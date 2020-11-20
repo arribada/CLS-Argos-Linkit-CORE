@@ -136,7 +136,7 @@ public:
 	lfs_ssize_t write(void *buffer, lfs_size_t size) {
 		return lfs_file_write(m_lfs, &m_file, buffer, size);
 	}
-	lfs_soff_t seek(lfs_soff_t off, int whence) {
+	lfs_soff_t seek(lfs_soff_t off, int whence=LFS_SEEK_SET) {
 		return lfs_file_seek(m_lfs, &m_file, off, whence);
 	}
 	int flush() {
@@ -148,17 +148,19 @@ public:
 };
 
 
-// CircularFile is a subclass of File and will wrap its read/write operations at m_max_size.  It uses apersistent file
+// CircularFile is a subclass of File and will wrap its read/write operations at m_max_size.  It uses a persistent file
 // attribute to keep track of the last write offset into the file i.e., m_offset.
 class CircularFile : public File {
 
 public:
 	lfs_size_t  m_max_size;
 	lfs_off_t   m_offset;
+	int			m_flags;
 
 	CircularFile(FileSystem *fs, const char *path, int flags, lfs_size_t max_size) : File(fs, path, flags) {
 		m_max_size = max_size;
 		m_offset = 0;
+		m_flags = flags;
 		if (flags & LFS_O_CREAT)
 			lfs_setattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
 		else
@@ -167,7 +169,8 @@ public:
 	}
 
 	~CircularFile() {
-		lfs_setattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
+		if (m_flags & LFS_O_WRONLY)
+			lfs_setattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
 	}
 
 	lfs_ssize_t read(void *buffer, lfs_size_t size) {
@@ -200,6 +203,6 @@ public:
 
 	lfs_soff_t seek(lfs_soff_t offset) {
 		m_offset = offset % m_max_size;
-		return File::seek(m_offset, LFS_SEEK_SET);
+		return File::seek(m_offset);
 	}
 };
