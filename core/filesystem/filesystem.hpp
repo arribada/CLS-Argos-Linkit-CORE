@@ -1,3 +1,6 @@
+#ifndef __FILESYSTEM_HPP_
+#define __FILESYSTEM_HPP_
+
 #include <iostream>
 #include <cstring>
 
@@ -165,6 +168,11 @@ public:
 			lfs_setattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
 		else
 			lfs_getattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
+
+		// Ensure we seek to the oldest entry in the file when file hasn't yet wrapped
+		if (flags & LFS_O_RDONLY && size() < max_size)
+			m_offset = 0;
+
 		seek(m_offset);
 	}
 
@@ -206,3 +214,5 @@ public:
 		return File::seek(m_offset);
 	}
 };
+
+#endif // __FILESYSTEM_HPP_
