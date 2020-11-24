@@ -38,8 +38,8 @@ struct LogEntry {
 	};
 };
 
-enum GPSEventType : uint8_t { ON, OFF, UPDATE, FIX, NO_FIX };
-enum GPSFixType : uint8_t { NO_FIX, DEAD_RECKONING, DIM_2D, DIM_3D };
+enum class GPSEventType : uint8_t { ON, OFF, UPDATE, FIX, NO_FIX };
+enum class GPSFixType : uint8_t { NO_FIX, DEAD_RECKONING, DIM_2D, DIM_3D };
 
 struct __attribute__((packed)) GPSLogEntry {
 	LogHeader header;
