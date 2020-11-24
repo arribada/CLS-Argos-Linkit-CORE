@@ -21,7 +21,7 @@ enum LogType : uint8_t {
 	LOG_TRACE
 };
 
-struct LogHeader __attribute__ ((packed)) {
+struct __attribute__((packed)) LogHeader {
 	uint8_t  day;
 	uint8_t  month;
 	uint16_t year;
@@ -41,7 +41,7 @@ struct LogEntry {
 enum GPSEventType : uint8_t { ON, OFF, UPDATE, FIX, NO_FIX };
 enum GPSFixType : uint8_t { NO_FIX, DEAD_RECKONING, DIM_2D, DIM_3D };
 
-struct GPSLogEntry __attribute__ ((packed)) {
+struct __attribute__((packed)) GPSLogEntry {
 	LogHeader header;
 	union {
 		struct {
