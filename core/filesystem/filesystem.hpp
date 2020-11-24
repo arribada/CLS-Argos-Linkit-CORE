@@ -161,14 +161,18 @@ public:
 	int			m_flags;
 
 	CircularFile(FileSystem *fs, const char *path, int flags, lfs_size_t max_size) : File(fs, path, flags) {
+		int ret;
 		m_max_size = max_size;
 		m_offset = 0;
 		m_flags = flags;
 		if (flags & LFS_O_CREAT)
-			lfs_setattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
+			ret = lfs_setattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
 		else
-			lfs_getattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
-
+			ret = lfs_getattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
+		
+		if (ret < 0)
+			throw ret;
+		
 		lfs_soff_t file_size = size();
 		if (file_size < 0)
 			throw file_size;
