@@ -169,8 +169,12 @@ public:
 		else
 			lfs_getattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
 
+		lfs_soff_t file_size = size();
+		if (file_size < 0)
+			throw file_size;
+
 		// Ensure we seek to the oldest entry in the file when file hasn't yet wrapped
-		if (flags & LFS_O_RDONLY && size() < max_size)
+		if (flags & LFS_O_RDONLY && static_cast<lfs_size_t>(file_size) < max_size)
 			m_offset = 0;
 
 		seek(m_offset);
