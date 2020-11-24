@@ -17,7 +17,6 @@ using fsm_handle = GenTracker;
 
 void main() {
 	// Setup global contexts
-	// TODO: this should be replaced with a new FlashFileSystem variant
 	main_filesystem = new RamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
 
 	// This will initialise the FSM

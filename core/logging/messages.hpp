@@ -5,13 +5,20 @@
 
 #define MAX_LOG_PAYLOAD    120
 
+static const char *log_type_name[8] = {
+	"GPS",
+	"ERROR",
+	"WARN",
+	"INFO",
+	"TRACE"
+};
 
 enum LogType : uint8_t {
 	LOG_GPS,
-	LOG_INFO,
 	LOG_ERROR,
 	LOG_WARN,
-	LOG_DEBUG
+	LOG_INFO,
+	LOG_TRACE
 };
 
 struct LogHeader __attribute__ ((packed)) {

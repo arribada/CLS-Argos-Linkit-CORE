@@ -4,11 +4,9 @@
 #include "filesystem.hpp"
 
 class GPSConfigFile {
-private:
-	FileSystem *m_filesystem;
-
 public:
-	GPSConfigFile(FileSystem *fs);
+	static void create();
+	static void destroy();
 };
 
 #endif // __GPS_CONFIG_FILE_HPP_

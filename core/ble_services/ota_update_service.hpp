@@ -5,7 +5,9 @@
 
 
 class OTAUpdateService : public BLEService {
-	OTAUpdateService(void (*on_connected)(void), void (*on_disconnected)(void));
+public:
+	static void start(void (*on_connected)(void), void (*on_disconnected)(void));
+	static void stop();
 };
 
 #endif // __OTA_UPDATE_SERVICE_HPP_

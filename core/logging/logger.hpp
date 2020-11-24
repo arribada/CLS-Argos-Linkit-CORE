@@ -7,51 +7,75 @@
 
 #include "messages.hpp"
 
+
+enum LogLevel {
+	LOG_LEVEL_OFF,
+	LOG_LEVEL_ERROR,
+	LOG_LEVEL_WARN,
+	LOG_LEVEL_INFO,
+	LOG_LEVEL_DEBUG
+};
+
+
 class Logger {
 
+private:
+	static int log_level = LOG_LEVEL_DEBUG;
+
 public:
-	void warn(const char *msg, ...) {
-		LogEntry buffer;
-		va_list args;
-		va_start (args, msg);
-		vsprintf (buffer.data, msg, args);
-		va_end (args);
-		buffer.header.log_type = LOG_WARN;
-		// TODO: set date time in header
-		write(&buffer);
+	static void set_log_level(int level) {
+		log_level = level;
 	}
-	void error(const char *msg, ...) {
-		LogEntry buffer;
-		va_list args;
-		va_start (args, msg);
-		vsprintf (buffer.data, msg, args);
-		va_end (args);
-		buffer.header.log_type = LOG_ERROR;
-		// TODO: set date time in header
-		write(&buffer);
+	static void warn(const char *msg, ...) {
+		if (log_level >= LOG_LEVEL_WARN) {
+			LogEntry buffer;
+			va_list args;
+			va_start (args, msg);
+			vsprintf (buffer.data, msg, args);
+			va_end (args);
+			buffer.header.log_type = LOG_WARN;
+			// TODO: set date time in header
+			write(&buffer);
+		}
 	}
-	void info(const char *msg, ...) {
-		LogEntry buffer;
-		va_list args;
-		va_start (args, msg);
-		vsprintf (buffer.data, msg, args);
-		va_end (args);
-		buffer.header.log_type = LOG_INFO;
-		// TODO: set date time in header
-		write(&buffer);
+	static void error(const char *msg, ...) {
+		if (log_level >= LOG_LEVEL_ERROR) {
+			LogEntry buffer;
+			va_list args;
+			va_start (args, msg);
+			vsprintf (buffer.data, msg, args);
+			va_end (args);
+			buffer.header.log_type = LOG_ERROR;
+			// TODO: set date time in header
+			write(&buffer);
+		}
 	}
-	void debug(const char *msg, ...) {
-		LogEntry buffer;
-		va_list args;
-		va_start (args, msg);
-		vsprintf (buffer.data, msg, args);
-		va_end (args);
-		buffer.header.log_type = LOG_DEBUG;
-		// TODO: set date time in header
-		write(&buffer);
+	static void info(const char *msg, ...) {
+		if (log_level >= LOG_LEVEL_INFO) {
+			LogEntry buffer;
+			va_list args;
+			va_start (args, msg);
+			vsprintf (buffer.data, msg, args);
+			va_end (args);
+			buffer.header.log_type = LOG_INFO;
+			// TODO: set date time in header
+			write(&buffer);
+		}
 	}
-	virtual void write(void *);
-	virtual void read(void *, int index = 0);
+	static void trace(const char *msg, ...) {
+		if (log_level >= LOG_LEVEL_INFO) {
+			LogEntry buffer;
+			va_list args;
+			va_start (args, msg);
+			vsprintf (buffer.data, msg, args);
+			va_end (args);
+			buffer.header.log_type = LOG_TRACE;
+			// TODO: set date time in header
+			write(&buffer);
+		}
+	}
+	static void write(void *) {}
+	static void read(void *, int index = 0) {}
 };
 
 #endif // __LOGGER_HPP_
