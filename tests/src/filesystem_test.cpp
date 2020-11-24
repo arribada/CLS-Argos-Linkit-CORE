@@ -26,6 +26,7 @@ TEST_GROUP(RamFileSystem)
 	}
 
 	void teardown() {
+		fs->umount();
 		delete fs;
 	}
 };

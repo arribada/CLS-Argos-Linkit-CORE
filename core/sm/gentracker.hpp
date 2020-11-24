@@ -13,6 +13,7 @@
 #include "filesystem.hpp"
 #include "config_store.hpp"
 #include "error.hpp"
+#include "timer.hpp"
 
 // These contexts must be created before the FSM is initialised
 extern FileSystem *main_filesystem;
@@ -69,8 +70,8 @@ class BootState : GenTracker
 {
 	void enter() {
 
-		Scheduler::register_task(notify_bad_filesystem_error);
-		Scheduler::register_task(notify_config_store_state);
+		// Ensure the system timer is started before anything
+		Timer::start();
 
 		// If we can't mount the filesystem then try to format it first and retry
 		if (main_filesystem->mount() < 0)
@@ -139,7 +140,7 @@ class ConfigurationState : GenTracker
 		[]() {
 			// After a DTE disconnection, re-evaluate if the configuration store
 			// is valid and notify all event listeners
-			main_sched->post_task_prio(notify_config_store_state);
+			Scheduler::post_task_prio(notify_config_store_state);
 		});
 		OTAUpdateService::start([]{}, []{});
 	}
@@ -160,15 +161,13 @@ class ErrorState : GenTracker
 		}
 	};
 
-	void reset() {
-		Scheduler::register_task(error_task);
-	}
-
 	void enter() {
+		// Call the error task immediately
 		Scheduler::post_task_prio(error_task);
 	}
 
 	void exit() {
+		// Cancel any pending calls
 		Scheduler::cancel_task(error_task);
 	}
 

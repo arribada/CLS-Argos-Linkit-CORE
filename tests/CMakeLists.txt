@@ -18,22 +18,27 @@ FetchContent_Declare(
 set(TESTS OFF CACHE BOOL "Switch off CppUTest Test build")
 FetchContent_MakeAvailable(CppUTest)
 
-
+find_package(Threads)
 add_executable(${PROJECT_NAME})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-g")
 
 # Test related includes
 target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/littlefs"
     "${ROOT_DIR}/core/filesystem"
+    "${ROOT_DIR}/core/scheduling"
+    "${ROOT_DIR}/ports/linux"
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/littlefs/lfs_util.c"
     "${ROOT_DIR}/libraries/littlefs/lfs.c"
+    "src/timer_test.cpp"
     "src/filesystem_test.cpp"
+    "src/scheduler_test.cpp"
     "src/main.cpp"
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE CppUTest CppUTestExt)
+target_link_libraries(${PROJECT_NAME} PRIVATE CppUTest CppUTestExt ${CMAKE_THREAD_LIBS_INIT})
