@@ -34,6 +34,7 @@ class GenTracker : public tinyfsm::Fsm<GenTracker>
 private:
 	static ErrorCode last_error;
 
+protected:
 	void notify_config_store_state() {
 		ConfigurationStatusEvent event;
 		event.is_valid = ConfigurationStore::is_valid();
