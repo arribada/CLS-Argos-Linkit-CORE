@@ -1,9 +1,8 @@
-#ifndef __TIMER_HPP_
-#define __TIMER_HPP_
+#ifndef __LINUX_TIMER_HPP_
+#define __LINUX_TIMER_HPP_
 
-#include <vector>
-#include <algorithm>
 #include <iostream>
+#include "timer.hpp"
 
 extern "C" {
 #include <stdlib.h>
@@ -14,36 +13,19 @@ extern "C" {
 #define NS_PER_SEC    1000000000UL
 #define MSEC          (NS_PER_SEC/1000)
 
-#define MAX_TIMER_SCHEDULES    32
-
 
 using namespace std;
-
-using TimerEvent = void(*)(void *);
-
-struct TimerSchedule {
-	void *user_arg;
-	TimerEvent event;
-	uint64_t target_counter_value;
-};
-
-static bool operator==(const TimerSchedule& lhs, const TimerSchedule& rhs)
-{
-    return (lhs.user_arg == rhs.user_arg &&
-    		lhs.event == rhs.event &&
-			lhs.target_counter_value == rhs.target_counter_value);
-}
 
 // This timer implementation just emulates a 1 ms tick based timer
 // A real hardware implementation should ideally sleep the processor until the earliest
 // timer schedule event arises rather than waking up every 1 ms period
 
-class Timer {
+class LinuxTimer : public Timer {
 private:
-	static inline pthread_t m_pid;
-	static inline volatile bool m_is_running = false;
-	static inline uint64_t m_counter_value = 0;
-	static inline TimerSchedule m_schedule[MAX_TIMER_SCHEDULES];
+	pthread_t m_pid;
+	volatile bool m_is_running ;
+	uint64_t m_counter_value;
+	TimerSchedule m_schedule[MAX_TIMER_SCHEDULES];
 
 	static uint64_t time_now() {
 		uint64_t val;
@@ -55,15 +37,13 @@ private:
 
 	static void *timer_handler(void *arg) {
 
-		m_is_running = true;
-
-		(void)arg;
-
+		LinuxTimer *parent = reinterpret_cast<LinuxTimer*>(arg);
+		parent->m_is_running = true;
 		uint64_t last_t;
 
 		last_t = time_now();  // Start-up condition so we know initial high-res time value
 
-		while (m_is_running) {
+		while (parent->m_is_running) {
 			uint64_t t = time_now();
 
 			unsigned int msec = ((t - last_t) / MSEC);
@@ -73,15 +53,15 @@ private:
 
 			for (unsigned int k = 0; k < msec; k++)
 			{
-				m_counter_value++;
+				parent->m_counter_value++;
 				//std::cout << "m_counter=" << m_counter_value << "\n";
 
 				// Check the current schedule -- make a copy first since we may modify the original
 				// vector size during the iteration process
 				for (unsigned int i = 0; i < MAX_TIMER_SCHEDULES; i++) {
-					TimerSchedule s = m_schedule[i];
-					if (s.event && s.target_counter_value == m_counter_value) {
-						m_schedule[i] = {0, 0, 0};
+					TimerSchedule s = parent->m_schedule[i];
+					if (s.event && s.target_counter_value == parent->m_counter_value) {
+						parent->m_schedule[i] = {0, 0, 0};
 						s.event(s.user_arg);
 					}
 				}
@@ -96,46 +76,46 @@ private:
 	}
 
 public:
-	static uint64_t get_counter() {
+	uint64_t get_counter() override {
 		return m_counter_value;
 	}
-	static void add_schedule(TimerSchedule &s) {
+	void add_schedule(TimerSchedule &s) override {
 		for (unsigned int i = 0; i < MAX_TIMER_SCHEDULES; i++)
 			if (m_schedule[i].event == 0) {
 				m_schedule[i] = s;
 				break;
 			}
 	}
-	static void cancel_schedule(TimerSchedule const &s) {
+	void cancel_schedule(TimerSchedule const &s) override {
 		for (unsigned int i = 0; i < MAX_TIMER_SCHEDULES; i++)
 			if (m_schedule[i] == s) {
 				m_schedule[i] = {0, 0, 0};
 				break;
 			}
 	}
-	static void cancel_schedule(TimerEvent const &e) {
+	void cancel_schedule(TimerEvent const &e) override {
 		for (unsigned int i = 0; i < MAX_TIMER_SCHEDULES; i++)
 			if (m_schedule[i].event == e) {
 				m_schedule[i] = {0, 0, 0};
 				break;
 			}
 	}
-	static void cancel_schedule(void *user_arg) {
+	void cancel_schedule(void *user_arg) override {
 		for (unsigned int i = 0; i < MAX_TIMER_SCHEDULES; i++)
 			if (m_schedule[i].user_arg == user_arg) {
 				m_schedule[i] = {0, 0, 0};
 				break;
 			}
 	}
-	static void start() {
+	void start() override {
 		if (!m_is_running)
 		{
 			m_counter_value = 0;
-			pthread_create(&m_pid, 0, timer_handler, 0);
+			pthread_create(&m_pid, 0, timer_handler, this);
 			//std::cout << "created" << "\n";
 		}
 	}
-	static void stop() {
+	void stop() override {
 		if (m_is_running)
 		{
 			m_is_running = false;
@@ -148,4 +128,4 @@ public:
 
 };
 
-#endif // __TIMER_HPP_
+#endif // __LINUX_TIMER_HPP_

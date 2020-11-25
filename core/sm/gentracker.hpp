@@ -2,11 +2,10 @@
 #define __GENTRACKER_HPP_INC
 
 #include "tinyfsm.hpp"
-#include "system_log.hpp"
-#include "sensor_log.hpp"
+#include "logger.hpp"
 #include "config_store.hpp"
 #include "gps_scheduler.hpp"
-#include "argos_scheduler.hpp"
+#include "comms_scheduler.hpp"
 #include "scheduler.hpp"
 #include "ota_update_service.hpp"
 #include "dte_service.hpp"
@@ -14,97 +13,110 @@
 #include "config_store.hpp"
 #include "error.hpp"
 #include "timer.hpp"
+#include "debug.hpp"
+
 
 // These contexts must be created before the FSM is initialised
 extern FileSystem *main_filesystem;
+extern Scheduler *system_scheduler;
+extern Timer *system_timer;
+extern CommsScheduler *comms_scheduler;
+extern GPSScheduler *gps_scheduler;
+extern Logger *sensor_log;
+extern Logger *system_log;
+extern ConfigurationStore *configuration_store;
+extern BLEService *dte_service;
+extern BLEService *ota_update_service;
+
 
 struct ReedSwitchEvent              : tinyfsm::Event { bool state; };
 struct SaltwaterSwitchEvent         : tinyfsm::Event { bool state; };
 struct ConfigurationStatusEvent     : tinyfsm::Event { bool is_valid; };
 struct ErrorEvent : tinyfsm::Event { ErrorCode error_code; };
 
-// Class prototypes
-class BootState;
-class OperationalState;
 class ConfigurationState;
 class ErrorState;
+class OperationalState;
 
 class GenTracker : public tinyfsm::Fsm<GenTracker>
 {
-private:
-	static ErrorCode last_error;
-
-protected:
-	void notify_config_store_state() {
-		ConfigurationStatusEvent event;
-		event.is_valid = ConfigurationStore::is_valid();
-		dispatch(event);
-	}
-
-	void notify_bad_filesystem_error() {
-		ErrorEvent event;
-		event.error_code = ERROR_BAD_FILESYSTEM;
-		dispatch(event);
-	}
-
 public:
+	ErrorCode last_error;
+
 	void react(tinyfsm::Event const &) { };
 	void react(ReedSwitchEvent const &event)
 	{
+		DEBUG_TRACE("react: ReedSwitchEvent");
 		if (event.state)
 		{
 			transit<ConfigurationState>();
 		}
 	};
 	void react(SaltwaterSwitchEvent const &event) {
-		ConfigurationStore::notify_saltwater_switch_state(event.state);
+		DEBUG_TRACE("react: SaltwaterSwitchEvent");
+		configuration_store->notify_saltwater_switch_state(event.state);
 	};
-	void react(ConfigurationStatusEvent const &) { };
+	virtual void react(ConfigurationStatusEvent const &) { };
 	void react(ErrorEvent const &event) {
 		last_error = event.error_code;
 		transit<ErrorState>();
 	};
 
-	void entry(void) { };
-	void exit(void)  { };
+	virtual void entry(void) { };
+	virtual void exit(void)  { };
 
+	static void notify_config_store_state() {
+		ConfigurationStatusEvent event;
+		event.is_valid = configuration_store->is_valid();
+		dispatch(event);
+	}
+
+	static void notify_bad_filesystem_error() {
+		ErrorEvent event;
+		event.error_code = ERROR_BAD_FILESYSTEM;
+		dispatch(event);
+	}
 
 };
 
 
 class BootState : public GenTracker
 {
-	void enter() {
+	void entry() override {
 
-		// Ensure the system timer is started before anything
-		Timer::start();
+		DEBUG_TRACE("entry: BootState");
 
 		// If we can't mount the filesystem then try to format it first and retry
+		DEBUG_TRACE("mount filesystem");
 		if (main_filesystem->mount() < 0)
 		{
-			main_filesystem->format();
-			if (main_filesystem->mount() < 0)
+			DEBUG_TRACE("format filesystem");
+			if (main_filesystem->format() < 0 || main_filesystem->mount() < 0)
 			{
 				// We can't mount a formatted filesystem, something bad has happened
-				Scheduler::post_task_prio(notify_bad_filesystem_error);
+				system_scheduler->post_task_prio(notify_bad_filesystem_error);
 				return;
 			}
 		}
 
+		// Ensure the system timer is started to allow scheduling to work
+		system_timer->start();
+
 		try {
 			// The underlying classes will create the files on the filesystem if they do not
 			// already yet exist
-			SensorLog::create();
-			SystemLog::create();
-			ConfigurationStore::init();
-			Scheduler::post_task_prio(notify_config_store_state);
+			sensor_log->create();
+			system_log->create();
+			configuration_store->init();
+			system_scheduler->post_task_prio(notify_config_store_state);
 		} catch (int e) {
-			Scheduler::post_task_prio(notify_bad_filesystem_error);
+			system_scheduler->post_task_prio(notify_bad_filesystem_error);
 		}
 	}
 
 	void react(ConfigurationStatusEvent const &event)
 	{
+		DEBUG_TRACE("react: ConfigurationStatusEvent");
 		if (event.is_valid) {
 			transit<OperationalState>();
 		}
@@ -115,19 +127,22 @@ class OperationalState : public GenTracker
 {
 	void react(SaltwaterSwitchEvent const &event)
 	{
-		ConfigurationStore::notify_saltwater_switch_state(event.state);
-		GPSScheduler::notify_saltwater_switch_state(event.state);
-		ArgosScheduler::notify_saltwater_switch_state(event.state);
+		DEBUG_TRACE("react: SaltwaterSwitchEvent");
+		configuration_store->notify_saltwater_switch_state(event.state);
+		gps_scheduler->notify_saltwater_switch_state(event.state);
+		comms_scheduler->notify_saltwater_switch_state(event.state);
 	};
 
-	void enter() {
-		GPSScheduler::start();
-		ArgosScheduler::start();
+	void entry() {
+		DEBUG_TRACE("entry: OperationalState");
+		gps_scheduler->start();
+		comms_scheduler->start();
 	}
 
 	void exit() {
-		GPSScheduler::stop();
-		ArgosScheduler::stop();
+		DEBUG_TRACE("exit: OperationalState");
+		gps_scheduler->stop();
+		comms_scheduler->stop();
 	}
 
 };
@@ -136,24 +151,28 @@ class ConfigurationState : public GenTracker
 {
 	void react(ReedSwitchEvent const &event)
 	{
-		if (!event.state)
-			transit<ConfigurationState>();
+		DEBUG_TRACE("react: ReedSwitchEvent");
+		if (!event.state) {
+			system_scheduler->post_task_prio(notify_config_store_state);
+		}
 	};
 
-	void enter() {
-		DTEService::start([] {
+	void entry() {
+		DEBUG_TRACE("entry: ConfigurationState");
+		dte_service->start([] {
 		},
 		[]() {
 			// After a DTE disconnection, re-evaluate if the configuration store
 			// is valid and notify all event listeners
-			Scheduler::post_task_prio(notify_config_store_state);
+			system_scheduler->post_task_prio(notify_config_store_state);
 		});
-		OTAUpdateService::start([]{}, []{});
+		ota_update_service->start([]{}, []{});
 	}
 
 	void exit() {
-		DTEService::stop();
-		OTAUpdateService::stop();
+		DEBUG_TRACE("exit: ConfigurationState");
+		dte_service->stop();
+		ota_update_service->stop();
 	}
 };
 
@@ -161,27 +180,30 @@ class ErrorState : public GenTracker
 {
 	void react(ReedSwitchEvent const &event)
 	{
+		DEBUG_TRACE("react: ReedSwitchEvent");
 		if (event.state)
 		{
 			transit<ConfigurationState>();
 		}
 	};
 
-	void enter() {
+	void entry() {
+		DEBUG_TRACE("entry: ErrorState");
 		// Call the error task immediately
-		Scheduler::post_task_prio(error_task);
+		system_scheduler->post_task_prio(error_task);
 	}
 
 	void exit() {
+		DEBUG_TRACE("exit: ErrorState");
 		// Cancel any pending calls
-		Scheduler::cancel_task(error_task);
+		system_scheduler->cancel_task(error_task);
 	}
 
-	void error_task() {
+	static void error_task() {
 		// TODO: handle LED error indication display on LEDs
 
 		// Invoke the scheduler to call us again in 1 second
-		Scheduler::post_task_prio(error_task, Scheduler::DEFAULT_PRIORITY, 1000);
+		system_scheduler->post_task_prio(error_task, Scheduler::DEFAULT_PRIORITY, 1000);
 	}
 };
 

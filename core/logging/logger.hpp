@@ -20,13 +20,13 @@ enum LogLevel {
 class Logger {
 
 private:
-	static int m_log_level = LOG_LEVEL_DEBUG;
+	int m_log_level = LOG_LEVEL_DEBUG;
 
 public:
-	static void set_log_level(int level) {
+	void set_log_level(int level) {
 		m_log_level = level;
 	}
-	static void warn(const char *msg, ...) {
+	void warn(const char *msg, ...) {
 		if (m_log_level >= LOG_LEVEL_WARN) {
 			LogEntry buffer;
 			va_list args;
@@ -38,7 +38,7 @@ public:
 			write(&buffer);
 		}
 	}
-	static void error(const char *msg, ...) {
+	void error(const char *msg, ...) {
 		if (m_log_level >= LOG_LEVEL_ERROR) {
 			LogEntry buffer;
 			va_list args;
@@ -50,7 +50,7 @@ public:
 			write(&buffer);
 		}
 	}
-	static void info(const char *msg, ...) {
+	void info(const char *msg, ...) {
 		if (m_log_level >= LOG_LEVEL_INFO) {
 			LogEntry buffer;
 			va_list args;
@@ -62,7 +62,7 @@ public:
 			write(&buffer);
 		}
 	}
-	static void trace(const char *msg, ...) {
+	void trace(const char *msg, ...) {
 		if (m_log_level >= LOG_LEVEL_INFO) {
 			LogEntry buffer;
 			va_list args;
@@ -74,8 +74,10 @@ public:
 			write(&buffer);
 		}
 	}
-	static void write(void *) {}
-	static void read(void *, int index = 0) {}
+	virtual void create() = 0;
+	virtual void write(void *) = 0;
+	virtual void read(void *, int index = 0) = 0;
+	virtual unsigned int num_entries() = 0;
 };
 
 #endif // __LOGGER_HPP_

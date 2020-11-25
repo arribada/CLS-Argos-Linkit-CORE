@@ -5,8 +5,8 @@
 
 class GPSConfigFile {
 public:
-	static void create();
-	static void destroy();
+	void create();
+	void destroy();
 };
 
 #endif // __GPS_CONFIG_FILE_HPP_

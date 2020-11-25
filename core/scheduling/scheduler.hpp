@@ -5,15 +5,17 @@
 
 #include "timer.hpp"
 #include "pmu.hpp"
+#include "debug.hpp"
 
 using namespace std;
 
 using Task = void (*)();
 
 struct TaskInfo {
-	int  prio;
-	bool runnable;
+	int  	prio;
+	bool 	runnable;
 };
+
 
 class Scheduler {
 public:
@@ -21,7 +23,12 @@ public:
 	static inline const int MAX_PRIORITY = 1;
 	static inline const int DEFAULT_PRIORITY = MIN_PRIORITY;
 
-	static void run(void (*exception_handler)(int), int iter=-1) {
+	Scheduler(Timer *timer) {
+		m_timer = timer;
+	}
+
+	void run(void (*exception_handler)(int), int iter=-1) {
+		DEBUG_TRACE("Scheduler.run: iter: %u", iter);
 		while (iter > 0 || iter == -1) {
 			iter--;
 			try {
@@ -41,6 +48,7 @@ public:
 					// Execute the highest priority runnable task
 					if (runnable_task)
 					{
+						DEBUG_TRACE("Scheduler: running task %p", runnable_task);
 						m_task_map[runnable_task] = {0, false};
 						runnable_task();
 					}
@@ -52,33 +60,35 @@ public:
 			PMU::enter_low_power_mode();
 		}
 	}
-	static void post_task_prio(Task task, int prio=Scheduler::DEFAULT_PRIORITY, unsigned int delay_ms=0) {
-		Timer::cancel_schedule((void *)task);  // To be safe, delete any existing timer event for this task
+	void post_task_prio(Task task, int prio=Scheduler::DEFAULT_PRIORITY, unsigned int delay_ms=0) {
+		DEBUG_TRACE("post_task_prio(%p)", task);
+		m_timer->cancel_schedule((void *)task);  // To be safe, delete any existing timer event for this task
 		if (delay_ms == 0) {
 			// Mark as runnable immediately
 			m_task_map[task] = { prio, true };
 		} else {
 			// Defer execution by invoking the timer to tell us when the scheduled delay period arrives
 			m_task_map[task] = { prio, false };
-			TimerSchedule s = { (void *)task, timer_event, Timer::get_counter() + delay_ms };
-			Timer::add_schedule(s);
+			TimerSchedule s = { (void *)&m_task_map[task], timer_event, m_timer->get_counter() + delay_ms };
+			m_timer->add_schedule(s);
 		}
 	}
-	static void cancel_task(Task task) {
-		Timer::cancel_schedule((void *)task);
+	void cancel_task(Task task) {
+		m_timer->cancel_schedule((void *)&m_task_map[task]);
 		m_task_map[task] = { 0, false };
 	}
-	static bool is_scheduled(Task task) {
+	bool is_scheduled(Task task) {
 		return (m_task_map[task].prio > 0);
 	}
 
 private:
 	// Tracks all scheduled tasks, their priority and if they are runnable or not
-	static inline std::map<Task, TaskInfo> m_task_map;
+	std::map<Task, TaskInfo> m_task_map;
+	Timer *m_timer;
 
 	static void timer_event(void *user_arg) {
-		// Mark this task as runnable now its timer event has fired
-		m_task_map[(Task)user_arg].runnable = true;
+		TaskInfo *info = (TaskInfo *)user_arg;
+		info->runnable = true;
 	}
 
 };

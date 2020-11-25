@@ -11,8 +11,14 @@ using namespace std;
 
 class File;
 
-
 class FileSystem {
+public:
+	virtual int mount() = 0;
+	virtual int umount() = 0;
+	virtual int format() = 0;
+};
+
+class LFSFileSystem : public FileSystem {
 
 private:
 	lfs_t  m_lfs;
@@ -23,7 +29,7 @@ protected:
 	struct lfs_config m_cfg;
 
 public:
-	FileSystem(unsigned int block_size, unsigned int blocks, unsigned int page_size) {
+	LFSFileSystem(unsigned int block_size, unsigned int blocks, unsigned int page_size) {
 		m_cfg.context = static_cast<void*>(this);
 
 		// block device configuration
@@ -46,7 +52,7 @@ public:
 		m_cfg.file_max = 4*1024*1024;
 	}
 
-	~FileSystem() {
+	~LFSFileSystem() {
 		delete[] (uint8_t*)m_cfg.read_buffer;
 		delete[] (uint8_t*)m_cfg.prog_buffer;
 		delete[] (uint8_t*)m_cfg.lookahead_buffer;
@@ -64,16 +70,16 @@ public:
 		return lfs_format(&m_lfs, &m_cfg);
 	}
 
-	friend class File;
+	friend class LFSFile;
 };
 
 
-class RamFileSystem : public FileSystem {
+class LFSRamFileSystem : public LFSFileSystem {
 private:
 	uint8_t *m_block_ram;
 
 	static int read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) {
-		RamFileSystem *fs = reinterpret_cast<RamFileSystem*>(c->context);
+		LFSRamFileSystem *fs = reinterpret_cast<LFSRamFileSystem*>(c->context);
 		if (fs->m_debug_trace)
 			std::cout << "read(" << block << " " << off << " " << size << ")\n";
 		uint32_t offset = (block * fs->m_cfg.block_size) + off;
@@ -81,7 +87,7 @@ private:
 		return 0;
 	}
 	static int prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
-		RamFileSystem *fs = reinterpret_cast<RamFileSystem*>(c->context);
+		LFSRamFileSystem *fs = reinterpret_cast<LFSRamFileSystem*>(c->context);
 		if (fs->m_debug_trace)
 			std::cout << "prog(" << block << " " << off << " " << size << ")\n";
 		uint32_t offset = (block * fs->m_cfg.block_size) + off;
@@ -90,7 +96,7 @@ private:
 	}
 	static int erase(const struct lfs_config *c, lfs_block_t block)
 	{
-		RamFileSystem *fs = reinterpret_cast<RamFileSystem*>(c->context);
+		LFSRamFileSystem *fs = reinterpret_cast<LFSRamFileSystem*>(c->context);
 		if (fs->m_debug_trace)
 			std::cout << "erase" << block << ")\n";
 		uint32_t offset = (block * fs->m_cfg.block_size);
@@ -101,7 +107,7 @@ private:
 
 public:
 	bool m_debug_trace;
-	RamFileSystem(unsigned int block_size, unsigned int blocks, unsigned int page_size) : FileSystem(block_size, blocks, page_size) {
+	LFSRamFileSystem(unsigned int block_size, unsigned int blocks, unsigned int page_size) : LFSFileSystem(block_size, blocks, page_size) {
 		m_block_ram = new uint8_t[block_size * blocks]();
 		m_cfg.read  = read;
 		m_cfg.prog  = prog;
@@ -109,13 +115,22 @@ public:
 		m_cfg.sync  = sync;
 		m_debug_trace = false;
 	}
-	~RamFileSystem() {
+	~LFSRamFileSystem() {
 		delete[] m_block_ram;
 	}
 };
 
-// File class wraps the commonly used per-file operations
 class File {
+public:
+	virtual lfs_ssize_t read(void *buffer, lfs_size_t size) = 0;
+	virtual lfs_ssize_t write(void *buffer, lfs_size_t size) = 0;
+	virtual lfs_soff_t seek(lfs_soff_t off, int whence=LFS_SEEK_SET) = 0;
+	virtual int flush() = 0;
+	virtual lfs_soff_t size() = 0;
+};
+
+// File class wraps the commonly used per-file operations
+class LFSFile : public File {
 protected:
 	lfs_t      *m_lfs;
 	lfs_file_t  m_file;
@@ -123,14 +138,14 @@ protected:
 public:
 	const char *m_path;
 
-	File(FileSystem *fs, const char *path, int flags) {
+	LFSFile(LFSFileSystem *fs, const char *path, int flags) {
 		m_lfs = &fs->m_lfs;
 		m_path = path;
 		int ret = lfs_file_open(m_lfs, &m_file, path, flags);
 		if (ret < 0)
 			throw ret;
 	}
-	~File() {
+	~LFSFile() {
 		lfs_file_close(m_lfs, &m_file);
 	}
 	lfs_ssize_t read(void *buffer, lfs_size_t size) {
@@ -151,16 +166,16 @@ public:
 };
 
 
-// CircularFile is a subclass of File and will wrap its read/write operations at m_max_size.  It uses a persistent file
+// LFSCircularFile is a subclass of LFSFile and will wrap its read/write operations at m_max_size.  It uses a persistent file
 // attribute to keep track of the last write offset into the file i.e., m_offset.
-class CircularFile : public File {
+class LFSCircularFile : public LFSFile {
 
 public:
 	lfs_size_t  m_max_size;
 	lfs_off_t   m_offset;
 	int			m_flags;
 
-	CircularFile(FileSystem *fs, const char *path, int flags, lfs_size_t max_size) : File(fs, path, flags) {
+	LFSCircularFile(LFSFileSystem *fs, const char *path, int flags, lfs_size_t max_size) : LFSFile(fs, path, flags) {
 		int ret;
 		m_max_size = max_size;
 		m_offset = 0;
@@ -184,13 +199,13 @@ public:
 		seek(m_offset);
 	}
 
-	~CircularFile() {
+	~LFSCircularFile() {
 		if (m_flags & LFS_O_WRONLY)
 			lfs_setattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
 	}
 
 	lfs_ssize_t read(void *buffer, lfs_size_t size) {
-		int ret = File::read(buffer, size);
+		int ret = LFSFile::read(buffer, size);
 		if (ret >= 0)
 		{
 			m_offset += ret;
@@ -204,7 +219,7 @@ public:
 	}
 
 	lfs_ssize_t write(void *buffer, lfs_size_t size) {
-		int ret = File::write(buffer, size);
+		int ret = LFSFile::write(buffer, size);
 		if (ret >= 0)
 		{
 			m_offset += ret;
@@ -219,7 +234,7 @@ public:
 
 	lfs_soff_t seek(lfs_soff_t offset) {
 		m_offset = offset % m_max_size;
-		return File::seek(m_offset);
+		return LFSFile::seek(m_offset);
 	}
 };
 

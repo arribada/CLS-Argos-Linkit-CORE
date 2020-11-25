@@ -3,8 +3,8 @@
 
 class BLEService {
 public:
-	static void start(void (*on_connected)(void), void (*on_disconnected)(void));
-	static void stop();
+	virtual void start(void (*on_connected)(void), void (*on_disconnected)(void)) = 0;
+	virtual void stop() = 0;
 };
 
 #endif // __BLE_SERVICE_HPP_

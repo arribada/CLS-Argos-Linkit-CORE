@@ -3,8 +3,8 @@
 
 class ParametersFile {
 public:
-	static void create();
-	static void destroy();
+	void create();
+	void destroy();
 };
 
 #endif // __PARAM_FILE_HPP_

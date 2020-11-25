@@ -1,30 +1,32 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-#include "timer.hpp"
+#include "linux_timer.hpp"
 #include <iostream>
 
 using namespace std;
+
+Timer *timer = new LinuxTimer;
 
 static void dummy_function(void *) {}
 
 TEST_GROUP(Timer)
 {
 	void setup() {
-		Timer::start();
+		timer->start();
 	}
 
 	void teardown() {
-		Timer::stop();
+		timer->stop();
 	}
 };
 
 
 TEST(Timer, TimerCounterIsAdvancing)
 {
-	uint64_t t = Timer::get_counter();
+	uint64_t t = timer->get_counter();
 	usleep(4000);
-	CHECK_COMPARE(t, <, Timer::get_counter());
+	CHECK_COMPARE(t, <, timer->get_counter());
 }
 
 TEST(Timer, TimerEventIsFired)
@@ -34,11 +36,11 @@ TEST(Timer, TimerEventIsFired)
 	TimerSchedule s = {
 		(void *)1,
 		[](void *a) { has_fired = true; param = a; },
-		Timer::get_counter() + 5
+		timer->get_counter() + 5
 	};
-	Timer::add_schedule(s);
+	timer->add_schedule(s);
 	usleep(15000);
-	Timer::cancel_schedule(s);
+	timer->cancel_schedule(s);
 	CHECK_TRUE(has_fired);
 	CHECK_EQUAL(s.user_arg, param);
 }
@@ -50,15 +52,15 @@ TEST(Timer, TimerMultiEventIsFired)
 	TimerSchedule s0 = {
 		(void *)1,
 		[](void *a) { has_fired[0] = true; params[0] = a; },
-		Timer::get_counter() + 2
+		timer->get_counter() + 2
 	};
 	TimerSchedule s1 = {
 		(void *)2,
 		[](void *a) { has_fired[1] = true; params[1] = a; },
-		Timer::get_counter() + 5
+		timer->get_counter() + 5
 	};
-	Timer::add_schedule(s0);
-	Timer::add_schedule(s1);
+	timer->add_schedule(s0);
+	timer->add_schedule(s1);
 	usleep(15000);
 	CHECK_TRUE(has_fired[0]);
 	CHECK_TRUE(has_fired[1]);
@@ -73,16 +75,16 @@ TEST(Timer, TimerCancelSingleWithMulti)
 	TimerSchedule s0 = {
 		(void *)1,
 		[](void *a) { has_fired[0] = true; params[0] = a; },
-		Timer::get_counter() + 2
+		timer->get_counter() + 2
 	};
 	TimerSchedule s1 = {
 		(void *)2,
 		[](void *a) { has_fired[1] = true; params[1] = a; },
-		Timer::get_counter() + 5
+		timer->get_counter() + 5
 	};
-	Timer::add_schedule(s0);
-	Timer::add_schedule(s1);
-	Timer::cancel_schedule(s0);
+	timer->add_schedule(s0);
+	timer->add_schedule(s1);
+	timer->cancel_schedule(s0);
 	usleep(15000);
 	CHECK_FALSE(has_fired[0]);
 	CHECK_TRUE(has_fired[1]);
@@ -95,10 +97,10 @@ TEST(Timer, TimerCancelBySchedule)
 	TimerSchedule s = {
 		(void *)1,
 		[](void *a) { has_fired = true; param = a; },
-		Timer::get_counter() + 5
+		timer->get_counter() + 5
 	};
-	Timer::add_schedule(s);
-	Timer::cancel_schedule(s);
+	timer->add_schedule(s);
+	timer->cancel_schedule(s);
 	usleep(15000);
 	CHECK_FALSE(has_fired);
 }
@@ -110,10 +112,10 @@ TEST(Timer, TimerCancelByUserArg)
 	TimerSchedule s = {
 		(void *)1,
 		[](void *a) { has_fired = true; param = a; },
-		Timer::get_counter() + 5
+		timer->get_counter() + 5
 	};
-	Timer::add_schedule(s);
-	Timer::cancel_schedule(s.user_arg);
+	timer->add_schedule(s);
+	timer->cancel_schedule(s.user_arg);
 	usleep(15000);
 	CHECK_FALSE(has_fired);
 }
@@ -125,10 +127,10 @@ TEST(Timer, TimerCancelByFunction)
 	TimerSchedule s = {
 		(void *)1,
 		dummy_function,
-		Timer::get_counter() + 5
+		timer->get_counter() + 5
 	};
-	Timer::add_schedule(s);
-	Timer::cancel_schedule(dummy_function);
+	timer->add_schedule(s);
+	timer->cancel_schedule(dummy_function);
 	usleep(15000);
 	CHECK_FALSE(has_fired);
 }

@@ -27,6 +27,11 @@ set(CMAKE_CXX_FLAGS "-g")
 # Test related includes
 target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/littlefs"
+    "${ROOT_DIR}/core/hardware"
+    "${ROOT_DIR}/core/sm"
+    "${ROOT_DIR}/core/ble_services"
+    "${ROOT_DIR}/core/configuration"
+    "${ROOT_DIR}/core/logging"
     "${ROOT_DIR}/core/filesystem"
     "${ROOT_DIR}/core/scheduling"
     "${ROOT_DIR}/ports/linux"
@@ -38,6 +43,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/timer_test.cpp"
     "src/filesystem_test.cpp"
     "src/scheduler_test.cpp"
+    "src/sm_test.cpp"
     "src/main.cpp"
 )
 

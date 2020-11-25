@@ -10,14 +10,14 @@
 #define MAX_FILE_SIZE (4*1024*1024)
 
 
-static RamFileSystem *fs;
+static LFSRamFileSystem *fs;
 static uint8_t wr_buffer[128];
 static uint8_t rd_buffer[128];
 
 TEST_GROUP(RamFileSystem)
 {
 	void setup() {
-		fs = new RamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+		fs = new LFSRamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
 		fs->format();
 		fs->mount();
 		for (unsigned int i = 0; i < sizeof(wr_buffer); i++)
@@ -34,7 +34,7 @@ TEST_GROUP(RamFileSystem)
 
 TEST(RamFileSystem, FileClassOperations)
 {
-	File *f = new File(fs, "test", LFS_O_WRONLY | LFS_O_CREAT);
+	LFSFile *f = new LFSFile(fs, "test", LFS_O_WRONLY | LFS_O_CREAT);
 
 	// Populate file with data
 	CHECK_EQUAL(sizeof(wr_buffer), f->write(wr_buffer, sizeof(wr_buffer)));
@@ -42,7 +42,7 @@ TEST(RamFileSystem, FileClassOperations)
 	delete f;  // Will force a close of the file
 
 	// Read back the data
-	f = new File(fs, "test", LFS_O_RDONLY);
+	f = new LFSFile(fs, "test", LFS_O_RDONLY);
 	CHECK_EQUAL(sizeof(rd_buffer), f->read(rd_buffer, sizeof(rd_buffer)));
 	MEMCMP_EQUAL(wr_buffer, rd_buffer, sizeof(rd_buffer));
 
@@ -65,12 +65,12 @@ TEST(RamFileSystem, FileClassOperations)
 	fs->format();
 
 	// Should throw an exception as unable to open file
-	CHECK_THROWS(int, new File(fs, "test", LFS_O_RDONLY));
+	CHECK_THROWS(int, new LFSFile(fs, "test", LFS_O_RDONLY));
 }
 
 TEST(RamFileSystem, CircularFileClassOperations)
 {
-	CircularFile *f = new CircularFile(fs, "test", LFS_O_WRONLY | LFS_O_CREAT, 16);
+	LFSCircularFile *f = new LFSCircularFile(fs, "test", LFS_O_WRONLY | LFS_O_CREAT, 16);
 
 	// Write 50% of file size (offset=50%)
 	CHECK_EQUAL(8, f->write(wr_buffer, 8));
@@ -87,7 +87,7 @@ TEST(RamFileSystem, CircularFileClassOperations)
 
 	// File closed @offset=50%
 
-	f = new CircularFile(fs, "test", LFS_O_RDONLY, 16);
+	f = new LFSCircularFile(fs, "test", LFS_O_RDONLY, 16);
 	// Read from offset=50%
 	CHECK_EQUAL(8, f->read(rd_buffer, 8));
 	MEMCMP_EQUAL(&wr_buffer[8], rd_buffer, 8);
@@ -100,7 +100,7 @@ TEST(RamFileSystem, CircularFileClassOperations)
 	delete f;
 
 	// Previous open as RDONLY should not modify the stored pointer
-	f = new CircularFile(fs, "test", LFS_O_WRONLY, 16);
+	f = new LFSCircularFile(fs, "test", LFS_O_WRONLY, 16);
 	CHECK_EQUAL(8, f->m_offset);
 	delete f;
 }

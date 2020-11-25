@@ -11,16 +11,19 @@ using namespace std;
 class ConsoleLog : public Logger {
 
 private:
-	static void debug_formatter(const char *level, const char *msg) {
+	void debug_formatter(const char *level, const char *msg) {
 		std::cout << "[" << level << "] " << msg << "\n";
 	}
-	static void gps_formatter(const GPSLogEntry *gps) {
+	void gps_formatter(const GPSLogEntry *gps) {
 		const char *level = log_type_name[gps->header.log_type];
 		std::cout << "[" << level << "] " << "lat: " << gps->lat << "lon: " << gps->lon << "\n";
 	}
 
 public:
-	static void write(void *entry) {
+	void create() {}
+	unsigned int num_entries() {}
+	void read(void *, int index) {}
+	void write(void *entry) {
 		LogEntry *p = (LogEntry *)entry;
 		switch (p->header.log_type) {
 		case LOG_ERROR:

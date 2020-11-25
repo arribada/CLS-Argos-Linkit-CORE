@@ -3,9 +3,9 @@
 
 class ConfigurationStore {
 public:
-	static void init();
-	static bool is_valid();
-	static void notify_saltwater_switch_state(bool);
+	virtual void init() = 0;
+	virtual bool is_valid() = 0;
+	virtual void notify_saltwater_switch_state(bool state) = 0;
 };
 
 #endif // __CONFIG_STORE_HPP_
