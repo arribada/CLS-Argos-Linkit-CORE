@@ -9,7 +9,7 @@ extern FileSystem *main_filesystem;
 class SensorLog : public Logger {
 public:
 	static const unsigned int MAX_SIZE = 4 * 1024 * 1024;
-	static const char *filename = "sensor.log";
+	static constexpr const char *filename = "sensor.log";
 
 	static void create() {
 		CircularFile *f;
