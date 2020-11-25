@@ -71,7 +71,7 @@ public:
 };
 
 
-class BootState : GenTracker
+class BootState : public GenTracker
 {
 	void enter() {
 
@@ -110,7 +110,7 @@ class BootState : GenTracker
 	};
 };
 
-class OperationalState : GenTracker
+class OperationalState : public GenTracker
 {
 	void react(SaltwaterSwitchEvent const &event)
 	{
@@ -131,7 +131,7 @@ class OperationalState : GenTracker
 
 };
 
-class ConfigurationState : GenTracker
+class ConfigurationState : public GenTracker
 {
 	void react(ReedSwitchEvent const &event)
 	{
@@ -156,7 +156,7 @@ class ConfigurationState : GenTracker
 	}
 };
 
-class ErrorState : GenTracker
+class ErrorState : public GenTracker
 {
 	void react(ReedSwitchEvent const &event)
 	{
