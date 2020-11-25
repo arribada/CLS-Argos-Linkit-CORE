@@ -30,11 +30,11 @@ public:
 					// Find the highest priority runnable task each time we iterate this loop until
 					// there are no more runnable tasks
 					runnable_task = 0;
-					for ( const auto &iter : m_task_map ) {
-						if (runnable_task && iter.second.runnable && m_task_map[runnable_task].prio > iter.second.prio) {
-							runnable_task = iter.first; // This task is higher priority
-						} else if (!runnable_task && iter.second.runnable) {
-							runnable_task = iter.first; // First runnable task found
+					for ( const auto &task : m_task_map ) {
+						if (runnable_task && task.second.runnable && m_task_map[runnable_task].prio > task.second.prio) {
+							runnable_task = task.first; // This task is higher priority
+						} else if (!runnable_task && task.second.runnable) {
+							runnable_task = task.first; // First runnable task found
 						}
 					}
 
