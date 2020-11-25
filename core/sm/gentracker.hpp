@@ -23,6 +23,11 @@ struct SaltwaterSwitchEvent         : tinyfsm::Event { bool state; };
 struct ConfigurationStatusEvent     : tinyfsm::Event { bool is_valid; };
 struct ErrorEvent : tinyfsm::Event { ErrorCode error_code; };
 
+// Class prototypes
+class BootState;
+class OperationalState;
+class ConfigurationState;
+class ErrorState;
 
 class GenTracker : public tinyfsm::Fsm<GenTracker>
 {
