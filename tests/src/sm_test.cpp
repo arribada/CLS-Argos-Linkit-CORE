@@ -1,131 +1,36 @@
 #include "gentracker.hpp"
-#include "filesystem.hpp"
-#include "timer.hpp"
-#include "gps_scheduler.hpp"
-#include "comms_scheduler.hpp"
 #include "debug.hpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
+
+#include "mock_ble_serv.hpp"
+#include "mock_comms.hpp"
+#include "mock_config_store.hpp"
+#include "mock_fs.hpp"
+#include "mock_gps.hpp"
+#include "mock_logger.hpp"
+#include "mock_timer.hpp"
+#include "scheduler.hpp"
+
 
 
 #define BLOCK_COUNT   (256)
 #define BLOCK_SIZE    (64*1024)
 #define PAGE_SIZE     (256)
 
-// Global contexts
-FileSystem *main_filesystem = 0;
-ConsoleLog *console_log = new ConsoleLog;
-Timer *system_timer;
-ConfigurationStore *configuration_store;
-GPSScheduler *gps_scheduler;
-CommsScheduler *comms_scheduler;
-Scheduler *system_scheduler;
-Logger *sensor_log;
-Logger *system_log;
-BLEService *dte_service;
-BLEService *ota_update_service;
+// These are defined by main.cpp
+extern FileSystem *main_filesystem ;
+extern Timer *system_timer;
+extern ConfigurationStore *configuration_store;
+extern GPSScheduler *gps_scheduler;
+extern CommsScheduler *comms_scheduler;
+extern Scheduler *system_scheduler;
+extern Logger *sensor_log;
+extern Logger *system_log;
+extern BLEService *dte_service;
+extern BLEService *ota_update_service;
 
-
-// Mocked classes
-class MockTimer : public Timer {
-public:
-	uint64_t get_counter() {
-		//return mock().actualCall("get_counter").returnLongIntValue();
-		return 0;
-	}
-	void add_schedule(TimerSchedule &s) {}
-	void cancel_schedule(TimerSchedule const &s) {}
-	void cancel_schedule(TimerEvent const &e) {}
-	void cancel_schedule(void *user_arg) {}
-	void start() {
-		mock().actualCall("start").onObject(this);
-	}
-	void stop() {
-		mock().actualCall("stop").onObject(this);
-	}
-};
-
-class MockConfigurationStore : public ConfigurationStore {
-public:
-	void init() {
-		mock().actualCall("init").onObject(this);
-	}
-	bool is_valid() {
-		return mock().actualCall("is_valid").onObject(this).returnBoolValue();
-	}
-	void notify_saltwater_switch_state(bool state) {
-		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
-	}
-};
-
-class MockGPSScheduler : public GPSScheduler {
-public:
-	void start() {
-		mock().actualCall("start").onObject(this);
-	}
-	void stop() {
-		mock().actualCall("stop").onObject(this);
-	}
-	void notify_saltwater_switch_state(bool state) {
-		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
-	}
-};
-
-class MockArgosScheduler : public CommsScheduler {
-public:
-	void start() {
-		mock().actualCall("start").onObject(this);
-	}
-	void stop() {
-		mock().actualCall("stop").onObject(this);
-	}
-	void notify_saltwater_switch_state(bool state) {
-		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
-	}
-};
-
-class MockLog : public Logger {
-public:
-
-	void create() {
-		mock().actualCall("create").onObject(this);
-	}
-
-	void write(void *entry) {
-		mock().actualCall("create").onObject(this).withParameter("entry", entry);
-	}
-
-	void read(void *entry, int index=0) {
-		mock().actualCall("create").onObject(this).withParameter("entry", entry).withParameter("index", index);
-	}
-
-	unsigned int num_entries() {
-		return mock().actualCall("num_entries").returnIntValue();
-	}
-};
-
-class MockBLEService : public BLEService {
-	void start(void (*on_connected)(void), void (*on_disconnected)(void)) {
-		mock().actualCall("start").onObject(this).withParameter("on_connected", on_connected).withParameter("on_disconnected", on_disconnected);
-	}
-	void stop() {
-		mock().actualCall("stop").onObject(this);
-	}
-};
-
-class MockFileSystem : public FileSystem {
-public:
-	int mount() {
-		return mock().actualCall("mount").onObject(this).returnIntValue();
-	}
-	int umount() {
-		return mock().actualCall("umount").onObject(this).returnIntValue();
-	}
-	int format() {
-		return mock().actualCall("format").onObject(this).returnIntValue();
-	}
-};
 
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
@@ -140,7 +45,7 @@ TEST_GROUP(Sm)
 		system_timer = new MockTimer;
 		configuration_store = new MockConfigurationStore;
 		gps_scheduler = new MockGPSScheduler;
-		comms_scheduler = new MockArgosScheduler;
+		comms_scheduler = new MockCommsScheduler;
 		system_scheduler = new Scheduler(system_timer);
 		sensor_log = new MockLog;
 		system_log = new MockLog;
