@@ -12,6 +12,7 @@ public:
 		mock().actualCall("stop").onObject(this);
 	}
 	void notify_saltwater_switch_state(bool state) {
+		DEBUG_TRACE("MockGPSScheduler: notify_saltwater_switch_state");
 		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
 	}
 };

@@ -36,6 +36,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/scheduling"
     "${ROOT_DIR}/ports/linux"
     "mocks"
+    "fakes"
 )
 
 target_sources(${PROJECT_NAME} PRIVATE

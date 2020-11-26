@@ -1,6 +1,9 @@
 #include "gentracker.hpp"
 #include "debug.hpp"
 
+#include "fake_switch.hpp"
+#include "fake_led.hpp"
+
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
@@ -30,6 +33,9 @@ extern Logger *sensor_log;
 extern Logger *system_log;
 extern BLEService *dte_service;
 extern BLEService *ota_update_service;
+extern Led *error_led;
+extern Switch *saltwater_switch;
+extern Switch *reed_switch;
 
 
 // FSM initial state -> BootState
@@ -39,6 +45,9 @@ using fsm_handle = GenTracker;
 
 TEST_GROUP(Sm)
 {
+	FakeSwitch *fake_reed_switch;
+	FakeSwitch *fake_saltwater_switch;
+
 	void setup() {
 		MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
 		main_filesystem = new MockFileSystem;
@@ -51,6 +60,11 @@ TEST_GROUP(Sm)
 		system_log = new MockLog;
 		dte_service = new MockBLEService;
 		ota_update_service = new MockBLEService;
+		error_led = new FakeLed("ERROR");
+		fake_saltwater_switch = new FakeSwitch(0, 0);
+		saltwater_switch = fake_saltwater_switch;
+		fake_reed_switch = new FakeSwitch(0, 0);
+		reed_switch = fake_reed_switch;
 	}
 
 	void teardown() {
@@ -61,6 +75,9 @@ TEST_GROUP(Sm)
 		delete comms_scheduler;
 		delete sensor_log;
 		delete system_log;
+		delete error_led;
+		delete fake_reed_switch;
+		delete fake_saltwater_switch;
 		MemoryLeakWarningPlugin::restoreNewDeleteOverloads();
 	}
 };
@@ -126,6 +143,8 @@ TEST(Sm, CheckBootStateInvokesSchedulerToCheckConfigStore)
 	system_scheduler->run([](int e){}, 1);
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
 	mock().checkExpectations();
+	CHECK_TRUE(fake_reed_switch->is_started());
+	CHECK_TRUE(fake_saltwater_switch->is_started());
 }
 
 TEST(Sm, CheckBootTransitionsToOperationalWithValidConfig)
@@ -160,9 +179,66 @@ TEST(Sm, CheckBootEnterConfigStateOnReedSwitchActive)
 	mock().disable();
 	fsm_handle::start();
 	mock().enable();
+
+	// Inject the event directly
 	ReedSwitchEvent e;
 	e.state = true;
 	fsm_handle::dispatch(e);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
+	mock().checkExpectations();
+
+	// Inject the event from fake switch notification
+	mock().disable();
+	fsm_handle::start();
+	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
+	fake_reed_switch->set_state(true);
+	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
+}
+
+TEST(Sm, CheckSaltwaterSwitchNotificationsDuringOperationalState)
+{
+	mock().disable();
+	fsm_handle::start();
+
+	{
+		ConfigurationStatusEvent e;
+		e.is_valid = true;
+		fsm_handle::dispatch(e);
+	}
+
+	mock().enable();
+
+	// Inject events directly
+
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", true);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(gps_scheduler).withParameter("state", true);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(configuration_store).withParameter("state", true);
+
+	{
+		SaltwaterSwitchEvent e;
+		e.state = true;
+		fsm_handle::dispatch(e);
+	}
+
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", false);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(gps_scheduler).withParameter("state", false);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(configuration_store).withParameter("state", false);
+
+	{
+		SaltwaterSwitchEvent e;
+		e.state = false;
+		fsm_handle::dispatch(e);
+	}
+
+	// Inject events from fake switch
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", true);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(gps_scheduler).withParameter("state", true);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(configuration_store).withParameter("state", true);
+	fake_saltwater_switch->set_state(true);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", false);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(gps_scheduler).withParameter("state", false);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(configuration_store).withParameter("state", false);
+	fake_saltwater_switch->set_state(false);
+
 	mock().checkExpectations();
 }

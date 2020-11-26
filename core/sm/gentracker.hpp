@@ -14,7 +14,8 @@
 #include "error.hpp"
 #include "timer.hpp"
 #include "debug.hpp"
-
+#include "switch.hpp"
+#include "led.hpp"
 
 // These contexts must be created before the FSM is initialised
 extern FileSystem *main_filesystem;
@@ -27,7 +28,9 @@ extern Logger *system_log;
 extern ConfigurationStore *configuration_store;
 extern BLEService *dte_service;
 extern BLEService *ota_update_service;
-
+extern Switch *saltwater_switch;
+extern Switch *reed_switch;
+extern Led *error_led;
 
 struct ReedSwitchEvent              : tinyfsm::Event { bool state; };
 struct SaltwaterSwitchEvent         : tinyfsm::Event { bool state; };
@@ -52,10 +55,7 @@ public:
 			transit<ConfigurationState>();
 		}
 	};
-	void react(SaltwaterSwitchEvent const &event) {
-		DEBUG_TRACE("react: SaltwaterSwitchEvent");
-		configuration_store->notify_saltwater_switch_state(event.state);
-	};
+	virtual void react(SaltwaterSwitchEvent const &event) { };
 	virtual void react(ConfigurationStatusEvent const &) { };
 	void react(ErrorEvent const &event) {
 		last_error = event.error_code;
@@ -102,6 +102,13 @@ class BootState : public GenTracker
 		// Ensure the system timer is started to allow scheduling to work
 		system_timer->start();
 
+		// Start both the saltwater and reed switch monitoring
+		reed_switch->start([](bool state) { ReedSwitchEvent e; e.state = state; dispatch(e); });
+		saltwater_switch->start([](bool state) { SaltwaterSwitchEvent e; e.state = state; dispatch(e); });
+
+		// Turn off LEDs
+		error_led->off();
+
 		try {
 			// The underlying classes will create the files on the filesystem if they do not
 			// already yet exist
@@ -113,6 +120,12 @@ class BootState : public GenTracker
 			system_scheduler->post_task_prio(notify_bad_filesystem_error);
 		}
 	}
+
+	void react(SaltwaterSwitchEvent const &event)
+	{
+		DEBUG_TRACE("react: SaltwaterSwitchEvent");
+		configuration_store->notify_saltwater_switch_state(event.state);
+	};
 
 	void react(ConfigurationStatusEvent const &event)
 	{
@@ -149,6 +162,12 @@ class OperationalState : public GenTracker
 
 class ConfigurationState : public GenTracker
 {
+	void react(SaltwaterSwitchEvent const &event)
+	{
+		DEBUG_TRACE("react: SaltwaterSwitchEvent");
+		configuration_store->notify_saltwater_switch_state(event.state);
+	};
+
 	void react(ReedSwitchEvent const &event)
 	{
 		DEBUG_TRACE("react: ReedSwitchEvent");
@@ -178,6 +197,12 @@ class ConfigurationState : public GenTracker
 
 class ErrorState : public GenTracker
 {
+	void react(SaltwaterSwitchEvent const &event)
+	{
+		DEBUG_TRACE("react: SaltwaterSwitchEvent");
+		configuration_store->notify_saltwater_switch_state(event.state);
+	};
+
 	void react(ReedSwitchEvent const &event)
 	{
 		DEBUG_TRACE("react: ReedSwitchEvent");
@@ -200,7 +225,7 @@ class ErrorState : public GenTracker
 	}
 
 	static void error_task() {
-		// TODO: handle LED error indication display on LEDs
+		// TODO: handle LED error indication display on error LED
 
 		// Invoke the scheduler to call us again in 1 second
 		system_scheduler->post_task_prio(error_task, Scheduler::DEFAULT_PRIORITY, 1000);

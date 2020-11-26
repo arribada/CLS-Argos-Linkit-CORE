@@ -7,6 +7,8 @@
 #include "scheduler.hpp"
 #include "logger.hpp"
 #include "ble_service.hpp"
+#include "led.hpp"
+#include "switch.hpp"
 
 #include "CppUTest/CommandLineTestRunner.h"
 
@@ -22,6 +24,9 @@ Logger *sensor_log;
 Logger *system_log;
 BLEService *dte_service;
 BLEService *ota_update_service;
+Switch *reed_switch;
+Switch *saltwater_switch;
+Led *error_led;
 
 
 int main(int ac, char *av[])
