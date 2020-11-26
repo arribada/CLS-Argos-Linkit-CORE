@@ -26,7 +26,9 @@ BLEService *dte_service;
 BLEService *ota_update_service;
 Switch *reed_switch;
 Switch *saltwater_switch;
-Led *error_led;
+Led *red_led;
+Led *green_led;
+Led *blue_led;
 
 
 int main(int ac, char *av[])

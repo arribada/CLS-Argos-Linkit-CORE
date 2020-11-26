@@ -30,7 +30,9 @@ extern BLEService *dte_service;
 extern BLEService *ota_update_service;
 extern Switch *saltwater_switch;
 extern Switch *reed_switch;
-extern Led *error_led;
+extern Led *red_led;
+extern Led *green_led;
+extern Led *blue_led;
 
 struct ReedSwitchEvent              : tinyfsm::Event { bool state; };
 struct SaltwaterSwitchEvent         : tinyfsm::Event { bool state; };
@@ -106,8 +108,10 @@ class BootState : public GenTracker
 		reed_switch->start([](bool state) { ReedSwitchEvent e; e.state = state; dispatch(e); });
 		saltwater_switch->start([](bool state) { SaltwaterSwitchEvent e; e.state = state; dispatch(e); });
 
-		// Turn off LEDs
-		error_led->off();
+		// Turn off all LEDs
+		red_led->off();
+		green_led->off();
+		blue_led->off();
 
 		try {
 			// The underlying classes will create the files on the filesystem if they do not
@@ -148,16 +152,20 @@ class OperationalState : public GenTracker
 
 	void entry() {
 		DEBUG_TRACE("entry: OperationalState");
+		// Flash the green LED for 5 seconds
+		green_led->flash();
+		system_scheduler->post_task_prio([](){green_led->off();}, Scheduler::DEFAULT_PRIORITY, 5000);
+
 		gps_scheduler->start();
 		comms_scheduler->start();
 	}
 
 	void exit() {
 		DEBUG_TRACE("exit: OperationalState");
+		green_led->off();
 		gps_scheduler->stop();
 		comms_scheduler->stop();
 	}
-
 };
 
 class ConfigurationState : public GenTracker
@@ -178,12 +186,20 @@ class ConfigurationState : public GenTracker
 
 	void entry() {
 		DEBUG_TRACE("entry: ConfigurationState");
+
+		// Flash the blue LED to indicate we have started BLE and we are
+		// waiting for a connection
+		blue_led->flash();
+
 		dte_service->start([] {
+			// Indicate DTE connection is made
+			blue_led->on();
 		},
 		[]() {
 			// After a DTE disconnection, re-evaluate if the configuration store
 			// is valid and notify all event listeners
 			system_scheduler->post_task_prio(notify_config_store_state);
+			blue_led->off();
 		});
 		ota_update_service->start([]{}, []{});
 	}
@@ -192,6 +208,7 @@ class ConfigurationState : public GenTracker
 		DEBUG_TRACE("exit: ConfigurationState");
 		dte_service->stop();
 		ota_update_service->stop();
+		blue_led->off();
 	}
 };
 

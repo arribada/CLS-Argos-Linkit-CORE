@@ -33,7 +33,9 @@ extern Logger *sensor_log;
 extern Logger *system_log;
 extern BLEService *dte_service;
 extern BLEService *ota_update_service;
-extern Led *error_led;
+extern Led *red_led;
+extern Led *green_led;
+extern Led *blue_led;
 extern Switch *saltwater_switch;
 extern Switch *reed_switch;
 
@@ -47,6 +49,9 @@ TEST_GROUP(Sm)
 {
 	FakeSwitch *fake_reed_switch;
 	FakeSwitch *fake_saltwater_switch;
+	FakeLed *fake_red_led;
+	FakeLed *fake_green_led;
+	FakeLed *fake_blue_led;
 
 	void setup() {
 		MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
@@ -60,7 +65,12 @@ TEST_GROUP(Sm)
 		system_log = new MockLog;
 		dte_service = new MockBLEService;
 		ota_update_service = new MockBLEService;
-		error_led = new FakeLed("ERROR");
+		fake_red_led = new FakeLed("RED");
+		red_led = fake_red_led;
+		fake_green_led = new FakeLed("GREEN");
+		green_led = fake_green_led;
+		fake_blue_led = new FakeLed("BLUE");
+		blue_led = fake_blue_led;
 		fake_saltwater_switch = new FakeSwitch(0, 0);
 		saltwater_switch = fake_saltwater_switch;
 		fake_reed_switch = new FakeSwitch(0, 0);
@@ -75,7 +85,9 @@ TEST_GROUP(Sm)
 		delete comms_scheduler;
 		delete sensor_log;
 		delete system_log;
-		delete error_led;
+		delete fake_red_led;
+		delete fake_green_led;
+		delete fake_blue_led;
 		delete fake_reed_switch;
 		delete fake_saltwater_switch;
 		MemoryLeakWarningPlugin::restoreNewDeleteOverloads();
@@ -159,6 +171,22 @@ TEST(Sm, CheckBootTransitionsToOperationalWithValidConfig)
 	fsm_handle::dispatch(e);
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	mock().checkExpectations();
+	CHECK_TRUE(fake_green_led->is_flashing());
+}
+
+TEST(Sm, CheckOperationalStateTransitionsToConfigState)
+{
+	mock().disable();
+	fsm_handle::start();
+	ConfigurationStatusEvent e;
+	e.is_valid = true;
+	fsm_handle::dispatch(e);
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	fake_reed_switch->set_state(true);
+	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
+	mock().enable();
+	CHECK_FALSE(fake_green_led->is_flashing());
+	CHECK_TRUE(fake_blue_led->is_flashing());
 }
 
 TEST(Sm, CheckRemainInBootStateWithoutValidConfig)
@@ -186,6 +214,7 @@ TEST(Sm, CheckBootEnterConfigStateOnReedSwitchActive)
 	fsm_handle::dispatch(e);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 	mock().checkExpectations();
+	CHECK_TRUE(fake_blue_led->is_flashing());
 
 	// Inject the event from fake switch notification
 	mock().disable();
@@ -193,6 +222,7 @@ TEST(Sm, CheckBootEnterConfigStateOnReedSwitchActive)
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
 	fake_reed_switch->set_state(true);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
+	CHECK_TRUE(fake_blue_led->is_flashing());
 }
 
 TEST(Sm, CheckSaltwaterSwitchNotificationsDuringOperationalState)
