@@ -35,6 +35,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/filesystem"
     "${ROOT_DIR}/core/scheduling"
     "${ROOT_DIR}/ports/linux"
+    "${ROOT_DIR}/core/protocol"
     "mocks"
     "fakes"
 )
@@ -46,6 +47,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/filesystem_test.cpp"
     "src/scheduler_test.cpp"
     "src/sm_test.cpp"
+    "src/protocol_test.cpp"
     "src/main.cpp"
 )
 
