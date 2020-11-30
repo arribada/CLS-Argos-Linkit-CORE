@@ -5,6 +5,9 @@
 #include <vector>
 #include <variant>
 
+#include "base_types.hpp"
+
+
 #define RESP_CMD_BASE   0x80
 
 enum class DTECommand {
@@ -22,6 +25,7 @@ enum class DTECommand {
 	DUMPD_REQ,
 	RESET_REQ,
 	FACTR_REQ,
+	__NUM_REQ,
 	PARML_RESP = RESP_CMD_BASE,
 	PARMR_RESP,
 	PARMW_RESP,
@@ -35,31 +39,13 @@ enum class DTECommand {
 	DUMPL_RESP,
 	DUMPD_RESP,
 	RESET_RESP,
-	FACTR_RESP
-};
-
-enum class DTECommandArgType {
-	DECIMAL,
-	HEXADECIMAL,
-	BASE64,
-	TEXT,
-	KEY_LIST,
-	KEY_VALUE_LIST
-};
-
-using DTECommandArgConstraint = std::variant<int, float>;
-
-struct DTECommandArgMap {
-	std::string name;
-	DTECommandArgType type;
-	DTECommandArgConstraint min_value;
-	DTECommandArgConstraint max_value;
-	std::vector<DTECommandArgConstraint> permitted_values;
+	FACTR_RESP,
+	__NUM_RESP
 };
 
 struct DTECommandMap {
 	std::string name;
-	std::vector<DTECommandArgMap> prototype;
+	std::vector<BaseMap> prototype;
 };
 
 static const DTECommandMap command_map[] = {
@@ -71,25 +57,25 @@ static const DTECommandMap command_map[] = {
 	{
 		"PARMR",
 		{
-			{ "keys", DTECommandArgType::KEY_LIST, 0, 0, {} }
+			{ "keys", "", BaseEncoding::KEY_LIST, 0, 0, {} }
 		}
 	},
 	{
 		"PARMW",
 		{
-			{ "key_values", DTECommandArgType::KEY_VALUE_LIST, 0, 0, {} }
+			{ "key_values", "", BaseEncoding::KEY_VALUE_LIST, 0, 0, {} }
 		}
 	},
 	{
 		"ZONER",
 		{
-			{ "zone_id", DTECommandArgType::KEY_LIST, 1, 1, {} }
+			{ "zone_id", "", BaseEncoding::KEY_LIST, 1, 1, {} }
 		}
 	},
 	{
 		"ZONEW",
 		{
-			{ "zone_file", DTECommandArgType::BASE64, 0, 0, {} }
+			{ "zone_file", "", BaseEncoding::BASE64, 0, 0, {} }
 		}
 	},
 	{
@@ -100,20 +86,25 @@ static const DTECommandMap command_map[] = {
 	{
 		"PROFW",
 		{
-			{ "profile_name", DTECommandArgType::TEXT, 1, 128, {} }
+			{ "profile_name", "", BaseEncoding::TEXT, 1, 128, {} }
 		}
 	},
 	{
 		"PASPW",
 		{
-			{ "prepass_file", DTECommandArgType::BASE64, 0, 0, {} }
+			{ "prepass_file", "", BaseEncoding::BASE64, 0, 0, {} }
+		}
+	},
+	{
+		"SECUR",
+		{
 		}
 	},
 	{
 		"DUMPM",
 		{
-			{ "start_address", DTECommandArgType::HEXADECIMAL, 0, 0, {} },
-			{ "length", DTECommandArgType::HEXADECIMAL, 0, 0x500, {} }
+			{ "start_address", "", BaseEncoding::HEXADECIMAL, 0U, 0U, {} },
+			{ "length", "", BaseEncoding::HEXADECIMAL, 0U, 0x500U, {} }
 		}
 	},
 	{
@@ -139,13 +130,13 @@ static const DTECommandMap command_map[] = {
 	{
 		"PARML",
 		{
-			{ "keys", DTECommandArgType::KEY_LIST, 0, 0, {} }
+			{ "keys", "", BaseEncoding::KEY_LIST, 0, 0, {} }
 		}
 	},
 	{
 		"PARMR",
 		{
-			{ "key_values", DTECommandArgType::KEY_VALUE_LIST, 0, 0, {} }
+			{ "key_values", "", BaseEncoding::KEY_VALUE_LIST, 0, 0, {} }
 		}
 	},
 	{
@@ -156,7 +147,7 @@ static const DTECommandMap command_map[] = {
 	{
 		"ZONER",
 		{
-			{ "zone_file", DTECommandArgType::BASE64, 0, 0, {} }
+			{ "zone_file", "", BaseEncoding::BASE64, 0, 0, {} }
 		}
 	},
 	{
@@ -167,7 +158,7 @@ static const DTECommandMap command_map[] = {
 	{
 		"PROFR",
 		{
-			{ "profile_name", DTECommandArgType::TEXT, 1, 128, {} }
+			{ "profile_name", "", BaseEncoding::TEXT, "", "", {} }
 		}
 	},
 	{
@@ -181,21 +172,26 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 	{
+		"SECUR",
+		{
+		}
+	},
+	{
 		"DUMPM",
 		{
-			{ "data", DTECommandArgType::BASE64, 0, 0, {} }
+			{ "data", "", BaseEncoding::BASE64, 0, 0, {} }
 		}
 	},
 	{
 		"DUMPL",
 		{
-			{ "data", DTECommandArgType::BASE64, 0, 0, {} }
+			{ "data", "", BaseEncoding::BASE64, 0, 0, {} }
 		}
 	},
 	{
 		"DUMPD",
 		{
-			{ "data", DTECommandArgType::BASE64, 0, 0, {} }
+			{ "data", "", BaseEncoding::BASE64, 0, 0, {} }
 		}
 	},
 	{

@@ -7,6 +7,9 @@
 #include <tuple>
 #include <ctime>
 
+#include "base_types.hpp"
+
+
 enum class ParamID {
 	ARGOS_DECID,
 	ARGOS_HEXID,
@@ -51,115 +54,52 @@ enum class ParamID {
 	__NULL_PARAM = 0xFFFF
 };
 
-enum class ParamEncoding {
-	DECIMAL,
-	HEXADECIMAL,
-	TEXT,
-	DATESTRING,
-	BASE64,
-	BOOLEAN,
-	UINT,
-	FLOAT,
-	DEPTHPILE,
-	ARGOSMODE,
-	ARGOSPOWER
-};
-
-
-enum class ParamArgosMode {
-	OFF,
-	LEGACY,
-	PASS_PREDICTION,
-	DUTY_CYCLE
-};
-
-enum class ParamArgosPower {
-	POWER_250_MW,
-	POWER_500_MW,
-	POWER_750_MW,
-	POWER_1000_MW
-};
-
-enum class ParamArgosDepthPile {
-	DEPTH_PILE_1 = 1,
-	DEPTH_PILE_2,
-	DEPTH_PILE_3,
-	DEPTH_PILE_4,
-	DEPTH_PILE_8 = 8,
-	DEPTH_PILE_12,
-	DEPTH_PILE_16,
-	DEPTH_PILE_20,
-	DEPTH_PILE_24
-};
-
-using ParamKey = std::string;
-using ParamName = std::string;
-using ParamConstraint = std::variant<int, float>;
-
-struct ParamMap {
-	ParamName 	   name;
-	ParamKey  	   key;
-	ParamEncoding  encoding;
-	ParamConstraint min_value;
-	ParamConstraint max_value;
-	std::vector<ParamConstraint> permitted_values;
-	bool           is_implemented;
-};
-
-struct DTEBase64 {
-	void *ptr;
-	unsigned int length;
-};
-
-using ParamType = std::variant<unsigned int, int, float, std::string, std::time_t, DTEBase64, ParamArgosMode, ParamArgosPower, ParamArgosDepthPile>;
-
 struct ParamValue {
-	ParamID   param;
-	ParamType value;
+	ParamID  param;
+	BaseType value;
 };
 
-
-static const ParamMap param_map[] = {
-	{ "ARGOS_DECID", "IDT06", ParamEncoding::DECIMAL, 0, 0, {}, true },
-	{ "ARGOS_HEXID", "IDT07", ParamEncoding::HEXADECIMAL, 0, 0, {}, true },
-	{ "DEVICE_MODEL", "IDT02", ParamEncoding::HEXADECIMAL, 0, 0, {}, true },
-	{ "FW_APP_VERSION", "IDT03", ParamEncoding::TEXT, 0, 0, {}, true },
-	{ "LAST_TX", "ART01", ParamEncoding::DATESTRING, 0, 0, {}, true },
-	{ "TX_COUNTER", "ART02", ParamEncoding::UINT, 0, 0, {}, true },
-	{ "BATT_SOC", "POT03", ParamEncoding::UINT, 0, 100, {}, true },
-	{ "LAST_FULL_CHARGE_DATE", "POT05", ParamEncoding::DATESTRING, 0, 0, {}, true },
-	{ "PROFILE_NAME", "IDP09", ParamEncoding::TEXT, 0, 0, {}, true },  // FIXME: type is not specified in spreadsheet
-	{ "AOP_STATUS", "", ParamEncoding::BASE64, 0, 0, {}, true },  // FIXME: missing parameter key
-	{ "ARGOS_AOP_DATE", "ART03", ParamEncoding::DATESTRING, 0, 0, {}, true },
-	{ "ARGOS_FREQ", "ARP03", ParamEncoding::FLOAT, 399.91f, 401.68f, {}, true },
-	{ "ARGOS_POWER", "ARP04", ParamEncoding::ARGOSPOWER, 0, 0, { 250, 500, 750, 1000 }, true },
-	{ "TR_NOM", "ARP05", ParamEncoding::DECIMAL, 45, 1200, {}, true },
-	{ "ARGOS_MODE", "ARP01", ParamEncoding::ARGOSMODE, 0, 0, { 0, 1, 2, 3 }, true },
-	{ "NTRY_PER_MESSAGE", "ARP19", ParamEncoding::DECIMAL, 0, 86400, {}, true },
-	{ "DUTY_CYCLE", "ARP18", ParamEncoding::HEXADECIMAL, 0, 0xFFFFFF, {}, true },
-	{ "GNSS_EN", "GNP01", ParamEncoding::BOOLEAN, 0, 0, {}, true },
-	{ "DLOC_ARG_NOM", "ARP11", ParamEncoding::DECIMAL, 0, 0, { 10, 15, 30, 60, 120, 360, 720, 1440 }, true },
-	{ "ARGOS_DEPTH_PILE", "ARP16", ParamEncoding::DEPTHPILE, 1, 12, {}, true },
-	{ "GPS_CONST_SELECT", "", ParamEncoding::DECIMAL, 0, 0, {}, false },  // FIXME: missing parameter key
-	{ "GLONASS_CONST_SELECT", "GNP08", ParamEncoding::DECIMAL, 0, 0, {}, false },
-	{ "GNSS_HDOPFILT_EN", "GNP02", ParamEncoding::BOOLEAN, 0, 0, {}, true },
-	{ "GNSS_HDOPFILT_THR", "GNP03", ParamEncoding::DECIMAL, 2, 15, {}, true },
-	{ "GNSS_ACQ_TIMEOUT", "GNP05", ParamEncoding::DECIMAL, 10, 60, {}, true },
-	{ "GNSS_NTRY", "GNP04", ParamEncoding::DECIMAL, 0, 0, {}, false },
-	{ "UNDERWATER_EN", "UNP01", ParamEncoding::BOOLEAN, 0, 0, {}, true },
-	{ "DRY_TIME_BEFORE_TX", "UNP02", ParamEncoding::DECIMAL, 1, 1440, {}, true },
-	{ "SAMPLING_UNDER_FREQ", "UNP03", ParamEncoding::DECIMAL, 1, 1440, {}, true },
-	{ "LB_EN", "LBP01", ParamEncoding::BOOLEAN, 0, 0, {}, true },
-	{ "LB_TRESHOLD", "LBP02", ParamEncoding::DECIMAL, 0, 100, {}, true },
-	{ "LB_ARGOS_POWER", "LBP03", ParamEncoding::ARGOSPOWER, 0, 0, { 250, 500, 750, 1000 }, true },
-	{ "TR_LB", "ARP06", ParamEncoding::DECIMAL, 45, 1200, {}, true },
-	{ "LB_ARGOS_MODE", "LBP04", ParamEncoding::ARGOSMODE, 0, 0, { 0, 1, 2, 3 }, true },
-	{ "LB_ARGOS_DUTY_CYCLE", "LBP05", ParamEncoding::HEXADECIMAL, 0, 0xFFFFFF, {}, true },
-	{ "LB_GNSS_EN", "LBP06", ParamEncoding::BOOLEAN, 0, 0, {}, true },
-	{ "DLOC_ARG_LB", "ARP12", ParamEncoding::DECIMAL, 0, 0, {}, true },
-	{ "LB_GNSS_HDOPFILT_THR", "LBP07", ParamEncoding::DECIMAL, 2, 15, {}, true },
-	{ "LB_ARGOS_DEPTH_PILE", "LBP08", ParamEncoding::DEPTHPILE, 0, 0, {1, 2, 3, 4, 9, 10, 11, 12}, true },
-	{ "LB_GNSS_ACQ_TIMEOUT", "LBP09", ParamEncoding::HEXADECIMAL, 10, 60, {}, true }
+static const BaseMap param_map[] = {
+	{ "ARGOS_DECID", "IDT06", BaseEncoding::UINT, 0U, 0xFFFFFFU, {}, true },
+	{ "ARGOS_HEXID", "IDT07", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFU, {}, true },
+	{ "DEVICE_MODEL", "IDT02", BaseEncoding::HEXADECIMAL, 0U, 0xFFU, {}, true },
+	{ "FW_APP_VERSION", "IDT03", BaseEncoding::TEXT, 0, 0, {}, true },
+	{ "LAST_TX", "ART01", BaseEncoding::DATESTRING, 0, 0, {}, true },
+	{ "TX_COUNTER", "ART02", BaseEncoding::UINT, 0U, 0U, {}, true },
+	{ "BATT_SOC", "POT03", BaseEncoding::UINT, 0U, 100U, {}, true },
+	{ "LAST_FULL_CHARGE_DATE", "POT05", BaseEncoding::DATESTRING, 0, 0, {}, true },
+	{ "PROFILE_NAME", "IDP09", BaseEncoding::TEXT, "", "", {}, true },  // FIXME: type is not specified in spreadsheet
+	{ "AOP_STATUS", "", BaseEncoding::BASE64, 0, 0, {}, true },  // FIXME: missing parameter key
+	{ "ARGOS_AOP_DATE", "ART03", BaseEncoding::DATESTRING, 0, 0, {}, true },
+	{ "ARGOS_FREQ", "ARP03", BaseEncoding::FLOAT, 399.91f, 401.68f, {}, true },
+	{ "ARGOS_POWER", "ARP04", BaseEncoding::ARGOSPOWER, 0U, 0U, { 250U, 500U, 750U, 1000U }, true },
+	{ "TR_NOM", "ARP05", BaseEncoding::UINT, 45U, 1200U, {}, true },
+	{ "ARGOS_MODE", "ARP01", BaseEncoding::ARGOSMODE, 0, 0, { 0, 1, 2, 3 }, true },
+	{ "NTRY_PER_MESSAGE", "ARP19", BaseEncoding::UINT, 0U, 86400U, {}, true },
+	{ "DUTY_CYCLE", "ARP18", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFU, {}, true },
+	{ "GNSS_EN", "GNP01", BaseEncoding::BOOLEAN, 0, 0, {}, true },
+	{ "DLOC_ARG_NOM", "ARP11", BaseEncoding::UINT, 0U, 0U, { 10U, 15U, 30U, 60U, 120U, 360U, 720U, 1440U }, true },
+	{ "ARGOS_DEPTH_PILE", "ARP16", BaseEncoding::DEPTHPILE, 1, 12, {}, true },
+	{ "GPS_CONST_SELECT", "", BaseEncoding::DECIMAL, 0, 0, {}, false },  // FIXME: missing parameter key
+	{ "GLONASS_CONST_SELECT", "GNP08", BaseEncoding::DECIMAL, 0, 0, {}, false },
+	{ "GNSS_HDOPFILT_EN", "GNP02", BaseEncoding::BOOLEAN, 0, 0, {}, true },
+	{ "GNSS_HDOPFILT_THR", "GNP03", BaseEncoding::UINT, 2U, 15U, {}, true },
+	{ "GNSS_ACQ_TIMEOUT", "GNP05", BaseEncoding::UINT, 10U, 60U, {}, true },
+	{ "GNSS_NTRY", "GNP04", BaseEncoding::UINT, 0U, 0U, {}, false },
+	{ "UNDERWATER_EN", "UNP01", BaseEncoding::BOOLEAN, 0, 0, {}, true },
+	{ "DRY_TIME_BEFORE_TX", "UNP02", BaseEncoding::UINT, 1U, 1440U, {}, true },
+	{ "SAMPLING_UNDER_FREQ", "UNP03", BaseEncoding::UINT, 1U, 1440U, {}, true },
+	{ "LB_EN", "LBP01", BaseEncoding::BOOLEAN, 0, 0, {}, true },
+	{ "LB_TRESHOLD", "LBP02", BaseEncoding::UINT, 0U, 100U, {}, true },
+	{ "LB_ARGOS_POWER", "LBP03", BaseEncoding::ARGOSPOWER, 0U, 0U, { 250U, 500U, 750U, 1000U }, true },
+	{ "TR_LB", "ARP06", BaseEncoding::UINT, 45U, 1200U, {}, true },
+	{ "LB_ARGOS_MODE", "LBP04", BaseEncoding::ARGOSMODE, 0U, 0U, { 0U, 1U, 2U, 3U }, true },
+	{ "LB_ARGOS_DUTY_CYCLE", "LBP05", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFU, {}, true },
+	{ "LB_GNSS_EN", "LBP06", BaseEncoding::BOOLEAN, 0, 0, {}, true },
+	{ "DLOC_ARG_LB", "ARP12", BaseEncoding::DECIMAL, 0, 0, {}, true },
+	{ "LB_GNSS_HDOPFILT_THR", "LBP07", BaseEncoding::UINT, 2U, 15U, {}, true },
+	{ "LB_ARGOS_DEPTH_PILE", "LBP08", BaseEncoding::DEPTHPILE, 0U, 0U, {1U, 2U, 3U, 4U, 9U, 10U, 11U, 12U}, true },
+	{ "LB_GNSS_ACQ_TIMEOUT", "LBP09", BaseEncoding::HEXADECIMAL, 10U, 60U, {}, true }
 };
 
 #endif // __DTE_PARAMS_HPP_
