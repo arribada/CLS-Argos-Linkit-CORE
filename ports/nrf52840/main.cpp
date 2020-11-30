@@ -15,7 +15,7 @@ FSM_INITIAL_STATE(GenTracker, BootState)
 
 using fsm_handle = GenTracker;
 
-void main() {
+int main() {
 	// Setup global contexts
 	// TODO: this should be replaced with a new FlashFileSystem variant
 	main_filesystem = new RamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
@@ -27,7 +27,9 @@ void main() {
 	// lambda function which passes them into the FSM
 	Scheduler::run([](int err) {
 		ErrorEvent e;
-		e.error_code = err;
+		e.error_code = static_cast<enum ErrorCode>(err);
 		fsm_handle::dispatch(e);
 	});
+
+	return 0;
 }
