@@ -47,7 +47,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/filesystem_test.cpp"
     "src/scheduler_test.cpp"
     "src/sm_test.cpp"
-    "src/protocol_test.cpp"
+    "src/encoder_test.cpp"
     "src/main.cpp"
 )
 

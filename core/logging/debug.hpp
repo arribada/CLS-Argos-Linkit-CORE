@@ -3,8 +3,6 @@
 
 #include "console_log.hpp"
 
-#define DEBUG_ENABLE
-
 #ifdef DEBUG_ENABLE
 
 extern ConsoleLog *console_log;
