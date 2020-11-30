@@ -17,6 +17,7 @@
 class DTEEncoder {
 private:
 	static inline void encode(std::ostringstream& output, const BaseArgosDepthPile& value) {
+		encode(output, (unsigned int&)value);
 	}
 	static inline void encode(std::ostringstream& output, const BaseArgosMode& value) {
 		encode(output, (unsigned int&)value);
@@ -56,7 +57,7 @@ private:
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		output << s;
 	}
-	static inline void encode(std::ostringstream& output, const float& value) {
+	static inline void encode(std::ostringstream& output, const double& value) {
 		output << value;
 	}
 	static inline void encode (std::ostringstream& output, const std::string& value) {
@@ -80,17 +81,17 @@ private:
 		}
 	}
 
-	static void validate(const BaseMap &arg_map, const float& value) {
-		const auto min_value = std::get<float>(arg_map.min_value);
-		const auto max_value = std::get<float>(arg_map.max_value);
-		if (min_value != 0 || max_value != 0 &&
+	static void validate(const BaseMap &arg_map, const double& value) {
+		const auto min_value = std::get<double>(arg_map.min_value);
+		const auto max_value = std::get<double>(arg_map.max_value);
+		if ((min_value != 0 || max_value != 0) &&
 			(value < min_value || value > max_value)) {
 			DEBUG_ERROR("parameter %s value out of min/max range", arg_map.name.c_str(), value, min_value, max_value);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 		if (!arg_map.permitted_values.empty() &&
 			std::find_if(arg_map.permitted_values.begin(), arg_map.permitted_values.end(), [value](const BaseConstraint x){
-				return std::get<float>(x) == value;
+				return std::get<double>(x) == value;
 			}) == arg_map.permitted_values.end()) {
 			DEBUG_ERROR("parameter %s not in permitted list", arg_map.name.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -100,7 +101,7 @@ private:
 	static void validate(const BaseMap &arg_map, const unsigned int& value) {
 		const auto min_value = std::get<unsigned int>(arg_map.min_value);
 		const auto max_value = std::get<unsigned int>(arg_map.max_value);
-		if (min_value != 0 || max_value != 0 &&
+		if ((min_value != 0 || max_value != 0) &&
 			(value < min_value || value > max_value)) {
 			DEBUG_ERROR("parameter %s value out of min/max range", arg_map.name.c_str(), value, min_value, max_value);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -117,7 +118,7 @@ private:
 	static void validate(const BaseMap &arg_map, const int& value) {
 		const auto min_value = std::get<int>(arg_map.min_value);
 		const auto max_value = std::get<int>(arg_map.max_value);
-		if (min_value != 0 || max_value != 0 &&
+		if ((min_value != 0 || max_value != 0) &&
 			(value < min_value || value > max_value)) {
 			DEBUG_ERROR("parameter %s value out of min/max range", arg_map.name.c_str(), value, min_value, max_value);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;

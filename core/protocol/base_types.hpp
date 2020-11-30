@@ -54,8 +54,8 @@ struct BaseRawData {
 
 using BaseKey = std::string;
 using BaseName = std::string;
-using BaseConstraint = std::variant<unsigned int, int, float, std::string>;
-using BaseType = std::variant<unsigned int, int, float, std::string, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile>;
+using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
+using BaseType = std::variant<unsigned int, int, double, std::string, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile>;
 
 struct BaseMap {
 	BaseName 	   name;
