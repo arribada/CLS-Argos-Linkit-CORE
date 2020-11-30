@@ -19,14 +19,23 @@ public:
 };
 
 class LFSFileSystem : public FileSystem {
+	friend class LFSFile;
 
 private:
+	struct lfs_config m_cfg;
 	lfs_t  m_lfs;
 
-	// Subclasses must implement their own static methods for LittleFS read, prog, erase and sync
+	static int lfs_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) { return reinterpret_cast<LFSFileSystem*>(c->context)->read(block, off, buffer, size); }
+	static int lfs_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) { return reinterpret_cast<LFSFileSystem*>(c->context)->prog(block, off, buffer, size); }
+	static int lfs_erase(const struct lfs_config *c, lfs_block_t block) { return reinterpret_cast<LFSFileSystem*>(c->context)->erase(block); }
+	static int lfs_sync(const struct lfs_config *c) { return reinterpret_cast<LFSFileSystem*>(c->context)->sync(); }
 
-protected:
-	struct lfs_config m_cfg;
+	// Derived classes must implement their own methods for LittleFS read, prog, erase and sync
+
+	virtual int read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) = 0;
+	virtual int prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) = 0;
+	virtual int erase(lfs_block_t block) = 0;
+	virtual int sync() = 0;
 
 public:
 	LFSFileSystem(unsigned int block_size, unsigned int blocks, unsigned int page_size) {
@@ -42,14 +51,20 @@ public:
 		m_cfg.block_cycles = 500;
 
 		// Buffers
-		m_cfg.read_buffer = new uint8_t[page_size]();
-		m_cfg.prog_buffer = new uint8_t[page_size]();
-		m_cfg.lookahead_buffer = new uint8_t[page_size]();
+		m_cfg.read_buffer = new uint8_t[page_size];
+		m_cfg.prog_buffer = new uint8_t[page_size];
+		m_cfg.lookahead_buffer = new uint8_t[page_size];
 
 		// Attrs
 		m_cfg.name_max = 32;
 		m_cfg.attr_max = 4;
 		m_cfg.file_max = 4*1024*1024;
+
+		// Function pointers
+		m_cfg.read  = lfs_read;
+		m_cfg.prog  = lfs_prog;
+		m_cfg.erase = lfs_erase;
+		m_cfg.sync  = lfs_sync;
 	}
 
 	~LFSFileSystem() {
@@ -70,7 +85,9 @@ public:
 		return lfs_format(&m_lfs, &m_cfg);
 	}
 
-	friend class LFSFile;
+	lfs_size_t get_block_size() {
+		return m_cfg.block_size;
+	}
 };
 
 
@@ -78,41 +95,33 @@ class LFSRamFileSystem : public LFSFileSystem {
 private:
 	uint8_t *m_block_ram;
 
-	static int read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) {
-		LFSRamFileSystem *fs = reinterpret_cast<LFSRamFileSystem*>(c->context);
-		if (fs->m_debug_trace)
+	int read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) override {
+		if (m_debug_trace)
 			std::cout << "read(" << block << " " << off << " " << size << ")\n";
-		uint32_t offset = (block * fs->m_cfg.block_size) + off;
-		std::memcpy(buffer, &fs->m_block_ram[offset], size);
-		return 0;
+		uint32_t offset = (block * get_block_size()) + off;
+		std::memcpy(buffer, &m_block_ram[offset], size);
+		return LFS_ERR_OK;
 	}
-	static int prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
-		LFSRamFileSystem *fs = reinterpret_cast<LFSRamFileSystem*>(c->context);
-		if (fs->m_debug_trace)
+	int prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) override {
+		if (m_debug_trace)
 			std::cout << "prog(" << block << " " << off << " " << size << ")\n";
-		uint32_t offset = (block * fs->m_cfg.block_size) + off;
-		std::memcpy(&fs->m_block_ram[offset], buffer, size);
-		return 0;
+		uint32_t offset = (block * get_block_size()) + off;
+		std::memcpy(&m_block_ram[offset], buffer, size);
+		return LFS_ERR_OK;
 	}
-	static int erase(const struct lfs_config *c, lfs_block_t block)
-	{
-		LFSRamFileSystem *fs = reinterpret_cast<LFSRamFileSystem*>(c->context);
-		if (fs->m_debug_trace)
+	int erase(lfs_block_t block) override {
+		if (m_debug_trace)
 			std::cout << "erase" << block << ")\n";
-		uint32_t offset = (block * fs->m_cfg.block_size);
-		std::memset(&fs->m_block_ram[offset], 0xFF, fs->m_cfg.block_size);
-		return 0;
+		uint32_t offset = (block * get_block_size());
+		std::memset(&m_block_ram[offset], 0xFF, get_block_size());
+		return LFS_ERR_OK;
 	}
-	static int sync(const struct lfs_config *c) { return 0; }
+	int sync() override { return LFS_ERR_OK; }
 
 public:
 	bool m_debug_trace;
 	LFSRamFileSystem(unsigned int block_size, unsigned int blocks, unsigned int page_size) : LFSFileSystem(block_size, blocks, page_size) {
-		m_block_ram = new uint8_t[block_size * blocks]();
-		m_cfg.read  = read;
-		m_cfg.prog  = prog;
-		m_cfg.erase = erase;
-		m_cfg.sync  = sync;
+		m_block_ram = new uint8_t[block_size * blocks];
 		m_debug_trace = false;
 	}
 	~LFSRamFileSystem() {
