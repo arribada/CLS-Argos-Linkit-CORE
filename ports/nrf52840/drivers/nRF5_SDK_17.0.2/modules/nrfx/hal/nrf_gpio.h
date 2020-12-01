@@ -881,6 +881,8 @@ __STATIC_INLINE bool nrf_gpio_pin_present_check(uint32_t pin_number)
             mask = P1_FEATURE_PINS_PRESENT;
             break;
 #endif
+        default:
+            break;
     }
 
     pin_number &= 0x1F;

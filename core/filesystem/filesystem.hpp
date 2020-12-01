@@ -7,8 +7,6 @@
 #include <stdint.h>
 #include "lfs.h"
 
-using namespace std;
-
 class File;
 
 class FileSystem {
