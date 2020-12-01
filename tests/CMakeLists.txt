@@ -48,7 +48,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/scheduler_test.cpp"
     "src/sm_test.cpp"
     "src/encoder_test.cpp"
-    "src/main.cpp"
+	"src/decoder_test.cpp"
+     "src/main.cpp"
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CppUTest CppUTestExt ${CMAKE_THREAD_LIBS_INIT})

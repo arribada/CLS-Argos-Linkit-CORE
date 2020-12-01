@@ -2,8 +2,11 @@
 #include <iomanip>
 #include <ctime>
 #include <stdarg.h>
+#include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <map>
+#include <regex>
 
 #include "debug.hpp"
 
@@ -14,8 +17,10 @@
 #include "error.hpp"
 
 
+class DTEDecoder;
+
 class DTEEncoder {
-private:
+protected:
 	static inline void encode(std::ostringstream& output, const BaseArgosDepthPile& value) {
 		encode(output, (unsigned int&)value);
 	}
@@ -321,4 +326,186 @@ public:
 
 		return buffer.str();
 	}
+
+	friend DTEDecoder;
 };
+
+
+class DTEDecoder {
+private:
+	static const DTECommandMap* lookup_command(std::string command_str, bool is_req) {
+		unsigned int start = is_req ? 0 : (unsigned int)DTECommand::__NUM_REQ;
+		unsigned int end = is_req ? (unsigned int)DTECommand::__NUM_REQ : sizeof(command_map)/sizeof(DTECommandMap);
+		for (unsigned int i = start; i < end; i++) {
+			if (command_map[i].name == command_str) {
+				//std::cout << "command: " << command_str << " match: " << command_map[i].name << "\n";
+				return &command_map[i];
+			}
+		}
+		throw DTE_PROTOCOL_UNKNOWN_COMMAND;
+	}
+
+	static ParamID lookup_key(std::string key) {
+		auto end = sizeof(param_map) / sizeof(BaseMap);
+		for (unsigned int i = 0; i < end; i++) {
+			if (param_map[i].key == key) {
+				return static_cast<ParamID>(i);
+			}
+		}
+		throw DTE_PROTOCOL_PARAM_KEY_UNRECOGNISED;
+	}
+
+	template <typename T>
+	static T decode(std::string s, bool is_hex=false)
+	{
+		std::istringstream ss(s);
+		return decode<T>(ss, is_hex);
+	}
+
+	template <typename T>
+	static T decode(std::istringstream& ss, bool is_hex=false)
+	{
+		T out;
+		if (is_hex)
+			ss >> std::hex;
+		ss >> out;
+		return out;
+	}
+
+	static void decode(std::istringstream& ss, std::vector<ParamID>& keys) {
+		std::string key;
+		while (std::getline(ss, key, ',')) {
+			keys.push_back(lookup_key(key));
+		}
+	}
+
+	static void decode(std::istringstream& ss, std::vector<ParamValue>& key_values) {
+		// TODO
+	}
+
+public:
+	static bool decode(std::string& str, DTECommand& command, unsigned int& error_code, std::vector<BaseType> &arg_list, std::vector<ParamID>& keys, std::vector<ParamValue>& key_values) {
+		bool is_req = false;
+		bool is_valid = false;
+
+		std::smatch base_match;
+		std::regex re_command_resp_ok("^\\$O;([A-Z]+)#([0-9a-fA-F]+);(.*)\r$");
+		std::regex re_command_resp_nok("^\\$N;([A-Z]+)#([0-9a-fA-F]+);([0-9]+)\r$");
+		std::regex re_command_req("^\\$([A-Z]+)#([0-9a-fA-F]+);(.*)\r");
+
+		if (std::regex_match(str, base_match, re_command_resp_ok) && base_match.size() >= 3) {
+			is_valid = true;
+			error_code = 0;
+		} else if (std::regex_match(str, base_match, re_command_resp_nok) && base_match.size() == 4 ) {
+			is_valid = true;
+			error_code = decode<unsigned int>(std::string(base_match.str(3)));
+		} else if (std::regex_match(str, base_match, re_command_req) && base_match.size() >= 3) {
+			is_valid = true;
+			is_req = true;
+			error_code = 0;
+		}
+
+		// Do not proceed without a valid command match e.g., only a partial buffer was presented
+		if (!is_valid)
+			return false;
+
+		// This will throw an exception if the command is not found
+		const DTECommandMap *cmd_ref = lookup_command(std::string(base_match.str(1)), is_req);
+		command = cmd_ref->command;
+
+		if (base_match.size() == 4 && error_code == 0) {
+
+			std::string payload = std::string(base_match.str(3));
+			unsigned int payload_size = decode<unsigned int>(std::string(base_match.str(2)), true);
+			std::istringstream ss(payload);
+
+			//std::cout << "payload=" << payload << " size=" << payload_size << "\n";
+			//std::cout << "args=" << cmd_ref->prototype.size() << "\n";
+
+			if (payload_size != payload.length()) {
+				//std::cout << "DTE_PROTOCOL_PAYLOAD_LENGTH_MISMATCH\n";
+				throw DTE_PROTOCOL_PAYLOAD_LENGTH_MISMATCH;
+			}
+
+			if (payload_size > BASE_MAX_PAYLOAD_LENGTH) {
+				//std::cout << "DTE_PROTOCOL_MESSAGE_TOO_LARGE\n";
+				throw DTE_PROTOCOL_MESSAGE_TOO_LARGE;
+			}
+
+			if (cmd_ref->prototype.size() && !payload_size) {
+				//std::cout << "DTE_PROTOCOL_MISSING_ARG\n";
+				throw DTE_PROTOCOL_MISSING_ARG;
+			}
+
+			if (payload_size && !cmd_ref->prototype.size()) {
+				//std::cout << "DTE_PROTOCOL_UNEXPECTED_ARG\n";
+				throw DTE_PROTOCOL_UNEXPECTED_ARG;
+			}
+
+			// Iterate over expected parameters based on the command map entries
+			for (unsigned int arg_index = 0; arg_index < cmd_ref->prototype.size(); arg_index++) {
+				if (arg_index > 0) {
+					// Skip over parameter separator and check it is a "," character
+					unsigned char x;
+					ss >> x;
+					if (x == std::char_traits<char>::eof()) {
+						//std::cout << "DTE_PROTOCOL_MISSING_ARG (EOF)\n";
+						throw DTE_PROTOCOL_MISSING_ARG;
+					}
+					if (x != ',') {
+						//std::cout << "DTE_PROTOCOL_BAD_FORMAT\n";
+						throw DTE_PROTOCOL_BAD_FORMAT;
+					}
+				}
+				switch (cmd_ref->prototype[arg_index].encoding) {
+				case BaseEncoding::KEY_VALUE_LIST:
+					decode(ss, key_values);
+					break;
+				case BaseEncoding::KEY_LIST:
+					decode(ss, keys);
+					break;
+				case BaseEncoding::DECIMAL:
+				{
+					int val = decode<int>(ss);
+					DTEEncoder::validate(cmd_ref->prototype[arg_index], val);
+					arg_list.push_back(val);
+					break;
+				}
+				case BaseEncoding::HEXADECIMAL:
+				{
+					unsigned int val = decode<unsigned int>(ss, true);
+					DTEEncoder::validate(cmd_ref->prototype[arg_index], val);
+					arg_list.push_back(val);
+					break;
+				}
+				case BaseEncoding::UINT:
+				{
+					unsigned int val = decode<unsigned int>(ss);
+					DTEEncoder::validate(cmd_ref->prototype[arg_index], val);
+					arg_list.push_back(val);
+					break;
+				}
+				case BaseEncoding::BOOLEAN:
+				{
+					bool val = decode<bool>(ss);
+					arg_list.push_back(val);
+					break;
+				}
+				break;
+				case BaseEncoding::FLOAT:
+				{
+					double val = decode<double>(ss);
+					DTEEncoder::validate(cmd_ref->prototype[arg_index], val);
+					arg_list.push_back(val);
+					break;
+				}
+				default:
+					break;
+				}
+			}
+		}
+
+		return is_valid;
+	}
+};
+
