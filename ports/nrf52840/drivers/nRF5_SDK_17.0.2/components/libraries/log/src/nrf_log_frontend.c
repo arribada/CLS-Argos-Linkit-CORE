@@ -242,6 +242,8 @@ uint8_t nrf_log_color_id_get(uint32_t module_id, nrf_log_severity_t severity)
     case NRF_LOG_SEVERITY_DEBUG:
         color_id = p_module_data->debug_color_id;
         break;
+    case NRF_LOG_SEVERITY_NONE:
+    case NRF_LOG_SEVERITY_INFO_RAW:
     default:
         color_id = 0;
         break;
