@@ -75,7 +75,7 @@ public:
 
 	static void notify_bad_filesystem_error() {
 		ErrorEvent event;
-		event.error_code = ERROR_BAD_FILESYSTEM;
+		event.error_code = BAD_FILESYSTEM;
 		dispatch(event);
 	}
 

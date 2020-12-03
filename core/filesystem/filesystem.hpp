@@ -14,6 +14,7 @@ public:
 	virtual int mount() = 0;
 	virtual int umount() = 0;
 	virtual int format() = 0;
+	virtual int remove(const char *) = 0;
 };
 
 class LFSFileSystem : public FileSystem {
@@ -81,6 +82,10 @@ public:
 
 	int format() {
 		return lfs_format(&m_lfs, &m_cfg);
+	}
+
+	int remove(const char *path) {
+		return lfs_remove(&m_lfs, path);
 	}
 
 	lfs_size_t get_block_size() {

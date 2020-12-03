@@ -14,6 +14,9 @@ public:
 	int format() {
 		return mock().actualCall("format").onObject(this).returnIntValue();
 	}
+	int remove(const char *path) {
+		return mock().actualCall("remove").onObject(this).withParameter("path", path).returnIntValue();
+	}
 };
 
 #endif // __MOCK_FS_HPP_
