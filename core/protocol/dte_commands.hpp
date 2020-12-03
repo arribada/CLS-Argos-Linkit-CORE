@@ -74,7 +74,7 @@ static const DTECommandMap command_map[] = {
 		"ZONER",
 		DTECommand::ZONER_REQ,
 		{
-			{ "zone_id", "", BaseEncoding::KEY_LIST, 1, 1, {} }
+			{ "zone_id", "", BaseEncoding::HEXADECIMAL, 1U, 1U, {} }
 		}
 	},
 	{

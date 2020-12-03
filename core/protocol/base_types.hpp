@@ -41,15 +41,73 @@ enum class BaseArgosDepthPile {
 	DEPTH_PILE_3,
 	DEPTH_PILE_4,
 	DEPTH_PILE_8 = 8,
-	DEPTH_PILE_12,
-	DEPTH_PILE_16,
-	DEPTH_PILE_20,
-	DEPTH_PILE_24
+	DEPTH_PILE_12 = 12,
+	DEPTH_PILE_16 = 16,
+	DEPTH_PILE_20 = 20,
+	DEPTH_PILE_24 = 24
 };
 
+enum class BaseZoneType : uint8_t {
+	CIRCLE = 1
+};
+
+struct BaseZone {
+	uint8_t 	       zone_id;
+	BaseZoneType       zone_type;
+	bool               enable_monitoring;
+	bool               enable_entering_leaving_events;
+	bool               enable_activation_date;
+	uint16_t           year;
+	uint8_t            month;
+	uint8_t            day;
+	uint8_t            hour;
+	uint8_t            minute;
+	uint32_t           delta_arg_loc_argos_seconds;
+	uint32_t           delta_arg_loc_cellular_seconds;
+	BaseArgosDepthPile argos_depth_pile;
+	BaseArgosPower     argos_power;
+	uint32_t           argos_time_repetition_seconds;
+	BaseArgosMode      argos_mode;
+	uint32_t           argos_duty_cycle;
+	bool               gnss_enable;
+	uint8_t            hdop_filter_threshold;
+	uint8_t            gnss_acquisition_timeout_seconds;
+	uint32_t           center_longitude_x;
+	uint32_t           center_latitude_y;
+	uint32_t           radius_m;
+};
+
+struct BasePassPredictRecord {
+	uint8_t  satellite_hex_id;
+	uint8_t  satellite_dcs_id;
+	uint8_t  uplink_status;
+	uint16_t year;
+	uint8_t  month;
+	uint8_t  day;
+	uint8_t  hour;
+	uint8_t  minute;
+	uint8_t  second;
+	uint32_t semi_major_axis;
+	uint32_t orbit_inclination;
+	uint32_t longitude_ascending_node;
+	uint32_t ascending_node_drift;
+	uint32_t orbit_period;
+	uint32_t drift_semi_major_axis;
+};
+
+struct BasePassPredict {
+	uint8_t num_records;
+	BasePassPredictRecord records[31];
+};
+
+
 struct BaseRawData {
+	// Use of a pointer and length field is permitted for encoding base64
 	void *ptr;
-	unsigned int length;
+	unsigned int length;  // Set to 0 if using string as raw data source
+
+	// Passing string instead is generally preferred wherever possible
+	std::string  str;
 };
 
 using BaseKey = std::string;

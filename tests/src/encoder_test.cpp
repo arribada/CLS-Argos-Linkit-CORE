@@ -61,12 +61,28 @@ TEST(Encoder, PARMW_REQ)
 	CHECK_EQUAL("$PARMW#016;IDT07=DEAD,IDT06=57005\r", s);
 }
 
+TEST(Encoder, ZONER_REQ)
+{
+	std::string s;
+	s = DTEEncoder::encode(DTECommand::ZONER_REQ, 0x1);
+	CHECK_EQUAL("$ZONER#001;1\r", s);
+}
+
+TEST(Encoder, ZONER_REQ_OutOfRangeCheck)
+{
+	std::string s;
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::ZONER_REQ, 0xA));  // Only 1 zone supported with ID=0x01
+}
+
+using namespace std::literals::string_literals;
+
 TEST(Encoder, ZONEW_REQ)
 {
 	std::string s;
 	// Convert a buffer to base64
-	unsigned char buffer[] = { 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15 };
-	BaseRawData raw_data = { buffer, sizeof(buffer) };
+	BaseRawData raw_data;
+	raw_data.str = "\x00\x01\x02\x03\x04\x05\x06\x07\x09\x0A\x0B\x0C\x0D\x0E\x0F"s;
+	raw_data.length = 0;
 	s = DTEEncoder::encode(DTECommand::ZONEW_REQ, raw_data);
 	CHECK_EQUAL("$ZONEW#014;AAECAwQFBgcJCgsMDQ4P\r", s);
 }
@@ -218,21 +234,21 @@ TEST(Encoder, RESET_RESP)
 	CHECK_EQUAL("$O;RESET#000;\r", s);
 }
 
-TEST(Encoder, PARAM_ARGOS_DECID_RANGE)
+TEST(Encoder, PARAM_ARGOS_DECID_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::ARGOS_DECID, 0xFFFFFFFFU };
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMW_REQ, v));
 }
 
-TEST(Encoder, PARAM_ARGOS_HEXID_RANGE)
+TEST(Encoder, PARAM_ARGOS_HEXID_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::ARGOS_HEXID, 0xFFFFFFFFU };
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMW_REQ, v));
 }
 
-TEST(Encoder, PARAM_ARGOS_DEVICE_MODEL_RANGE)
+TEST(Encoder, PARAM_ARGOS_DEVICE_MODEL_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::DEVICE_MODEL, 0x100U };
 	std::vector<ParamValue> v = { p };
@@ -248,7 +264,7 @@ TEST(Encoder, PARAM_ARGOS_FW_APP_VERSION)
 	CHECK_EQUAL("$O;PARMR#00E;IDT03=V1.2.3.4\r", s);
 }
 
-TEST(Encoder, PARAM_ARGOS_FW_APP_VERSION_RANGE)
+TEST(Encoder, PARAM_ARGOS_FW_APP_VERSION_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::FW_APP_VERSION, "V1.2.3.4xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" };
 	std::vector<ParamValue> v = { p };
@@ -273,7 +289,7 @@ TEST(Encoder, PARAM_TX_COUNTER)
 	CHECK_EQUAL("$O;PARMR#008;ART02=22\r", s);
 }
 
-TEST(Encoder, PARAM_BATT_SOC_RANGE)
+TEST(Encoder, PARAM_BATT_SOC_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::BATT_SOC, 101U };
 	std::vector<ParamValue> v = { p };
@@ -341,7 +357,7 @@ TEST(Encoder, PARAM_ARGOS_FREQ)
 	CHECK_EQUAL("$O;PARMR#00B;ARP03=400.1\r", s);
 }
 
-TEST(Encoder, PARAM_ARGOS_FREQ_RANGE)
+TEST(Encoder, PARAM_ARGOS_FREQ_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::ARGOS_FREQ, 300.0};
 	std::vector<ParamValue> v = { p };
@@ -381,7 +397,7 @@ TEST(Encoder, PARAM_TR_NOM)
 	CHECK_EQUAL("$O;PARMR#008;ARP05=50\r", s);
 }
 
-TEST(Encoder, PARAM_TR_NOM_RANGE)
+TEST(Encoder, PARAM_TR_NOM_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::TR_NOM, 44U};
 	std::vector<ParamValue> v = { p };
@@ -422,14 +438,14 @@ TEST(Encoder, PARAM_NTRY_PER_MESSAGE)
 	CHECK_EQUAL("$O;PARMR#007;ARP19=3\r", s);
 }
 
-TEST(Encoder, PARAM_NTRY_PER_MESSAGE_RANGE)
+TEST(Encoder, PARAM_NTRY_PER_MESSAGE_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::NTRY_PER_MESSAGE, 86401U };
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
 }
 
-TEST(Encoder, PARAM_DUTY_CYCLE_RANGE)
+TEST(Encoder, PARAM_DUTY_CYCLE_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::DUTY_CYCLE, 0x1FFFFFFU };
 	std::vector<ParamValue> v = { p };
@@ -495,7 +511,7 @@ TEST(Encoder, PARAM_DLOC_ARG_NOM)
 	CHECK_EQUAL("$O;PARMR#00A;ARP11=1440\r", s);
 }
 
-TEST(Encoder, PARAM_DLOC_ARG_NOM_RANGE)
+TEST(Encoder, PARAM_DLOC_ARG_NOM_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::DLOC_ARG_NOM, 22U };
 	std::vector<ParamValue> v = { p };
@@ -565,7 +581,7 @@ TEST(Encoder, PARAM_GNSS_HDOPFILT_THR_)
 	CHECK_EQUAL("$O;PARMR#007;GNP03=2\r", s);
 }
 
-TEST(Encoder, PARAM_GNSS_HDOPFILT_THR_RANGE)
+TEST(Encoder, PARAM_GNSS_HDOPFILT_THR_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::GNSS_HDOPFILT_THR, 1U };
 	std::vector<ParamValue> v = { p };
@@ -584,7 +600,7 @@ TEST(Encoder, PARAM_GNSS_ACQ_TIMEOUT)
 	CHECK_EQUAL("$O;PARMR#008;GNP05=30\r", s);
 }
 
-TEST(Encoder, PARAM_GNSS_ACQ_TIMEOUT_RANGE)
+TEST(Encoder, PARAM_GNSS_ACQ_TIMEOUT_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::GNSS_ACQ_TIMEOUT, 9U };
 	std::vector<ParamValue> v = { p };
@@ -616,7 +632,7 @@ TEST(Encoder, PARAM_DRY_TIME_BEFORE_TX)
 	CHECK_EQUAL("$O;PARMR#008;UNP02=10\r", s);
 }
 
-TEST(Encoder, PARAM_DRY_TIME_BEFORE_TX_RANGE)
+TEST(Encoder, PARAM_DRY_TIME_BEFORE_TX_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::DRY_TIME_BEFORE_TX, 0U };
 	std::vector<ParamValue> v = { p };
@@ -635,7 +651,7 @@ TEST(Encoder, PARAM_SAMPLING_UNDER_FREQ)
 	CHECK_EQUAL("$O;PARMR#008;UNP03=10\r", s);
 }
 
-TEST(Encoder, PARAM_SAMPLING_UNDER_FREQ_RANGE)
+TEST(Encoder, PARAM_SAMPLING_UNDER_FREQ_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::SAMPLING_UNDER_FREQ, 0U };
 	std::vector<ParamValue> v = { p };
@@ -667,7 +683,7 @@ TEST(Encoder, PARAM_LB_TRESHOLD)
 	CHECK_EQUAL("$O;PARMR#008;LBP02=10\r", s);
 }
 
-TEST(Encoder, PARAM_LB_TRESHOLD_RANGE)
+TEST(Encoder, PARAM_LB_TRESHOLD_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::LB_TRESHOLD, 101U };
 	std::vector<ParamValue> v = { p };
@@ -705,7 +721,7 @@ TEST(Encoder, PARAM_TR_LB)
 	CHECK_EQUAL("$O;PARMR#008;ARP06=50\r", s);
 }
 
-TEST(Encoder, PARAM_TR_LB_RANGE)
+TEST(Encoder, PARAM_TR_LB_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::TR_LB, 44U};
 	std::vector<ParamValue> v = { p };
@@ -737,7 +753,7 @@ TEST(Encoder, PARAM_LB_ARGOS_MODE)
 }
 
 
-TEST(Encoder, PARAM_LB_ARGOS_DUTY_CYCLE_RANGE)
+TEST(Encoder, PARAM_LB_ARGOS_DUTY_CYCLE_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::LB_ARGOS_DUTY_CYCLE, 0x1FFFFFFU };
 	std::vector<ParamValue> v = { p };
@@ -811,7 +827,7 @@ TEST(Encoder, PARAM_LB_GNSS_HDOPFILT_THR)
 	CHECK_EQUAL("$O;PARMR#007;LBP07=2\r", s);
 }
 
-TEST(Encoder, PARAM_LB_GNSS_HDOPFILT_THR_RANGE)
+TEST(Encoder, PARAM_LB_GNSS_HDOPFILT_THR_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::LB_GNSS_HDOPFILT_THR, 1U };
 	std::vector<ParamValue> v = { p };
@@ -871,7 +887,7 @@ TEST(Encoder, PARAM_LB_GNSS_ACQ_TIMEOUT)
 	CHECK_EQUAL("$O;PARMR#008;LBP09=30\r", s);
 }
 
-TEST(Encoder, PARAM_LB_GNSS_ACQ_TIMEOUT_RANGE)
+TEST(Encoder, PARAM_LB_GNSS_ACQ_TIMEOUT_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::LB_GNSS_ACQ_TIMEOUT, 9U };
 	std::vector<ParamValue> v = { p };
