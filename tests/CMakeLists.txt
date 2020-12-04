@@ -6,6 +6,8 @@ project(CLSGenTrackerTests
 )
 
 set(ROOT_DIR "..")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DLFS_NO_DEBUG")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DLFS_NO_DEBUG")
 
 # CppUTest
 include(FetchContent)
@@ -22,7 +24,6 @@ find_package(Threads)
 add_executable(${PROJECT_NAME})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-g")
 
 # Test related includes
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -49,7 +50,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/sm_test.cpp"
     "src/encoder_test.cpp"
 	"src/decoder_test.cpp"
-     "src/main.cpp"
+	"src/config_store_test.cpp"
+    "src/main.cpp"
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CppUTest CppUTestExt ${CMAKE_THREAD_LIBS_INIT})

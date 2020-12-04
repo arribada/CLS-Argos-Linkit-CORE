@@ -20,6 +20,15 @@ TEST_GROUP(Decoder)
 	}
 };
 
+TEST(Decoder, BooleanParsing)
+{
+	std::string s;
+	s = "$O;PARMR#007;GNP01=1\r";
+	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
+	CHECK_TRUE(DTECommand::PARMR_RESP == command);
+	CHECK_EQUAL(true, (unsigned)std::get<bool>(param_values[0].value));
+}
+
 TEST(Decoder, DatestringParsing)
 {
 	std::string s;

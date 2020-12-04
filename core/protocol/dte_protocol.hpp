@@ -5,7 +5,6 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <map>
 #include <regex>
 
 #include "debug.hpp"
@@ -565,6 +564,12 @@ public:
 				unsigned int arg = va_arg(args, unsigned int);
 				validate(command_args[arg_index], arg);
 				encode(payload, arg, true);
+			}
+			break;
+			case BaseEncoding::BOOLEAN:
+			{
+				bool arg = va_arg(args, unsigned int);
+				encode(payload, arg);
 			}
 			break;
 			case BaseEncoding::BASE64:

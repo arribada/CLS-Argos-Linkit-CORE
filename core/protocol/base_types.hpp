@@ -6,6 +6,7 @@
 #include <variant>
 #include <ctime>
 
+
 #define BASE_TEXT_MAX_LENGTH  128
 #define BASE_MAX_PAYLOAD_LENGTH 0xFFF
 
@@ -163,7 +164,9 @@ struct BaseRawData {
 using BaseKey = std::string;
 using BaseName = std::string;
 using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
-using BaseType = std::variant<unsigned int, int, double, std::string, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile>;
+
+// !!! Do not change the ordering of variants and also make sure std::string is the first entry !!!
+using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool>;
 
 struct BaseMap {
 	BaseName 	   name;

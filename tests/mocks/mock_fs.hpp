@@ -17,6 +17,8 @@ public:
 	int remove(const char *path) {
 		return mock().actualCall("remove").onObject(this).withParameter("path", path).returnIntValue();
 	}
+	void *get_private_data() {
+	}
 };
 
 #endif // __MOCK_FS_HPP_

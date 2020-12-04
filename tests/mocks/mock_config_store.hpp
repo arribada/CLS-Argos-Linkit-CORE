@@ -24,19 +24,19 @@ public:
 	void factory_reset() {
 		mock().actualCall("factory_reset").onObject(this);
 	}
-	BaseZone& read(uint8_t zone_id=1) {
+	BaseZone& read_zone(uint8_t zone_id=1) {
 		mock().actualCall("read").onObject(this).withParameter("zone_id", zone_id);
 		return m_zone;
 	}
-	BasePassPredict& read() {
+	BasePassPredict& read_pass_predict() {
 		mock().actualCall("read").onObject(this);
 		return m_pass_predict;
 	}
-	void write(BaseZone& value) {
+	void write_zone(BaseZone& value) {
 		mock().actualCall("write").onObject(this);
 		m_zone = value;
 	}
-	void write(BasePassPredict& value) {
+	void write_pass_predict(BasePassPredict& value) {
 		mock().actualCall("write").onObject(this);
 		m_pass_predict = value;
 	}

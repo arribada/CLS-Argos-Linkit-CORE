@@ -258,7 +258,7 @@ TEST(Encoder, PARAM_ARGOS_DEVICE_MODEL_OutOfRangeCheck)
 TEST(Encoder, PARAM_ARGOS_FW_APP_VERSION)
 {
 	std::string s;
-	ParamValue p = { ParamID::FW_APP_VERSION, "V1.2.3.4" };
+	ParamValue p = { ParamID::FW_APP_VERSION, "V1.2.3.4"s };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
 	CHECK_EQUAL("$O;PARMR#00E;IDT03=V1.2.3.4\r", s);
@@ -266,7 +266,7 @@ TEST(Encoder, PARAM_ARGOS_FW_APP_VERSION)
 
 TEST(Encoder, PARAM_ARGOS_FW_APP_VERSION_OutOfRangeCheck)
 {
-	ParamValue p = { ParamID::FW_APP_VERSION, "V1.2.3.4xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" };
+	ParamValue p = { ParamID::FW_APP_VERSION, "V1.2.3.4xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"s };
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMW_REQ, v));
 }
@@ -322,7 +322,7 @@ TEST(Encoder, PARAM_LAST_FULL_CHARGE_DATE)
 TEST(Encoder, PARAM_ARGOS_PROFILE_NAME)
 {
 	std::string s;
-	ParamValue p = { ParamID::PROFILE_NAME, "Turtle Tracker" };
+	ParamValue p = { ParamID::PROFILE_NAME, "Turtle Tracker"s };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
 	CHECK_EQUAL("$O;PARMR#014;IDP09=Turtle Tracker\r", s);

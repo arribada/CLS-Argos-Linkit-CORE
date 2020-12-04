@@ -15,6 +15,7 @@ public:
 	virtual int umount() = 0;
 	virtual int format() = 0;
 	virtual int remove(const char *) = 0;
+	virtual void *get_private_data() = 0;
 };
 
 class LFSFileSystem : public FileSystem {
@@ -91,6 +92,10 @@ public:
 	lfs_size_t get_block_size() {
 		return m_cfg.block_size;
 	}
+
+	void *get_private_data() override {
+		return &m_lfs;
+	}
 };
 
 
@@ -150,8 +155,8 @@ protected:
 public:
 	const char *m_path;
 
-	LFSFile(LFSFileSystem *fs, const char *path, int flags) {
-		m_lfs = &fs->m_lfs;
+	LFSFile(FileSystem *fs, const char *path, int flags) {
+		m_lfs = (lfs_t *)fs->get_private_data();
 		m_path = path;
 		int ret = lfs_file_open(m_lfs, &m_file, path, flags);
 		if (ret < 0)
@@ -187,7 +192,7 @@ public:
 	lfs_off_t   m_offset;
 	int			m_flags;
 
-	LFSCircularFile(LFSFileSystem *fs, const char *path, int flags, lfs_size_t max_size) : LFSFile(fs, path, flags) {
+	LFSCircularFile(FileSystem *fs, const char *path, int flags, lfs_size_t max_size) : LFSFile(fs, path, flags) {
 		int ret;
 		m_max_size = max_size;
 		m_offset = 0;
