@@ -76,7 +76,20 @@ std::string BleInterface::read_line()
 
 void BleInterface::write(std::string str)
 {
-
+    uint32_t err_code;
+    do
+    {
+        uint16_t length = (uint16_t)str.length();
+        // WARN: Unfortunately the ble_nus_data_send() library incorrectly requires a non-const data pointer
+        // By examining the code we can see this incorrect and at least for SDK v17.0.2 it is safe to cast away the const
+        err_code = ble_nus_data_send(&m_nus, reinterpret_cast<uint8_t *>(const_cast<char *>(str.c_str())), &length, m_conn_handle);
+        if ((err_code != NRF_ERROR_INVALID_STATE) &&
+            (err_code != NRF_ERROR_RESOURCES) &&
+            (err_code != NRF_ERROR_NOT_FOUND))
+        {
+            APP_ERROR_CHECK(err_code);
+        }
+    } while (err_code == NRF_ERROR_RESOURCES);
 }
 
 void BleInterface::timers_init()
