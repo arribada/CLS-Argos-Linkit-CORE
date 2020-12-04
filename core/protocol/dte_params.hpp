@@ -18,7 +18,7 @@ static const BaseMap param_map[] = {
 	{ "BATT_SOC", "POT03", BaseEncoding::UINT, 0U, 100U, {}, true },
 	{ "LAST_FULL_CHARGE_DATE", "POT05", BaseEncoding::DATESTRING, 0, 0, {}, true },
 	{ "PROFILE_NAME", "IDP09", BaseEncoding::TEXT, "", "", {}, true },  // FIXME: type is not specified in spreadsheet
-	{ "AOP_STATUS", "XXXXX", BaseEncoding::BASE64, 0, 0, {}, true },  // FIXME: missing parameter key
+	{ "AOP_STATUS", "XXXXX", BaseEncoding::BASE64, 0, 0, {}, false },  // FIXME: missing parameter key
 	{ "ARGOS_AOP_DATE", "ART03", BaseEncoding::DATESTRING, 0, 0, {}, true },
 	{ "ARGOS_FREQ", "ARP03", BaseEncoding::FLOAT, 399.91, 401.68, {}, true },
 	{ "ARGOS_POWER", "ARP04", BaseEncoding::ARGOSPOWER, 0U, 0U, { 250U, 500U, 750U, 1000U }, true },

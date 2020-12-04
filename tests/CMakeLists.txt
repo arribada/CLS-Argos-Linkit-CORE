@@ -51,6 +51,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/encoder_test.cpp"
 	"src/decoder_test.cpp"
 	"src/config_store_test.cpp"
+	"src/dte_handler_test.cpp"
     "src/main.cpp"
 )
 
