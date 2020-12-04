@@ -19,10 +19,6 @@ add_executable(${PROJECT_NAME})
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${PROJ_DIR}
-    ${PROJ_DIR}/bsp/horizon_v4.0
-    ${PROJ_DIR}/core/filesystem
-    ${LIB_DIR}/littlefs
     ${SDK_ROOT}/components/ble/ble_services/ble_ancs_c
     ${SDK_ROOT}/components/ble/ble_services/ble_ias_c
     ${SDK_ROOT}/components/ble/ble_services/ble_gls
@@ -85,9 +81,15 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/mdk
     ${SDK_ROOT}/modules/nrfx/drivers/include
     ${SDK_ROOT}/integration/nrfx
+    ${PROJ_DIR}
+    ${PROJ_DIR}/drivers/nrf_log_redirect
+    ${PROJ_DIR}/bsp/horizon_v4.0
+    ${LIB_DIR}/littlefs
     #${CORE_DIR}/ble_services
     #${CORE_DIR}/configuration
     ${CORE_DIR}/filesystem
+    ${CORE_DIR}/interface
+    ${PROJ_DIR}/core/interface
     #${CORE_DIR}/hardware
     #${CORE_DIR}/logging
     #${CORE_DIR}/scheduling
@@ -136,7 +138,9 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
     ${PROJ_DIR}/bsp/horizon_v4.0/bsp.cpp
     ${PROJ_DIR}/core/filesystem/spi_flash_file_system.cpp
-    ${PROJ_DIR}/main.c
+    ${PROJ_DIR}/core/interface/ble_interface.cpp
+    ${PROJ_DIR}/drivers/nrf_log_redirect/nrf_log_redirect.c
+    ${PROJ_DIR}/main.cpp
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE

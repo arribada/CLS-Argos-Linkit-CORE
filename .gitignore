@@ -9,3 +9,9 @@ tests/CMakeFiles/*
 tests/CLSGenTrackerTests
 CMakeCache.txt
 tests/Makefile
+ports/nrf52840/GenTracker.bin
+ports/nrf52840/GenTracker.hex
+ports/nrf52840/GenTracker.elf
+ports/nrf52840/GenTracker_dfu.zip
+ports/nrf52840/GenTracker.map
+ports/nrf52840/GenTracker
