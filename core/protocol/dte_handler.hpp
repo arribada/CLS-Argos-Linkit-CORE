@@ -6,9 +6,10 @@ using namespace std::literals::string_literals;
 
 
 enum class DTEAction {
-	NONE,
-	RESET,
-	SECUR
+	NONE,    // Default action is none
+	RESET,   // Deferred action since DTE must respond first before reset can be performed
+	FACTR,   // Deferred action since DTE must respond first before factory reset can be performed
+	SECUR    // DTE service must be notified when SECUR is requested to grant privileges for OTA FW commands
 };
 
 
@@ -91,6 +92,24 @@ private:
 		return DTEEncoder::encode(DTECommand::PROFR_RESP, error_code, configuration_store->read_param<std::string>(ParamID::PROFILE_NAME));
 	}
 
+	static std::string SECUR_REQ(int error_code) {
+
+		return DTEEncoder::encode(DTECommand::SECUR_RESP, error_code);
+
+	}
+
+	static std::string RESET_REQ(int error_code) {
+
+		return DTEEncoder::encode(DTECommand::RESET_RESP, error_code);
+
+	}
+
+	static std::string FACTR_REQ(int error_code) {
+
+		return DTEEncoder::encode(DTECommand::FACTR_RESP, error_code);
+
+	}
+
 public:
 	static DTEAction handle_dte_message(std::string& req, std::string& resp) {
 		DTECommand command;
@@ -102,9 +121,8 @@ public:
 
 		try {
 			if (!DTEDecoder::decode(req, command, error_code, arg_list, params, param_values))
-				return DTEAction::NONE;
+				return action;
 		} catch (ErrorCode e) {
-			std::cout << "error: " << (unsigned)e << "\n";
 			switch (e) {
 			case ErrorCode::DTE_PROTOCOL_MESSAGE_TOO_LARGE:
 			case ErrorCode::DTE_PROTOCOL_PARAM_KEY_UNRECOGNISED:
@@ -141,6 +159,18 @@ public:
 			break;
 		case DTECommand::PROFR_REQ:
 			resp = PROFR_REQ(error_code);
+			break;
+		case DTECommand::SECUR_REQ:
+			resp = SECUR_REQ(error_code);
+			if (!error_code) action = DTEAction::SECUR;
+			break;
+		case DTECommand::RESET_REQ:
+			resp = RESET_REQ(error_code);
+			if (!error_code) action = DTEAction::RESET;
+			break;
+		case DTECommand::FACTR_REQ:
+			resp = FACTR_REQ(error_code);
+			if (!error_code) action = DTEAction::FACTR;
 			break;
 		default:
 			break;

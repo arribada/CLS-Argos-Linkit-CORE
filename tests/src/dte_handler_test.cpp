@@ -72,3 +72,27 @@ TEST(DTEHandler, PROFW_PROFR_REQ)
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
 	CHECK_EQUAL("$O;PROFR#018;Profile Name For Tracker\r", resp);
 }
+
+TEST(DTEHandler, SECUR_REQ)
+{
+	std::string resp;
+	std::string req = "$SECUR#000;\r";
+	CHECK_TRUE(DTEAction::SECUR == DTEHandler::handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;SECUR#000;\r", resp);
+}
+
+TEST(DTEHandler, RESET_REQ)
+{
+	std::string resp;
+	std::string req = "$RESET#000;\r";
+	CHECK_TRUE(DTEAction::RESET == DTEHandler::handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;RESET#000;\r", resp);
+}
+
+TEST(DTEHandler, FACTR_REQ)
+{
+	std::string resp;
+	std::string req = "$FACTR#000;\r";
+	CHECK_TRUE(DTEAction::FACTR == DTEHandler::handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;FACTR#000;\r", resp);
+}
