@@ -1,6 +1,6 @@
 #include "dte_protocol.hpp"
 #include "config_store.hpp"
-
+#include "memory_access.hpp"
 
 using namespace std::literals::string_literals;
 
@@ -14,6 +14,8 @@ enum class DTEAction {
 
 
 extern ConfigurationStore *configuration_store;
+extern MemoryAccess *memory_access;
+
 
 class DTEHandler {
 private:
@@ -110,6 +112,22 @@ private:
 
 	}
 
+	static std::string DUMPM_REQ(int error_code, std::vector<BaseType>& arg_list) {
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::DUMPM_RESP, error_code);
+		}
+
+		unsigned int address = std::get<unsigned int>(arg_list[0]);
+		unsigned int length = std::get<unsigned int>(arg_list[1]);
+		BaseRawData raw = {
+			memory_access->get_physical_address(address, length),
+			length
+		};
+
+		return DTEEncoder::encode(DTECommand::DUMPM_RESP, error_code, raw);
+	}
+
 public:
 	static DTEAction handle_dte_message(std::string& req, std::string& resp) {
 		DTECommand command;
@@ -171,6 +189,9 @@ public:
 		case DTECommand::FACTR_REQ:
 			resp = FACTR_REQ(error_code);
 			if (!error_code) action = DTEAction::FACTR;
+			break;
+		case DTECommand::DUMPM_REQ:
+			resp = DUMPM_REQ(error_code, arg_list);
 			break;
 		default:
 			break;

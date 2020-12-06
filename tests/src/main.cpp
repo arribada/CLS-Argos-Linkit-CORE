@@ -9,6 +9,7 @@
 #include "ble_service.hpp"
 #include "led.hpp"
 #include "switch.hpp"
+#include "memory_access.hpp"
 
 #include "CppUTest/CommandLineTestRunner.h"
 
@@ -29,7 +30,7 @@ Switch *saltwater_switch;
 Led *red_led;
 Led *green_led;
 Led *blue_led;
-
+MemoryAccess *memory_access;
 
 int main(int ac, char *av[])
 {

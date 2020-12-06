@@ -1,5 +1,6 @@
 #include "dte_handler.hpp"
 #include "config_store_fs.hpp"
+#include "fake_memory_access.hpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
@@ -13,11 +14,13 @@
 
 extern FileSystem *main_filesystem;
 extern ConfigurationStore *configuration_store;
+extern MemoryAccess *memory_access;
 
 TEST_GROUP(DTEHandler)
 {
 	LFSRamFileSystem *ram_filesystem;
 	LFSConfigurationStore *store;
+	FakeMemoryAccess *fake_memory_access;
 
 	void setup() {
 		ram_filesystem = new LFSRamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
@@ -27,9 +30,12 @@ TEST_GROUP(DTEHandler)
 		store = new LFSConfigurationStore();
 		store->init();
 		configuration_store = store;
+		fake_memory_access = new FakeMemoryAccess();
+		memory_access = fake_memory_access;
 	}
 
 	void teardown() {
+		delete fake_memory_access;
 		delete store;
 		ram_filesystem->umount();
 		delete ram_filesystem;
@@ -95,4 +101,12 @@ TEST(DTEHandler, FACTR_REQ)
 	std::string req = "$FACTR#000;\r";
 	CHECK_TRUE(DTEAction::FACTR == DTEHandler::handle_dte_message(req, resp));
 	CHECK_EQUAL("$O;FACTR#000;\r", resp);
+}
+
+TEST(DTEHandler, DUMPM_REQ)
+{
+	std::string resp;
+	std::string req = "$DUMPM#007;100,200\r";
+	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;DUMPM#2AC;AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8=\r", resp);
 }
