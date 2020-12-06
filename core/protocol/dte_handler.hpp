@@ -1,6 +1,9 @@
-#include <vector>
 #include "dte_protocol.hpp"
 #include "config_store.hpp"
+
+
+using namespace std::literals::string_literals;
+
 
 enum class DTEAction {
 	NONE,
@@ -9,9 +12,17 @@ enum class DTEAction {
 };
 
 
+extern ConfigurationStore *configuration_store;
+
 class DTEHandler {
 private:
 	enum class DTEError {
+		OK,
+		INCORRECT_COMMAND,
+		NO_LENGTH_DELIMITER,
+		NO_DATA_DELIMITER,
+		DATA_LENGTH_MISMATCH,
+		INCORRECT_DATA
 	};
 
 	static std::string PARML_REQ(int error_code) {
@@ -31,26 +42,105 @@ private:
 		return DTEEncoder::encode(DTECommand::PARML_RESP, params);
 	}
 
+	static std::string PARMW_REQ(int error_code, std::vector<ParamValue>& param_values) {
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::PARML_RESP, error_code);
+		}
+
+		for(unsigned int i = 0; i < param_values.size(); i++)
+			configuration_store->write_param(param_values[i].param, param_values[i].value);
+
+		return DTEEncoder::encode(DTECommand::PARMW_RESP, DTEError::OK);
+	}
+
+	static std::string PARMR_REQ(int error_code, std::vector<ParamID>& params) {
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::PARMR_RESP, error_code);
+		}
+
+		std::vector<ParamValue> param_values;
+		for (unsigned int i = 0; i < params.size(); i++) {
+			BaseType x = configuration_store->read_param<BaseType>(params[i]);
+			ParamValue p = {
+				params[i],
+				x
+			};
+			param_values.push_back(p);
+		}
+
+		return DTEEncoder::encode(DTECommand::PARMR_RESP, param_values);
+	}
+
+	static std::string PROFW_REQ(int error_code, std::vector<BaseType>& arg_list) {
+
+		if (!error_code) {
+			configuration_store->write_param(ParamID::PROFILE_NAME, arg_list[0]);
+		}
+
+		return DTEEncoder::encode(DTECommand::PROFW_RESP, error_code);
+	}
+
+	static std::string PROFR_REQ(int error_code) {
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::PROFR_RESP, error_code);
+		}
+
+		return DTEEncoder::encode(DTECommand::PROFR_RESP, error_code, configuration_store->read_param<std::string>(ParamID::PROFILE_NAME));
+	}
+
 public:
-	static DTEAction handle_dte_message(ConfigurationStore* store, std::string& req, std::string& resp) {
+	static DTEAction handle_dte_message(std::string& req, std::string& resp) {
 		DTECommand command;
 		std::vector<ParamID> params;
 		std::vector<ParamValue> param_values;
 		std::vector<BaseType> arg_list;
-		unsigned int error_code;
+		unsigned int error_code = (unsigned int)DTEError::OK;
 		DTEAction action = DTEAction::NONE;
 
 		try {
 			if (!DTEDecoder::decode(req, command, error_code, arg_list, params, param_values))
 				return DTEAction::NONE;
-		} catch (int e) {
-			// TODO: generic error response handler
-			error_code = 0;
+		} catch (ErrorCode e) {
+			std::cout << "error: " << (unsigned)e << "\n";
+			switch (e) {
+			case ErrorCode::DTE_PROTOCOL_MESSAGE_TOO_LARGE:
+			case ErrorCode::DTE_PROTOCOL_PARAM_KEY_UNRECOGNISED:
+			case ErrorCode::DTE_PROTOCOL_UNEXPECTED_ARG:
+			case ErrorCode::DTE_PROTOCOL_VALUE_OUT_OF_RANGE:
+			case ErrorCode::DTE_PROTOCOL_MISSING_ARG:
+			case ErrorCode::DTE_PROTOCOL_BAD_FORMAT:
+				error_code = (unsigned int)DTEError::INCORRECT_DATA;
+				break;
+			case ErrorCode::DTE_PROTOCOL_PAYLOAD_LENGTH_MISMATCH:
+				error_code = (unsigned int)DTEError::DATA_LENGTH_MISMATCH;
+				break;
+			case ErrorCode::DTE_PROTOCOL_UNKNOWN_COMMAND:
+				error_code = (unsigned int)DTEError::INCORRECT_COMMAND;
+				break;
+			default:
+				throw e; // Error code is unexpected
+				break;
+			}
 		}
 
 		switch(command) {
 		case DTECommand::PARML_REQ:
 			resp = PARML_REQ(error_code);
+			break;
+		case DTECommand::PARMW_REQ:
+			resp = PARMW_REQ(error_code, param_values);
+			break;
+		case DTECommand::PARMR_REQ:
+			resp = PARMR_REQ(error_code, params);
+			break;
+		case DTECommand::PROFW_REQ:
+			resp = PROFW_REQ(error_code, arg_list);
+			break;
+		case DTECommand::PROFR_REQ:
+			resp = PROFR_REQ(error_code);
 			break;
 		default:
 			break;

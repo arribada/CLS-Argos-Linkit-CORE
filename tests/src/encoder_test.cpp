@@ -5,6 +5,9 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+using namespace std::literals::string_literals;
+
+
 
 TEST_GROUP(Encoder)
 {
@@ -73,8 +76,6 @@ TEST(Encoder, ZONER_REQ_OutOfRangeCheck)
 	std::string s;
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::ZONER_REQ, 0xA));  // Only 1 zone supported with ID=0x01
 }
-
-using namespace std::literals::string_literals;
 
 TEST(Encoder, ZONEW_REQ)
 {

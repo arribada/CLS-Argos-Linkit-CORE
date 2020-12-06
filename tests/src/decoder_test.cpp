@@ -5,6 +5,9 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+using namespace std::literals::string_literals;
+
+
 
 TEST_GROUP(Decoder)
 {

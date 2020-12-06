@@ -2,6 +2,8 @@
 #define __CONFIG_STORE_HPP_
 
 #include <array>
+#include <type_traits>
+#include <iostream>
 #include "base_types.hpp"
 #include "error.hpp"
 
@@ -15,8 +17,8 @@ protected:
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
-		/* DEVICE_MODEL */ ""s,
-		/* FW_APP_VERSION */ "V0.1",
+		/* DEVICE_MODEL */ 0U,
+		/* FW_APP_VERSION */ "V0.1"s,
 		/* LAST_TX */ static_cast<std::time_t>(0U),
 		/* TX_COUNTER */ 0U,
 		/* BATT_SOC */ 0U,
@@ -45,12 +47,12 @@ protected:
 		/* LB_EN */ (bool)false,
 		/* LB_TRESHOLD */ 0U,
 		/* LB_ARGOS_POWER */ BaseArgosPower::POWER_750_MW,
-		/* TR_LB */ 0U,
+		/* TR_LB */ 45U,
 		/* LB_ARGOS_MODE */ BaseArgosMode::OFF,
 		/* LB_ARGOS_DUTY_CYCLE */ 0U,
 		/* LB_GNSS_EN */ (bool)false,
 		/* DLOC_ARG_LB */ 60U,
-		/* LB_GNSS_HDOPFILT_THR */ 0U,
+		/* LB_GNSS_HDOPFILT_THR */ 2U,
 		/* LB_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* LB_GNSS_ACQ_TIMEOUT */ 60U
 	}};
@@ -69,10 +71,17 @@ public:
 
 	template <typename T>
 	T& read_param(ParamID param_id) {
-		if (is_valid())
-			return std::get<T>(m_params.at((unsigned)param_id));
+		if (is_valid()) {
+			if constexpr (std::is_same<T, BaseType>::value) {
+				return m_params.at((unsigned)param_id);
+			}
+			else {
+				return std::get<T>(m_params.at((unsigned)param_id));
+			};
+		}
 		else
 			throw CONFIG_STORE_CORRUPTED;
+
 	}
 
 	template<typename T>
