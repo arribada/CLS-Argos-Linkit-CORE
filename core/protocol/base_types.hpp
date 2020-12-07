@@ -1,6 +1,7 @@
 #ifndef __BASE_TYPES_HPP_
 #define __BASE_TYPES_HPP_
 
+#include <cstring>
 #include <string>
 #include <vector>
 #include <variant>
@@ -127,6 +128,11 @@ struct BaseZone {
 	uint32_t           center_latitude_y;
 	uint32_t           radius_m;
 };
+
+static bool operator==(const BaseZone& lhs, const BaseZone& rhs)
+{
+    return std::memcmp( &lhs, &rhs, sizeof(BaseZone) );
+}
 
 struct BasePassPredictRecord {
 	uint8_t  satellite_hex_id;

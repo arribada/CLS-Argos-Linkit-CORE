@@ -110,3 +110,53 @@ TEST(DTEHandler, DUMPM_REQ)
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
 	CHECK_EQUAL("$O;DUMPM#2AC;AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8=\r", resp);
 }
+
+TEST(DTEHandler, ZONEW_REQ)
+{
+	BaseRawData zone_raw = {0,0};
+	BaseZone zone;
+	zone.zone_id = 1;
+	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	zone.argos_mode = BaseArgosMode::DUTY_CYCLE;
+	zone.argos_duty_cycle = 0b101010101010101010101010;
+	zone.argos_time_repetition_seconds = 60U;
+	zone.delta_arg_loc_argos_seconds = 7*60U;
+	zone.zone_type = BaseZoneType::CIRCLE;
+	zone.gnss_enable = true;
+	zone.argos_power = BaseArgosPower::POWER_1000_MW;
+	ZoneCodec::encode(zone, zone_raw.str);
+
+	std::string resp;
+	std::string req = DTEEncoder::encode(DTECommand::ZONEW_REQ, zone_raw);
+	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;ZONEW#000;\r", resp);
+
+	BaseZone& stored_zone = configuration_store->read_zone();
+	CHECK_TRUE(stored_zone == zone);
+}
+
+TEST(DTEHandler, ZONER_REQ)
+{
+	BaseZone zone;
+	zone.zone_id = 1;
+	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	zone.argos_mode = BaseArgosMode::DUTY_CYCLE;
+	zone.argos_duty_cycle = 0b101010101010101010101010;
+	zone.argos_time_repetition_seconds = 60U;
+	zone.delta_arg_loc_argos_seconds = 7*60U;
+	zone.zone_type = BaseZoneType::CIRCLE;
+	zone.gnss_enable = true;
+	zone.argos_power = BaseArgosPower::POWER_1000_MW;
+	configuration_store->write_zone(zone);
+
+	std::string resp;
+	std::string req = DTEEncoder::encode(DTECommand::ZONER_REQ, 1);
+	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;ZONER#01C;gQAMAECB2LCqqmoAAAAAQP7//w8=\r", resp);
+
+	std::string zone_resp_bits = websocketpp::base64_decode("gQAMAECB2LCqqmoAAAAAQP7//w8="s);
+	BaseZone zone_resp_decoded;
+	ZoneCodec::decode(zone_resp_bits, zone_resp_decoded);
+
+	CHECK_TRUE(zone == zone_resp_decoded);
+}

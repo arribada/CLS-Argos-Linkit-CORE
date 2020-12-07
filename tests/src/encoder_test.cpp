@@ -71,6 +71,16 @@ TEST(Encoder, ZONER_REQ)
 	CHECK_EQUAL("$ZONER#001;1\r", s);
 }
 
+TEST(Encoder, ZONER_RESP)
+{
+	std::string s;
+	BaseRawData raw_data;
+	raw_data.str = "\x00\x01\x02\x03\x04\x05\x06\x07\x09\x0A\x0B\x0C\x0D\x0E\x0F"s;
+	raw_data.length = 0;
+	s = DTEEncoder::encode(DTECommand::ZONER_RESP, 0, raw_data);
+	CHECK_EQUAL("$O;ZONER#014;AAECAwQFBgcJCgsMDQ4P\r", s);
+}
+
 TEST(Encoder, ZONER_REQ_OutOfRangeCheck)
 {
 	std::string s;

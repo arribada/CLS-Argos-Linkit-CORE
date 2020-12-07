@@ -64,7 +64,7 @@ protected:
 		delete f;
 	}
 
-	void serialize_config(ParamID param_id) {
+	void serialize_config(ParamID param_id) override {
 		DEBUG_TRACE("serial_config(%u)", (unsigned)param_id);
 		LFSFile *f = new LFSFile(main_filesystem, "config.dat", LFS_O_WRONLY);
 		if (f->seek((unsigned)param_id * BASE_TEXT_MAX_LENGTH) != (unsigned)param_id * BASE_TEXT_MAX_LENGTH ||
@@ -151,37 +151,37 @@ public:
 		}
 	}
 
-	bool is_valid() {
+	bool is_valid() override {
 		return m_is_config_valid;
 	}
 
-	void notify_saltwater_switch_state(bool state) {
+	void notify_saltwater_switch_state(bool state) override {
 		// TODO
 	}
 
-	void factory_reset() {
+	void factory_reset() override {
 		main_filesystem->format();
 	}
 
-	BaseZone& read_zone(uint8_t zone_id=1) {
+	BaseZone& read_zone(uint8_t zone_id=1) override {
 		if (m_is_zone_valid && m_zone.zone_id == zone_id) {
 			return m_zone;
 		}
 		throw CONFIG_DOES_NOT_EXIST;
 	}
 
-	BasePassPredict& read_pass_predict() {
+	BasePassPredict& read_pass_predict() override {
 		if (m_is_pass_predict_valid) {
 			return m_pass_predict;
 		}
 		throw CONFIG_DOES_NOT_EXIST;
 	}
 
-	void write_zone(BaseZone& value) {
+	void write_zone(BaseZone& value) override {
 		m_zone = value;
 		serialize_zone();
 	}
-	void write_pass_predict(BasePassPredict& value) {
+	void write_pass_predict(BasePassPredict& value) override {
 		m_pass_predict = value;
 		serialize_pass_predict();
 	}

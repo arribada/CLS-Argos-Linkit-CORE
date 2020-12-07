@@ -128,6 +128,34 @@ private:
 		return DTEEncoder::encode(DTECommand::DUMPM_RESP, error_code, raw);
 	}
 
+	static std::string ZONEW_REQ(int error_code, std::vector<BaseType>& arg_list) {
+
+		if (!error_code) {
+			BaseZone zone;
+			std::string zone_bits = std::get<std::string>(arg_list[0]);
+			ZoneCodec::decode(zone_bits, zone);
+			configuration_store->write_zone(zone);
+		}
+
+		return DTEEncoder::encode(DTECommand::ZONEW_RESP, error_code);
+	}
+
+	static std::string ZONER_REQ(int error_code, std::vector<BaseType>& arg_list) {
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::ZONER_RESP, error_code);
+		}
+
+		unsigned int zone_id = std::get<unsigned int>(arg_list[0]);
+		BaseZone& zone = configuration_store->read_zone((uint8_t)zone_id);
+
+		BaseRawData zone_raw;
+		zone_raw.length = 0;
+		ZoneCodec::encode(zone, zone_raw.str);
+
+		return DTEEncoder::encode(DTECommand::ZONER_RESP, error_code, zone_raw);
+	}
+
 public:
 	static DTEAction handle_dte_message(std::string& req, std::string& resp) {
 		DTECommand command;
@@ -192,6 +220,12 @@ public:
 			break;
 		case DTECommand::DUMPM_REQ:
 			resp = DUMPM_REQ(error_code, arg_list);
+			break;
+		case DTECommand::ZONEW_REQ:
+			resp = ZONEW_REQ(error_code, arg_list);
+			break;
+		case DTECommand::ZONER_REQ:
+			resp = ZONER_REQ(error_code, arg_list);
 			break;
 		default:
 			break;
