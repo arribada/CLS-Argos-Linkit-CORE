@@ -105,8 +105,8 @@ class BootState : public GenTracker
 		system_timer->start();
 
 		// Start both the saltwater and reed switch monitoring
-		reed_switch->start([](bool state) { ReedSwitchEvent e; e.state = state; dispatch(e); });
-		saltwater_switch->start([](bool state) { SaltwaterSwitchEvent e; e.state = state; dispatch(e); });
+		reed_switch->start([](bool s) { ReedSwitchEvent e; e.state = s; dispatch(e); });
+		saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
 
 		// Turn off all LEDs
 		red_led->off();
