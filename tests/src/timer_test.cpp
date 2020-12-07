@@ -20,7 +20,11 @@ TEST_GROUP(Timer)
 TEST(Timer, TimerCounterIsAdvancing)
 {
 	uint64_t t = timer->get_counter();
-	std::this_thread::sleep_for(std::chrono::milliseconds(4));
+
+	// Make sure the timer has advanced sufficiently to schedule all events
+	while (timer->get_counter() < 5)
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
 	CHECK_COMPARE(t, <, timer->get_counter());
 }
 
@@ -30,7 +34,10 @@ TEST(Timer, TimerEventIsFired)
 
 	timer->add_schedule([]() { has_fired = true; }, timer->get_counter() + 5);
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(15));
+	// Make sure the timer has advanced sufficiently to schedule all events
+	while (timer->get_counter() < 5)
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
 	CHECK_TRUE(has_fired);
 }
 
@@ -41,7 +48,10 @@ TEST(Timer, TimerMultiEventIsFired)
 	timer->add_schedule([]() { has_fired[0] = true; }, timer->get_counter() + 2);
 	timer->add_schedule([]() { has_fired[1] = true; }, timer->get_counter() + 5);
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(15));
+	// Make sure the timer has advanced sufficiently to schedule all events
+	while (timer->get_counter() < 5)
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
 	CHECK_TRUE(has_fired[0]);
 	CHECK_TRUE(has_fired[1]);
 }
