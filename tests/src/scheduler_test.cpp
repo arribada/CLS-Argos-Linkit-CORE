@@ -288,8 +288,6 @@ TEST(Scheduler, SchedulerMultithreadedCountingHalfCancelled)
 
 	unsigned int test_iterations = 100;
 
-	std::cout << "threads: " << threads.size() << "\n";
-
 	for (unsigned int i = 0; i < test_iterations; ++i)
 	{
 		for (size_t i = 0; i < threads.size(); ++i)

@@ -17,24 +17,23 @@ enum class DTEAction {
 	SECUR    // DTE service must be notified when SECUR is requested to grant privileges for OTA FW commands
 };
 
+enum class DTEError {
+	OK,
+	INCORRECT_COMMAND,
+	NO_LENGTH_DELIMITER,
+	NO_DATA_DELIMITER,
+	DATA_LENGTH_MISMATCH,
+	INCORRECT_DATA
+};
+
 // The DTEHandler requires access to the following system objects that are extern declared
 extern ConfigurationStore *configuration_store;
 extern MemoryAccess *memory_access;
 extern Logger *sensor_log;
 extern Logger *system_log;
 
-
 class DTEHandler {
 private:
-	enum class DTEError {
-		OK,
-		INCORRECT_COMMAND,
-		NO_LENGTH_DELIMITER,
-		NO_DATA_DELIMITER,
-		DATA_LENGTH_MISMATCH,
-		INCORRECT_DATA
-	};
-
 	static std::string PARML_REQ(int error_code) {
 
 		if (error_code) {
@@ -214,8 +213,6 @@ public:
 			if (!DTEDecoder::decode(req, command, error_code, arg_list, params, param_values))
 				return action;
 		} catch (ErrorCode e) {
-
-			std::cout << "error: " << (unsigned)e << "\n";
 
 			switch (e) {
 			case ErrorCode::DTE_PROTOCOL_MESSAGE_TOO_LARGE:
