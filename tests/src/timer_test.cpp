@@ -4,11 +4,7 @@
 #include "linux_timer.hpp"
 #include <iostream>
 
-using namespace std;
-
 Timer *timer = new LinuxTimer;
-
-static void dummy_function(void *) {}
 
 TEST_GROUP(Timer)
 {
@@ -21,116 +17,55 @@ TEST_GROUP(Timer)
 	}
 };
 
-
 TEST(Timer, TimerCounterIsAdvancing)
 {
 	uint64_t t = timer->get_counter();
-	usleep(4000);
+	std::this_thread::sleep_for(std::chrono::milliseconds(4));
 	CHECK_COMPARE(t, <, timer->get_counter());
 }
 
 TEST(Timer, TimerEventIsFired)
 {
 	static bool has_fired = false;
-	static void *param = 0;
-	TimerSchedule s = {
-		(void *)1,
-		[](void *a) { has_fired = true; param = a; },
-		timer->get_counter() + 5
-	};
-	timer->add_schedule(s);
-	usleep(15000);
-	timer->cancel_schedule(s);
+
+	timer->add_schedule([]() { has_fired = true; }, timer->get_counter() + 5);
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(15));
 	CHECK_TRUE(has_fired);
-	CHECK_EQUAL(s.user_arg, param);
 }
 
 TEST(Timer, TimerMultiEventIsFired)
 {
 	static bool has_fired[2] = {false};
-	static void *params[2] = {0};
-	TimerSchedule s0 = {
-		(void *)1,
-		[](void *a) { has_fired[0] = true; params[0] = a; },
-		timer->get_counter() + 2
-	};
-	TimerSchedule s1 = {
-		(void *)2,
-		[](void *a) { has_fired[1] = true; params[1] = a; },
-		timer->get_counter() + 5
-	};
-	timer->add_schedule(s0);
-	timer->add_schedule(s1);
-	usleep(15000);
+
+	timer->add_schedule([]() { has_fired[0] = true; }, timer->get_counter() + 2);
+	timer->add_schedule([]() { has_fired[1] = true; }, timer->get_counter() + 5);
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(15));
 	CHECK_TRUE(has_fired[0]);
 	CHECK_TRUE(has_fired[1]);
-	CHECK_EQUAL(s0.user_arg, params[0]);
-	CHECK_EQUAL(s1.user_arg, params[1]);
 }
 
 TEST(Timer, TimerCancelSingleWithMulti)
 {
 	static bool has_fired[2] = {false};
-	static void *params[2] = {0};
-	TimerSchedule s0 = {
-		(void *)1,
-		[](void *a) { has_fired[0] = true; params[0] = a; },
-		timer->get_counter() + 2
-	};
-	TimerSchedule s1 = {
-		(void *)2,
-		[](void *a) { has_fired[1] = true; params[1] = a; },
-		timer->get_counter() + 5
-	};
-	timer->add_schedule(s0);
-	timer->add_schedule(s1);
-	timer->cancel_schedule(s0);
-	usleep(15000);
+
+	auto timer_handle_1 = timer->add_schedule([]() { has_fired[0] = true; }, timer->get_counter() + 2);
+	auto timer_handle_2 = timer->add_schedule([]() { has_fired[1] = true; }, timer->get_counter() + 5);
+
+	timer->cancel_schedule(timer_handle_1);
+	std::this_thread::sleep_for(std::chrono::milliseconds(15));
 	CHECK_FALSE(has_fired[0]);
 	CHECK_TRUE(has_fired[1]);
 }
 
-TEST(Timer, TimerCancelBySchedule)
+TEST(Timer, TimerCancel)
 {
 	static bool has_fired = false;
-	static void *param = 0;
-	TimerSchedule s = {
-		(void *)1,
-		[](void *a) { has_fired = true; param = a; },
-		timer->get_counter() + 5
-	};
-	timer->add_schedule(s);
-	timer->cancel_schedule(s);
-	usleep(15000);
-	CHECK_FALSE(has_fired);
-}
 
-TEST(Timer, TimerCancelByUserArg)
-{
-	static bool has_fired = false;
-	static void *param = 0;
-	TimerSchedule s = {
-		(void *)1,
-		[](void *a) { has_fired = true; param = a; },
-		timer->get_counter() + 5
-	};
-	timer->add_schedule(s);
-	timer->cancel_schedule(s.user_arg);
-	usleep(15000);
-	CHECK_FALSE(has_fired);
-}
+	auto timer_handle = timer->add_schedule([]() { has_fired = true; }, timer->get_counter() + 5);
 
-TEST(Timer, TimerCancelByFunction)
-{
-	static bool has_fired = false;
-	static void *param = 0;
-	TimerSchedule s = {
-		(void *)1,
-		dummy_function,
-		timer->get_counter() + 5
-	};
-	timer->add_schedule(s);
-	timer->cancel_schedule(dummy_function);
-	usleep(15000);
+	timer->cancel_schedule(timer_handle);
+	std::this_thread::sleep_for(std::chrono::milliseconds(15));
 	CHECK_FALSE(has_fired);
 }

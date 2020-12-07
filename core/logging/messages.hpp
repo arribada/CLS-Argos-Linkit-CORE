@@ -5,7 +5,7 @@
 
 #define MAX_LOG_PAYLOAD    120
 
-static const char *log_type_name[8] = {
+static constexpr const char *log_type_name[8] = {
 	"GPS",
 	"ERROR",
 	"WARN",

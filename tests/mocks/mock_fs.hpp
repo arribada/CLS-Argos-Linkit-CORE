@@ -18,6 +18,7 @@ public:
 		return mock().actualCall("remove").onObject(this).withParameter("path", path).returnIntValue();
 	}
 	void *get_private_data() {
+		return nullptr;
 	}
 };
 

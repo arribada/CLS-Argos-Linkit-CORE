@@ -1,96 +1,198 @@
 #ifndef __SCHEDULER_HPP_
 #define __SCHEDULER_HPP_
 
+#include <functional>
+#include <algorithm>
+#include <optional>
+#include <memory>
 #include <map>
+#include <list>
 
+#include "interrupt_lock.hpp"
 #include "timer.hpp"
 #include "pmu.hpp"
 #include "debug.hpp"
 
-using namespace std;
-
-using Task = void (*)();
-
-struct TaskInfo {
-	int  	prio;
-	bool 	runnable;
-};
-
-
 class Scheduler {
-public:
-	static inline const int MIN_PRIORITY = 7;
-	static inline const int MAX_PRIORITY = 1;
-	static inline const int DEFAULT_PRIORITY = MIN_PRIORITY;
 
-	Scheduler(Timer *timer) {
-		m_timer = timer;
+public:
+	static const unsigned int DEFAULT_PRIORITY = 7;
+
+	Scheduler(Timer *timer) : m_timer(timer), m_unique_id(0) {}
+	Scheduler(const Scheduler &) = delete;
+	
+	class Task 
+    {
+		friend class Scheduler;
+
+	private:
+		std::optional<unsigned int> m_id;
+		unsigned int m_priority;
+		std::function<void()> m_func;
+    };
+	class TaskHandle
+	{
+		friend class Scheduler;
+	
+	public:
+		TaskHandle() : m_parent(nullptr) {}
+
+	private:
+		Scheduler *m_parent;
+		std::optional<unsigned int> m_id;
+	};
+
+	// Used for queuing a static or free function as a task
+	TaskHandle post_task_prio(std::function<void()> const &task_func, unsigned int priority = DEFAULT_PRIORITY, unsigned int delay_ms = 0) {
+
+		Task task;
+		task.m_id = m_unique_id++;
+		task.m_priority = priority;
+		task.m_func = task_func;
+
+		if (!delay_ms)
+		{
+			// Task is requested to be processed on next run()
+			// Safetly add this task to our task list in priority order
+			{
+				InterruptLock lock;
+				auto iter = m_tasks.begin();
+				while (iter != m_tasks.end())
+				{
+					if (iter->m_priority > priority)
+						break;
+					iter++;
+				}
+				m_tasks.insert(iter, task);
+			}
+		}
+		else
+		{
+			// If this task was delayed then schedule a timer to start it
+			{
+				InterruptLock lock;
+				// We do this by setting up our timer to call this function after the delay has elapsed
+				m_timer_schedules[*task.m_id] = m_timer->add_schedule([this, task_func, priority]() { this->post_task_prio(task_func, priority, 0); }, m_timer->get_counter() + delay_ms);
+			}
+		}
+
+		TaskHandle handle;
+		handle.m_id = task.m_id;
+		handle.m_parent = this;
+
+		return handle;
 	}
 
-	void run(void (*exception_handler)(int), int iter=-1) {
-		DEBUG_TRACE("Scheduler.run: iter: %u", iter);
-		while (iter > 0 || iter == -1) {
-			iter--;
-			try {
-				Task runnable_task;
-				do {
-					// Find the highest priority runnable task each time we iterate this loop until
-					// there are no more runnable tasks
-					runnable_task = 0;
-					for ( const auto &task : m_task_map ) {
-						if (runnable_task && task.second.runnable && m_task_map[runnable_task].prio > task.second.prio) {
-							runnable_task = task.first; // This task is higher priority
-						} else if (!runnable_task && task.second.runnable) {
-							runnable_task = task.first; // First runnable task found
-						}
-					}
+	void cancel_task(TaskHandle &task) {
+		if (task.m_parent != this)
+			return; // This handle belongs to another scheduler
 
-					// Execute the highest priority runnable task
-					if (runnable_task)
-					{
-						DEBUG_TRACE("Scheduler: running task %p", runnable_task);
-						m_task_map[runnable_task] = {0, false};
-						runnable_task();
-					}
-				} while (runnable_task);
-			} catch (int e) {
-				exception_handler(e);
+		if (!task.m_id.has_value())
+			return;
+		
+		InterruptLock lock;
+
+		// Check to see if this task is in our immediate task list
+		auto iter = m_tasks.begin();
+		while (iter != m_tasks.end())
+		{
+			if (iter->m_id == task.m_id)
+			{
+				iter = m_tasks.erase(iter);
+				// Invalidate the task handle
+				task.m_id.reset();
+				task.m_parent = nullptr;
+				return;
+			}
+			else
+				iter++;
+		}
+
+		// Check if this task is in our deferred task list
+		// If so then cancel the timer scheduler for it
+		auto schedule = m_timer_schedules.find(*task.m_id);
+		if (schedule != m_timer_schedules.end())
+		{
+			m_timer->cancel_schedule(schedule->second);
+			m_timer_schedules.erase(schedule);
+		}
+	}
+
+	void run(std::function<void(int)> const &exception_handler) {
+
+		// Run through our queue of tasks in order and run them
+		// As our queue is in priority order so will our run order
+
+		while (true)
+		{
+			// We need to safetly retrieve the front value with a lock
+			// We then need to release the lock so that the called function may add/cancel tasks
+
+			Task task;
+			{
+				InterruptLock lock;
+				if (!m_tasks.size())
+					return;
+
+				task = m_tasks.front();
+				m_tasks.pop_front();
 			}
 
-			PMU::enter_low_power_mode();
+			if (task.m_func)
+				task.m_func();
 		}
-	}
-	void post_task_prio(Task task, int prio=Scheduler::DEFAULT_PRIORITY, unsigned int delay_ms=0) {
-		DEBUG_TRACE("post_task_prio(%p)", task);
-		m_timer->cancel_schedule((void *)task);  // To be safe, delete any existing timer event for this task
-		if (delay_ms == 0) {
-			// Mark as runnable immediately
-			m_task_map[task] = { prio, true };
-		} else {
-			// Defer execution by invoking the timer to tell us when the scheduled delay period arrives
-			m_task_map[task] = { prio, false };
-			TimerSchedule s = { (void *)&m_task_map[task], timer_event, m_timer->get_counter() + delay_ms };
-			m_timer->add_schedule(s);
-		}
-	}
-	void cancel_task(Task task) {
-		m_timer->cancel_schedule((void *)&m_task_map[task]);
-		m_task_map[task] = { 0, false };
-	}
-	bool is_scheduled(Task task) {
-		return (m_task_map[task].prio > 0);
 	}
 
+	bool is_scheduled(TaskHandle task) {
+		if (task.m_parent != this)
+			return false; // This handle belongs to another scheduler
+
+		if (!task.m_id.has_value())
+			return false;
+		
+		InterruptLock lock;
+
+		// Check to see if this task is in our immediate task list
+		auto iter = m_tasks.begin();
+		while (iter != m_tasks.end())
+		{
+			if (iter->m_id == task.m_id)
+			{
+				return true;
+			}
+			else
+				iter++;
+		}
+
+		// Check if this task is in our deferred task list
+		auto schedule = m_timer_schedules.find(*task.m_id);
+		if (schedule != m_timer_schedules.end())
+			return true;
+
+		return false;
+	}
+
+	void clear_all()
+	{
+		InterruptLock lock;
+		m_tasks.clear();
+
+		// Cancel all scheduled tasks
+		auto iter = m_timer_schedules.begin();
+		while (iter != m_timer_schedules.end())
+		{
+			m_timer->cancel_schedule(iter->second);
+			iter = m_timer_schedules.erase(iter);
+		}
+	}
+	
 private:
-	// Tracks all scheduled tasks, their priority and if they are runnable or not
-	std::map<Task, TaskInfo> m_task_map;
-	Timer *m_timer;
 
-	static void timer_event(void *user_arg) {
-		TaskInfo *info = (TaskInfo *)user_arg;
-		info->runnable = true;
-	}
+	std::list<Task> m_tasks;
+	std::unordered_map<unsigned int, Timer::TimerHandle> m_timer_schedules;
+	unsigned int m_unique_id;
 
+    Timer *m_timer;
 };
 
 #endif // __SCHEDULER_HPP_

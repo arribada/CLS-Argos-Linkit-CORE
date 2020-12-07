@@ -21,7 +21,7 @@ private:
 
 public:
 	void create() {}
-	unsigned int num_entries() { return 0; }
+	unsigned int num_entries() {return 0;}
 	void read(void *, int index) {}
 	void write(void *entry) {
 		LogEntry *p = (LogEntry *)entry;

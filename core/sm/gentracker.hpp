@@ -232,13 +232,13 @@ class ErrorState : public GenTracker
 	void entry() {
 		DEBUG_TRACE("entry: ErrorState");
 		// Call the error task immediately
-		system_scheduler->post_task_prio(error_task);
+		error_task_handle = system_scheduler->post_task_prio(error_task);
 	}
 
 	void exit() {
 		DEBUG_TRACE("exit: ErrorState");
 		// Cancel any pending calls
-		system_scheduler->cancel_task(error_task);
+		system_scheduler->cancel_task(error_task_handle);
 	}
 
 	static void error_task() {
@@ -247,6 +247,9 @@ class ErrorState : public GenTracker
 		// Invoke the scheduler to call us again in 1 second
 		system_scheduler->post_task_prio(error_task, Scheduler::DEFAULT_PRIORITY, 1000);
 	}
+
+private:
+	Scheduler::TaskHandle error_task_handle;
 };
 
 

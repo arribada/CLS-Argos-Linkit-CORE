@@ -6,8 +6,7 @@ project(CLSGenTrackerTests
 )
 
 set(ROOT_DIR "..")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DLFS_NO_DEBUG")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DLFS_NO_DEBUG")
+set(LINUX_DIR "${ROOT_DIR}/ports/linux")
 
 # CppUTest
 include(FetchContent)
@@ -19,11 +18,25 @@ FetchContent_Declare(
 # Set this to ON if you want to have the CppUTests in your project as well.
 set(TESTS OFF CACHE BOOL "Switch off CppUTest Test build")
 FetchContent_MakeAvailable(CppUTest)
+target_compile_definitions(CppUTest PUBLIC CPPUTEST_MEM_LEAK_DETECTION_DISABLED)
+target_compile_definitions(CppUTestExt PUBLIC CPPUTEST_MEM_LEAK_DETECTION_DISABLED)
 
 find_package(Threads)
 add_executable(${PROJECT_NAME})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    LFS_NO_DEBUG
+)
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    -g3
+
+    # Always output coloured text from GCC
+    -fdiagnostics-color=always
+)
 
 # Test related includes
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -44,6 +57,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/littlefs/lfs_util.c"
     "${ROOT_DIR}/libraries/littlefs/lfs.c"
+    "${LINUX_DIR}/interrupt_lock.cpp"
     "src/timer_test.cpp"
     "src/filesystem_test.cpp"
     "src/scheduler_test.cpp"

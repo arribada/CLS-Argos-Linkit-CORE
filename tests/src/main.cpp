@@ -12,6 +12,8 @@
 #include "memory_access.hpp"
 
 #include "CppUTest/CommandLineTestRunner.h"
+#include "CppUTest/TestRegistry.h"
+#include "CppUTestExt/MockSupportPlugin.h"
 
 // Global contexts
 FileSystem *main_filesystem ;
@@ -32,9 +34,12 @@ Led *green_led;
 Led *blue_led;
 MemoryAccess *memory_access;
 
-int main(int ac, char *av[])
+MockSupportPlugin mockPlugin;
+
+int main(int argc, char** argv)
 {
-    int exit_code = CommandLineTestRunner::RunAllTests(ac, av);
+    TestRegistry::getCurrentRegistry()->installPlugin(&mockPlugin);
+    int exit_code = CommandLineTestRunner::RunAllTests(argc, argv);
     delete console_log;
     return exit_code;
 }

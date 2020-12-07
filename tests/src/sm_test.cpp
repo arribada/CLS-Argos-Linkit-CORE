@@ -103,7 +103,6 @@ TEST(Sm, CheckBootFileSystemMountOk)
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
-	mock().checkExpectations();
 }
 
 TEST(Sm, CheckBootFileSystemFirstMountFail)
@@ -117,7 +116,6 @@ TEST(Sm, CheckBootFileSystemFirstMountFail)
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
-	mock().checkExpectations();
 }
 
 TEST(Sm, CheckBootFileSystemSecondMountFailAndEnterErrorState)
@@ -127,9 +125,8 @@ TEST(Sm, CheckBootFileSystemSecondMountFailAndEnterErrorState)
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(-1);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
-	system_scheduler->run([](int e){}, 1);
+	system_scheduler->run([](int e){});
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
-	mock().checkExpectations();
 }
 
 TEST(Sm, CheckBootFileSystemFormatFailAndEnterErrorState)
@@ -138,9 +135,8 @@ TEST(Sm, CheckBootFileSystemFormatFailAndEnterErrorState)
 	mock().expectOneCall("format").onObject(main_filesystem).andReturnValue(-1);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
-	system_scheduler->run([](int e){}, 1);
+	system_scheduler->run([](int e){});
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
-	mock().checkExpectations();
 }
 
 TEST(Sm, CheckBootStateInvokesSchedulerToCheckConfigStore)
@@ -152,9 +148,8 @@ TEST(Sm, CheckBootStateInvokesSchedulerToCheckConfigStore)
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
 	fsm_handle::start();
-	system_scheduler->run([](int e){}, 1);
+	system_scheduler->run([](int e){});
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
-	mock().checkExpectations();
 	CHECK_TRUE(fake_reed_switch->is_started());
 	CHECK_TRUE(fake_saltwater_switch->is_started());
 }
@@ -170,7 +165,6 @@ TEST(Sm, CheckBootTransitionsToOperationalWithValidConfig)
 	e.is_valid = true;
 	fsm_handle::dispatch(e);
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
-	mock().checkExpectations();
 	CHECK_TRUE(fake_green_led->is_flashing());
 }
 
@@ -213,7 +207,6 @@ TEST(Sm, CheckBootEnterConfigStateOnReedSwitchActive)
 	e.state = true;
 	fsm_handle::dispatch(e);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
-	mock().checkExpectations();
 	CHECK_TRUE(fake_blue_led->is_flashing());
 
 	// Inject the event from fake switch notification
@@ -269,6 +262,4 @@ TEST(Sm, CheckSaltwaterSwitchNotificationsDuringOperationalState)
 	mock().expectOneCall("notify_saltwater_switch_state").onObject(gps_scheduler).withParameter("state", false);
 	mock().expectOneCall("notify_saltwater_switch_state").onObject(configuration_store).withParameter("state", false);
 	fake_saltwater_switch->set_state(false);
-
-	mock().checkExpectations();
 }
