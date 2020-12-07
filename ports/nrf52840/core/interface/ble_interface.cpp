@@ -79,7 +79,7 @@ std::string BleInterface::read_line()
         if (m_ring_buffer.peek_at(i) == '\r')
         {
             // String found, lets extract it
-            for (uint32_t j = 0; j < i; ++j)
+            for (uint32_t j = 0; j <= i; ++j)
                 str.push_back(m_ring_buffer.remove());
             
             break;
