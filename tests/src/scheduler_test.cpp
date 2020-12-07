@@ -232,7 +232,8 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferred)
 TEST(Scheduler, SchedulerMultithreadedCountingDeferredCancelled)
 {
 	std::vector<std::thread> threads;
-	threads.resize(std::thread::hardware_concurrency());
+	unsigned int simultaneous_threads = 16;  // Must be a multiple of 2 to work
+	threads.resize(simultaneous_threads);
 	static std::atomic<int> counter;
 	counter = 0;
 
@@ -267,7 +268,8 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredCancelled)
 TEST(Scheduler, SchedulerMultithreadedCountingHalfCancelled)
 {
 	std::vector<std::thread> threads;
-	threads.resize(std::thread::hardware_concurrency());
+	unsigned int simultaneous_threads = 16;  // Must be a multiple of 2 to work
+	threads.resize(simultaneous_threads);
 	static std::atomic<int> counter;
 	counter = 0;
 
@@ -285,6 +287,8 @@ TEST(Scheduler, SchedulerMultithreadedCountingHalfCancelled)
 	};
 
 	unsigned int test_iterations = 100;
+
+	std::cout << "threads: " << threads.size() << "\n";
 
 	for (unsigned int i = 0; i < test_iterations; ++i)
 	{
@@ -305,13 +309,14 @@ TEST(Scheduler, SchedulerMultithreadedCountingHalfCancelled)
 	delay_ms(100);
 	scheduler->run([](int e){});
 
-	CHECK_EQUAL(std::thread::hardware_concurrency() * test_iterations / 2, counter);
+	CHECK_EQUAL(simultaneous_threads * test_iterations / 2, counter);
 }
 
 TEST(Scheduler, SchedulerMultithreadedCountingDeferredHalfCancelled)
 {
 	std::vector<std::thread> threads;
-	threads.resize(std::thread::hardware_concurrency());
+	unsigned int simultaneous_threads = 16;  // Must be a multiple of 2 to work
+	threads.resize(simultaneous_threads);
 	static std::atomic<int> counter;
 	counter = 0;
 
@@ -349,5 +354,5 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredHalfCancelled)
 	delay_ms(100);
 	scheduler->run([](int e){});
 
-	CHECK_EQUAL(std::thread::hardware_concurrency() * test_iterations / 2, counter);
+	CHECK_EQUAL(simultaneous_threads * test_iterations / 2, counter);
 }
