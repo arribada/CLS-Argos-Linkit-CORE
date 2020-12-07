@@ -11,6 +11,7 @@ class File;
 
 class FileSystem {
 public:
+	virtual ~FileSystem() {}
 	virtual int mount() = 0;
 	virtual int umount() = 0;
 	virtual int format() = 0;
@@ -67,7 +68,7 @@ public:
 		m_cfg.sync  = lfs_sync;
 	}
 
-	~LFSFileSystem() {
+	virtual ~LFSFileSystem() {
 		delete[] (uint8_t*)m_cfg.read_buffer;
 		delete[] (uint8_t*)m_cfg.prog_buffer;
 		delete[] (uint8_t*)m_cfg.lookahead_buffer;
@@ -162,7 +163,7 @@ public:
 		if (ret < 0)
 			throw ret;
 	}
-	~LFSFile() {
+	virtual ~LFSFile() {
 		lfs_file_close(m_lfs, &m_file);
 	}
 	lfs_ssize_t read(void *buffer, lfs_size_t size) {

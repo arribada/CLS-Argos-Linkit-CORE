@@ -338,7 +338,7 @@ TEST(Decoder, ZONEW_REQ)
 	s = "$ZONEW#024;" + websocketpp::base64_encode(dummy_zone_file) + "\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::ZONEW_REQ == command);
-	CHECK_EQUAL(dummy_zone_file, std::get<std::string>(arg_list[0]));
+	CHECK_EQUAL(dummy_zone_file, std::get<std::string>(arg_list[0]).c_str());
 }
 
 TEST(Decoder, PROFR_REQ)
@@ -355,7 +355,7 @@ TEST(Decoder, PROFW_REQ)
 	s = "$PROFW#01B;Profile Name For Our Device\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PROFW_REQ == command);
-	CHECK_EQUAL("Profile Name For Our Device", std::get<std::string>(arg_list[0]));
+	STRCMP_EQUAL("Profile Name For Our Device", std::get<std::string>(arg_list[0]).c_str());
 }
 
 TEST(Decoder, PASPW_REQ)
@@ -365,7 +365,7 @@ TEST(Decoder, PASPW_REQ)
 	s = "$PASPW#024;" + websocketpp::base64_encode(dummy_file) + "\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PASPW_REQ == command);
-	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]));
+	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
 }
 
 TEST(Decoder, SECUR_REQ)
@@ -455,7 +455,7 @@ TEST(Decoder, ZONER_RESP)
 	s = "$O;ZONER#024;" + websocketpp::base64_encode(dummy_file) + "\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::ZONER_RESP == command);
-	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]));
+	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
 }
 
 TEST(Decoder, ZONEW_RESP)
@@ -472,7 +472,7 @@ TEST(Decoder, PROFR_RESP)
 	s = "$O;PROFR#01B;Profile Name For Our Device\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PROFR_RESP == command);
-	CHECK_EQUAL("Profile Name For Our Device", std::get<std::string>(arg_list[0]));
+	STRCMP_EQUAL("Profile Name For Our Device", std::get<std::string>(arg_list[0]).c_str());
 }
 
 TEST(Decoder, PROFW_RESP)
@@ -506,7 +506,7 @@ TEST(Decoder, DUMPM_RESP)
 	s = "$O;DUMPM#024;" + websocketpp::base64_encode(dummy_file) + "\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::DUMPM_RESP == command);
-	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]));
+	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
 }
 
 TEST(Decoder, DUMPL_RESP)
@@ -516,7 +516,7 @@ TEST(Decoder, DUMPL_RESP)
 	s = "$O;DUMPL#024;" + websocketpp::base64_encode(dummy_file) + "\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::DUMPL_RESP == command);
-	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]));
+	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
 }
 
 TEST(Decoder, DUMPD_RESP)
@@ -526,7 +526,7 @@ TEST(Decoder, DUMPD_RESP)
 	s = "$O;DUMPD#024;" + websocketpp::base64_encode(dummy_file) + "\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::DUMPD_RESP == command);
-	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]));
+	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
 }
 
 TEST(Decoder, RESET_RESP)

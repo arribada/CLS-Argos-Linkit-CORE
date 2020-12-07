@@ -4,6 +4,7 @@
 class Led {
 public:
 	Led(int pin) {};
+	virtual ~Led() {}
 	virtual void on() = 0;
 	virtual void off() = 0;
 	virtual bool get_state() = 0;

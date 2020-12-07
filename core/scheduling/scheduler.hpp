@@ -190,9 +190,8 @@ private:
 
 	std::list<Task> m_tasks;
 	std::unordered_map<unsigned int, Timer::TimerHandle> m_timer_schedules;
+	Timer *m_timer;
 	unsigned int m_unique_id;
-
-    Timer *m_timer;
 };
 
 #endif // __SCHEDULER_HPP_

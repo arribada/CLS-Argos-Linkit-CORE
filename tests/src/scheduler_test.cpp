@@ -127,7 +127,7 @@ TEST(Scheduler, SchedulerMultithreadedCounting)
 {
 	std::vector<std::thread> threads;
 	threads.resize(std::thread::hardware_concurrency());
-	static std::atomic<int> counter;
+	static std::atomic<unsigned int> counter;
 	counter = 0;
 
 	auto counter_func = []() {
@@ -140,7 +140,7 @@ TEST(Scheduler, SchedulerMultithreadedCounting)
 
 	unsigned int test_iterations = 100;
 
-	for (unsigned int i = 0; i < test_iterations; ++i)
+	for (unsigned int iter = 0; iter < test_iterations; ++iter)
 	{
 		for (size_t i = 0; i < threads.size(); ++i)
 		{
@@ -164,7 +164,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingCancelled)
 {
 	std::vector<std::thread> threads;
 	threads.resize(std::thread::hardware_concurrency());
-	static std::atomic<int> counter;
+	static std::atomic<unsigned int> counter;
 	counter = 0;
 
 	auto counter_func = []() {
@@ -178,7 +178,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingCancelled)
 
 	unsigned int test_iterations = 100;
 
-	for (unsigned int i = 0; i < test_iterations; ++i)
+	for (unsigned int iter = 0; iter < test_iterations; ++iter)
 	{
 		for (size_t i = 0; i < threads.size(); ++i)
 			threads[i] = std::thread(create_counter_task_func);
@@ -199,7 +199,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferred)
 {
 	std::vector<std::thread> threads;
 	threads.resize(std::thread::hardware_concurrency());
-	static std::atomic<int> counter;
+	static std::atomic<unsigned int> counter;
 	counter = 0;
 
 	auto counter_func = []() {
@@ -212,7 +212,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferred)
 
 	unsigned int test_iterations = 100;
 
-	for (unsigned int i = 0; i < test_iterations; ++i)
+	for (unsigned int iter = 0; iter < test_iterations; ++iter)
 	{
 		for (size_t i = 0; i < threads.size(); ++i)
 			threads[i] = std::thread(create_counter_task_func);
@@ -234,7 +234,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredCancelled)
 	std::vector<std::thread> threads;
 	unsigned int simultaneous_threads = 16;  // Must be a multiple of 2 to work
 	threads.resize(simultaneous_threads);
-	static std::atomic<int> counter;
+	static std::atomic<unsigned int> counter;
 	counter = 0;
 
 	auto counter_func = []() {
@@ -248,7 +248,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredCancelled)
 
 	unsigned int test_iterations = 100;
 
-	for (unsigned int i = 0; i < test_iterations; ++i)
+	for (unsigned int iter = 0; iter < test_iterations; ++iter)
 	{
 		for (size_t i = 0; i < threads.size(); ++i)
 			threads[i] = std::thread(create_counter_task_func);
@@ -270,7 +270,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingHalfCancelled)
 	std::vector<std::thread> threads;
 	unsigned int simultaneous_threads = 16;  // Must be a multiple of 2 to work
 	threads.resize(simultaneous_threads);
-	static std::atomic<int> counter;
+	static std::atomic<unsigned int> counter;
 	counter = 0;
 
 	auto counter_func = []() {
@@ -288,7 +288,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingHalfCancelled)
 
 	unsigned int test_iterations = 100;
 
-	for (unsigned int i = 0; i < test_iterations; ++i)
+	for (unsigned int iter = 0; iter < test_iterations; ++iter)
 	{
 		for (size_t i = 0; i < threads.size(); ++i)
 		{
@@ -315,7 +315,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredHalfCancelled)
 	std::vector<std::thread> threads;
 	unsigned int simultaneous_threads = 16;  // Must be a multiple of 2 to work
 	threads.resize(simultaneous_threads);
-	static std::atomic<int> counter;
+	static std::atomic<unsigned int> counter;
 	counter = 0;
 
 	auto counter_func = []() {
@@ -333,7 +333,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredHalfCancelled)
 
 	unsigned int test_iterations = 100;
 
-	for (unsigned int i = 0; i < test_iterations; ++i)
+	for (unsigned int iter = 0; iter < test_iterations; ++iter)
 	{
 		for (size_t i = 0; i < threads.size(); ++i)
 		{

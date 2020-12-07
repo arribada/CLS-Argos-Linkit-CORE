@@ -60,6 +60,7 @@ protected:
 	virtual void serialize_config(ParamID) = 0;
 
 public:
+	virtual ~ConfigurationStore() {}
 	virtual void init() = 0;
 	virtual bool is_valid() = 0;
 	virtual void notify_saltwater_switch_state(bool state) = 0;

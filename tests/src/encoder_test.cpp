@@ -40,35 +40,35 @@ TEST(Encoder, PARML_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PARML_REQ);
-	CHECK_EQUAL("$PARML#000;\r", s);
+	STRCMP_EQUAL("$PARML#000;\r", s.c_str());
 }
 
 TEST(Encoder, PARML_RESP)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PARML_RESP, params);
-	CHECK_EQUAL("$O;PARML#04D;IDT07,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP09,ART03,ARP03,ARP04,ARP05\r", s);
+	STRCMP_EQUAL("$O;PARML#04D;IDT07,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP09,ART03,ARP03,ARP04,ARP05\r", s.c_str());
 }
 
 TEST(Encoder, PARMR_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PARMR_REQ, params);
-	CHECK_EQUAL("$PARMR#04D;IDT07,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP09,ART03,ARP03,ARP04,ARP05\r", s);
+	STRCMP_EQUAL("$PARMR#04D;IDT07,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP09,ART03,ARP03,ARP04,ARP05\r", s.c_str());
 }
 
 TEST(Encoder, PARMW_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PARMW_REQ, values);
-	CHECK_EQUAL("$PARMW#016;IDT07=DEAD,IDT06=57005\r", s);
+	STRCMP_EQUAL("$PARMW#016;IDT07=DEAD,IDT06=57005\r", s.c_str());
 }
 
 TEST(Encoder, ZONER_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::ZONER_REQ, 0x1);
-	CHECK_EQUAL("$ZONER#001;1\r", s);
+	STRCMP_EQUAL("$ZONER#001;1\r", s.c_str());
 }
 
 TEST(Encoder, ZONER_RESP)
@@ -78,7 +78,7 @@ TEST(Encoder, ZONER_RESP)
 	raw_data.str = "\x00\x01\x02\x03\x04\x05\x06\x07\x09\x0A\x0B\x0C\x0D\x0E\x0F"s;
 	raw_data.length = 0;
 	s = DTEEncoder::encode(DTECommand::ZONER_RESP, 0, raw_data);
-	CHECK_EQUAL("$O;ZONER#014;AAECAwQFBgcJCgsMDQ4P\r", s);
+	STRCMP_EQUAL("$O;ZONER#014;AAECAwQFBgcJCgsMDQ4P\r", s.c_str());
 }
 
 TEST(Encoder, ZONER_REQ_OutOfRangeCheck)
@@ -95,65 +95,65 @@ TEST(Encoder, ZONEW_REQ)
 	raw_data.str = "\x00\x01\x02\x03\x04\x05\x06\x07\x09\x0A\x0B\x0C\x0D\x0E\x0F"s;
 	raw_data.length = 0;
 	s = DTEEncoder::encode(DTECommand::ZONEW_REQ, raw_data);
-	CHECK_EQUAL("$ZONEW#014;AAECAwQFBgcJCgsMDQ4P\r", s);
+	STRCMP_EQUAL("$ZONEW#014;AAECAwQFBgcJCgsMDQ4P\r", s.c_str());
 }
 
 TEST(Encoder, PROFR_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PROFR_REQ);
-	CHECK_EQUAL("$PROFR#000;\r", s);
+	STRCMP_EQUAL("$PROFR#000;\r", s.c_str());
 }
 
 TEST(Encoder, PROFR_RESP)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PROFR_RESP, 0, std::string("Underwater Vehicle"));
-	CHECK_EQUAL("$O;PROFR#012;Underwater Vehicle\r", s);
+	STRCMP_EQUAL("$O;PROFR#012;Underwater Vehicle\r", s.c_str());
 }
 
 TEST(Encoder, PROFW_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PROFW_REQ, std::string("Underwater Vehicle"));
-	CHECK_EQUAL("$PROFW#012;Underwater Vehicle\r", s);
+	STRCMP_EQUAL("$PROFW#012;Underwater Vehicle\r", s.c_str());
 }
 
 TEST(Encoder, PROFW_RESP)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PROFW_RESP, 0);
-	CHECK_EQUAL("$O;PROFW#000;\r", s);
+	STRCMP_EQUAL("$O;PROFW#000;\r", s.c_str());
 }
 
 TEST(Encoder, PASPW_REQ)
 {
 	std::string s;
 	unsigned char buffer[] = { 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15 };
-	BaseRawData raw_data = { buffer, sizeof(buffer) };
+	BaseRawData raw_data = { buffer, sizeof(buffer), "" };
 	s = DTEEncoder::encode(DTECommand::PASPW_REQ, raw_data);
-	CHECK_EQUAL("$PASPW#014;AAECAwQFBgcJCgsMDQ4P\r", s);
+	STRCMP_EQUAL("$PASPW#014;AAECAwQFBgcJCgsMDQ4P\r", s.c_str());
 }
 
 TEST(Encoder, PASPW_RESP)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PASPW_RESP, 0);
-	CHECK_EQUAL("$O;PASPW#000;\r", s);
+	STRCMP_EQUAL("$O;PASPW#000;\r", s.c_str());
 }
 
 TEST(Encoder, SECUR_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::SECUR_REQ);
-	CHECK_EQUAL("$SECUR#000;\r", s);
+	STRCMP_EQUAL("$SECUR#000;\r", s.c_str());
 }
 
 TEST(Encoder, SECUR_RESP)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::SECUR_RESP, 0);
-	CHECK_EQUAL("$O;SECUR#000;\r", s);
+	STRCMP_EQUAL("$O;SECUR#000;\r", s.c_str());
 }
 
 TEST(Encoder, DUMPM_REQ)
@@ -161,20 +161,20 @@ TEST(Encoder, DUMPM_REQ)
 	std::string s;
 	// Command with multi-args
 	s = DTEEncoder::encode(DTECommand::DUMPM_REQ, 0x10000, 0x200);
-	CHECK_EQUAL("$DUMPM#009;10000,200\r", s);
+	STRCMP_EQUAL("$DUMPM#009;10000,200\r", s.c_str());
 
 	// Surplus args are ignored
 	s = DTEEncoder::encode(DTECommand::DUMPM_REQ, 0x10000, 0x200, 1, 2, 3);
-	CHECK_EQUAL("$DUMPM#009;10000,200\r", s);
+	STRCMP_EQUAL("$DUMPM#009;10000,200\r", s.c_str());
 }
 
 TEST(Encoder, DUMPM_RESP)
 {
 	std::string s;
 	unsigned char buffer[0x200] = { 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15 };
-	BaseRawData raw_data = { buffer, sizeof(buffer) };
+	BaseRawData raw_data = { buffer, sizeof(buffer), "" };
 	s = DTEEncoder::encode(DTECommand::DUMPM_RESP, 0, raw_data);
-	CHECK_EQUAL("$O;DUMPM#2AC;AAECAwQFBgcJCgsMDQ4PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", s);
+	STRCMP_EQUAL("$O;DUMPM#2AC;AAECAwQFBgcJCgsMDQ4PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", s.c_str());
 }
 
 TEST(Encoder, DUMPM_RESP_ERROR)
@@ -182,67 +182,67 @@ TEST(Encoder, DUMPM_RESP_ERROR)
 	std::string s;
 	// Command response with an error code
 	s = DTEEncoder::encode(DTECommand::DUMPM_RESP, 3);
-	CHECK_EQUAL("$N;DUMPM#001;3\r", s);
+	STRCMP_EQUAL("$N;DUMPM#001;3\r", s.c_str());
 }
 
 TEST(Encoder, DUMPL_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::DUMPL_REQ);
-	CHECK_EQUAL("$DUMPL#000;\r", s);
+	STRCMP_EQUAL("$DUMPL#000;\r", s.c_str());
 }
 
 TEST(Encoder, DUMPL_RESP)
 {
 	std::string s;
 	unsigned char buffer[0x200] = { 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15 };
-	BaseRawData raw_data = { buffer, sizeof(buffer) };
+	BaseRawData raw_data = { buffer, sizeof(buffer), "" };
 	s = DTEEncoder::encode(DTECommand::DUMPL_RESP, 0, raw_data);
-	CHECK_EQUAL("$O;DUMPL#2AC;AAECAwQFBgcJCgsMDQ4PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", s);
+	STRCMP_EQUAL("$O;DUMPL#2AC;AAECAwQFBgcJCgsMDQ4PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", s.c_str());
 }
 
 TEST(Encoder, DUMPD_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::DUMPD_REQ);
-	CHECK_EQUAL("$DUMPD#000;\r", s);
+	STRCMP_EQUAL("$DUMPD#000;\r", s.c_str());
 }
 
 TEST(Encoder, DUMPD_RESP)
 {
 	std::string s;
 	unsigned char buffer[0x200] = { 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15 };
-	BaseRawData raw_data = { buffer, sizeof(buffer) };
+	BaseRawData raw_data = { buffer, sizeof(buffer), "" };
 	s = DTEEncoder::encode(DTECommand::DUMPD_RESP, 0, raw_data);
-	CHECK_EQUAL("$O;DUMPD#2AC;AAECAwQFBgcJCgsMDQ4PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", s);
+	STRCMP_EQUAL("$O;DUMPD#2AC;AAECAwQFBgcJCgsMDQ4PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", s.c_str());
 }
 
 TEST(Encoder, FACTR_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::FACTR_REQ);
-	CHECK_EQUAL("$FACTR#000;\r", s);
+	STRCMP_EQUAL("$FACTR#000;\r", s.c_str());
 }
 
 TEST(Encoder, FACTR_RESP)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::FACTR_RESP, 0);
-	CHECK_EQUAL("$O;FACTR#000;\r", s);
+	STRCMP_EQUAL("$O;FACTR#000;\r", s.c_str());
 }
 
 TEST(Encoder, RESET_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::RESET_REQ);
-	CHECK_EQUAL("$RESET#000;\r", s);
+	STRCMP_EQUAL("$RESET#000;\r", s.c_str());
 }
 
 TEST(Encoder, RESET_RESP)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::RESET_RESP, 0);
-	CHECK_EQUAL("$O;RESET#000;\r", s);
+	STRCMP_EQUAL("$O;RESET#000;\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_DECID_OutOfRangeCheck)
@@ -272,7 +272,7 @@ TEST(Encoder, PARAM_ARGOS_FW_APP_VERSION)
 	ParamValue p = { ParamID::FW_APP_VERSION, "V1.2.3.4"s };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#00E;IDT03=V1.2.3.4\r", s);
+	STRCMP_EQUAL("$O;PARMR#00E;IDT03=V1.2.3.4\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_FW_APP_VERSION_OutOfRangeCheck)
@@ -288,7 +288,7 @@ TEST(Encoder, PARAM_LAST_TX)
 	ParamValue p = { ParamID::LAST_TX, (std::time_t)0 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#01E;ART01=Thu Jan  1 00:00:00 1970\r", s);
+	STRCMP_EQUAL("$O;PARMR#01E;ART01=Thu Jan  1 00:00:00 1970\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_TX_COUNTER)
@@ -297,7 +297,7 @@ TEST(Encoder, PARAM_TX_COUNTER)
 	ParamValue p = { ParamID::TX_COUNTER, 22U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ART02=22\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ART02=22\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_BATT_SOC_OutOfRangeCheck)
@@ -313,12 +313,12 @@ TEST(Encoder, PARAM_BATT_SOC)
 	ParamValue p = { ParamID::BATT_SOC, 100U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;POT03=100\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;POT03=100\r", s.c_str());
 
 	p = { ParamID::BATT_SOC, 0U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;POT03=0\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;POT03=0\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LAST_FULL_CHARGE_DATE)
@@ -327,7 +327,7 @@ TEST(Encoder, PARAM_LAST_FULL_CHARGE_DATE)
 	ParamValue p = { ParamID::LAST_FULL_CHARGE_DATE, (std::time_t)0 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#01E;POT05=Thu Jan  1 00:00:00 1970\r", s);
+	STRCMP_EQUAL("$O;PARMR#01E;POT05=Thu Jan  1 00:00:00 1970\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_PROFILE_NAME)
@@ -336,18 +336,18 @@ TEST(Encoder, PARAM_ARGOS_PROFILE_NAME)
 	ParamValue p = { ParamID::PROFILE_NAME, "Turtle Tracker"s };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#014;IDP09=Turtle Tracker\r", s);
+	STRCMP_EQUAL("$O;PARMR#014;IDP09=Turtle Tracker\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_AOP_STATUS)
 {
 	std::string s;
 	unsigned char buffer[] = { 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15 };
-	BaseRawData raw_data = { buffer, sizeof(buffer) };
+	BaseRawData raw_data = { buffer, sizeof(buffer), "" };
 	ParamValue p = { ParamID::AOP_STATUS, raw_data };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#01A;XXXXX=AAECAwQFBgcJCgsMDQ4P\r", s);
+	STRCMP_EQUAL("$O;PARMR#01A;XXXXX=AAECAwQFBgcJCgsMDQ4P\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_AOP_DATE)
@@ -356,7 +356,7 @@ TEST(Encoder, PARAM_ARGOS_AOP_DATE)
 	ParamValue p = { ParamID::ARGOS_AOP_DATE, (std::time_t)0 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#01E;ART03=Thu Jan  1 00:00:00 1970\r", s);
+	STRCMP_EQUAL("$O;PARMR#01E;ART03=Thu Jan  1 00:00:00 1970\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_FREQ)
@@ -365,7 +365,7 @@ TEST(Encoder, PARAM_ARGOS_FREQ)
 	ParamValue p = { ParamID::ARGOS_FREQ, 400.1};
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#00B;ARP03=400.1\r", s);
+	STRCMP_EQUAL("$O;PARMR#00B;ARP03=400.1\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_FREQ_OutOfRangeCheck)
@@ -384,19 +384,19 @@ TEST(Encoder, PARAM_ARGOS_POWER)
 	ParamValue p = { ParamID::ARGOS_POWER, BaseArgosPower::POWER_250_MW};
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;ARP04=250\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;ARP04=250\r", s.c_str());
 	p = { ParamID::ARGOS_POWER, BaseArgosPower::POWER_500_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;ARP04=500\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;ARP04=500\r", s.c_str());
 	p = { ParamID::ARGOS_POWER, BaseArgosPower::POWER_750_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;ARP04=750\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;ARP04=750\r", s.c_str());
 	p = { ParamID::ARGOS_POWER, BaseArgosPower::POWER_1000_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#00A;ARP04=1000\r", s);
+	STRCMP_EQUAL("$O;PARMR#00A;ARP04=1000\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_TR_NOM)
@@ -405,7 +405,7 @@ TEST(Encoder, PARAM_TR_NOM)
 	ParamValue p = { ParamID::TR_NOM, 50U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP05=50\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP05=50\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_TR_NOM_OutOfRangeCheck)
@@ -424,19 +424,19 @@ TEST(Encoder, PARAM_ARGOS_MODE)
 	ParamValue p = { ParamID::ARGOS_MODE, BaseArgosMode::OFF};
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP01=0\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP01=0\r", s.c_str());
 	p = { ParamID::ARGOS_MODE, BaseArgosMode::LEGACY};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP01=1\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP01=1\r", s.c_str());
 	p = { ParamID::ARGOS_MODE, BaseArgosMode::PASS_PREDICTION};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP01=2\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP01=2\r", s.c_str());
 	p = { ParamID::ARGOS_MODE, BaseArgosMode::DUTY_CYCLE};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP01=3\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP01=3\r", s.c_str());
 }
 
 
@@ -446,7 +446,7 @@ TEST(Encoder, PARAM_NTRY_PER_MESSAGE)
 	ParamValue p = { ParamID::NTRY_PER_MESSAGE, 3U};
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP19=3\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP19=3\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_NTRY_PER_MESSAGE_OutOfRangeCheck)
@@ -469,7 +469,7 @@ TEST(Encoder, PARAM_DUTY_CYCLE)
 	ParamValue p = { ParamID::DUTY_CYCLE, 0b101010101010101010101010U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#00C;ARP18=AAAAAA\r", s);
+	STRCMP_EQUAL("$O;PARMR#00C;ARP18=AAAAAA\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_GNSS_EN)
@@ -478,11 +478,11 @@ TEST(Encoder, PARAM_GNSS_EN)
 	ParamValue p = { ParamID::GNSS_EN, true };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;GNP01=1\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;GNP01=1\r", s.c_str());
 	p = { ParamID::GNSS_EN, false };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;GNP01=0\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;GNP01=0\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_DLOC_ARG_NOM)
@@ -491,35 +491,35 @@ TEST(Encoder, PARAM_DLOC_ARG_NOM)
 	ParamValue p = { ParamID::DLOC_ARG_NOM, 10U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP11=10\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP11=10\r", s.c_str());
 	p = { ParamID::DLOC_ARG_NOM, 15U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP11=15\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP11=15\r", s.c_str());
 	p = { ParamID::DLOC_ARG_NOM, 30U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP11=30\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP11=30\r", s.c_str());
 	p = { ParamID::DLOC_ARG_NOM, 60U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP11=60\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP11=60\r", s.c_str());
 	p = { ParamID::DLOC_ARG_NOM, 120U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;ARP11=120\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;ARP11=120\r", s.c_str());
 	p = { ParamID::DLOC_ARG_NOM, 360U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;ARP11=360\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;ARP11=360\r", s.c_str());
 	p = { ParamID::DLOC_ARG_NOM, 720U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;ARP11=720\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;ARP11=720\r", s.c_str());
 	p = { ParamID::DLOC_ARG_NOM, 1440U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#00A;ARP11=1440\r", s);
+	STRCMP_EQUAL("$O;PARMR#00A;ARP11=1440\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_DLOC_ARG_NOM_OutOfRangeCheck)
@@ -535,39 +535,39 @@ TEST(Encoder, PARAM_ARGOS_DEPTH_PILE)
 	ParamValue p = { ParamID::ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_1 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP16=1\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP16=1\r", s.c_str());
 	p = { ParamID::ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_2 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP16=2\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP16=2\r", s.c_str());
 	p = { ParamID::ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_3 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP16=3\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP16=3\r", s.c_str());
 	p = { ParamID::ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_4 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP16=4\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP16=4\r", s.c_str());
 	p = { ParamID::ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_8 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP16=8\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP16=8\r", s.c_str());
 	p = { ParamID::ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_12 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;ARP16=9\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;ARP16=9\r", s.c_str());
 	p = { ParamID::ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_16 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP16=10\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP16=10\r", s.c_str());
 	p = { ParamID::ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_20 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP16=11\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP16=11\r", s.c_str());
 	p = { ParamID::ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_24 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP16=12\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP16=12\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_GNSS_HDOPFILT_EN)
@@ -576,11 +576,11 @@ TEST(Encoder, PARAM_GNSS_HDOPFILT_EN)
 	ParamValue p = { ParamID::GNSS_HDOPFILT_EN, true };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;GNP02=1\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;GNP02=1\r", s.c_str());
 	p = { ParamID::GNSS_HDOPFILT_EN, false };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;GNP02=0\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;GNP02=0\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_GNSS_HDOPFILT_THR_)
@@ -589,7 +589,7 @@ TEST(Encoder, PARAM_GNSS_HDOPFILT_THR_)
 	ParamValue p = { ParamID::GNSS_HDOPFILT_THR, 2U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;GNP03=2\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;GNP03=2\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_GNSS_HDOPFILT_THR_OutOfRangeCheck)
@@ -608,7 +608,7 @@ TEST(Encoder, PARAM_GNSS_ACQ_TIMEOUT)
 	ParamValue p = { ParamID::GNSS_ACQ_TIMEOUT, 30U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;GNP05=30\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;GNP05=30\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_GNSS_ACQ_TIMEOUT_OutOfRangeCheck)
@@ -627,11 +627,11 @@ TEST(Encoder, PARAM_UNDERWATER_EN)
 	ParamValue p = { ParamID::UNDERWATER_EN, true };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;UNP01=1\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;UNP01=1\r", s.c_str());
 	p = { ParamID::UNDERWATER_EN, false };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;UNP01=0\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;UNP01=0\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_DRY_TIME_BEFORE_TX)
@@ -640,7 +640,7 @@ TEST(Encoder, PARAM_DRY_TIME_BEFORE_TX)
 	ParamValue p = { ParamID::DRY_TIME_BEFORE_TX, 10U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;UNP02=10\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;UNP02=10\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_DRY_TIME_BEFORE_TX_OutOfRangeCheck)
@@ -659,7 +659,7 @@ TEST(Encoder, PARAM_SAMPLING_UNDER_FREQ)
 	ParamValue p = { ParamID::SAMPLING_UNDER_FREQ, 10U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;UNP03=10\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;UNP03=10\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_SAMPLING_UNDER_FREQ_OutOfRangeCheck)
@@ -678,11 +678,11 @@ TEST(Encoder, PARAM_LB_EN)
 	ParamValue p = { ParamID::LB_EN, true };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP01=1\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP01=1\r", s.c_str());
 	p = { ParamID::LB_EN, false };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP01=0\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP01=0\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LB_TRESHOLD)
@@ -691,7 +691,7 @@ TEST(Encoder, PARAM_LB_TRESHOLD)
 	ParamValue p = { ParamID::LB_TRESHOLD, 10U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;LBP02=10\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;LBP02=10\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LB_TRESHOLD_OutOfRangeCheck)
@@ -708,19 +708,19 @@ TEST(Encoder, PARAM_LB_ARGOS_POWER)
 	ParamValue p = { ParamID::LB_ARGOS_POWER, BaseArgosPower::POWER_250_MW};
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;LBP03=250\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;LBP03=250\r", s.c_str());
 	p = { ParamID::LB_ARGOS_POWER, BaseArgosPower::POWER_500_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;LBP03=500\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;LBP03=500\r", s.c_str());
 	p = { ParamID::LB_ARGOS_POWER, BaseArgosPower::POWER_750_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;LBP03=750\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;LBP03=750\r", s.c_str());
 	p = { ParamID::LB_ARGOS_POWER, BaseArgosPower::POWER_1000_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#00A;LBP03=1000\r", s);
+	STRCMP_EQUAL("$O;PARMR#00A;LBP03=1000\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_TR_LB)
@@ -729,7 +729,7 @@ TEST(Encoder, PARAM_TR_LB)
 	ParamValue p = { ParamID::TR_LB, 50U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP06=50\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP06=50\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_TR_LB_OutOfRangeCheck)
@@ -748,19 +748,19 @@ TEST(Encoder, PARAM_LB_ARGOS_MODE)
 	ParamValue p = { ParamID::LB_ARGOS_MODE, BaseArgosMode::OFF};
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP04=0\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP04=0\r", s.c_str());
 	p = { ParamID::LB_ARGOS_MODE, BaseArgosMode::LEGACY};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP04=1\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP04=1\r", s.c_str());
 	p = { ParamID::LB_ARGOS_MODE, BaseArgosMode::PASS_PREDICTION};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP04=2\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP04=2\r", s.c_str());
 	p = { ParamID::LB_ARGOS_MODE, BaseArgosMode::DUTY_CYCLE};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP04=3\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP04=3\r", s.c_str());
 }
 
 
@@ -777,7 +777,7 @@ TEST(Encoder, PARAM_LB_ARGOS_DUTY_CYCLE)
 	ParamValue p = { ParamID::LB_ARGOS_DUTY_CYCLE, 0b101010101010101010101010U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#00C;LBP05=AAAAAA\r", s);
+	STRCMP_EQUAL("$O;PARMR#00C;LBP05=AAAAAA\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LB_GNSS_EN)
@@ -786,11 +786,11 @@ TEST(Encoder, PARAM_LB_GNSS_EN)
 	ParamValue p = { ParamID::LB_GNSS_EN, true };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP06=1\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP06=1\r", s.c_str());
 	p = { ParamID::LB_GNSS_EN, false };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP06=0\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP06=0\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_DLOC_ARG_LB)
@@ -802,31 +802,31 @@ TEST(Encoder, PARAM_DLOC_ARG_LB)
 	p = { ParamID::DLOC_ARG_LB, 15U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP12=15\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP12=15\r", s.c_str());
 	p = { ParamID::DLOC_ARG_LB, 30U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP12=30\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP12=30\r", s.c_str());
 	p = { ParamID::DLOC_ARG_LB, 60U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;ARP12=60\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;ARP12=60\r", s.c_str());
 	p = { ParamID::DLOC_ARG_LB, 120U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;ARP12=120\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;ARP12=120\r", s.c_str());
 	p = { ParamID::DLOC_ARG_LB, 360U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;ARP12=360\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;ARP12=360\r", s.c_str());
 	p = { ParamID::DLOC_ARG_LB, 720U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#009;ARP12=720\r", s);
+	STRCMP_EQUAL("$O;PARMR#009;ARP12=720\r", s.c_str());
 	p = { ParamID::DLOC_ARG_LB, 1440U };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#00A;ARP12=1440\r", s);
+	STRCMP_EQUAL("$O;PARMR#00A;ARP12=1440\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LB_GNSS_HDOPFILT_THR)
@@ -835,7 +835,7 @@ TEST(Encoder, PARAM_LB_GNSS_HDOPFILT_THR)
 	ParamValue p = { ParamID::LB_GNSS_HDOPFILT_THR, 2U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP07=2\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP07=2\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LB_GNSS_HDOPFILT_THR_OutOfRangeCheck)
@@ -854,39 +854,39 @@ TEST(Encoder, PARAM_LB_ARGOS_DEPTH_PILE)
 	ParamValue p = { ParamID::LB_ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_1 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP08=1\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP08=1\r", s.c_str());
 	p = { ParamID::LB_ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_2 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP08=2\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP08=2\r", s.c_str());
 	p = { ParamID::LB_ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_3 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP08=3\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP08=3\r", s.c_str());
 	p = { ParamID::LB_ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_4 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP08=4\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP08=4\r", s.c_str());
 	p = { ParamID::LB_ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_8 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP08=8\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP08=8\r", s.c_str());
 	p = { ParamID::LB_ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_12 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#007;LBP08=9\r", s);
+	STRCMP_EQUAL("$O;PARMR#007;LBP08=9\r", s.c_str());
 	p = { ParamID::LB_ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_16 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;LBP08=10\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;LBP08=10\r", s.c_str());
 	p = { ParamID::LB_ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_20 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;LBP08=11\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;LBP08=11\r", s.c_str());
 	p = { ParamID::LB_ARGOS_DEPTH_PILE, BaseArgosDepthPile::DEPTH_PILE_24 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;LBP08=12\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;LBP08=12\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LB_GNSS_ACQ_TIMEOUT)
@@ -895,7 +895,7 @@ TEST(Encoder, PARAM_LB_GNSS_ACQ_TIMEOUT)
 	ParamValue p = { ParamID::LB_GNSS_ACQ_TIMEOUT, 30U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	CHECK_EQUAL("$O;PARMR#008;LBP09=30\r", s);
+	STRCMP_EQUAL("$O;PARMR#008;LBP09=30\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LB_GNSS_ACQ_TIMEOUT_OutOfRangeCheck)

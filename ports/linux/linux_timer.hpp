@@ -11,7 +11,7 @@
 
 class LinuxTimer : public Timer {
 public:
-	LinuxTimer() : m_is_running(false), m_counter_value(0), m_unique_id(0) {}
+	LinuxTimer() : m_counter_value(0), m_is_running(false), m_unique_id(0) {}
 	~LinuxTimer() {
 		stop();
 	}

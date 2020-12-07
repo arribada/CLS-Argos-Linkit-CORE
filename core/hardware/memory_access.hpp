@@ -3,6 +3,7 @@
 
 class MemoryAccess {
 public:
+	virtual ~MemoryAccess() {}
 	virtual void *get_physical_address(unsigned int, unsigned int) = 0;
 };
 

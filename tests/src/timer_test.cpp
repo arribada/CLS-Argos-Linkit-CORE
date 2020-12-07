@@ -60,10 +60,10 @@ TEST(Timer, TimerCancelSingleWithMulti)
 {
 	static bool has_fired[2] = {false};
 
-	auto timer_handle_1 = timer->add_schedule([]() { has_fired[0] = true; }, timer->get_counter() + 2);
-	auto timer_handle_2 = timer->add_schedule([]() { has_fired[1] = true; }, timer->get_counter() + 5);
+	auto timer_handle = timer->add_schedule([]() { has_fired[0] = true; }, timer->get_counter() + 2);
+	timer->add_schedule([]() { has_fired[1] = true; }, timer->get_counter() + 5);
 
-	timer->cancel_schedule(timer_handle_1);
+	timer->cancel_schedule(timer_handle);
 	std::this_thread::sleep_for(std::chrono::milliseconds(15));
 	CHECK_FALSE(has_fired[0]);
 	CHECK_TRUE(has_fired[1]);

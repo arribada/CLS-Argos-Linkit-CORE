@@ -1,7 +1,9 @@
+#include <iostream>
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_log_redirect.h"
 #include "ble_interface.hpp"
+#include "dte_protocol.hpp"
 #include "bsp.hpp"
 
 #define RED_LED_GPIO (NRF_GPIO_PIN_MAP(1, 7))
@@ -33,6 +35,18 @@ int main() {
 	{
 		nrf_gpio_pin_toggle(RED_LED_GPIO);
 		nrf_delay_ms(500);
+
+		auto req = BleInterface::get_instance().read_line();
+
+		if (req.size())
+		{
+			std::string resp;
+			auto action = DTEHandler::handle_dte_message(req, resp);
+
+			std::cout << req;
+			std::cout << resp << std::endl;
+		}
+		
 	}
 
 	return 0;

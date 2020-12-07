@@ -89,11 +89,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     #${CORE_DIR}/configuration
     ${CORE_DIR}/filesystem
     ${CORE_DIR}/interface
+    ${CORE_DIR}/protocol
     ${CORE_DIR}/util
     #${CORE_DIR}/hardware
-    #${CORE_DIR}/logging
+    ${CORE_DIR}/logging
+    ${CORE_DIR}/sm
     #${CORE_DIR}/scheduling
-    #${CORE_DIR}/sm
     ${PROJ_DIR}/core/interface
 )
 

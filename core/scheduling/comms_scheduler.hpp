@@ -3,6 +3,7 @@
 
 class CommsScheduler {
 public:
+	virtual ~CommsScheduler() {}
 	virtual void start() = 0;
 	virtual void stop() = 0;
 	virtual void notify_saltwater_switch_state(bool state) = 0;

@@ -63,7 +63,7 @@ TEST(DTEHandler, PARML_REQ)
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::PARML_REQ);
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;PARML#0D7;IDT06,IDT07,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP09,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09\r", resp);
+	STRCMP_EQUAL("$O;PARML#0D7;IDT06,IDT07,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP09,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09\r", resp.c_str());
 }
 
 TEST(DTEHandler, PARMW_REQ)
@@ -71,7 +71,7 @@ TEST(DTEHandler, PARMW_REQ)
 	std::string resp;
 	std::string req = "$PARMW#009;ARP04=500\r";
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;PARMW#000;\r", resp);
+	STRCMP_EQUAL("$O;PARMW#000;\r", resp.c_str());
 	CHECK_TRUE(BaseArgosPower::POWER_500_MW == configuration_store->read_param<BaseArgosPower>(ParamID::ARGOS_POWER));
 }
 
@@ -80,7 +80,7 @@ TEST(DTEHandler, PARMR_REQ)
 	std::string resp;
 	std::string req = "$PARMR#0D7;IDT06,IDT07,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP09,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09\r";
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;PARMR#175;IDT06=0,IDT07=0,IDT02=0,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,IDP09=,ART03=Thu Jan  1 00:00:00 1970,ARP03=399.91,ARP04=750,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=10,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=750,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=60,LBP07=2,LBP08=1,LBP09=60\r", resp);
+	STRCMP_EQUAL("$O;PARMR#175;IDT06=0,IDT07=0,IDT02=0,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,IDP09=,ART03=Thu Jan  1 00:00:00 1970,ARP03=399.91,ARP04=750,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=10,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=750,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=60,LBP07=2,LBP08=1,LBP09=60\r", resp.c_str());
 }
 
 TEST(DTEHandler, PARMR_REQ_CheckEmptyRequest)
@@ -88,7 +88,7 @@ TEST(DTEHandler, PARMR_REQ_CheckEmptyRequest)
 	std::string resp;
 	std::string req = "$PARMR#000;\r";
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$N;PARMR#001;5\r", resp);
+	STRCMP_EQUAL("$N;PARMR#001;5\r", resp.c_str());
 }
 
 TEST(DTEHandler, PROFW_PROFR_REQ)
@@ -96,10 +96,10 @@ TEST(DTEHandler, PROFW_PROFR_REQ)
 	std::string resp;
 	std::string req = "$PROFW#018;Profile Name For Tracker\r";
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;PROFW#000;\r", resp);
+	STRCMP_EQUAL("$O;PROFW#000;\r", resp.c_str());
 	req = "$PROFR#000;\r";
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;PROFR#018;Profile Name For Tracker\r", resp);
+	STRCMP_EQUAL("$O;PROFR#018;Profile Name For Tracker\r", resp.c_str());
 }
 
 TEST(DTEHandler, SECUR_REQ)
@@ -107,7 +107,7 @@ TEST(DTEHandler, SECUR_REQ)
 	std::string resp;
 	std::string req = "$SECUR#000;\r";
 	CHECK_TRUE(DTEAction::SECUR == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;SECUR#000;\r", resp);
+	STRCMP_EQUAL("$O;SECUR#000;\r", resp.c_str());
 }
 
 TEST(DTEHandler, RESET_REQ)
@@ -115,7 +115,7 @@ TEST(DTEHandler, RESET_REQ)
 	std::string resp;
 	std::string req = "$RESET#000;\r";
 	CHECK_TRUE(DTEAction::RESET == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;RESET#000;\r", resp);
+	STRCMP_EQUAL("$O;RESET#000;\r", resp.c_str());
 }
 
 TEST(DTEHandler, FACTR_REQ)
@@ -123,7 +123,7 @@ TEST(DTEHandler, FACTR_REQ)
 	std::string resp;
 	std::string req = "$FACTR#000;\r";
 	CHECK_TRUE(DTEAction::FACTR == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;FACTR#000;\r", resp);
+	STRCMP_EQUAL("$O;FACTR#000;\r", resp.c_str());
 }
 
 TEST(DTEHandler, DUMPM_REQ)
@@ -131,12 +131,12 @@ TEST(DTEHandler, DUMPM_REQ)
 	std::string resp;
 	std::string req = "$DUMPM#007;100,200\r";
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;DUMPM#2AC;AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8=\r", resp);
+	STRCMP_EQUAL("$O;DUMPM#2AC;AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8=\r", resp.c_str());
 }
 
 TEST(DTEHandler, ZONEW_REQ)
 {
-	BaseRawData zone_raw = {0,0};
+	BaseRawData zone_raw = {0,0, ""};
 	BaseZone zone;
 	zone.zone_id = 1;
 	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
@@ -152,7 +152,7 @@ TEST(DTEHandler, ZONEW_REQ)
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::ZONEW_REQ, zone_raw);
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;ZONEW#000;\r", resp);
+	STRCMP_EQUAL("$O;ZONEW#000;\r", resp.c_str());
 
 	BaseZone& stored_zone = configuration_store->read_zone();
 	CHECK_TRUE(stored_zone == zone);
@@ -160,7 +160,7 @@ TEST(DTEHandler, ZONEW_REQ)
 
 TEST(DTEHandler, ZONER_REQ)
 {
-	BaseZone zone = {0};
+	BaseZone zone;
 	zone.zone_id = 1;
 	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
 	zone.argos_mode = BaseArgosMode::DUTY_CYCLE;
@@ -188,7 +188,7 @@ TEST(DTEHandler, ZONER_REQ)
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::ZONER_REQ, 1);
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;ZONER#01C;gZcRAECB2LCqqmoBAAAAAAAAAAA=\r", resp);
+	STRCMP_EQUAL("$O;ZONER#01C;gZcRAECB2LCqqmoBAAAAAAAAAAA=\r", resp.c_str());
 
 	std::string zone_resp_bits = websocketpp::base64_decode("gZcRAECB2LCqqmoBAAAAAAAAAAA="s);
 	BaseZone zone_resp_decoded;
@@ -199,7 +199,7 @@ TEST(DTEHandler, ZONER_REQ)
 
 TEST(DTEHandler, PASPW_REQ)
 {
-	BaseRawData paspw_raw = {0,0};
+	BaseRawData paspw_raw = {0,0, ""};
 	BasePassPredict pass_predict;
 	pass_predict.num_records = 1;
 	PassPredictCodec::encode(pass_predict, paspw_raw.str);
@@ -207,7 +207,7 @@ TEST(DTEHandler, PASPW_REQ)
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::PASPW_REQ, paspw_raw);
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;PASPW#000;\r", resp);
+	STRCMP_EQUAL("$O;PASPW#000;\r", resp.c_str());
 
 	BasePassPredict& stored_pass_predict = configuration_store->read_pass_predict();
 	CHECK_TRUE(stored_pass_predict == pass_predict);
@@ -222,7 +222,7 @@ TEST(DTEHandler, DUMPL_REQ)
 	mock().expectOneCall("read").onObject(mock_system_log).withIntParameter("index", 0).ignoreOtherParameters();
 
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;DUMPL#0AC;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", resp);
+	STRCMP_EQUAL("$O;DUMPL#0AC;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", resp.c_str());
 
 	// Check last 16 are retrieved when more than 16 entries are in the log file
 	mock().expectOneCall("num_entries").onObject(mock_system_log).andReturnValue(20);
@@ -242,7 +242,7 @@ TEST(DTEHandler, DUMPD_REQ)
 	mock().expectOneCall("read").onObject(mock_sensor_log).withIntParameter("index", 0).ignoreOtherParameters();
 
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;DUMPD#0AC;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", resp);
+	STRCMP_EQUAL("$O;DUMPD#0AC;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", resp.c_str());
 
 	// Check last 16 are retrieved when more than 16 entries are in the log file
 	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(20);

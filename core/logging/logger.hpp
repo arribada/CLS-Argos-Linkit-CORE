@@ -23,6 +23,8 @@ private:
 	int m_log_level = LOG_LEVEL_DEBUG;
 
 public:
+	virtual ~Logger() {}
+
 	void set_log_level(int level) {
 		m_log_level = level;
 	}

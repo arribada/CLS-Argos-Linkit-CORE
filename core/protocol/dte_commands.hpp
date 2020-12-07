@@ -47,185 +47,333 @@ struct DTECommandMap {
 
 static const DTECommandMap command_map[] = {
 	{
-		"PARML",
-		DTECommand::PARML_REQ,
+		.name = "PARML",
+		.command = DTECommand::PARML_REQ,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"PARMR",
-		DTECommand::PARMR_REQ,
+		.name = "PARMR",
+		.command = DTECommand::PARMR_REQ,
+		.prototype = 
 		{
-			{ "keys", "", BaseEncoding::KEY_LIST, 0, 0, {} }
+			{
+				.name = "keys",
+				.key = "",
+				.encoding = BaseEncoding::KEY_LIST,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
 		}
 	},
 	{
-		"PARMW",
-		DTECommand::PARMW_REQ,
+		.name = "PARMW",
+		.command = DTECommand::PARMW_REQ,
+		.prototype = 
 		{
-			{ "key_values", "", BaseEncoding::KEY_VALUE_LIST, 0, 0, {} }
+			{
+				.name = "key_values",
+				.key = "",
+				.encoding = BaseEncoding::KEY_VALUE_LIST,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
 		}
 	},
 	{
-		"ZONER",
-		DTECommand::ZONER_REQ,
+		.name = "ZONER",
+		.command = DTECommand::ZONER_REQ,
+		.prototype = 
 		{
-			{ "zone_id", "", BaseEncoding::HEXADECIMAL, 1U, 1U, {} }
+			{
+				.name = "zone_id",
+				.key = "",
+				.encoding = BaseEncoding::HEXADECIMAL,
+				.min_value = 1U,
+				.max_value = 1U,
+				.permitted_values = {},
+				.is_implemented = false
+			}
 		}
 	},
 	{
-		"ZONEW",
-		DTECommand::ZONEW_REQ,
+		.name = "ZONEW",
+		.command = DTECommand::ZONEW_REQ,
+		.prototype = 
 		{
-			{ "zone_file", "", BaseEncoding::BASE64, 0, 0, {} }
+			{
+				.name = "zone_file",
+				.key = "",
+				.encoding = BaseEncoding::BASE64,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
 		}
 	},
 	{
-		"PROFR",
-		DTECommand::PROFR_REQ,
-		{
-		}
-	},
-	{
-		"PROFW",
-		DTECommand::PROFW_REQ,
-		{
-			{ "profile_name", "", BaseEncoding::TEXT, 1, 128, {} }
-		}
-	},
-	{
-		"PASPW",
-		DTECommand::PASPW_REQ,
-		{
-			{ "prepass_file", "", BaseEncoding::BASE64, 0, 0, {} }
-		}
-	},
-	{
-		"SECUR",
-		DTECommand::SECUR_REQ,
-		{
-		}
-	},
-	{
-		"DUMPM",
-		DTECommand::DUMPM_REQ,
-		{
-			{ "start_address", "", BaseEncoding::HEXADECIMAL, 0U, 0U, {} },
-			{ "length", "", BaseEncoding::HEXADECIMAL, 0U, 0x500U, {} }
-		}
-	},
-	{
-		"DUMPL",
-		DTECommand::DUMPL_REQ,
-		{
-		}
-	},
-	{
-		"DUMPD",
-		DTECommand::DUMPD_REQ,
+		.name = "PROFR",
+		.command = DTECommand::PROFR_REQ,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"RESET",
-		DTECommand::RESET_REQ,
+		.name = "PROFW",
+		.command = DTECommand::PROFW_REQ,
+		.prototype = 
+		{
+			{
+				.name = "profile_name",
+				.key = "",
+				.encoding = BaseEncoding::TEXT,
+				.min_value = 1,
+				.max_value = 128,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
+	{
+		.name = "PASPW",
+		.command = DTECommand::PASPW_REQ,
+		.prototype = 
+		{
+			{
+				.name = "prepass_file",
+				.key = "",
+				.encoding = BaseEncoding::BASE64,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
+	{
+		.name = "SECUR",
+		.command = DTECommand::SECUR_REQ,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"FACTR",
-		DTECommand::FACTR_REQ,
+		.name = "DUMPM",
+		.command = DTECommand::DUMPM_REQ,
+		.prototype = 
+		{
+			{
+				.name = "start_address",
+				.key = "",
+				.encoding = BaseEncoding::HEXADECIMAL,
+				.min_value = 0U,
+				.max_value = 0U,
+				.permitted_values = {},
+				.is_implemented = false
+			},
+			{
+				.name = "length",
+				.key = "",
+				.encoding = BaseEncoding::HEXADECIMAL,
+				.min_value = 0U,
+				.max_value = 0x500U,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
+	{
+		.name = "DUMPL",
+		.command = DTECommand::DUMPL_REQ,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"PARML",
-		DTECommand::PARML_RESP,
-		{
-			{ "keys", "", BaseEncoding::KEY_LIST, 0, 0, {} }
-		}
-	},
-	{
-		"PARMR",
-		DTECommand::PARMR_RESP,
-		{
-			{ "key_values", "", BaseEncoding::KEY_VALUE_LIST, 0, 0, {} }
-		}
-	},
-	{
-		"PARMW",
-		DTECommand::PARMW_RESP,
+		.name = "DUMPD",
+		.command = DTECommand::DUMPD_REQ,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"ZONER",
-		DTECommand::ZONER_RESP,
-		{
-			{ "zone_file", "", BaseEncoding::BASE64, 0, 0, {} }
-		}
-	},
-	{
-		"ZONEW",
-		DTECommand::ZONEW_RESP,
+		.name = "RESET",
+		.command = DTECommand::RESET_REQ,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"PROFR",
-		DTECommand::PROFR_RESP,
-		{
-			{ "profile_name", "", BaseEncoding::TEXT, "", "", {} }
-		}
-	},
-	{
-		"PROFW",
-		DTECommand::PROFW_RESP,
+		.name = "FACTR",
+		.command = DTECommand::FACTR_REQ,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"PASPW",
-		DTECommand::PASPW_RESP,
+		.name = "PARML",
+		.command = DTECommand::PARML_RESP,
+		.prototype = 
+		{
+			{
+				.name = "keys",
+				.key = "",
+				.encoding = BaseEncoding::KEY_LIST,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
+	{
+		.name = "PARMR",
+		.command = DTECommand::PARMR_RESP,
+		.prototype = 
+		{
+			{
+				.name = "key_values",
+				.key = "",
+				.encoding = BaseEncoding::KEY_VALUE_LIST,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
+	{
+		.name = "PARMW",
+		.command = DTECommand::PARMW_RESP,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"SECUR",
-		DTECommand::SECUR_RESP,
+		.name = "ZONER",
+		.command = DTECommand::ZONER_RESP,
+		.prototype = 
+		{
+			{
+				.name = "zone_file",
+				.key = "",
+				.encoding = BaseEncoding::BASE64,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
+	{
+		.name = "ZONEW",
+		.command = DTECommand::ZONEW_RESP,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"DUMPM",
-		DTECommand::DUMPM_RESP,
+		.name = "PROFR",
+		.command = DTECommand::PROFR_RESP,
+		.prototype = 
 		{
-			{ "data", "", BaseEncoding::BASE64, 0, 0, {} }
+			{
+				.name = "profile_name",
+				.key = "",
+				.encoding = BaseEncoding::TEXT,
+				.min_value = "",
+				.max_value = "",
+				.permitted_values = {},
+				.is_implemented = false
+			}
 		}
 	},
 	{
-		"DUMPL",
-		DTECommand::DUMPL_RESP,
-		{
-			{ "data", "", BaseEncoding::BASE64, 0, 0, {} }
-		}
-	},
-	{
-		"DUMPD",
-		DTECommand::DUMPD_RESP,
-		{
-			{ "data", "", BaseEncoding::BASE64, 0, 0, {} }
-		}
-	},
-	{
-		"RESET",
-		DTECommand::RESET_RESP,
+		.name = "PROFW",
+		.command = DTECommand::PROFW_RESP,
+		.prototype = 
 		{
 		}
 	},
 	{
-		"FACTR",
-		DTECommand::FACTR_RESP,
+		.name = "PASPW",
+		.command = DTECommand::PASPW_RESP,
+		.prototype = 
+		{
+		}
+	},
+	{
+		.name = "SECUR",
+		.command = DTECommand::SECUR_RESP,
+		.prototype = 
+		{
+		}
+	},
+	{
+		.name = "DUMPM",
+		.command = DTECommand::DUMPM_RESP,
+		.prototype = 
+		{
+			{
+				.name = "data",
+				.key = "",
+				.encoding = BaseEncoding::BASE64,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
+	{
+		.name = "DUMPL",
+		.command = DTECommand::DUMPL_RESP,
+		.prototype = 
+		{
+			{
+				.name = "data",
+				.key = "",
+				.encoding = BaseEncoding::BASE64,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
+	{
+		.name = "DUMPD",
+		.command = DTECommand::DUMPD_RESP,
+		.prototype = 
+		{
+			{
+				.name = "data",
+				.key = "",
+				.encoding = BaseEncoding::BASE64,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
+	{
+		.name = "RESET",
+		.command = DTECommand::RESET_RESP,
+		.prototype = 
+		{
+		}
+	},
+	{
+		.name = "FACTR",
+		.command = DTECommand::FACTR_RESP,
+		.prototype = 
 		{
 		}
 	}

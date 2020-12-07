@@ -131,9 +131,11 @@ private:
 		case 10:
 			return 24 * 60 * 60;
 			break;
+		
+		default:
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 
-		throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 	}
 
 	static BaseArgosDepthPile decode_depth_pile(unsigned int x) {
@@ -162,9 +164,10 @@ private:
 		case 12:
 			return BaseArgosDepthPile::DEPTH_PILE_24;
 			break;
+		
+		default:
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
-
-		throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 	}
 
 	static unsigned int encode_depth_pile(BaseArgosDepthPile x) {
@@ -196,9 +199,10 @@ private:
 		case BaseArgosDepthPile::DEPTH_PILE_24:
 			return 12;
 			break;
-		}
 
-		throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		default:
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
 	}
 
 	static unsigned int encode_arg_loc(unsigned int x) {
@@ -233,8 +237,10 @@ private:
 		case 24 * 60 * 60:
 			return 10;
 			break;
+		
+		default:
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
-		throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 	}
 
 public:
@@ -412,7 +418,7 @@ protected:
 		output.copyfmt(old);
 	}
 	static inline void encode(std::ostringstream& output, const bool& value) {
-		encode(output, (const unsigned int)value);
+		encode(output, static_cast<unsigned int>(value));
 	}
 	static inline void encode(std::ostringstream& output, const int& value) {
 		output << value;
@@ -554,44 +560,49 @@ public:
 			if (arg_index > 0)
 				payload << ",";
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+
 			switch (command_args[arg_index].encoding) {
-			case BaseEncoding::DECIMAL:
-			{
-				int arg = va_arg(args, int);
-				validate(command_args[arg_index], arg);
-				encode(payload, arg);
+				case BaseEncoding::DECIMAL:
+					{
+						int arg = va_arg(args, int);
+						validate(command_args[arg_index], arg);
+						encode(payload, arg);
+						break;
+					}
+				case BaseEncoding::HEXADECIMAL:
+					{
+						unsigned int arg = va_arg(args, unsigned int);
+						validate(command_args[arg_index], arg);
+						encode(payload, arg, true);
+						break;
+					}
+				case BaseEncoding::BOOLEAN:
+					{
+						bool arg = va_arg(args, unsigned int);
+						encode(payload, arg);
+						break;
+					}
+				case BaseEncoding::BASE64:
+					encode(payload, va_arg(args, BaseRawData));
+					break;
+				case BaseEncoding::TEXT:
+					{
+						DEBUG_TRACE("Encoding TEXT....");
+						std::string arg = va_arg(args, std::string);
+						DEBUG_TRACE("Checking %s....", arg.c_str());
+						validate(command_args[arg_index], arg);
+						encode(payload, arg);
+						break;
+					}
+				default:
+					DEBUG_ERROR("parameter type not permitted");
+					throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 			}
-			break;
-			case BaseEncoding::HEXADECIMAL:
-			{
-				unsigned int arg = va_arg(args, unsigned int);
-				validate(command_args[arg_index], arg);
-				encode(payload, arg, true);
-			}
-			break;
-			case BaseEncoding::BOOLEAN:
-			{
-				bool arg = va_arg(args, unsigned int);
-				encode(payload, arg);
-			}
-			break;
-			case BaseEncoding::BASE64:
-				encode(payload, va_arg(args, BaseRawData));
-				break;
-			case BaseEncoding::TEXT:
-			{
-				DEBUG_TRACE("Encoding TEXT....");
-				std::string arg = va_arg(args, std::string);
-				DEBUG_TRACE("Checking %s....", arg.c_str());
-				validate(command_args[arg_index], arg);
-				encode(payload, arg);
-			}
-			break;
-			default:
-				DEBUG_ERROR("parameter type not permitted");
-				throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
-				break;
-			}
+
+#pragma GCC diagnostic pop
+
 		}
 		va_end(args);
 
@@ -851,98 +862,100 @@ private:
 	}
 
 	static void decode(std::istringstream& ss, std::vector<ParamValue>& key_values) {
-		std::string key_value;
-		while (std::getline(ss, key_value, ',')) {
+		std::string key_str;
+		while (std::getline(ss, key_str, ',')) {
 			std::smatch base_match;
 			std::regex re_key_value("^([A-Z0-9]+)=(.*)$");
-			if (std::regex_match(key_value, base_match, re_key_value) && base_match.size() == 3) {
+			if (std::regex_match(key_str, base_match, re_key_value) && base_match.size() == 3) {
 				ParamValue key_value;
 				std::string key = base_match.str(1);
 				std::string value = base_match.str(2);
 				key_value.param = lookup_key(key);
 				const BaseMap& param_ref = param_map[(unsigned int)key_value.param];
 				switch (param_ref.encoding) {
-				case BaseEncoding::DECIMAL:
-				{
-					int x = decode<int>(value);
-					DTEEncoder::validate(param_ref, x);
-					key_value.value = x;
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::HEXADECIMAL:
-				{
-					unsigned int x = decode<unsigned int>(value, true);
-					DTEEncoder::validate(param_ref, x);
-					key_value.value = x;
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::UINT:
-				{
-					unsigned int x = decode<unsigned int>(value);
-					DTEEncoder::validate(param_ref, x);
-					key_value.value = x;
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::BOOLEAN:
-				{
-					key_value.value = decode<bool>(value);
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::FLOAT:
-				{
-					double x = decode<double>(value);
-					DTEEncoder::validate(param_ref, x);
-					key_value.value = x;
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::TEXT:
-				{
-					key_value.value = value;
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::BASE64:
-				{
-					key_value.value = websocketpp::base64_decode(value);
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::ARGOSPOWER:
-				{
-					BaseArgosPower x = decode_power(value);
-					key_value.value = x;
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::DEPTHPILE:
-				{
-					BaseArgosDepthPile x = decode_depth_pile(value);
-					key_value.value = x;
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::ARGOSMODE:
-				{
-					BaseArgosMode x = decode_mode(value);
-					key_value.value = x;
-					key_values.push_back(key_value);
-					break;
-				}
-				case BaseEncoding::DATESTRING:
-				{
-					std::time_t x = decode_datestring(value);
-					key_value.value = x;
-					key_values.push_back(key_value);
-					break;
-				}
-				default:
-					break;
-				}
+					case BaseEncoding::DECIMAL:
+					{
+						int x = decode<int>(value);
+						DTEEncoder::validate(param_ref, x);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::HEXADECIMAL:
+					{
+						unsigned int x = decode<unsigned int>(value, true);
+						DTEEncoder::validate(param_ref, x);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::UINT:
+					{
+						unsigned int x = decode<unsigned int>(value);
+						DTEEncoder::validate(param_ref, x);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::BOOLEAN:
+					{
+						key_value.value = decode<bool>(value);
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::FLOAT:
+					{
+						double x = decode<double>(value);
+						DTEEncoder::validate(param_ref, x);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::TEXT:
+					{
+						key_value.value = value;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::BASE64:
+					{
+						key_value.value = websocketpp::base64_decode(value);
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::ARGOSPOWER:
+					{
+						BaseArgosPower x = decode_power(value);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::DEPTHPILE:
+					{
+						BaseArgosDepthPile x = decode_depth_pile(value);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::ARGOSMODE:
+					{
+						BaseArgosMode x = decode_mode(value);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::DATESTRING:
+					{
+						std::time_t x = decode_datestring(value);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::KEY_LIST:
+					case BaseEncoding::KEY_VALUE_LIST:
+					default:
+						break;
+					}
 			}
 		}
 	}
@@ -1072,6 +1085,10 @@ public:
 					arg_list.push_back(websocketpp::base64_decode(decode(ss)));
 					break;
 				}
+				case BaseEncoding::DATESTRING:
+				case BaseEncoding::DEPTHPILE:
+				case BaseEncoding::ARGOSMODE:
+				case BaseEncoding::ARGOSPOWER:
 				default:
 					break;
 				}

@@ -34,6 +34,34 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_compile_options(${PROJECT_NAME} PRIVATE
     -g3
 
+    # Warnings
+    -Wall
+    -Wextra
+    -Werror
+    -Wduplicated-cond
+    -Wduplicated-branches
+    -Wlogical-op
+    -Wnull-dereference
+    -Wshadow
+    -Wpointer-arith
+    -Wdangling-else
+    -Wrestrict
+    -Wdouble-promotion
+    -Wvla
+    -Wswitch-enum
+    -Wswitch-default
+    -Winvalid-pch
+    -Wodr
+
+    # C Only Warnings
+    $<$<COMPILE_LANGUAGE:C>:${-Wjump-misses-init}>
+
+    # Disabled Warnings
+    -Wno-unused-parameter
+    -Wno-expansion-to-defined # The NRFX library requires this
+    -Wno-maybe-uninitialized
+    -Wno-unused-function
+
     # Always output coloured text from GCC
     -fdiagnostics-color=always
 )

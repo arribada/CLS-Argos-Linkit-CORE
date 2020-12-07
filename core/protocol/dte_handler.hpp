@@ -127,8 +127,9 @@ private:
 		unsigned int address = std::get<unsigned int>(arg_list[0]);
 		unsigned int length = std::get<unsigned int>(arg_list[1]);
 		BaseRawData raw = {
-			memory_access->get_physical_address(address, length),
-			length
+			.ptr = memory_access->get_physical_address(address, length),
+			.length = length,
+			.str = ""
 		};
 
 		return DTEEncoder::encode(DTECommand::DUMPM_RESP, error_code, raw);
@@ -214,6 +215,9 @@ public:
 				return action;
 		} catch (ErrorCode e) {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+
 			switch (e) {
 			case ErrorCode::DTE_PROTOCOL_MESSAGE_TOO_LARGE:
 			case ErrorCode::DTE_PROTOCOL_PARAM_KEY_UNRECOGNISED:
@@ -287,4 +291,7 @@ public:
 
 		return action;
 	}
+
+#pragma GCC diagnostic pop
+
 };
