@@ -55,8 +55,6 @@ static ble_uuid_t m_adv_uuids[]          =                                      
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}
 };
 
-
-
 void BleInterface::init()
 {
     timers_init();
@@ -70,8 +68,25 @@ void BleInterface::init()
 
 std::string BleInterface::read_line()
 {
-    std::string temp;
-    return temp;
+    std::string str;
+
+    // Check ring buffer for a carriage return, if so we have a string to return
+
+    uint32_t contents = m_ring_buffer.occupancy();
+
+    for (uint32_t i = 0; i < contents; ++i)
+    {
+        if (m_ring_buffer.peek_at(i) == '\r')
+        {
+            // String found, lets extract it
+            for (uint32_t j = 0; j < i; ++j)
+                str.push_back(m_ring_buffer.remove());
+            
+            break;
+        }
+    }
+    
+    return str;
 }
 
 void BleInterface::write(std::string str)
@@ -81,7 +96,7 @@ void BleInterface::write(std::string str)
     {
         uint16_t length = (uint16_t)str.length();
         // WARN: Unfortunately the ble_nus_data_send() library incorrectly requires a non-const data pointer
-        // By examining the code we can see this incorrect and at least for SDK v17.0.2 it is safe to cast away the const
+        // By examining the code we can see this is incorrect and at least for SDK v17.0.2 it is safe to cast away the const
         err_code = ble_nus_data_send(&m_nus, reinterpret_cast<uint8_t *>(const_cast<char *>(str.c_str())), &length, m_conn_handle);
         if ((err_code != NRF_ERROR_INVALID_STATE) &&
             (err_code != NRF_ERROR_RESOURCES) &&
@@ -339,6 +354,7 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
         // Echo the received data
         for (uint32_t i = 0; i < p_evt->params.rx_data.length; i++)
         {
+            m_ring_buffer.insert(p_evt->params.rx_data.p_data[i]);
             printf("%c", p_evt->params.rx_data.p_data[i]);
         }
     }

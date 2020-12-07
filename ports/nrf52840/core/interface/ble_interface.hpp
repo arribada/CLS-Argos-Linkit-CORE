@@ -7,6 +7,7 @@
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "ble_conn_params.h"
+#include "ring_buffer.hpp"
 
 class BleInterface : public Interface
 {
@@ -55,4 +56,6 @@ private:
     static void static_on_adv_evt(ble_adv_evt_t ble_adv_evt) { get_instance().on_adv_evt(ble_adv_evt); }
     static void static_on_conn_params_evt(ble_conn_params_evt_t * p_evt) { get_instance().on_conn_params_evt(p_evt); };
     static void static_conn_params_error_handler(uint32_t nrf_error) { get_instance().conn_params_error_handler(nrf_error); }
+
+    RingBuffer<512> m_ring_buffer;
 };
