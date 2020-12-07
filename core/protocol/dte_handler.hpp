@@ -1,9 +1,14 @@
+#include <algorithm>
+
 #include "dte_protocol.hpp"
 #include "config_store.hpp"
 #include "memory_access.hpp"
 
 using namespace std::literals::string_literals;
 
+
+// This governs the maximum number of log entries we can read out in a single request
+#define DTE_HANDLER_MAX_LOG_DUMP_ENTRIES          16U
 
 enum class DTEAction {
 	NONE,    // Default action is none
@@ -12,9 +17,11 @@ enum class DTEAction {
 	SECUR    // DTE service must be notified when SECUR is requested to grant privileges for OTA FW commands
 };
 
-
+// The DTEHandler requires access to the following system objects that are extern declared
 extern ConfigurationStore *configuration_store;
 extern MemoryAccess *memory_access;
+extern Logger *sensor_log;
+extern Logger *system_log;
 
 
 class DTEHandler {
@@ -156,6 +163,44 @@ private:
 		return DTEEncoder::encode(DTECommand::ZONER_RESP, error_code, zone_raw);
 	}
 
+	static std::string PASPW_REQ(int error_code, std::vector<BaseType>& arg_list) {
+
+		if (!error_code) {
+			BasePassPredict pass_predict;
+			std::string paspw_bits = std::get<std::string>(arg_list[0]);
+			PassPredictCodec::decode(paspw_bits, pass_predict);
+			configuration_store->write_pass_predict(pass_predict);
+		}
+
+		return DTEEncoder::encode(DTECommand::PASPW_RESP, error_code);
+	}
+
+	static std::string DUMPX_REQ(int error_code, DTECommand resp, Logger *logger) {
+
+		if (error_code) {
+			return DTEEncoder::encode(resp, error_code);
+		}
+
+		LogEntry log_entries[DTE_HANDLER_MAX_LOG_DUMP_ENTRIES];
+		BaseRawData raw_data;
+		unsigned int start_index = 0;
+		unsigned int num_entries = logger->num_entries();
+		raw_data.ptr = log_entries;
+		raw_data.length = std::min(DTE_HANDLER_MAX_LOG_DUMP_ENTRIES, num_entries);
+
+		// Set the start index to reflect the last "N" entries being retrieved
+		if (num_entries > DTE_HANDLER_MAX_LOG_DUMP_ENTRIES) {
+			start_index = num_entries - DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
+		}
+
+		for (unsigned int i = 0; i < raw_data.length; i++)
+			logger->read(&log_entries[i], i + start_index);
+
+		raw_data.length *= sizeof(LogEntry);
+
+		return DTEEncoder::encode(resp, error_code, raw_data);
+	}
+
 public:
 	static DTEAction handle_dte_message(std::string& req, std::string& resp) {
 		DTECommand command;
@@ -169,6 +214,9 @@ public:
 			if (!DTEDecoder::decode(req, command, error_code, arg_list, params, param_values))
 				return action;
 		} catch (ErrorCode e) {
+
+			std::cout << "error: " << (unsigned)e << "\n";
+
 			switch (e) {
 			case ErrorCode::DTE_PROTOCOL_MESSAGE_TOO_LARGE:
 			case ErrorCode::DTE_PROTOCOL_PARAM_KEY_UNRECOGNISED:
@@ -226,6 +274,15 @@ public:
 			break;
 		case DTECommand::ZONER_REQ:
 			resp = ZONER_REQ(error_code, arg_list);
+			break;
+		case DTECommand::PASPW_REQ:
+			resp = PASPW_REQ(error_code, arg_list);
+			break;
+		case DTECommand::DUMPD_REQ:
+			resp = DUMPX_REQ(error_code, DTECommand::DUMPD_RESP, sensor_log);
+			break;
+		case DTECommand::DUMPL_REQ:
+			resp = DUMPX_REQ(error_code, DTECommand::DUMPL_RESP, system_log);
 			break;
 		default:
 			break;

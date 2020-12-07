@@ -5,6 +5,8 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+#include "mock_logger.hpp"
+
 
 #define BLOCK_COUNT   (256)
 #define BLOCK_SIZE    (64*1024)
@@ -15,14 +17,20 @@
 extern FileSystem *main_filesystem;
 extern ConfigurationStore *configuration_store;
 extern MemoryAccess *memory_access;
+extern Logger *sensor_log;
+extern Logger *system_log;
+
 
 TEST_GROUP(DTEHandler)
 {
 	LFSRamFileSystem *ram_filesystem;
 	LFSConfigurationStore *store;
 	FakeMemoryAccess *fake_memory_access;
+	MockLog *mock_system_log;
+	MockLog *mock_sensor_log;
 
 	void setup() {
+		MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
 		ram_filesystem = new LFSRamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
 		ram_filesystem->format();
 		ram_filesystem->mount();
@@ -32,13 +40,20 @@ TEST_GROUP(DTEHandler)
 		configuration_store = store;
 		fake_memory_access = new FakeMemoryAccess();
 		memory_access = fake_memory_access;
+		mock_system_log = new MockLog;
+		system_log = mock_system_log;
+		mock_sensor_log = new MockLog;
+		sensor_log = mock_sensor_log;
 	}
 
 	void teardown() {
+		delete mock_sensor_log;
+		delete mock_system_log;
 		delete fake_memory_access;
 		delete store;
 		ram_filesystem->umount();
 		delete ram_filesystem;
+		MemoryLeakWarningPlugin::restoreNewDeleteOverloads();
 	}
 };
 
@@ -137,26 +152,95 @@ TEST(DTEHandler, ZONEW_REQ)
 
 TEST(DTEHandler, ZONER_REQ)
 {
-	BaseZone zone;
+	BaseZone zone = {0};
 	zone.zone_id = 1;
 	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
 	zone.argos_mode = BaseArgosMode::DUTY_CYCLE;
 	zone.argos_duty_cycle = 0b101010101010101010101010;
 	zone.argos_time_repetition_seconds = 60U;
+	zone.delta_arg_loc_cellular_seconds = 0;
 	zone.delta_arg_loc_argos_seconds = 7*60U;
 	zone.zone_type = BaseZoneType::CIRCLE;
 	zone.gnss_enable = true;
 	zone.argos_power = BaseArgosPower::POWER_1000_MW;
+	zone.center_latitude_y = 0;
+	zone.center_longitude_x = 0;
+	zone.radius_m = 0;
+	zone.day = 1;
+	zone.month = 1;
+	zone.year = 1970;
+	zone.hour = 0;
+	zone.minute = 0;
+	zone.hdop_filter_threshold = 2U;
+	zone.enable_activation_date = true;
+	zone.enable_entering_leaving_events = true;
+	zone.enable_monitoring = true;
 	configuration_store->write_zone(zone);
 
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::ZONER_REQ, 1);
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;ZONER#01C;gQAMAECB2LCqqmoAAAAAQP7//w8=\r", resp);
+	CHECK_EQUAL("$O;ZONER#01C;gZcRAECB2LCqqmoBAAAAAAAAAAA=\r", resp);
 
-	std::string zone_resp_bits = websocketpp::base64_decode("gQAMAECB2LCqqmoAAAAAQP7//w8="s);
+	std::string zone_resp_bits = websocketpp::base64_decode("gZcRAECB2LCqqmoBAAAAAAAAAAA="s);
 	BaseZone zone_resp_decoded;
 	ZoneCodec::decode(zone_resp_bits, zone_resp_decoded);
 
 	CHECK_TRUE(zone == zone_resp_decoded);
+}
+
+TEST(DTEHandler, PASPW_REQ)
+{
+	BaseRawData paspw_raw = {0,0};
+	BasePassPredict pass_predict;
+	pass_predict.num_records = 1;
+	PassPredictCodec::encode(pass_predict, paspw_raw.str);
+
+	std::string resp;
+	std::string req = DTEEncoder::encode(DTECommand::PASPW_REQ, paspw_raw);
+	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;PASPW#000;\r", resp);
+
+	BasePassPredict& stored_pass_predict = configuration_store->read_pass_predict();
+	CHECK_TRUE(stored_pass_predict == pass_predict);
+}
+
+TEST(DTEHandler, DUMPL_REQ)
+{
+	std::string req = DTEEncoder::encode(DTECommand::DUMPL_REQ);
+	std::string resp;
+
+	mock().expectOneCall("num_entries").onObject(mock_system_log).andReturnValue(1);
+	mock().expectOneCall("read").onObject(mock_system_log).withIntParameter("index", 0).ignoreOtherParameters();
+
+	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;DUMPL#0AC;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", resp);
+
+	// Check last 16 are retrieved when more than 16 entries are in the log file
+	mock().expectOneCall("num_entries").onObject(mock_system_log).andReturnValue(20);
+	for (unsigned int i = 0; i < 16; i++)
+		mock().expectOneCall("read").onObject(mock_system_log).withIntParameter("index", i+4).ignoreOtherParameters();
+	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
+
+	mock().checkExpectations();
+}
+
+TEST(DTEHandler, DUMPD_REQ)
+{
+	std::string req = DTEEncoder::encode(DTECommand::DUMPD_REQ);
+	std::string resp;
+
+	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(1);
+	mock().expectOneCall("read").onObject(mock_sensor_log).withIntParameter("index", 0).ignoreOtherParameters();
+
+	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;DUMPD#0AC;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\r", resp);
+
+	// Check last 16 are retrieved when more than 16 entries are in the log file
+	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(20);
+	for (unsigned int i = 0; i < 16; i++)
+		mock().expectOneCall("read").onObject(mock_sensor_log).withIntParameter("index", i+4).ignoreOtherParameters();
+	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
+
+	mock().checkExpectations();
 }

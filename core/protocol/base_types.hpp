@@ -157,6 +157,10 @@ struct BasePassPredict {
 	BasePassPredictRecord records[31];
 };
 
+static bool operator==(const BasePassPredict& lhs, const BasePassPredict& rhs)
+{
+    return std::memcmp( &lhs, &rhs, sizeof(BasePassPredict) );
+}
 
 struct BaseRawData {
 	// Use of a pointer and length field is permitted for encoding base64
