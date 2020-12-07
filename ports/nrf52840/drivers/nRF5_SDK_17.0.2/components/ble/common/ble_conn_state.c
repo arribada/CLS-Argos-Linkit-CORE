@@ -274,6 +274,8 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
                 flag_toggle(&m_bcs.flags.lesc_flags, conn_handle, lesc);
             }
             break;
+        default:
+            break;
     }
 }
 

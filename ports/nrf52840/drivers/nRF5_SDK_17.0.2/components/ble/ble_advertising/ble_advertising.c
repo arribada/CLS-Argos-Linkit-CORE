@@ -197,6 +197,7 @@ static ble_adv_mode_t adv_mode_next_avail_get(ble_advertising_t * const p_advert
             }
             // Fallthrough.
 
+        case BLE_ADV_MODE_IDLE:
         default:
             return BLE_ADV_MODE_IDLE;
     }

@@ -112,6 +112,8 @@ static inline void set_security_req(security_req_t level, ble_gap_conn_sec_mode_
         case SEC_SIGNED_MITM:
             BLE_GAP_CONN_SEC_MODE_SET_SIGNED_WITH_MITM(p_perm);
         break;
+        default:
+            break;
     }
     return;
 }
