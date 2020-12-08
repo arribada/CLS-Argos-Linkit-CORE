@@ -82,6 +82,25 @@ private:
 		return DTEEncoder::encode(DTECommand::PARMR_RESP, param_values);
 	}
 
+	static std::string STATR_REQ(int error_code, std::vector<ParamID>& params) {
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::STATR_RESP, error_code);
+		}
+
+		std::vector<ParamValue> param_values;
+		for (unsigned int i = 0; i < params.size(); i++) {
+			BaseType x = configuration_store->read_param<BaseType>(params[i]);
+			ParamValue p = {
+				params[i],
+				x
+			};
+			param_values.push_back(p);
+		}
+
+		return DTEEncoder::encode(DTECommand::STATR_RESP, param_values);
+	}
+
 	static std::string PROFW_REQ(int error_code, std::vector<BaseType>& arg_list) {
 
 		if (!error_code) {
@@ -106,15 +125,15 @@ private:
 
 	}
 
-	static std::string RESET_REQ(int error_code) {
+	static std::string RSTBW_REQ(int error_code) {
 
-		return DTEEncoder::encode(DTECommand::RESET_RESP, error_code);
+		return DTEEncoder::encode(DTECommand::RSTBW_RESP, error_code);
 
 	}
 
-	static std::string FACTR_REQ(int error_code) {
+	static std::string FACTW_REQ(int error_code) {
 
-		return DTEEncoder::encode(DTECommand::FACTR_RESP, error_code);
+		return DTEEncoder::encode(DTECommand::FACTW_RESP, error_code);
 
 	}
 
@@ -249,6 +268,9 @@ public:
 		case DTECommand::PARMR_REQ:
 			resp = PARMR_REQ(error_code, params);
 			break;
+		case DTECommand::STATR_REQ:
+			resp = STATR_REQ(error_code, params);
+			break;
 		case DTECommand::PROFW_REQ:
 			resp = PROFW_REQ(error_code, arg_list);
 			break;
@@ -259,12 +281,12 @@ public:
 			resp = SECUR_REQ(error_code);
 			if (!error_code) action = DTEAction::SECUR;
 			break;
-		case DTECommand::RESET_REQ:
-			resp = RESET_REQ(error_code);
+		case DTECommand::RSTBW_REQ:
+			resp = RSTBW_REQ(error_code);
 			if (!error_code) action = DTEAction::RESET;
 			break;
-		case DTECommand::FACTR_REQ:
-			resp = FACTR_REQ(error_code);
+		case DTECommand::FACTW_REQ:
+			resp = FACTW_REQ(error_code);
 			if (!error_code) action = DTEAction::FACTR;
 			break;
 		case DTECommand::DUMPM_REQ:

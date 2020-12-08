@@ -158,14 +158,14 @@ TEST(Decoder, ArgosDepthPile)
 TEST(Decoder, MissingLengthSeparator)
 {
 	std::string s;
-	s = "$O;RESET000;\r";
+	s = "$O;RSTBW000;\r";
 	CHECK_FALSE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 }
 
 TEST(Decoder, MissingPayloadSeparator)
 {
 	std::string s;
-	s = "$O;RESET#000\r";
+	s = "$O;RSTBW#000\r";
 	CHECK_FALSE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 }
 
@@ -191,13 +191,25 @@ TEST(Decoder, CommandResponseWithErrorCode)
 	CHECK_EQUAL(3, error_code);
 }
 
-TEST(Decoder, KeyList)
+TEST(Decoder, ParamKeyList)
 {
 	std::string s;
 	s = "$PARMR#011;IDT06,IDT07,IDT03\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_EQUAL(0, error_code);
 	CHECK_TRUE(DTECommand::PARMR_REQ == command);
+	CHECK_TRUE(ParamID::ARGOS_DECID == params[0]);
+	CHECK_TRUE(ParamID::ARGOS_HEXID == params[1]);
+	CHECK_TRUE(ParamID::FW_APP_VERSION == params[2]);
+}
+
+TEST(Decoder, StatKeyList)
+{
+	std::string s;
+	s = "$STATR#011;IDT06,IDT07,IDT03\r";
+	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
+	CHECK_EQUAL(0, error_code);
+	CHECK_TRUE(DTECommand::STATR_REQ == command);
 	CHECK_TRUE(ParamID::ARGOS_DECID == params[0]);
 	CHECK_TRUE(ParamID::ARGOS_HEXID == params[1]);
 	CHECK_TRUE(ParamID::FW_APP_VERSION == params[2]);
@@ -312,6 +324,16 @@ TEST(Decoder, PARMR_REQ)
 	CHECK_TRUE(ParamID::ARGOS_HEXID == params[1]);
 }
 
+TEST(Decoder, STATR_REQ)
+{
+	std::string s;
+	s = "$STATR#00B;IDT06,IDT07\r";
+	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
+	CHECK_TRUE(DTECommand::STATR_REQ == command);
+	CHECK_TRUE(ParamID::ARGOS_DECID == params[0]);
+	CHECK_TRUE(ParamID::ARGOS_HEXID == params[1]);
+}
+
 TEST(Decoder, PARMW_REQ)
 {
 	std::string s;
@@ -402,20 +424,20 @@ TEST(Decoder, DUMPD_REQ)
 	CHECK_TRUE(DTECommand::DUMPD_REQ == command);
 }
 
-TEST(Decoder, RESET_REQ)
+TEST(Decoder, RSTBW_REQ)
 {
 	std::string s;
-	s = "$RESET#000;\r";
+	s = "$RSTBW#000;\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::RESET_REQ == command);
+	CHECK_TRUE(DTECommand::RSTBW_REQ == command);
 }
 
-TEST(Decoder, FACTR_REQ)
+TEST(Decoder, FACTW_REQ)
 {
 	std::string s;
-	s = "$FACTR#000;\r";
+	s = "$FACTW#000;\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::FACTR_REQ == command);
+	CHECK_TRUE(DTECommand::FACTW_REQ == command);
 }
 
 TEST(Decoder, PARML_RESP)
@@ -434,6 +456,18 @@ TEST(Decoder, PARMR_RESP)
 	s = "$O;PARMR#016;IDT06=57005,IDT07=DEAD\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMR_RESP == command);
+	CHECK_TRUE(ParamID::ARGOS_DECID == param_values[0].param);
+	CHECK_EQUAL(57005, std::get<unsigned int>(param_values[0].value));
+	CHECK_TRUE(ParamID::ARGOS_HEXID == param_values[1].param);
+	CHECK_EQUAL(0xDEAD, std::get<unsigned int>(param_values[1].value));
+}
+
+TEST(Decoder, STATR_RESP)
+{
+	std::string s;
+	s = "$O;STATR#016;IDT06=57005,IDT07=DEAD\r";
+	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
+	CHECK_TRUE(DTECommand::STATR_RESP == command);
 	CHECK_TRUE(ParamID::ARGOS_DECID == param_values[0].param);
 	CHECK_EQUAL(57005, std::get<unsigned int>(param_values[0].value));
 	CHECK_TRUE(ParamID::ARGOS_HEXID == param_values[1].param);
@@ -529,18 +563,18 @@ TEST(Decoder, DUMPD_RESP)
 	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
 }
 
-TEST(Decoder, RESET_RESP)
+TEST(Decoder, RSTBW_RESP)
 {
 	std::string s;
-	s = "$O;RESET#000;\r";
+	s = "$O;RSTBW#000;\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::RESET_RESP == command);
+	CHECK_TRUE(DTECommand::RSTBW_RESP == command);
 }
 
-TEST(Decoder, FACTR_RESP)
+TEST(Decoder, FACTW_RESP)
 {
 	std::string s;
-	s = "$O;FACTR#000;\r";
+	s = "$O;FACTW#000;\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::FACTR_RESP == command);
+	CHECK_TRUE(DTECommand::FACTW_RESP == command);
 }

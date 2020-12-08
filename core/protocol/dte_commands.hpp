@@ -19,8 +19,9 @@ enum class DTECommand {
 	DUMPM_REQ,
 	DUMPL_REQ,
 	DUMPD_REQ,
-	RESET_REQ,
-	FACTR_REQ,
+	RSTBW_REQ,
+	FACTW_REQ,
+	STATR_REQ,
 	__NUM_REQ,
 	PARML_RESP = RESP_CMD_BASE,
 	PARMR_RESP,
@@ -34,8 +35,9 @@ enum class DTECommand {
 	DUMPM_RESP,
 	DUMPL_RESP,
 	DUMPD_RESP,
-	RESET_RESP,
-	FACTR_RESP,
+	RSTBW_RESP,
+	FACTW_RESP,
+	STATR_RESP,
 	__NUM_RESP
 };
 
@@ -203,17 +205,33 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 	{
-		.name = "RESET",
-		.command = DTECommand::RESET_REQ,
+		.name = "RSTBW",
+		.command = DTECommand::RSTBW_REQ,
 		.prototype = 
 		{
 		}
 	},
 	{
-		.name = "FACTR",
-		.command = DTECommand::FACTR_REQ,
+		.name = "FACTW",
+		.command = DTECommand::FACTW_REQ,
 		.prototype = 
 		{
+		}
+	},
+	{
+		.name = "STATR",
+		.command = DTECommand::STATR_REQ,
+		.prototype =
+		{
+			{
+				.name = "keys",
+				.key = "",
+				.encoding = BaseEncoding::KEY_LIST,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
 		}
 	},
 	{
@@ -364,19 +382,35 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 	{
-		.name = "RESET",
-		.command = DTECommand::RESET_RESP,
+		.name = "RSTBW",
+		.command = DTECommand::RSTBW_RESP,
 		.prototype = 
 		{
 		}
 	},
 	{
-		.name = "FACTR",
-		.command = DTECommand::FACTR_RESP,
+		.name = "FACTW",
+		.command = DTECommand::FACTW_RESP,
 		.prototype = 
 		{
 		}
-	}
+	},
+	{
+		.name = "STATR",
+		.command = DTECommand::STATR_RESP,
+		.prototype =
+		{
+			{
+				.name = "key_values",
+				.key = "",
+				.encoding = BaseEncoding::KEY_VALUE_LIST,
+				.min_value = 0,
+				.max_value = 0,
+				.permitted_values = {},
+				.is_implemented = false
+			}
+		}
+	},
 };
 
 #endif // __DTE_COMMANDS_HPP_
