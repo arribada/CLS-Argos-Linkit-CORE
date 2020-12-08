@@ -23,12 +23,11 @@ public:
 		LFSCircularFile *f;
 		try {
 			// See if an existing file exists
-			f = new LFSCircularFile(m_filesystem, m_filename, LFS_O_RDONLY, m_max_size);
+			LFSCircularFile f(m_filesystem, m_filename, LFS_O_RDONLY, m_max_size);
 		} catch (int e) {
 			// Create a new log file if the file does not exist
-			f = new LFSCircularFile(m_filesystem, m_filename, LFS_O_WRONLY | LFS_O_CREAT, m_max_size);
+			LFSCircularFile f(m_filesystem, m_filename, LFS_O_WRONLY | LFS_O_CREAT, m_max_size);
 		}
-		delete f;
 	}
 
 	void write(void *entry) {
