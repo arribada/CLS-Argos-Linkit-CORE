@@ -18,7 +18,7 @@ protected:
 	BaseZone m_zone;
 	BasePassPredict m_pass_predict;
 
-	bool serialize_config_entry(LFSFile *f, BaseType& d) {
+	bool serialize_config_entry(LFSFile &f, BaseType& d) {
 
 		// std::string is dynamically allocated so we can't write the std::variant
 		// directly and have to translate it first to a char array
@@ -26,33 +26,33 @@ protected:
 		char entry[BASE_TEXT_MAX_LENGTH];
 		if (d.index() == 0) {  // std::string type
 			std::strcpy(entry, std::get<std::string>(d).c_str());
-			return f->write(entry, BASE_TEXT_MAX_LENGTH) == BASE_TEXT_MAX_LENGTH;
+			return f.write(entry, BASE_TEXT_MAX_LENGTH) == BASE_TEXT_MAX_LENGTH;
 		} else {   			// All other types
-			return f->write(&d, sizeof(BaseType)) == sizeof(BaseType) &&
-				f->write(entry, BASE_TEXT_MAX_LENGTH - sizeof(BaseType)) == BASE_TEXT_MAX_LENGTH - sizeof(BaseType);
+			return f.write(&d, sizeof(BaseType)) == sizeof(BaseType) &&
+				f.write(entry, BASE_TEXT_MAX_LENGTH - sizeof(BaseType)) == BASE_TEXT_MAX_LENGTH - sizeof(BaseType);
 		}
 	}
 
-	bool deserialize_config_entry(LFSFile *f, BaseType& d) {
+	bool deserialize_config_entry(LFSFile &f, BaseType& d) {
 
 		// std::string is dynamically allocated so we can't read into the std::variant
 		// directly and have to translate it first from a char array
 
 		char entry[BASE_TEXT_MAX_LENGTH];
 		if (d.index() == 0) {  // std::string type
-			if (f->read(entry, BASE_TEXT_MAX_LENGTH) != BASE_TEXT_MAX_LENGTH)
+			if (f.read(entry, BASE_TEXT_MAX_LENGTH) != BASE_TEXT_MAX_LENGTH)
 				return false;
 			d = std::string(entry);
 			return true;
 		} else {             // All other types
-			return f->read(&d, sizeof(BaseType)) == sizeof(BaseType) &&
-					f->read(entry, BASE_TEXT_MAX_LENGTH - sizeof(BaseType));
+			return f.read(&d, sizeof(BaseType)) == sizeof(BaseType) &&
+					f.read(entry, BASE_TEXT_MAX_LENGTH - sizeof(BaseType));
 		}
 	}
 
 	void deserialize_config() {
 		DEBUG_TRACE("deserialize_config");
-		LFSFile *f = new LFSFile(main_filesystem, "config.dat", LFS_O_RDONLY);
+		LFSFile f(main_filesystem, "config.dat", LFS_O_RDONLY);
 		unsigned int i;
 
 		for (i = 0; i < MAX_CONFIG_ITEMS; i++) {
@@ -61,45 +61,37 @@ protected:
 		}
 
 		m_is_config_valid = (i == MAX_CONFIG_ITEMS);
-		delete f;
 	}
 
 	void serialize_config(ParamID param_id) override {
 		DEBUG_TRACE("serial_config(%u)", (unsigned)param_id);
-		LFSFile *f = new LFSFile(main_filesystem, "config.dat", LFS_O_WRONLY);
-		if (f->seek((signed)param_id * BASE_TEXT_MAX_LENGTH) != (signed)param_id * BASE_TEXT_MAX_LENGTH ||
+		LFSFile f(main_filesystem, "config.dat", LFS_O_WRONLY);
+		if (f.seek((signed)param_id * BASE_TEXT_MAX_LENGTH) != (signed)param_id * BASE_TEXT_MAX_LENGTH ||
 			!serialize_config_entry(f, m_params.at((unsigned)param_id))) {
-			delete f;
 			m_is_config_valid = false;
 			throw CONFIG_STORE_CORRUPTED;
 		}
-		delete f;
 	}
 
 	void serialize_zone() {
 		DEBUG_TRACE("serialize_zone");
-		LFSFile *f = new LFSFile(main_filesystem, "zone.dat", LFS_O_WRONLY);
+		LFSFile f(main_filesystem, "zone.dat", LFS_O_WRONLY);
 		m_is_zone_valid = false;
-		m_is_zone_valid = f->write(&m_zone, sizeof(m_zone)) == sizeof(m_zone);
+		m_is_zone_valid = f.write(&m_zone, sizeof(m_zone)) == sizeof(m_zone);
 		if (!m_is_zone_valid) {
-			delete f;
 			throw CONFIG_STORE_CORRUPTED;
 		}
-		delete f;
 	}
 
 	void serialize_pass_predict() {
 		DEBUG_TRACE("serialize_pass_predict");
-		LFSFile *f = new LFSFile(main_filesystem, "pass_predict.dat", LFS_O_WRONLY);
+		LFSFile f(main_filesystem, "pass_predict.dat", LFS_O_WRONLY);
 		m_is_pass_predict_valid = false;
-		m_is_pass_predict_valid = f->write(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict);
-		delete f;
+		m_is_pass_predict_valid = f.write(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict);
 	}
 
 public:
 	void init() {
-		LFSFile *f;
-
 		m_is_zone_valid = false;
 		m_is_pass_predict_valid = false;
 		m_is_config_valid = false;
@@ -114,14 +106,13 @@ public:
 
 			DEBUG_WARN("No configuration file so creating a default file");
 
-			f = new LFSFile(main_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT);
+			LFSFile f(main_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT);
 			unsigned int i;
 			for (i = 0; i < MAX_CONFIG_ITEMS; i++) {
 				if (!serialize_config_entry(f, m_params.at(i)))
 					break;
 			}
 			m_is_config_valid = i == MAX_CONFIG_ITEMS;
-			delete f;
 
 			DEBUG_TRACE("Created new config.data is_valid=%u", m_is_config_valid);
 		}
@@ -131,10 +122,9 @@ public:
 
 		// Read in zone file
 		try {
-			f = new LFSFile(main_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_RDWR);
-			if (f->read(&m_zone, sizeof(m_zone)) == sizeof(m_zone))
+			LFSFile f(main_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_RDWR);
+			if (f.read(&m_zone, sizeof(m_zone)) == sizeof(m_zone))
 				m_is_zone_valid = true;
-			delete f;
 		} catch (int e) {
 			DEBUG_WARN("Zone file does not exist");
 		}
@@ -142,10 +132,9 @@ public:
 		// Read in pass predict file
 		m_is_pass_predict_valid = false;
 		try {
-			f = new LFSFile(main_filesystem, "pass_predict.dat", LFS_O_CREAT | LFS_O_RDWR);
-			if (f->read(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict))
+			LFSFile f(main_filesystem, "pass_predict.dat", LFS_O_CREAT | LFS_O_RDWR);
+			if (f.read(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict))
 				m_is_pass_predict_valid = true;
-			delete f;
 		} catch (int e) {
 			DEBUG_WARN("Prepass file does not exist");
 		}
