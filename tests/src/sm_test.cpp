@@ -125,7 +125,7 @@ TEST(Sm, CheckBootFileSystemSecondMountFailAndEnterErrorState)
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(-1);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
-	system_scheduler->run([](int e){});
+	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
 }
 
@@ -135,7 +135,7 @@ TEST(Sm, CheckBootFileSystemFormatFailAndEnterErrorState)
 	mock().expectOneCall("format").onObject(main_filesystem).andReturnValue(-1);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
-	system_scheduler->run([](int e){});
+	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
 }
 
@@ -148,7 +148,7 @@ TEST(Sm, CheckBootStateInvokesSchedulerToCheckConfigStore)
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
 	fsm_handle::start();
-	system_scheduler->run([](int e){});
+	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
 	CHECK_TRUE(fake_reed_switch->is_started());
 	CHECK_TRUE(fake_saltwater_switch->is_started());

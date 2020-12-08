@@ -413,9 +413,13 @@ protected:
 	}
 	static inline void encode(std::ostringstream& output, const unsigned int& value, bool hex) {
 		std::ios old(nullptr);
-		old.copyfmt(output);
-		output << std::hex << std::uppercase << value;
-		output.copyfmt(old);
+		if (hex) {
+			old.copyfmt(output);
+			output << std::hex << std::uppercase << value;
+			output.copyfmt(old);
+		} else
+			output << value;
+
 	}
 	static inline void encode(std::ostringstream& output, const bool& value) {
 		encode(output, static_cast<unsigned int>(value));
@@ -511,18 +515,28 @@ protected:
 	}
 
 	static void validate(const BaseMap &arg_map, const std::time_t& value) {
+		(void)arg_map;
+		(void)value;
 	}
 
 	static void validate(const BaseMap &arg_map, const BaseRawData& value) {
+		(void)arg_map;
+		(void)value;
 	}
 
 	static void validate(const BaseMap &arg_map, const BaseArgosMode& value) {
+		(void)arg_map;
+		(void)value;
 	}
 
 	static void validate(const BaseMap &arg_map, const BaseArgosPower& value) {
+		(void)arg_map;
+		(void)value;
 	}
 
 	static void validate(const BaseMap &arg_map, const BaseArgosDepthPile& value) {
+		(void)arg_map;
+		(void)value;
 	}
 
 public:

@@ -3,7 +3,7 @@
 
 class Led {
 public:
-	Led(int pin) {};
+	Led(int pin) { (void)pin; };
 	virtual ~Led() {}
 	virtual void on() = 0;
 	virtual void off() = 0;

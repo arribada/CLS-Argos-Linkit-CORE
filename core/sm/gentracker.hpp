@@ -57,7 +57,7 @@ public:
 			transit<ConfigurationState>();
 		}
 	};
-	virtual void react(SaltwaterSwitchEvent const &event) { };
+	virtual void react(SaltwaterSwitchEvent const &) { };
 	virtual void react(ConfigurationStatusEvent const &) { };
 	void react(ErrorEvent const &event) {
 		last_error = event.error_code;

@@ -6,7 +6,7 @@
 
 class DTEService : public BLEService {
 public:
-	void start(void (*on_connected)(void), void (*on_disconnected)(void)) {}
+	void start(void (*on_connected)(void), void (*on_disconnected)(void)) { (void)on_connected; (void)on_disconnected; }
 	void stop() {}
 };
 

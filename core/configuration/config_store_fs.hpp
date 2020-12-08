@@ -156,7 +156,7 @@ public:
 	}
 
 	void notify_saltwater_switch_state(bool state) override {
-		// TODO
+		(void)state;
 	}
 
 	void factory_reset() override {

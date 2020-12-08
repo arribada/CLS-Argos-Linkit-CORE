@@ -118,7 +118,7 @@ public:
 		}
 	}
 
-	void run(std::function<void(int)> const &exception_handler) {
+	void run() {
 
 		// Run through our queue of tasks in order and run them
 		// As our queue is in priority order so will our run order

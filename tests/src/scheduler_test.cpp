@@ -39,7 +39,7 @@ TEST(Scheduler, SchedulerSingleTaskSingleShot)
 	static bool fired = false;
 	scheduler->post_task_prio([]() { fired = true; }, scheduler->DEFAULT_PRIORITY, 0);
 	delay_ms(10);
-	scheduler->run([](int e){});
+	scheduler->run();
 	CHECK_TRUE(fired);
 }
 
@@ -48,7 +48,7 @@ TEST(Scheduler, SchedulerDeferredSingleTaskSingleShot)
 	static bool fired = false;
 	scheduler->post_task_prio([]() { fired = true; }, scheduler->DEFAULT_PRIORITY, 5);
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 	CHECK_TRUE(fired);
 }
 
@@ -58,7 +58,7 @@ TEST(Scheduler, SchedulerDeferredMultiTaskSingleShot)
 	scheduler->post_task_prio([]() { fired[0] = true; }, scheduler->DEFAULT_PRIORITY, 5);
 	scheduler->post_task_prio([]() { fired[1] = true; }, scheduler->DEFAULT_PRIORITY, 10);
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 	CHECK_TRUE(fired[0]);
 	CHECK_TRUE(fired[1]);
 }
@@ -69,10 +69,10 @@ TEST(Scheduler, SchedulerCancelSingleTaskSingleShot)
 	auto t = []() { fired = true; };
 	auto task_handle = scheduler->post_task_prio(t, scheduler->DEFAULT_PRIORITY);
 	scheduler->cancel_task(task_handle);
-	scheduler->run([](int e){});
+	scheduler->run();
 	CHECK_FALSE(scheduler->is_scheduled(task_handle));
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 	CHECK_FALSE(fired);
 }
 
@@ -81,11 +81,11 @@ TEST(Scheduler, SchedulerCancelDeferredTaskSingleShot)
 	static bool fired = false;
 	auto t = []() { fired = true; };
 	auto task_handle = scheduler->post_task_prio(t, scheduler->DEFAULT_PRIORITY, 5);
-	scheduler->run([](int e){});
+	scheduler->run();
 	scheduler->cancel_task(task_handle);
 	CHECK_FALSE(scheduler->is_scheduled(task_handle));
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 	CHECK_FALSE(fired);
 }
 
@@ -94,10 +94,10 @@ TEST(Scheduler, SchedulerIsScheduledApiCall)
 	static bool fired = false;
 	auto t = []() { fired = true; };
 	auto task_handle = scheduler->post_task_prio(t, scheduler->DEFAULT_PRIORITY, 5);
-	scheduler->run([](int e){});
+	scheduler->run();
 	CHECK_TRUE(scheduler->is_scheduled(task_handle));
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 	CHECK_TRUE(fired);
 }
 
@@ -113,7 +113,7 @@ TEST(Scheduler, SchedulerPriorityOrdering)
 	scheduler->post_task_prio([]() { fired[5] = order++; }, 2, 5);
 	scheduler->post_task_prio([]() { fired[6] = order++; }, 1, 5);
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 	CHECK_EQUAL(6, fired[0]);
 	CHECK_EQUAL(5, fired[1]);
 	CHECK_EQUAL(4, fired[2]);
@@ -145,17 +145,17 @@ TEST(Scheduler, SchedulerMultithreadedCounting)
 		for (size_t i = 0; i < threads.size(); ++i)
 		{
 			threads[i] = std::thread(create_counter_task_func);
-			scheduler->run([](int e){});
+			scheduler->run();
 		}
 
 		for (auto &thread : threads)
 			thread.join();
 		
-		scheduler->run([](int e){});
+		scheduler->run();
 	}
 
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 
 	CHECK_EQUAL(std::thread::hardware_concurrency() * test_iterations, counter);
 }
@@ -186,11 +186,11 @@ TEST(Scheduler, SchedulerMultithreadedCountingCancelled)
 		for (auto &thread : threads)
 			thread.join();
 		
-		scheduler->run([](int e){});
+		scheduler->run();
 	}
 
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 
 	CHECK_EQUAL(0, counter);
 }
@@ -220,11 +220,11 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferred)
 		for (auto &thread : threads)
 			thread.join();
 		
-		scheduler->run([](int e){});
+		scheduler->run();
 	}
 
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 
 	CHECK_EQUAL(std::thread::hardware_concurrency() * test_iterations, counter);
 }
@@ -256,11 +256,11 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredCancelled)
 		for (auto &thread : threads)
 			thread.join();
 		
-		scheduler->run([](int e){});
+		scheduler->run();
 	}
 
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 
 	CHECK_EQUAL(0, counter);
 }
@@ -301,11 +301,11 @@ TEST(Scheduler, SchedulerMultithreadedCountingHalfCancelled)
 		for (auto &thread : threads)
 			thread.join();
 		
-		scheduler->run([](int e){});
+		scheduler->run();
 	}
 
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 
 	CHECK_EQUAL(simultaneous_threads * test_iterations / 2, counter);
 }
@@ -346,11 +346,11 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredHalfCancelled)
 		for (auto &thread : threads)
 			thread.join();
 		
-		scheduler->run([](int e){});
+		scheduler->run();
 	}
 
 	delay_ms(100);
-	scheduler->run([](int e){});
+	scheduler->run();
 
 	CHECK_EQUAL(simultaneous_threads * test_iterations / 2, counter);
 }

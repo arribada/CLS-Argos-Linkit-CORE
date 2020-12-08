@@ -57,7 +57,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANGUAGE:C>:${-Wjump-misses-init}>
 
     # Disabled Warnings
-    -Wno-unused-parameter
     -Wno-expansion-to-defined # The NRFX library requires this
     -Wno-maybe-uninitialized
     -Wno-unused-function
