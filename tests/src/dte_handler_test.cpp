@@ -30,12 +30,11 @@ TEST_GROUP(DTEHandler)
 	MockLog *mock_sensor_log;
 
 	void setup() {
-		MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
 		ram_filesystem = new LFSRamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
 		ram_filesystem->format();
 		ram_filesystem->mount();
 		main_filesystem = ram_filesystem;
-		store = new LFSConfigurationStore();
+		store = new LFSConfigurationStore(*ram_filesystem);
 		store->init();
 		configuration_store = store;
 		fake_memory_access = new FakeMemoryAccess();
@@ -53,7 +52,6 @@ TEST_GROUP(DTEHandler)
 		delete store;
 		ram_filesystem->umount();
 		delete ram_filesystem;
-		MemoryLeakWarningPlugin::restoreNewDeleteOverloads();
 	}
 };
 

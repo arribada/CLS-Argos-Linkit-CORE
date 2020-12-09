@@ -38,7 +38,7 @@ TEST_GROUP(ConfigStore)
 TEST(ConfigStore, CreateConfigStoreWithDefaultParams)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 
 	store->init();
 	CHECK_TRUE(store->is_valid());
@@ -53,7 +53,7 @@ TEST(ConfigStore, CreateConfigStoreWithDefaultParams)
 TEST(ConfigStore, CheckBaseTypeReadAccess)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	// Modify some parameter values
@@ -70,7 +70,7 @@ TEST(ConfigStore, CheckBaseTypeReadAccess)
 TEST(ConfigStore, CheckConfigStorePersistence)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 
 	store->init();
 
@@ -82,7 +82,7 @@ TEST(ConfigStore, CheckConfigStorePersistence)
 
 	// Delete the object and recreate a new one
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();  // This will read in the saved file
 
 	// Check modified parameters
@@ -95,7 +95,7 @@ TEST(ConfigStore, CheckConfigStorePersistence)
 TEST(ConfigStore, CheckDefaultZoneDoesNotExist)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 
 	store->init();
 
@@ -107,7 +107,7 @@ TEST(ConfigStore, CheckDefaultZoneDoesNotExist)
 TEST(ConfigStore, CheckDefaultPassPredictNotExist)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 
 	store->init();
 
@@ -119,7 +119,7 @@ TEST(ConfigStore, CheckDefaultPassPredictNotExist)
 TEST(ConfigStore, CheckZoneCreationAndPersistence)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 
 	store->init();
 
@@ -130,7 +130,7 @@ TEST(ConfigStore, CheckZoneCreationAndPersistence)
 	}
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 
 	{
 		store->init();
@@ -144,7 +144,7 @@ TEST(ConfigStore, CheckZoneCreationAndPersistence)
 TEST(ConfigStore, CheckPassPredictCreationAndPersistence)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 
 	store->init();
 
@@ -155,7 +155,7 @@ TEST(ConfigStore, CheckPassPredictCreationAndPersistence)
 	}
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 
 	{
 		store->init();
@@ -169,7 +169,7 @@ TEST(ConfigStore, CheckPassPredictCreationAndPersistence)
 TEST(ConfigStore, PARAM_ARGOS_DECID)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int dec_id = 1234U;
@@ -181,7 +181,7 @@ TEST(ConfigStore, PARAM_ARGOS_DECID)
 TEST(ConfigStore, PARAM_ARGOS_HEXID)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int hex_id = 1234U;
@@ -193,7 +193,7 @@ TEST(ConfigStore, PARAM_ARGOS_HEXID)
 TEST(ConfigStore, PARAM_FW_APP_VERSION)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	std::string s = "New Firmware App Version";
@@ -205,7 +205,7 @@ TEST(ConfigStore, PARAM_FW_APP_VERSION)
 TEST(ConfigStore, PARAM_LAST_TX)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	std::time_t t = 1234U;
@@ -217,7 +217,7 @@ TEST(ConfigStore, PARAM_LAST_TX)
 TEST(ConfigStore, PARAM_TX_COUNTER)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 64U;
@@ -230,7 +230,7 @@ TEST(ConfigStore, PARAM_TX_COUNTER)
 TEST(ConfigStore, PARAM_BATT_SOC)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 50U;
@@ -242,7 +242,7 @@ TEST(ConfigStore, PARAM_BATT_SOC)
 TEST(ConfigStore, PARAM_LAST_FULL_CHARGE_DATE)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	std::time_t t = 123224U;
@@ -254,7 +254,7 @@ TEST(ConfigStore, PARAM_LAST_FULL_CHARGE_DATE)
 TEST(ConfigStore, PARAM_PROFILE_NAME)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	std::string s = "New Profile Name";
@@ -266,7 +266,7 @@ TEST(ConfigStore, PARAM_PROFILE_NAME)
 TEST(ConfigStore, PARAM_ARGOS_AOP_DATE)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	std::time_t t = 123224U;
@@ -278,7 +278,7 @@ TEST(ConfigStore, PARAM_ARGOS_AOP_DATE)
 TEST(ConfigStore, PARAM_ARGOS_FREQ)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	double t = 401.68;
@@ -286,7 +286,7 @@ TEST(ConfigStore, PARAM_ARGOS_FREQ)
 	CHECK_EQUAL(t, store->read_param<double>(ParamID::ARGOS_FREQ));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<double>(ParamID::ARGOS_FREQ));
@@ -296,7 +296,7 @@ TEST(ConfigStore, PARAM_ARGOS_FREQ)
 TEST(ConfigStore, PARAM_ARGOS_POWER)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	BaseArgosPower t = BaseArgosPower::POWER_250_MW;
@@ -304,7 +304,7 @@ TEST(ConfigStore, PARAM_ARGOS_POWER)
 	CHECK_TRUE(t == store->read_param<BaseArgosPower>(ParamID::ARGOS_POWER));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_TRUE(t == store->read_param<BaseArgosPower>(ParamID::ARGOS_POWER));
@@ -314,7 +314,7 @@ TEST(ConfigStore, PARAM_ARGOS_POWER)
 TEST(ConfigStore, PARAM_TR_NOM)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 45;
@@ -322,7 +322,7 @@ TEST(ConfigStore, PARAM_TR_NOM)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::TR_NOM));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::TR_NOM));
@@ -332,7 +332,7 @@ TEST(ConfigStore, PARAM_TR_NOM)
 TEST(ConfigStore, PARAM_ARGOS_MODE)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	BaseArgosMode t = BaseArgosMode::DUTY_CYCLE;
@@ -340,7 +340,7 @@ TEST(ConfigStore, PARAM_ARGOS_MODE)
 	CHECK_TRUE(t == store->read_param<BaseArgosMode>(ParamID::ARGOS_MODE));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_TRUE(t == store->read_param<BaseArgosMode>(ParamID::ARGOS_MODE));
@@ -350,7 +350,7 @@ TEST(ConfigStore, PARAM_ARGOS_MODE)
 TEST(ConfigStore, PARAM_NTRY_PER_MESSAGE)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 3;
@@ -358,7 +358,7 @@ TEST(ConfigStore, PARAM_NTRY_PER_MESSAGE)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::NTRY_PER_MESSAGE));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::NTRY_PER_MESSAGE));
@@ -368,7 +368,7 @@ TEST(ConfigStore, PARAM_NTRY_PER_MESSAGE)
 TEST(ConfigStore, PARAM_DUTY_CYCLE)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 0b101010101010101010101010;
@@ -376,7 +376,7 @@ TEST(ConfigStore, PARAM_DUTY_CYCLE)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::DUTY_CYCLE));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::DUTY_CYCLE));
@@ -386,7 +386,7 @@ TEST(ConfigStore, PARAM_DUTY_CYCLE)
 TEST(ConfigStore, PARAM_GNSS_EN)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	bool t = true;
@@ -394,7 +394,7 @@ TEST(ConfigStore, PARAM_GNSS_EN)
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::GNSS_EN));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::GNSS_EN));
@@ -404,7 +404,7 @@ TEST(ConfigStore, PARAM_GNSS_EN)
 TEST(ConfigStore, PARAM_DLOC_ARG_NOM)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 10U;
@@ -412,7 +412,7 @@ TEST(ConfigStore, PARAM_DLOC_ARG_NOM)
 	CHECK_EQUAL(t, store->read_param<unsigned int >(ParamID::DLOC_ARG_NOM));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int >(ParamID::DLOC_ARG_NOM));
@@ -422,7 +422,7 @@ TEST(ConfigStore, PARAM_DLOC_ARG_NOM)
 TEST(ConfigStore, PARAM_ARGOS_DEPTH_PILE)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	BaseArgosDepthPile t = BaseArgosDepthPile::DEPTH_PILE_12;
@@ -430,7 +430,7 @@ TEST(ConfigStore, PARAM_ARGOS_DEPTH_PILE)
 	CHECK_TRUE(t == store->read_param<BaseArgosDepthPile>(ParamID::ARGOS_DEPTH_PILE));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_TRUE(t == store->read_param<BaseArgosDepthPile>(ParamID::ARGOS_DEPTH_PILE));
@@ -440,7 +440,7 @@ TEST(ConfigStore, PARAM_ARGOS_DEPTH_PILE)
 TEST(ConfigStore, PARAM_GNSS_HDOPFILT_EN)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	bool t = true;
@@ -448,7 +448,7 @@ TEST(ConfigStore, PARAM_GNSS_HDOPFILT_EN)
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::GNSS_HDOPFILT_EN));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::GNSS_HDOPFILT_EN));
@@ -458,7 +458,7 @@ TEST(ConfigStore, PARAM_GNSS_HDOPFILT_EN)
 TEST(ConfigStore, PARAM_GNSS_HDOPFILT_THR)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 10U;
@@ -466,7 +466,7 @@ TEST(ConfigStore, PARAM_GNSS_HDOPFILT_THR)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR));
@@ -476,7 +476,7 @@ TEST(ConfigStore, PARAM_GNSS_HDOPFILT_THR)
 TEST(ConfigStore, PARAM_GNSS_ACQ_TIMEOUT)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 30U;
@@ -484,7 +484,7 @@ TEST(ConfigStore, PARAM_GNSS_ACQ_TIMEOUT)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT));
@@ -494,7 +494,7 @@ TEST(ConfigStore, PARAM_GNSS_ACQ_TIMEOUT)
 TEST(ConfigStore, PARAM_UNDERWATER_EN)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	bool t = true;
@@ -502,7 +502,7 @@ TEST(ConfigStore, PARAM_UNDERWATER_EN)
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::UNDERWATER_EN));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::UNDERWATER_EN));
@@ -512,7 +512,7 @@ TEST(ConfigStore, PARAM_UNDERWATER_EN)
 TEST(ConfigStore, PARAM_DRY_TIME_BEFORE_TX)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 10U;
@@ -520,7 +520,7 @@ TEST(ConfigStore, PARAM_DRY_TIME_BEFORE_TX)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX));
@@ -531,7 +531,7 @@ TEST(ConfigStore, PARAM_DRY_TIME_BEFORE_TX)
 TEST(ConfigStore, PARAM_SAMPLING_UNDER_FREQ)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 1440U;
@@ -539,7 +539,7 @@ TEST(ConfigStore, PARAM_SAMPLING_UNDER_FREQ)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ));
@@ -549,7 +549,7 @@ TEST(ConfigStore, PARAM_SAMPLING_UNDER_FREQ)
 TEST(ConfigStore, PARAM_LB_EN)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	bool t = true;
@@ -557,7 +557,7 @@ TEST(ConfigStore, PARAM_LB_EN)
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::LB_EN));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::LB_EN));
@@ -567,7 +567,7 @@ TEST(ConfigStore, PARAM_LB_EN)
 TEST(ConfigStore, PARAM_LB_TRESHOLD)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 5;
@@ -575,7 +575,7 @@ TEST(ConfigStore, PARAM_LB_TRESHOLD)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_TRESHOLD));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_TRESHOLD));
@@ -585,7 +585,7 @@ TEST(ConfigStore, PARAM_LB_TRESHOLD)
 TEST(ConfigStore, PARAM_LB_ARGOS_POWER)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	BaseArgosPower t = BaseArgosPower::POWER_250_MW;
@@ -593,7 +593,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_POWER)
 	CHECK_TRUE(t == store->read_param<BaseArgosPower>(ParamID::LB_ARGOS_POWER));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_TRUE(t == store->read_param<BaseArgosPower>(ParamID::LB_ARGOS_POWER));
@@ -603,7 +603,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_POWER)
 TEST(ConfigStore, PARAM_TR_LB)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 1200U;
@@ -611,7 +611,7 @@ TEST(ConfigStore, PARAM_TR_LB)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::TR_LB));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::TR_LB));
@@ -621,7 +621,7 @@ TEST(ConfigStore, PARAM_TR_LB)
 TEST(ConfigStore, PARAM_LB_ARGOS_MODE)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	BaseArgosMode t = BaseArgosMode::LEGACY;
@@ -629,7 +629,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_MODE)
 	CHECK_TRUE(t == store->read_param<BaseArgosMode>(ParamID::LB_ARGOS_MODE));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_TRUE(t == store->read_param<BaseArgosMode>(ParamID::LB_ARGOS_MODE));
@@ -639,7 +639,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_MODE)
 TEST(ConfigStore, PARAM_LB_ARGOS_DUTY_CYCLE)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 0b101010101010101010101010;
@@ -647,7 +647,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_DUTY_CYCLE)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_ARGOS_DUTY_CYCLE));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_ARGOS_DUTY_CYCLE));
@@ -657,7 +657,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_DUTY_CYCLE)
 TEST(ConfigStore, PARAM_LB_GNSS_EN)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	bool t = true;
@@ -665,7 +665,7 @@ TEST(ConfigStore, PARAM_LB_GNSS_EN)
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::LB_GNSS_EN));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::LB_GNSS_EN));
@@ -675,7 +675,7 @@ TEST(ConfigStore, PARAM_LB_GNSS_EN)
 TEST(ConfigStore, PARAM_DLOC_ARG_LB)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 720U;
@@ -683,7 +683,7 @@ TEST(ConfigStore, PARAM_DLOC_ARG_LB)
 	CHECK_EQUAL(t, store->read_param<unsigned int >(ParamID::DLOC_ARG_LB));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int >(ParamID::DLOC_ARG_LB));
@@ -693,7 +693,7 @@ TEST(ConfigStore, PARAM_DLOC_ARG_LB)
 TEST(ConfigStore, PARAM_LB_GNSS_HDOPFILT_THR)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 10U;
@@ -701,7 +701,7 @@ TEST(ConfigStore, PARAM_LB_GNSS_HDOPFILT_THR)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_GNSS_HDOPFILT_THR));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_GNSS_HDOPFILT_THR));
@@ -711,7 +711,7 @@ TEST(ConfigStore, PARAM_LB_GNSS_HDOPFILT_THR)
 TEST(ConfigStore, PARAM_LB_GNSS_ACQ_TIMEOUT)
 {
 	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	unsigned int t = 30U;
@@ -719,7 +719,7 @@ TEST(ConfigStore, PARAM_LB_GNSS_ACQ_TIMEOUT)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_GNSS_ACQ_TIMEOUT));
 
 	delete store;
-	store = new LFSConfigurationStore();
+	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_GNSS_ACQ_TIMEOUT));
