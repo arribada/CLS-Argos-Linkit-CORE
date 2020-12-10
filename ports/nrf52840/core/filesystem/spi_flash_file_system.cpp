@@ -1,9 +1,9 @@
 #include <algorithm>
-#include <iostream>
 #include <vector>
 #include "spi_flash_file_system.hpp"
 #include "IS25LP128F.hpp"
 #include "bsp.hpp"
+#include "debug.hpp"
 
 void LFSSpiFlashFileSystem::init()
 {
@@ -29,12 +29,11 @@ void LFSSpiFlashFileSystem::init()
 
 	nrfx_qspi_cinstr_xfer(&config, nullptr, rx_buffer);
 
-	printf("Result: %02X %02X %02X\r\n", rx_buffer[0], rx_buffer[1], rx_buffer[2]);
-
     if (rx_buffer[0] != IS25LP128F::MANUFACTURER_ID ||
         rx_buffer[1] != IS25LP128F::MEMORY_TYPE_ID ||
         rx_buffer[2] != IS25LP128F::CAPACITY_ID)
     {
+		DEBUG_ERROR("IS25LP128F not correctly identified");
         return;
     }
 
@@ -60,10 +59,13 @@ void LFSSpiFlashFileSystem::init()
 // The maximum read size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
 int LFSSpiFlashFileSystem::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
 {
-	std::cout << "SPI Flash read(" << block << " " << off << " " << size << ")\r\n";
-	nrfx_err_t ret = nrfx_qspi_read(buffer, size, block + off);
+	DEBUG_TRACE("QSPI Flash read(%lu %lu %lu)", block, off, size);
+	nrfx_err_t ret = nrfx_qspi_read(buffer, size, block * get_block_size() + off);
 	if (ret != NRFX_SUCCESS)
+	{
+		DEBUG_ERROR("QSPI IO Error %d", ret);
 		return LFS_ERR_IO;
+	}
 
 	return LFS_ERR_OK;
 }
@@ -71,20 +73,23 @@ int LFSSpiFlashFileSystem::read(lfs_block_t block, lfs_off_t off, void * buffer,
 // The maximum program size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
 int LFSSpiFlashFileSystem::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
 {
-	std::cout << "SPI Flash prog(" << block << " " << off << " " << size << ")\r\n";
-	nrfx_err_t ret = nrfx_qspi_write(buffer, size, block + off);
+	DEBUG_TRACE("QSPI Flash prog(%lu %lu %lu)", block, off, size);
+	nrfx_err_t ret = nrfx_qspi_write(buffer, size, block * get_block_size() + off);
 	if (ret != NRFX_SUCCESS)
+	{
+		DEBUG_ERROR("QSPI IO Error %d", ret);
 		return LFS_ERR_IO;
+	}
 
 	// Check that all bytes were written correctly
 	std::vector<uint8_t> read_buffer;
 	read_buffer.resize(size);
 
-	read(block, 0, &read_buffer[0], read_buffer.size());
+	read(block, off, &read_buffer[0], read_buffer.size());
 
 	if (memcmp( reinterpret_cast<const uint8_t *>(buffer), &read_buffer[0], size ))
 	{
-		std::cout << "SPI Flash prog reported a bad write\r\n";
+		DEBUG_ERROR("QSPI Flash prog reported a bad write");
 		return LFS_ERR_CORRUPT;
 	}
 	
@@ -93,10 +98,13 @@ int LFSSpiFlashFileSystem::prog(lfs_block_t block, lfs_off_t off, const void *bu
 
 int LFSSpiFlashFileSystem::erase(lfs_block_t block)
 {
-	std::cout << "SPI Flash erase" << block << ")\r\n";
-	nrfx_err_t ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block);
+	DEBUG_TRACE("QSPI Flash erase(%lu)", block);
+	nrfx_err_t ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * get_block_size());
 	if (ret != NRFX_SUCCESS)
+	{
+		DEBUG_ERROR("QSPI IO Error %d", ret);
 		return LFS_ERR_IO;
+	}
 	
 	// Check the block erased correctly
 	std::vector<uint8_t> read_buffer;
@@ -107,7 +115,7 @@ int LFSSpiFlashFileSystem::erase(lfs_block_t block)
 	// Check all bytes were erased correctly
 	if (std::any_of(read_buffer.cbegin(), read_buffer.cend(), [](uint8_t i){ return i != 0xFF; }))
 	{
-		std::cout << "SPI Flash erase failed to erase\r\n";
+		DEBUG_ERROR("QSPI Flash erase failed to erase");
 		return LFS_ERR_CORRUPT;
 	}
 
