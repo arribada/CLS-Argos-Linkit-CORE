@@ -241,7 +241,7 @@ private:
 	}
 
 public:
-	static DTEAction handle_dte_message(std::string& req, std::string& resp) {
+	static DTEAction handle_dte_message(const std::string& req, std::string& resp) {
 		DTECommand command;
 		std::vector<ParamID> params;
 		std::vector<ParamValue> param_values;
