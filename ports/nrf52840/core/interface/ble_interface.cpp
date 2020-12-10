@@ -364,12 +364,9 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
         NRF_LOG_DEBUG("Received data from BLE NUS. Writing data on UART.");
         NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
 
-        // Echo the received data
+        // Append the received data to our ring buffer
         for (uint32_t i = 0; i < p_evt->params.rx_data.length; i++)
-        {
             m_ring_buffer.insert(p_evt->params.rx_data.p_data[i]);
-            printf("%c", p_evt->params.rx_data.p_data[i]);
-        }
     }
 
 }

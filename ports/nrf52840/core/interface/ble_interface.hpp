@@ -57,5 +57,5 @@ private:
     static void static_on_conn_params_evt(ble_conn_params_evt_t * p_evt) { get_instance().on_conn_params_evt(p_evt); };
     static void static_conn_params_error_handler(uint32_t nrf_error) { get_instance().conn_params_error_handler(nrf_error); }
 
-    RingBuffer<512> m_ring_buffer;
+    RingBuffer<1024> m_ring_buffer;
 };
