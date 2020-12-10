@@ -133,6 +133,7 @@ private:
 			break;
 		
 		default:
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%lu)", __FUNCTION__, x);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 
@@ -166,6 +167,7 @@ private:
 			break;
 		
 		default:
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%lu)", __FUNCTION__, x);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 	}
@@ -179,6 +181,7 @@ private:
 		case 2:
 			return BaseCommsVector::CELLULAR_PREFERRED;
 		default:
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%lu)", __FUNCTION__, x);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 	}
@@ -214,6 +217,7 @@ private:
 			break;
 
 		default:
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%d)", __FUNCTION__, x);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 	}
@@ -252,6 +256,7 @@ private:
 			break;
 		
 		default:
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%lu)", __FUNCTION__, x);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 	}
@@ -654,7 +659,10 @@ public:
 
 		// Sanity check payload length
 		if (payload.str().size() > BASE_MAX_PAYLOAD_LENGTH)
+		{
+			DEBUG_ERROR("DTE_PROTOCOL_MESSAGE_TOO_LARGE");
 			throw DTE_PROTOCOL_MESSAGE_TOO_LARGE;
+		}
 
 		// Append command, separator, payload and terminate
 		std::ios old(nullptr);
@@ -689,7 +697,10 @@ public:
 
 		// Sanity check payload length
 		if (payload.str().size() > BASE_MAX_PAYLOAD_LENGTH)
+		{
+			DEBUG_ERROR("DTE_PROTOCOL_MESSAGE_TOO_LARGE");
 			throw DTE_PROTOCOL_MESSAGE_TOO_LARGE;
+		}
 
 		// Append command, separator, payload and terminate
 		std::ios old(nullptr);
@@ -736,7 +747,10 @@ public:
 
 		// Sanity check payload length
 		if (payload.str().size() > BASE_MAX_PAYLOAD_LENGTH)
+		{
+			DEBUG_ERROR("DTE_PROTOCOL_MESSAGE_TOO_LARGE");
 			throw DTE_PROTOCOL_MESSAGE_TOO_LARGE;
+		}
 
 		// Append command, separator, payload and terminate
 		std::ios old(nullptr);
@@ -763,6 +777,7 @@ private:
 				return &command_map[i];
 			}
 		}
+		DEBUG_ERROR("DTE_PROTOCOL_UNKNOWN_COMMAND");
 		throw DTE_PROTOCOL_UNKNOWN_COMMAND;
 	}
 
@@ -773,6 +788,7 @@ private:
 				return static_cast<ParamID>(i);
 			}
 		}
+		DEBUG_ERROR("DTE_PROTOCOL_PARAM_KEY_UNRECOGNISED, \"%s\"", key.c_str());
 		throw DTE_PROTOCOL_PARAM_KEY_UNRECOGNISED;
 	}
 
@@ -780,6 +796,7 @@ private:
 		std::string s;
 		if (std::getline(ss, s, ','))
 			return s;
+		DEBUG_ERROR("DTE_PROTOCOL_BAD_FORMAT in %s()", __FUNCTION__);
 		throw DTE_PROTOCOL_BAD_FORMAT;
 	}
 
@@ -793,6 +810,7 @@ private:
 		} else if (s == "1000") {
 			return BaseArgosPower::POWER_1000_MW;
 		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 	}
@@ -812,6 +830,7 @@ private:
 		} else if (s == "3") {
 			return BaseArgosMode::DUTY_CYCLE;
 		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 	}
@@ -841,6 +860,7 @@ private:
 		} else if (s == "12") {
 			return BaseArgosDepthPile::DEPTH_PILE_24;
 		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 	}
@@ -859,8 +879,11 @@ private:
 		std::tm tm = {};
 		if (ss >> std::get_time(&tm, "%a %b %d %H:%M:%S %Y")) {
 			return std::mktime(&tm);
-		} else
+		}
+		else {
+			DEBUG_ERROR("DTE_PROTOCOL_BAD_FORMAT in %s()", __FUNCTION__);
 			throw DTE_PROTOCOL_BAD_FORMAT;
+		}
 	}
 
 	template <typename T>
@@ -878,16 +901,20 @@ private:
 			ss >> std::hex;
 		if (ss >> out)
 			return out;
-		else
+		else {
+			DEBUG_ERROR("DTE_PROTOCOL_BAD_FORMAT in %s()", __FUNCTION__);
 			throw DTE_PROTOCOL_BAD_FORMAT;
+		}
 	}
 
 	static std::string decode(std::istringstream& ss) {
 		std::string value;
 		if (std::getline(ss, value, ','))
 			return value;
-		else
+		else {
+			DEBUG_ERROR("DTE_PROTOCOL_BAD_FORMAT in %s()", __FUNCTION__);
 			throw DTE_PROTOCOL_BAD_FORMAT;
+		}
 	}
 
 	static void decode(std::istringstream& ss, std::vector<ParamID>& keys) {
@@ -1032,24 +1059,24 @@ public:
 			std::string payload = std::string(base_match.str(3));
 
 			if (payload_size != payload.length()) {
-				//std::cout << "DTE_PROTOCOL_PAYLOAD_LENGTH_MISMATCH\n";
+				DEBUG_ERROR("DTE_PROTOCOL_PAYLOAD_LENGTH_MISMATCH, expected %ld but got %ld", payload_size, payload.length());
 				throw DTE_PROTOCOL_PAYLOAD_LENGTH_MISMATCH;
 			}
 
 			if (payload_size > BASE_MAX_PAYLOAD_LENGTH) {
-				//std::cout << "DTE_PROTOCOL_MESSAGE_TOO_LARGE\n";
+				DEBUG_ERROR("DTE_PROTOCOL_MESSAGE_TOO_LARGE");
 				throw DTE_PROTOCOL_MESSAGE_TOO_LARGE;
 			}
 
 			// KEY_LIST is permitted to be zero length
 			if (cmd_ref->prototype.size() && !payload_size &&
 				cmd_ref->prototype[0].encoding != BaseEncoding::KEY_LIST) {
-				//std::cout << "DTE_PROTOCOL_MISSING_ARG\n";
+				DEBUG_ERROR("DTE_PROTOCOL_MISSING_ARG");
 				throw DTE_PROTOCOL_MISSING_ARG;
 			}
 
 			if (payload_size && !cmd_ref->prototype.size()) {
-				//std::cout << "DTE_PROTOCOL_UNEXPECTED_ARG\n";
+				DEBUG_ERROR("DTE_PROTOCOL_UNEXPECTED_ARG");
 				throw DTE_PROTOCOL_UNEXPECTED_ARG;
 			}
 
@@ -1062,19 +1089,21 @@ public:
 					unsigned char x;
 					ss >> x;
 					if (x == std::char_traits<char>::eof()) {
-						//std::cout << "DTE_PROTOCOL_MISSING_ARG (EOF)\n";
+						DEBUG_ERROR("DTE_PROTOCOL_MISSING_ARG (EOF");
 						throw DTE_PROTOCOL_MISSING_ARG;
 					}
 					if (x != ',') {
-						//std::cout << "DTE_PROTOCOL_BAD_FORMAT\n";
+						DEBUG_ERROR("DTE_PROTOCOL_BAD_FORMAT in %s()", __FUNCTION__);
 						throw DTE_PROTOCOL_BAD_FORMAT;
 					}
 				}
 				switch (cmd_ref->prototype[arg_index].encoding) {
 				case BaseEncoding::KEY_VALUE_LIST:
+					DEBUG_TRACE("BaseEncoding::KEY_VALUE_LIST");
 					decode(ss, key_values);
 					break;
 				case BaseEncoding::KEY_LIST:
+					DEBUG_TRACE("BaseEncoding::KEY_LIST");
 					decode(ss, keys);
 					break;
 				case BaseEncoding::DECIMAL:

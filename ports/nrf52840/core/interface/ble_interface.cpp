@@ -275,7 +275,7 @@ void BleInterface::ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
-            NRF_LOG_INFO("Disconnected");
+            NRF_LOG_INFO("Disconnected for reason 0x%02X", p_ble_evt->evt.gap_evt.params.disconnected.reason);
             // LED indication will be changed when advertising starts.
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             break;

@@ -77,19 +77,6 @@ int main() {
 	ConsoleLog console_sensor_log;
 	sensor_log = &console_sensor_log;
 
-
-	
-
-	//fake_memory_access = new FakeMemoryAccess();
-	//memory_access = fake_memory_access;
-	//mock_system_log = new MockLog;
-	//system_log = mock_system_log;
-	//mock_sensor_log = new MockLog;
-	//sensor_log = mock_sensor_log;
-
-
-
-
 	for(;;)
 	{
 		nrf_gpio_pin_toggle(RED_LED_GPIO);
