@@ -69,7 +69,7 @@ protected:
 			/* hour */ 0,
 			/* minute */ 0,
 			/* comms_vector */ BaseCommsVector::UNCHANGED,
-			/* delta_arg_loc_argos_seconds */ 10,
+			/* delta_arg_loc_argos_seconds */ 7 * 60,
 			/* delta_arg_loc_cellular_seconds */ 10,
 			/* argos_extra_flags_enable */ false,
 			/* argos_depth_pile */ BaseArgosDepthPile::DEPTH_PILE_1,
