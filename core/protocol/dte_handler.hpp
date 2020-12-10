@@ -69,6 +69,16 @@ private:
 			return DTEEncoder::encode(DTECommand::PARMR_RESP, error_code);
 		}
 
+		// Check special case where params is zero length => retrieve all parameter key types
+		if (params.size() == 0) {
+			// Extract all parameter keys
+			for (unsigned int i = 0; i < sizeof(param_map)/sizeof(BaseMap); i++) {
+				if (param_map[i].is_implemented &&
+					param_map[i].key[2] == 'P')
+					params.push_back((ParamID)i);
+			}
+		}
+
 		std::vector<ParamValue> param_values;
 		for (unsigned int i = 0; i < params.size(); i++) {
 			BaseType x = configuration_store->read_param<BaseType>(params[i]);
@@ -86,6 +96,16 @@ private:
 
 		if (error_code) {
 			return DTEEncoder::encode(DTECommand::STATR_RESP, error_code);
+		}
+
+		// Check special case where params is zero length => retrieve all technical key types
+		if (params.size() == 0) {
+			// Extract all parameter keys
+			for (unsigned int i = 0; i < sizeof(param_map)/sizeof(BaseMap); i++) {
+				if (param_map[i].is_implemented &&
+					param_map[i].key[2] == 'T')
+					params.push_back((ParamID)i);
+			}
 		}
 
 		std::vector<ParamValue> param_values;

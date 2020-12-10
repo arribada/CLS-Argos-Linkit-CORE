@@ -1041,7 +1041,9 @@ public:
 				throw DTE_PROTOCOL_MESSAGE_TOO_LARGE;
 			}
 
-			if (cmd_ref->prototype.size() && !payload_size) {
+			// KEY_LIST is permitted to be zero length
+			if (cmd_ref->prototype.size() && !payload_size &&
+				cmd_ref->prototype[0].encoding != BaseEncoding::KEY_LIST) {
 				//std::cout << "DTE_PROTOCOL_MISSING_ARG\n";
 				throw DTE_PROTOCOL_MISSING_ARG;
 			}

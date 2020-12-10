@@ -89,12 +89,20 @@ TEST(DTEHandler, STATR_REQ)
 	STRCMP_EQUAL("$O;STATR#175;IDT06=0,IDT07=0,IDT02=0,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,IDP09=,ART03=Thu Jan  1 00:00:00 1970,ARP03=399.91,ARP04=750,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=10,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=750,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=60,LBP07=2,LBP08=1,LBP09=60\r", resp.c_str());
 }
 
+TEST(DTEHandler, STATR_REQ_CheckEmptyRequest)
+{
+	std::string resp;
+	std::string req = "$STATR#000;\r";
+	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;STATR#08F;IDT06=0,IDT07=0,IDT02=0,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,ART03=Thu Jan  1 00:00:00 1970\r", resp.c_str());
+}
+
 TEST(DTEHandler, PARMR_REQ_CheckEmptyRequest)
 {
 	std::string resp;
 	std::string req = "$PARMR#000;\r";
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	STRCMP_EQUAL("$N;PARMR#001;5\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARMR#0E5;IDP09=,ARP03=399.91,ARP04=750,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=10,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=750,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=60,LBP07=2,LBP08=1,LBP09=60\r", resp.c_str());
 }
 
 TEST(DTEHandler, PROFW_PROFR_REQ)
@@ -145,13 +153,31 @@ TEST(DTEHandler, ZONEW_REQ)
 	BaseRawData zone_raw = {0,0, ""};
 	BaseZone zone;
 	zone.zone_id = 1;
+	zone.zone_type = BaseZoneType::CIRCLE;
+	zone.enable_monitoring = true;
+	zone.enable_entering_leaving_events = true;
+	zone.enable_out_of_zone_detection_mode = true;
+	zone.enable_activation_date = true;
+	zone.year = 1970;
+	zone.month = 1;
+	zone.day = 1;
+	zone.hour = 0;
+	zone.minute = 0;
+	zone.comms_vector = BaseCommsVector::ARGOS_PREFERRED;
+	zone.delta_arg_loc_argos_seconds = 7*60U;
+	zone.delta_arg_loc_cellular_seconds = 0;
+	zone.argos_extra_flags_enable = true;
 	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	zone.argos_power = BaseArgosPower::POWER_1000_MW;
+	zone.argos_time_repetition_seconds = 60U;
 	zone.argos_mode = BaseArgosMode::DUTY_CYCLE;
 	zone.argos_duty_cycle = 0b101010101010101010101010;
-	zone.argos_time_repetition_seconds = 60U;
-	zone.delta_arg_loc_argos_seconds = 7*60U;
-	zone.zone_type = BaseZoneType::CIRCLE;
-	zone.argos_power = BaseArgosPower::POWER_1000_MW;
+	zone.gnss_extra_flags_enable = true;
+	zone.hdop_filter_threshold = 2U;
+	zone.gnss_acquisition_timeout_seconds = 60U;
+	zone.center_latitude_y = 0;
+	zone.center_longitude_x = 0;
+	zone.radius_m = 0;
 	ZoneCodec::encode(zone, zone_raw.str);
 
 	std::string resp;

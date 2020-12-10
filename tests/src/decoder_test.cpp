@@ -306,6 +306,17 @@ TEST(Decoder, NoArgumentSupplied)
 	CHECK_TRUE(DTECommand::DUMPM_REQ == command);
 }
 
+TEST(Decoder, EmptyKeyList)
+{
+	std::string s;
+	s = "$PARMR#000;\r";
+	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
+	CHECK_TRUE(DTECommand::PARMR_REQ == command);
+	s = "$STATR#000;\r";
+	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
+	CHECK_TRUE(DTECommand::STATR_REQ == command);
+}
+
 TEST(Decoder, PARML_REQ)
 {
 	std::string s;
