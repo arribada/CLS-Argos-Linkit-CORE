@@ -170,6 +170,19 @@ private:
 		}
 	}
 
+	static BaseCommsVector decode_comms_vector(unsigned int x) {
+		switch (x) {
+		case 0:
+			return BaseCommsVector::UNCHANGED;
+		case 1:
+			return BaseCommsVector::ARGOS_PREFERRED;
+		case 2:
+			return BaseCommsVector::CELLULAR_PREFERRED;
+		default:
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
 	static unsigned int encode_depth_pile(BaseArgosDepthPile x) {
 		switch (x) {
 		case BaseArgosDepthPile::DEPTH_PILE_1:
@@ -250,15 +263,21 @@ public:
 		EXTRACT_BITS_CAST(BaseZoneType, zone.zone_type, data, base_pos, 1);
 		EXTRACT_BITS(zone.enable_monitoring, data, base_pos, 1);
 		EXTRACT_BITS(zone.enable_entering_leaving_events, data, base_pos, 1);
+		EXTRACT_BITS(zone.enable_out_of_zone_detection_mode, data, base_pos, 1);
 		EXTRACT_BITS(zone.enable_activation_date, data, base_pos, 1);
 		EXTRACT_BITS(zone.year, data, base_pos, 5);
+		zone.year += 2020;
 		EXTRACT_BITS(zone.month, data, base_pos, 4);
 		EXTRACT_BITS(zone.day, data, base_pos, 5);
 		EXTRACT_BITS(zone.hour, data, base_pos, 5);
 		EXTRACT_BITS(zone.minute, data, base_pos, 6);
+		unsigned int comms_vector;
+		EXTRACT_BITS(comms_vector, data, base_pos, 2);
+		zone.comms_vector = decode_comms_vector(comms_vector);
 		EXTRACT_BITS(zone.delta_arg_loc_argos_seconds, data, base_pos, 4);
 		zone.delta_arg_loc_argos_seconds = decode_arg_loc(zone.delta_arg_loc_argos_seconds);
 		EXTRACT_BITS(zone.delta_arg_loc_cellular_seconds, data, base_pos, 7);  // Not used
+		EXTRACT_BITS(zone.argos_extra_flags_enable, data, base_pos, 1);
 		unsigned int argos_depth_pile;
 		EXTRACT_BITS(argos_depth_pile, data, base_pos, 4);
 		zone.argos_depth_pile = decode_depth_pile(argos_depth_pile);
@@ -267,7 +286,7 @@ public:
 		zone.argos_time_repetition_seconds *= 10;
 		EXTRACT_BITS_CAST(BaseArgosMode, zone.argos_mode, data, base_pos, 2);
 		EXTRACT_BITS(zone.argos_duty_cycle, data, base_pos, 24);
-		EXTRACT_BITS(zone.gnss_enable, data, base_pos, 1);
+		EXTRACT_BITS(zone.gnss_extra_flags_enable, data, base_pos, 1);
 		EXTRACT_BITS(zone.hdop_filter_threshold, data, base_pos, 4);
 		EXTRACT_BITS(zone.gnss_acquisition_timeout_seconds, data, base_pos, 8);
 		EXTRACT_BITS(zone.center_longitude_x, data, base_pos, 23);
@@ -280,22 +299,25 @@ public:
 
 		// Zero out the data buffer to the required number of bytes -- this will round up to
 		// the nearest number of bytes and zero all bytes before encoding
-		unsigned int total_bits = 156;
+		unsigned int total_bits = 160;
 		data.assign((total_bits + 4) / 8, 0);
 
 		PACK_BITS(zone.zone_id, data, base_pos, 7);
 		PACK_BITS_CAST(uint32_t, zone.zone_type, data, base_pos, 1);
 		PACK_BITS(zone.enable_monitoring, data, base_pos, 1);
 		PACK_BITS(zone.enable_entering_leaving_events, data, base_pos, 1);
+		PACK_BITS(zone.enable_out_of_zone_detection_mode, data, base_pos, 1);
 		PACK_BITS(zone.enable_activation_date, data, base_pos, 1);
-		PACK_BITS(zone.year, data, base_pos, 5);
+		PACK_BITS((zone.year - 2020), data, base_pos, 5);
 		PACK_BITS(zone.month, data, base_pos, 4);
 		PACK_BITS(zone.day, data, base_pos, 5);
 		PACK_BITS(zone.hour, data, base_pos, 5);
 		PACK_BITS(zone.minute, data, base_pos, 6);
+		PACK_BITS_CAST(uint32_t, zone.comms_vector, data, base_pos, 2);
 		PACK_BITS(zone.delta_arg_loc_argos_seconds, data, base_pos, 4);
 		unsigned int delta_arg_loc_argos_seconds = encode_arg_loc(zone.delta_arg_loc_argos_seconds);
 		PACK_BITS(delta_arg_loc_argos_seconds, data, base_pos, 7);  // Not used
+		PACK_BITS(zone.argos_extra_flags_enable, data, base_pos, 1);
 		unsigned int argos_depth_pile;
 		argos_depth_pile = encode_depth_pile(zone.argos_depth_pile);
 		PACK_BITS(argos_depth_pile, data, base_pos, 4);
@@ -303,7 +325,7 @@ public:
 		PACK_BITS((zone.argos_time_repetition_seconds / 10), data, base_pos, 7);
 		PACK_BITS_CAST(uint32_t, zone.argos_mode, data, base_pos, 2);
 		PACK_BITS(zone.argos_duty_cycle, data, base_pos, 24);
-		PACK_BITS(zone.gnss_enable, data, base_pos, 1);
+		PACK_BITS(zone.gnss_extra_flags_enable, data, base_pos, 1);
 		PACK_BITS(zone.hdop_filter_threshold, data, base_pos, 4);
 		PACK_BITS(zone.gnss_acquisition_timeout_seconds, data, base_pos, 8);
 		PACK_BITS(zone.center_longitude_x, data, base_pos, 23);

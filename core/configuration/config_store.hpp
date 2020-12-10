@@ -56,18 +56,47 @@ protected:
 		/* LB_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* LB_GNSS_ACQ_TIMEOUT */ 60U
 	}};
+	static inline const BaseZone default_zone = {
+			/* zone_id */ 1,
+			/* zone_type */ BaseZoneType::CIRCLE,
+			/* enable_monitoring */ false,
+			/* enable_entering_leaving_events */ false,
+			/* enable_out_of_zone_detection_mode */ false,
+			/* enable_activation_date */ false,
+			/* year */ 0,
+			/* month */ 1,
+			/* day */ 1,
+			/* hour */ 0,
+			/* minute */ 0,
+			/* comms_vector */ BaseCommsVector::UNCHANGED,
+			/* delta_arg_loc_argos_seconds */ 10,
+			/* delta_arg_loc_cellular_seconds */ 10,
+			/* argos_extra_flags_enable */ false,
+			/* argos_depth_pile */ BaseArgosDepthPile::DEPTH_PILE_1,
+			/* argos_power */ BaseArgosPower::POWER_250_MW,
+			/* argos_time_repetition_seconds */ 10,
+			/* argos_mode */ BaseArgosMode::OFF,
+			/* argos_duty_cycle */ 0,
+			/* gnss_extra_flags_enable */ false,
+			/* hdop_filter_threshold */ 2,
+			/* gnss_acquisition_timeout_seconds */ 45,
+			/* center_longitude_x */ 0,
+			/* center_latitude_y */ 0,
+			/* radius_m */ 0
+	};
 	std::array<BaseType, MAX_CONFIG_ITEMS> m_params;
+	BaseZone m_zone;
 	virtual void serialize_config(ParamID) = 0;
+	virtual void serialize_zone() = 0;
 
 public:
 	virtual ~ConfigurationStore() {}
 	virtual void init() = 0;
 	virtual bool is_valid() = 0;
+	virtual bool is_zone_valid() = 0;
 	virtual void notify_saltwater_switch_state(bool state) = 0;
 	virtual void factory_reset() = 0;
-	virtual BaseZone& read_zone(uint8_t zone_id=1) = 0;
 	virtual BasePassPredict& read_pass_predict() = 0;
-	virtual void write_zone(BaseZone& value) = 0;
 	virtual void write_pass_predict(BasePassPredict& value) = 0;
 
 	template <typename T>
@@ -93,6 +122,19 @@ public:
 		} else
 			throw CONFIG_STORE_CORRUPTED;
 	}
+
+	BaseZone& read_zone(uint8_t zone_id=1) {
+		if (is_zone_valid() && m_zone.zone_id == zone_id) {
+			return m_zone;
+		}
+		throw CONFIG_DOES_NOT_EXIST;
+	}
+
+	void write_zone(BaseZone& value) {
+		m_zone = value;
+		serialize_zone();
+	}
+
 };
 
 #endif // __CONFIG_STORE_HPP_

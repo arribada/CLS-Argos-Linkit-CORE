@@ -12,7 +12,6 @@ protected:
 	bool m_is_pass_predict_valid;
 	bool m_is_zone_valid;
 	bool m_is_config_valid;
-	BaseZone m_zone;
 	BasePassPredict m_pass_predict;
 
 	bool serialize_config_entry(LFSFile &f, BaseType& d) {
@@ -70,11 +69,18 @@ protected:
 		}
 	}
 
+	void deserialize_zone() {
+		LFSFile f(&m_filesystem, "zone.dat", LFS_O_RDWR);
+		if (f.read(&m_zone, sizeof(m_zone)) == sizeof(m_zone))
+			m_is_zone_valid = true;
+	}
+
 	void serialize_zone() {
 		DEBUG_TRACE("serialize_zone");
-		LFSFile f(&m_filesystem, "zone.dat", LFS_O_WRONLY);
+		LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_WRONLY);
 		m_is_zone_valid = false;
 		m_is_zone_valid = f.write(&m_zone, sizeof(m_zone)) == sizeof(m_zone);
+		DEBUG_TRACE("m_is_zone_valid = %u", m_is_zone_valid);
 		if (!m_is_zone_valid) {
 			throw CONFIG_STORE_CORRUPTED;
 		}
@@ -85,6 +91,22 @@ protected:
 		LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_WRONLY);
 		m_is_pass_predict_valid = false;
 		m_is_pass_predict_valid = f.write(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict);
+	}
+
+	void create_default_config() {
+		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT);
+		unsigned int i;
+		for (i = 0; i < MAX_CONFIG_ITEMS; i++) {
+			if (!serialize_config_entry(f, m_params.at(i)))
+				break;
+		}
+		m_is_config_valid = i == MAX_CONFIG_ITEMS;
+
+		DEBUG_TRACE("Created new config.data is_valid=%u", m_is_config_valid);
+	}
+
+	void create_default_zone() {
+		write_zone((BaseZone&)default_zone);
 	}
 
 private:
@@ -105,18 +127,8 @@ public:
 		try {
 			deserialize_config();
 		} catch (int e) {
-
 			DEBUG_WARN("No configuration file so creating a default file");
-
-			LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT);
-			unsigned int i;
-			for (i = 0; i < MAX_CONFIG_ITEMS; i++) {
-				if (!serialize_config_entry(f, m_params.at(i)))
-					break;
-			}
-			m_is_config_valid = i == MAX_CONFIG_ITEMS;
-
-			DEBUG_TRACE("Created new config.data is_valid=%u", m_is_config_valid);
+			create_default_config();
 		}
 
 		if (!m_is_config_valid)
@@ -124,11 +136,10 @@ public:
 
 		// Read in zone file
 		try {
-			LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_RDWR);
-			if (f.read(&m_zone, sizeof(m_zone)) == sizeof(m_zone))
-				m_is_zone_valid = true;
+			deserialize_zone();
 		} catch (int e) {
 			DEBUG_WARN("Zone file does not exist");
+			create_default_zone();
 		}
 
 		// Read in pass predict file
@@ -146,19 +157,16 @@ public:
 		return m_is_config_valid;
 	}
 
+	bool is_zone_valid() override {
+		return m_is_zone_valid;
+	}
+
 	void notify_saltwater_switch_state(bool state) override {
 		(void)state;
 	}
 
 	void factory_reset() override {
 		m_filesystem.format();
-	}
-
-	BaseZone& read_zone(uint8_t zone_id=1) override {
-		if (m_is_zone_valid && m_zone.zone_id == zone_id) {
-			return m_zone;
-		}
-		throw CONFIG_DOES_NOT_EXIST;
 	}
 
 	BasePassPredict& read_pass_predict() override {
@@ -168,10 +176,6 @@ public:
 		throw CONFIG_DOES_NOT_EXIST;
 	}
 
-	void write_zone(BaseZone& value) override {
-		m_zone = value;
-		serialize_zone();
-	}
 	void write_pass_predict(BasePassPredict& value) override {
 		m_pass_predict = value;
 		serialize_pass_predict();

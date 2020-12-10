@@ -151,7 +151,6 @@ TEST(DTEHandler, ZONEW_REQ)
 	zone.argos_time_repetition_seconds = 60U;
 	zone.delta_arg_loc_argos_seconds = 7*60U;
 	zone.zone_type = BaseZoneType::CIRCLE;
-	zone.gnss_enable = true;
 	zone.argos_power = BaseArgosPower::POWER_1000_MW;
 	ZoneCodec::encode(zone, zone_raw.str);
 
@@ -171,20 +170,23 @@ TEST(DTEHandler, ZONER_REQ)
 	zone.zone_type = BaseZoneType::CIRCLE;
 	zone.enable_monitoring = true;
 	zone.enable_entering_leaving_events = true;
+	zone.enable_out_of_zone_detection_mode = true;
 	zone.enable_activation_date = true;
 	zone.year = 1970;
 	zone.month = 1;
 	zone.day = 1;
 	zone.hour = 0;
 	zone.minute = 0;
+	zone.comms_vector = BaseCommsVector::ARGOS_PREFERRED;
 	zone.delta_arg_loc_argos_seconds = 7*60U;
 	zone.delta_arg_loc_cellular_seconds = 0;
+	zone.argos_extra_flags_enable = true;
 	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
 	zone.argos_power = BaseArgosPower::POWER_1000_MW;
 	zone.argos_time_repetition_seconds = 60U;
 	zone.argos_mode = BaseArgosMode::DUTY_CYCLE;
 	zone.argos_duty_cycle = 0b101010101010101010101010;
-	zone.gnss_enable = true;
+	zone.gnss_extra_flags_enable = true;
 	zone.hdop_filter_threshold = 2U;
 	zone.gnss_acquisition_timeout_seconds = 60U;
 	zone.center_latitude_y = 0;
@@ -195,9 +197,9 @@ TEST(DTEHandler, ZONER_REQ)
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::ZONER_REQ, 1);
 	CHECK_TRUE(DTEAction::NONE == DTEHandler::handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;ZONER#01C;gZcRAECB2LCqqmrhAQAAAAAAAAA=\r"s, resp);
+	CHECK_EQUAL("$O;ZONER#01C;ge8iACAKjA2rqqoWHgAAAAAAAAA=\r"s, resp);
 
-	std::string zone_resp_bits = websocketpp::base64_decode("gZcRAECB2LCqqmoBAAAAAAAAAAA="s);
+	std::string zone_resp_bits = websocketpp::base64_decode("ge8iACAKjA2rqqoWHgAAAAAAAAA="s);
 	BaseZone zone_resp_decoded;
 	ZoneCodec::decode(zone_resp_bits, zone_resp_decoded);
 

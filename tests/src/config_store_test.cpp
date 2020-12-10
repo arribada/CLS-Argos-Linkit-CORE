@@ -92,14 +92,16 @@ TEST(ConfigStore, CheckConfigStorePersistence)
 	delete store;
 }
 
-TEST(ConfigStore, CheckDefaultZoneDoesNotExist)
+TEST(ConfigStore, CheckDefaultZoneFile)
 {
 	LFSConfigurationStore *store;
 	store = new LFSConfigurationStore(*main_filesystem);
 
 	store->init();
 
-	CHECK_THROWS(ErrorCode, store->read_zone());
+	BaseZone& default_zone = store->read_zone();
+	CHECK_EQUAL(1, default_zone.zone_id);
+	CHECK_FALSE(default_zone.enable_monitoring);
 
 	delete store;
 }

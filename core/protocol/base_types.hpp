@@ -103,25 +103,34 @@ enum class BaseZoneType : uint8_t {
 	CIRCLE = 1
 };
 
+enum class BaseCommsVector : uint8_t {
+	UNCHANGED,
+	ARGOS_PREFERRED,
+	CELLULAR_PREFERRED
+};
+
 struct BaseZone {
 	uint8_t 	       zone_id;
 	BaseZoneType       zone_type;
 	bool               enable_monitoring;
 	bool               enable_entering_leaving_events;
+	bool			   enable_out_of_zone_detection_mode;
 	bool               enable_activation_date;
 	uint16_t           year;
 	uint8_t            month;
 	uint8_t            day;
 	uint8_t            hour;
 	uint8_t            minute;
+	BaseCommsVector    comms_vector;
 	uint32_t           delta_arg_loc_argos_seconds;
 	uint32_t           delta_arg_loc_cellular_seconds;
+	bool	           argos_extra_flags_enable;
 	BaseArgosDepthPile argos_depth_pile;
 	BaseArgosPower     argos_power;
 	uint32_t           argos_time_repetition_seconds;
 	BaseArgosMode      argos_mode;
 	uint32_t           argos_duty_cycle;
-	bool               gnss_enable;
+	bool               gnss_extra_flags_enable;
 	uint8_t            hdop_filter_threshold;
 	uint8_t            gnss_acquisition_timeout_seconds;
 	uint32_t           center_longitude_x;
