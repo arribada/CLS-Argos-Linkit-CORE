@@ -85,17 +85,18 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJ_DIR}/drivers/nrf_log_redirect
     ${PROJ_DIR}/bsp/horizon_v4.0
     ${LIB_DIR}/littlefs
-    #${CORE_DIR}/ble_services
-    #${CORE_DIR}/configuration
+    ${CORE_DIR}/hardware
+    ${CORE_DIR}/configuration
     ${CORE_DIR}/filesystem
     ${CORE_DIR}/interface
     ${CORE_DIR}/protocol
     ${CORE_DIR}/util
-    #${CORE_DIR}/hardware
     ${CORE_DIR}/logging
     ${CORE_DIR}/sm
     #${CORE_DIR}/scheduling
+    ${PROJ_DIR}/core/hardware
     ${PROJ_DIR}/core/interface
+    ${PROJ_DIR}/core/filesystem
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
@@ -147,6 +148,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     DEBUG
+    DEBUG_ENABLE
     APP_TIMER_V2
     APP_TIMER_V2_RTC1_ENABLED
     BOARD_PCA10059
@@ -159,7 +161,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     SOFTDEVICE_PRESENT
     __HEAP_SIZE=8192
     __STACK_SIZE=65536
-    LFS_YES_TRACE=1
+    #LFS_YES_TRACE
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
@@ -188,6 +190,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     # Disabled Warnings
     -Wno-unused-parameter
     -Wno-expansion-to-defined # The NRFX library requires this
+    -Wno-psabi
+    -Wno-unused-function
 
     # Build flags
     -mcpu=cortex-m4
@@ -214,7 +218,7 @@ target_link_options(${PROJECT_NAME} PRIVATE
     -mfloat-abi=hard
     -mfpu=fpv4-sp-d16
     -Wl,--gc-sections
-    --specs=nano.specs
+    #--specs=nano.specs # We use exceptions so we can not use this due to nano-specs being built with exceptions disabled
     "-u _printf_float"
     "-u _scanf_float"
     -Xlinker -Map=${PROJECT_NAME}.map
