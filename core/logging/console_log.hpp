@@ -1,7 +1,6 @@
 #ifndef __CONSOLE_LOG_HPP_
 #define __CONSOLE_LOG_HPP_
 
-#include <iostream>
 #include "logger.hpp"
 #include "messages.hpp"
 
@@ -12,11 +11,11 @@ class ConsoleLog : public Logger {
 
 private:
 	void debug_formatter(const char *level, const char *msg) {
-		std::cout << "[" << level << "] " << msg << "\n";
+		printf("[%s] %s\r\n", level, msg);
 	}
 	void gps_formatter(const GPSLogEntry *gps) {
 		const char *level = log_type_name[gps->header.log_type];
-		std::cout << "[" << level << "] " << "lat: " << gps->lat << "lon: " << gps->lon << "\n";
+		printf("[%s] lat: %ld lon %ld\r\n", level, gps->lat, gps->lon);
 	}
 
 public:
