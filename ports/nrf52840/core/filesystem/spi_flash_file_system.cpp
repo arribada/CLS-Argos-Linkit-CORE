@@ -59,7 +59,12 @@ void LFSSpiFlashFileSystem::init()
 // The maximum read size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
 int LFSSpiFlashFileSystem::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
 {
-	DEBUG_TRACE("QSPI Flash read(%lu %lu %lu)", block, off, size);
+	// Ensure any previous writes/erases have completed
+	int sync_ret = sync();
+	if (sync_ret)
+		return sync_ret;
+
+	//DEBUG_TRACE("QSPI Flash read(%lu %lu %lu)", block, off, size);
 	nrfx_err_t ret = nrfx_qspi_read(buffer, size, block * get_block_size() + off);
 	if (ret != NRFX_SUCCESS)
 	{
@@ -73,7 +78,13 @@ int LFSSpiFlashFileSystem::read(lfs_block_t block, lfs_off_t off, void * buffer,
 // The maximum program size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
 int LFSSpiFlashFileSystem::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
 {
-	DEBUG_TRACE("QSPI Flash prog(%lu %lu %lu)", block, off, size);
+	//DEBUG_TRACE("QSPI Flash prog(%lu %lu %lu)", block, off, size);
+
+	// Ensure any previous writes/erases have completed
+	int sync_ret = sync();
+	if (sync_ret)
+		return sync_ret;
+
 	nrfx_err_t ret = nrfx_qspi_write(buffer, size, block * get_block_size() + off);
 	if (ret != NRFX_SUCCESS)
 	{
@@ -98,19 +109,27 @@ int LFSSpiFlashFileSystem::prog(lfs_block_t block, lfs_off_t off, const void *bu
 
 int LFSSpiFlashFileSystem::erase(lfs_block_t block)
 {
-	DEBUG_TRACE("QSPI Flash erase(%lu)", block);
-	nrfx_err_t ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * get_block_size());
-	if (ret != NRFX_SUCCESS)
+	//DEBUG_TRACE("QSPI Flash erase(%lu)", block);
+
+	// Ensure any previous writes/erases have completed
+	int sync_ret = sync();
+	if (sync_ret)
+		return sync_ret;
+
+	nrfx_err_t qspi_ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * get_block_size());
+	if (qspi_ret != NRFX_SUCCESS)
 	{
-		DEBUG_ERROR("QSPI IO Error %d", ret);
+		DEBUG_ERROR("QSPI IO Error %d", qspi_ret);
 		return LFS_ERR_IO;
 	}
 	
-	// Check the block erased correctly
+	// Check the block erased correctly by reading it back
 	std::vector<uint8_t> read_buffer;
 	read_buffer.resize(get_block_size());
 
-	read(block, 0, &read_buffer[0], read_buffer.size());
+	int read_ret = read(block, 0, &read_buffer[0], read_buffer.size());
+	if (read_ret)
+		return read_ret;
 
 	// Check all bytes were erased correctly
 	if (std::any_of(read_buffer.cbegin(), read_buffer.cend(), [](uint8_t i){ return i != 0xFF; }))
@@ -124,5 +143,19 @@ int LFSSpiFlashFileSystem::erase(lfs_block_t block)
 
 int LFSSpiFlashFileSystem::sync()
 {
+	//DEBUG_TRACE("QSPI Sync()");
+	nrfx_err_t ret;
+	do
+	{
+		ret = nrfx_qspi_mem_busy_check();
+	}
+	while (ret == NRFX_ERROR_BUSY);
+
+	if (ret != NRFX_SUCCESS)
+	{
+		DEBUG_ERROR("QSPI IO Sync %d", ret);
+		return LFS_ERR_IO;
+	}
+
 	return LFS_ERR_OK;
 }
