@@ -42,9 +42,7 @@ int main() {
 
     nrf_log_redirect_init();
 	
-
     BleInterface::get_instance().init();
-    BleInterface::get_instance().advertising_start();
 
 	printf("GenTracker Booted\r\n");
 
@@ -64,9 +62,7 @@ int main() {
 
 	LFSConfigurationStore store(lfs_file_system);
 	configuration_store = &store;
-	DEBUG_TRACE("%s(): %u", __PRETTY_FUNCTION__, __LINE__);
 	store.init();
-	DEBUG_TRACE("%s(): %u", __PRETTY_FUNCTION__, __LINE__);
 
 	NrfMemoryAccess nrf_memory_access;
 	memory_access = &nrf_memory_access;
@@ -77,16 +73,28 @@ int main() {
 	ConsoleLog console_sensor_log;
 	sensor_log = &console_sensor_log;
 
+    BleInterface::get_instance().advertising_start();
+
 	for(;;)
 	{
 		nrf_gpio_pin_toggle(RED_LED_GPIO);
-		nrf_delay_ms(500);
 
 		auto req = BleInterface::get_instance().read_line();
 
 		if (req.size())
 		{
 			DEBUG_TRACE("received: %s", req.c_str());
+
+			// Convert any instance of NaN to 0x0. This is a temporary work around until the phone app gets updated
+			const std::string search_str = "NaN";
+			const std::string replace_str = "0x0";
+
+			std::string::size_type n = 0;
+			while ( ( n = req.find( search_str, n ) ) != std::string::npos )
+			{
+				req.replace( n, search_str.size(), replace_str );
+				n += replace_str.size();
+			}
 
 			std::string resp;
 			auto action = DTEHandler::handle_dte_message(req, resp);

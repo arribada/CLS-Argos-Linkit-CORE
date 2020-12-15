@@ -229,7 +229,7 @@ TEST(Decoder, BasicKeyValueList)
 TEST(Decoder, MultiTextParams)
 {
 	std::string s;
-	s = "$PARMW#030;IDP09=My profile name,IDP09=Another profile name\r";
+	s = "$PARMW#030;IDP11=My profile name,IDP11=Another profile name\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(ParamID::PROFILE_NAME == param_values[0].param);
 	CHECK_EQUAL(std::string("My profile name"), std::get<std::string>(param_values[0].value));

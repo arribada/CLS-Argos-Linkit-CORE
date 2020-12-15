@@ -45,7 +45,7 @@ TEST(ConfigStore, CreateConfigStoreWithDefaultParams)
 
 	// Check some defaults are correct
 	CHECK_EQUAL(0U, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
-	CHECK_EQUAL(0U, store->read_param<unsigned int>(ParamID::DEVICE_MODEL));
+	CHECK_EQUAL("GenTracker"s, store->read_param<std::string>(ParamID::DEVICE_MODEL));
 
 	delete store;
 }
@@ -57,11 +57,11 @@ TEST(ConfigStore, CheckBaseTypeReadAccess)
 	store->init();
 
 	// Modify some parameter values
-	unsigned int model = 1U;
+	std::string model = "GenTracker";
 	store->write_param(ParamID::DEVICE_MODEL, model);
 
 	BaseType x = store->read_param<BaseType>(ParamID::DEVICE_MODEL);
-	CHECK_EQUAL(model, std::get<unsigned int>(x));
+	CHECK_EQUAL(model, std::get<std::string>(x));
 
 
 	delete store;
@@ -75,7 +75,7 @@ TEST(ConfigStore, CheckConfigStorePersistence)
 	store->init();
 
 	// Modify some parameter values
-	unsigned int model = 1U;
+	std::string model = "GenTracker";
 	unsigned int dec_id = 1234U;
 	store->write_param(ParamID::ARGOS_DECID, dec_id);
 	store->write_param(ParamID::DEVICE_MODEL, model);
@@ -87,7 +87,7 @@ TEST(ConfigStore, CheckConfigStorePersistence)
 
 	// Check modified parameters
 	CHECK_EQUAL(1234U, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
-	CHECK_EQUAL(model, store->read_param<unsigned int>(ParamID::DEVICE_MODEL));
+	CHECK_EQUAL(model, store->read_param<std::string>(ParamID::DEVICE_MODEL));
 
 	delete store;
 }

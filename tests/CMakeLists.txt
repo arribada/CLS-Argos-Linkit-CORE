@@ -29,6 +29,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     LFS_NO_DEBUG
+    #DEBUG_ENABLE
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
@@ -60,6 +61,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -Wno-expansion-to-defined # The NRFX library requires this
     -Wno-maybe-uninitialized
     -Wno-unused-function
+    -Wno-format
 
     # Always output coloured text from GCC
     -fdiagnostics-color=always

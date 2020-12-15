@@ -6,6 +6,7 @@
 #include <iostream>
 #include "base_types.hpp"
 #include "error.hpp"
+#include "debug.hpp"
 
 #define MAX_CONFIG_ITEMS  50
 
@@ -17,7 +18,7 @@ protected:
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
-		/* DEVICE_MODEL */ 0U,
+		/* DEVICE_MODEL */ "GenTracker"s,
 		/* FW_APP_VERSION */ "V0.1"s,
 		/* LAST_TX */ static_cast<std::time_t>(0U),
 		/* TX_COUNTER */ 0U,
@@ -54,7 +55,8 @@ protected:
 		/* DLOC_ARG_LB */ 60U,
 		/* LB_GNSS_HDOPFILT_THR */ 2U,
 		/* LB_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
-		/* LB_GNSS_ACQ_TIMEOUT */ 60U
+		/* LB_GNSS_ACQ_TIMEOUT */ 60U,
+		/* SAMPLING_SURF_FREQ */ 1U
 	}};
 	static inline const BaseZone default_zone = {
 			/* zone_id */ 1,
@@ -124,9 +126,22 @@ public:
 	}
 
 	BaseZone& read_zone(uint8_t zone_id=1) {
-		if (is_zone_valid() && m_zone.zone_id == zone_id) {
-			return m_zone;
+		if (is_zone_valid())
+		{
+			if (m_zone.zone_id == zone_id)
+			{
+				return m_zone;
+			}
+			else
+			{
+				DEBUG_ERROR("Zone requested: %u does not match current zone: %u", zone_id, m_zone.zone_id);
+			}
 		}
+		else
+		{
+			DEBUG_ERROR("Zone is invalid");
+		}
+		
 		throw CONFIG_DOES_NOT_EXIST;
 	}
 

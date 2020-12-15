@@ -19,10 +19,10 @@ private:
 	}
 
 public:
-	void create() {}
-	unsigned int num_entries() {return 0;}
-	void read(void *, int) { }
-	void write(void *entry) {
+	void create() override {}
+	unsigned int num_entries() override {return 0;}
+	void read(void *, int) override { }
+	void write(void *entry) override {
 		LogEntry *p = (LogEntry *)entry;
 		switch (p->header.log_type) {
 		case LOG_ERROR:
