@@ -44,22 +44,22 @@ TEST(Decoder, DatestringParsing)
 TEST(Decoder, ArgosPowerParsing)
 {
 	std::string s;
-	s = "$O;PARMR#007;ARP04=3\r";
+	s = "$O;PARMR#007;ARP04=4\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMR_RESP == command);
 	CHECK_TRUE(BaseArgosPower::POWER_500_MW == std::get<BaseArgosPower>(param_values[0].value));
 	param_values.clear();
-	s = "$O;PARMR#007;ARP04=2\r";
+	s = "$O;PARMR#007;ARP04=3\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMR_RESP == command);
 	CHECK_TRUE(BaseArgosPower::POWER_200_MW == std::get<BaseArgosPower>(param_values[0].value));
 	param_values.clear();
-	s = "$O;PARMR#007;ARP04=1\r";
+	s = "$O;PARMR#007;ARP04=2\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMR_RESP == command);
 	CHECK_TRUE(BaseArgosPower::POWER_40_MW == std::get<BaseArgosPower>(param_values[0].value));
 	param_values.clear();
-	s = "$O;PARMR#007;ARP04=0\r";
+	s = "$O;PARMR#007;ARP04=1\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMR_RESP == command);
 	CHECK_TRUE(BaseArgosPower::POWER_3_MW == std::get<BaseArgosPower>(param_values[0].value));

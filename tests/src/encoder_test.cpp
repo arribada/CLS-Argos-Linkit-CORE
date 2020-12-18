@@ -409,19 +409,19 @@ TEST(Encoder, PARAM_ARGOS_POWER)
 	ParamValue p = { ParamID::ARGOS_POWER, BaseArgosPower::POWER_3_MW};
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;ARP04=0\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;ARP04=1\r", s.c_str());
 	p = { ParamID::ARGOS_POWER, BaseArgosPower::POWER_40_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;ARP04=1\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;ARP04=2\r", s.c_str());
 	p = { ParamID::ARGOS_POWER, BaseArgosPower::POWER_200_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;ARP04=2\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;ARP04=3\r", s.c_str());
 	p = { ParamID::ARGOS_POWER, BaseArgosPower::POWER_500_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;ARP04=3\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;ARP04=4\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_TR_NOM)
@@ -733,19 +733,19 @@ TEST(Encoder, PARAM_LB_ARGOS_POWER)
 	ParamValue p = { ParamID::LB_ARGOS_POWER, BaseArgosPower::POWER_3_MW};
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;LOP03=0\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;LOP03=1\r", s.c_str());
 	p = { ParamID::LB_ARGOS_POWER, BaseArgosPower::POWER_40_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;LOP03=1\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;LOP03=2\r", s.c_str());
 	p = { ParamID::LB_ARGOS_POWER, BaseArgosPower::POWER_200_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;LOP03=2\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;LOP03=3\r", s.c_str());
 	p = { ParamID::LB_ARGOS_POWER, BaseArgosPower::POWER_500_MW};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;LOP03=3\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;LOP03=4\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_TR_LB)

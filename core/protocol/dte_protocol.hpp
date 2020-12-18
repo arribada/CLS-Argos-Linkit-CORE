@@ -794,13 +794,13 @@ private:
 	}
 
 	static BaseArgosPower decode_power(std::string& s) {
-		if (s == "0") {
+		if (s == "1") {
 			return BaseArgosPower::POWER_3_MW;
-		} else if (s == "1") {
-			return BaseArgosPower::POWER_40_MW;
 		} else if (s == "2") {
-			return BaseArgosPower::POWER_200_MW;
+			return BaseArgosPower::POWER_40_MW;
 		} else if (s == "3") {
+			return BaseArgosPower::POWER_200_MW;
+		} else if (s == "4") {
 			return BaseArgosPower::POWER_500_MW;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
