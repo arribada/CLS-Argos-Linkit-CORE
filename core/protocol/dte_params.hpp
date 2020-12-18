@@ -40,7 +40,7 @@ static const BaseMap param_map[] = {
 	{ "SAMPLING_UNDER_FREQ", "UNP03", BaseEncoding::UINT, 1U, 1440U, {}, true },
 	{ "LB_EN", "LOP01", BaseEncoding::BOOLEAN, 0, 0, {}, true },
 	{ "LB_TRESHOLD", "LOP02", BaseEncoding::UINT, 0U, 100U, {}, true },
-	{ "LB_ARGOS_POWER", "LOP03", BaseEncoding::ARGOSPOWER, 0U, 0U, { 250U, 500U, 750U, 1000U }, true },
+	{ "LB_ARGOS_POWER", "LOP03", BaseEncoding::ARGOSPOWER, 0, 0, { 0, 1, 2, 3 }, true },
 	{ "TR_LB", "ARP06", BaseEncoding::UINT, 45U, 1200U, {}, true },
 	{ "LB_ARGOS_MODE", "LOP04", BaseEncoding::ARGOSMODE, 0U, 0U, { 0U, 1U, 2U, 3U }, true },
 	{ "LB_ARGOS_DUTY_CYCLE", "LOP05", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFU, {}, true },
