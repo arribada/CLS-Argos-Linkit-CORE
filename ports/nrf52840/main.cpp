@@ -85,17 +85,6 @@ int main() {
 		{
 			DEBUG_TRACE("received: %s", req.c_str());
 
-			// Convert any instance of NaN to 0x0. This is a temporary work around until the phone app gets updated
-			const std::string search_str = "NaN";
-			const std::string replace_str = "0x0";
-
-			std::string::size_type n = 0;
-			while ( ( n = req.find( search_str, n ) ) != std::string::npos )
-			{
-				req.replace( n, search_str.size(), replace_str );
-				n += replace_str.size();
-			}
-
 			std::string resp;
 			auto action = DTEHandler::handle_dte_message(req, resp);
 			(void) action;
