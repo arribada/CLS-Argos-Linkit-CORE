@@ -20,7 +20,12 @@ static const BaseMap param_map[] = {
 	{ "PROFILE_NAME", "IDP11", BaseEncoding::TEXT, "", "", {}, true },
 	{ "AOP_STATUS", "XXXXX", BaseEncoding::BASE64, 0, 0, {}, false },  // FIXME: missing parameter key
 	{ "ARGOS_AOP_DATE", "ART03", BaseEncoding::DATESTRING, 0, 0, {}, true },
+#ifdef ARGOS_FREQ_MIN_WORKAROUND
+	// The phone app currently rounds 399.91 to 399 so this is a workaround for that
 	{ "ARGOS_FREQ", "ARP03", BaseEncoding::FLOAT, 399.0, 401.68, {}, true },
+#else
+	{ "ARGOS_FREQ", "ARP03", BaseEncoding::FLOAT, 399.91, 401.68, {}, true },
+#endif
 	{ "ARGOS_POWER", "ARP04", BaseEncoding::ARGOSPOWER, 0, 0, { 0, 1, 2, 3 }, true },
 	{ "TR_NOM", "ARP05", BaseEncoding::UINT, 45U, 1200U, {}, true },
 	{ "ARGOS_MODE", "ARP01", BaseEncoding::ARGOSMODE, 0, 0, { 0, 1, 2, 3 }, true },
