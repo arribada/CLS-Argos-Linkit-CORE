@@ -176,6 +176,10 @@ private:
 
 	static std::string ZONEW_REQ(int error_code, std::vector<BaseType>& arg_list) {
 
+#ifdef OLD_ZONE_FORMAT_WORKAROUND
+		// The zone file format used on the phone app is of an older version so lets just ignore it and say we succeeded
+		return "$O;ZONEW#000;\r";
+#else
 		if (!error_code) {
 			BaseZone zone;
 			std::string zone_bits = std::get<std::string>(arg_list[0]);
@@ -184,6 +188,7 @@ private:
 		}
 
 		return DTEEncoder::encode(DTECommand::ZONEW_RESP, error_code);
+#endif
 	}
 
 	static std::string ZONER_REQ(int error_code, std::vector<BaseType>& arg_list) {

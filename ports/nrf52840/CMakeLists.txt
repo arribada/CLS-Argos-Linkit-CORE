@@ -162,6 +162,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     __HEAP_SIZE=8192
     __STACK_SIZE=65536
     #LFS_YES_TRACE
+    ARGOS_FREQ_MIN_WORKAROUND
+    OLD_ZONE_FORMAT_WORKAROUND
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
