@@ -27,7 +27,7 @@ static const BaseMap param_map[] = {
 	{ "NTRY_PER_MESSAGE", "ARP19", BaseEncoding::UINT, 0U, 86400U, {}, true },
 	{ "DUTY_CYCLE", "ARP18", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFU, {}, true },
 	{ "GNSS_EN", "GNP01", BaseEncoding::BOOLEAN, 0, 0, {}, true },
-	{ "DLOC_ARG_NOM", "ARP11", BaseEncoding::UINT, 0U, 0U, { 10U, 15U, 30U, 60U, 120U, 360U, 720U, 1440U }, true },
+	{ "DLOC_ARG_NOM", "ARP11", BaseEncoding::AQPERIOD, 0, 0, { 1, 2, 3, 4, 5, 6, 7, 8 }, true },
 	{ "ARGOS_DEPTH_PILE", "ARP16", BaseEncoding::DEPTHPILE, 0U, 0U, {1U, 2U, 3U, 4U, 8U, 9U, 10U, 11U, 12U}, true },
 	{ "GPS_CONST_SELECT", "", BaseEncoding::DECIMAL, 0, 0, {}, false },  // FIXME: missing parameter key
 	{ "GLONASS_CONST_SELECT", "GNP08", BaseEncoding::DECIMAL, 0, 0, {}, false },
@@ -45,7 +45,7 @@ static const BaseMap param_map[] = {
 	{ "LB_ARGOS_MODE", "LOP04", BaseEncoding::ARGOSMODE, 0U, 0U, { 0U, 1U, 2U, 3U }, true },
 	{ "LB_ARGOS_DUTY_CYCLE", "LOP05", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFU, {}, true },
 	{ "LB_GNSS_EN", "LOP06", BaseEncoding::BOOLEAN, 0, 0, {}, true },
-	{ "DLOC_ARG_LB", "ARP12", BaseEncoding::UINT, 0U, 0U, { 10U, 15U, 30U, 60U, 120U, 360U, 720U, 1440U }, true },
+	{ "DLOC_ARG_LB", "ARP12", BaseEncoding::AQPERIOD, 0, 0, { 1, 2, 3, 4, 5, 6, 7, 8 }, true },
 	{ "LB_GNSS_HDOPFILT_THR", "LOP07", BaseEncoding::UINT, 2U, 15U, {}, true },
 	{ "LB_ARGOS_DEPTH_PILE", "LOP08", BaseEncoding::DEPTHPILE, 0U, 0U, {1U, 2U, 3U, 4U, 8U, 9U, 10U, 11U, 12U}, true },
 	{ "LB_GNSS_ACQ_TIMEOUT", "LOP09", BaseEncoding::UINT, 10U, 60U, {}, true },

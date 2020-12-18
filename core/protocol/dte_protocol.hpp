@@ -425,6 +425,9 @@ protected:
 	static inline void encode(std::ostringstream& output, const BaseArgosPower& value) {
 		encode(output, (unsigned int&)value);
 	}
+	static inline void encode(std::ostringstream& output, const BaseAqPeriod& value) {
+		encode(output, (unsigned int&)value);
+	}
 	static inline void encode(std::ostringstream& output, const std::time_t& value) {
 		output << std::put_time(std::gmtime(&value), "%c");
 	}
@@ -550,6 +553,11 @@ protected:
 	}
 
 	static void validate(const BaseMap &arg_map, const BaseArgosPower& value) {
+		(void)arg_map;
+		(void)value;
+	}
+
+	static void validate(const BaseMap &arg_map, const BaseAqPeriod& value) {
 		(void)arg_map;
 		(void)value;
 	}
@@ -808,6 +816,29 @@ private:
 		}
 	}
 
+	static BaseAqPeriod decode_acquisition_period(std::string& s) {
+		if (s == "1") {
+			return BaseAqPeriod::AQPERIOD_10;
+		} else if (s == "2") {
+			return BaseAqPeriod::AQPERIOD_15;
+		} else if (s == "3") {
+			return BaseAqPeriod::AQPERIOD_30;
+		} else if (s == "4") {
+			return BaseAqPeriod::AQPERIOD_60;
+		} else if (s == "5") {
+			return BaseAqPeriod::AQPERIOD_120;
+		} else if (s == "6") {
+			return BaseAqPeriod::AQPERIOD_360;
+		} else if (s == "7") {
+			return BaseAqPeriod::AQPERIOD_720;
+		} else if (s == "8") {
+			return BaseAqPeriod::AQPERIOD_1440;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
 	static BaseArgosPower decode_power(std::istringstream& ss) {
 		std::string s = fetch_param(ss);
 		return decode_power(s);
@@ -986,6 +1017,13 @@ private:
 						key_values.push_back(key_value);
 						break;
 					}
+					case BaseEncoding::AQPERIOD:
+					{
+						BaseAqPeriod x = decode_acquisition_period(value);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
 					case BaseEncoding::DEPTHPILE:
 					{
 						BaseArgosDepthPile x = decode_depth_pile(value);
@@ -1149,6 +1187,7 @@ public:
 				case BaseEncoding::DEPTHPILE:
 				case BaseEncoding::ARGOSMODE:
 				case BaseEncoding::ARGOSPOWER:
+				case BaseEncoding::AQPERIOD:
 				default:
 					break;
 				}

@@ -513,45 +513,38 @@ TEST(Encoder, PARAM_GNSS_EN)
 TEST(Encoder, PARAM_DLOC_ARG_NOM)
 {
 	std::string s;
-	ParamValue p = { ParamID::DLOC_ARG_NOM, 10U };
+	ParamValue p = { ParamID::DLOC_ARG_NOM, BaseAqPeriod::AQPERIOD_10 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#008;ARP11=10\r", s.c_str());
-	p = { ParamID::DLOC_ARG_NOM, 15U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP11=1\r", s.c_str());
+	p = { ParamID::DLOC_ARG_NOM, BaseAqPeriod::AQPERIOD_15 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#008;ARP11=15\r", s.c_str());
-	p = { ParamID::DLOC_ARG_NOM, 30U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP11=2\r", s.c_str());
+	p = { ParamID::DLOC_ARG_NOM, BaseAqPeriod::AQPERIOD_30 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#008;ARP11=30\r", s.c_str());
-	p = { ParamID::DLOC_ARG_NOM, 60U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP11=3\r", s.c_str());
+	p = { ParamID::DLOC_ARG_NOM, BaseAqPeriod::AQPERIOD_60 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#008;ARP11=60\r", s.c_str());
-	p = { ParamID::DLOC_ARG_NOM, 120U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP11=4\r", s.c_str());
+	p = { ParamID::DLOC_ARG_NOM, BaseAqPeriod::AQPERIOD_120 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#009;ARP11=120\r", s.c_str());
-	p = { ParamID::DLOC_ARG_NOM, 360U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP11=5\r", s.c_str());
+	p = { ParamID::DLOC_ARG_NOM, BaseAqPeriod::AQPERIOD_360 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#009;ARP11=360\r", s.c_str());
-	p = { ParamID::DLOC_ARG_NOM, 720U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP11=6\r", s.c_str());
+	p = { ParamID::DLOC_ARG_NOM, BaseAqPeriod::AQPERIOD_720 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#009;ARP11=720\r", s.c_str());
-	p = { ParamID::DLOC_ARG_NOM, 1440U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP11=7\r", s.c_str());
+	p = { ParamID::DLOC_ARG_NOM, BaseAqPeriod::AQPERIOD_1440 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#00A;ARP11=1440\r", s.c_str());
-}
-
-TEST(Encoder, PARAM_DLOC_ARG_NOM_OutOfRangeCheck)
-{
-	ParamValue p = { ParamID::DLOC_ARG_NOM, 22U };
-	std::vector<ParamValue> v = { p };
-	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	STRCMP_EQUAL("$O;PARMR#007;ARP11=8\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_DEPTH_PILE)
@@ -821,37 +814,38 @@ TEST(Encoder, PARAM_LB_GNSS_EN)
 TEST(Encoder, PARAM_DLOC_ARG_LB)
 {
 	std::string s;
-	ParamValue p = { ParamID::DLOC_ARG_LB, 10U };
+	ParamValue p = { ParamID::DLOC_ARG_LB, BaseAqPeriod::AQPERIOD_10 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	p = { ParamID::DLOC_ARG_LB, 15U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP12=1\r", s.c_str());
+	p = { ParamID::DLOC_ARG_LB, BaseAqPeriod::AQPERIOD_15 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#008;ARP12=15\r", s.c_str());
-	p = { ParamID::DLOC_ARG_LB, 30U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP12=2\r", s.c_str());
+	p = { ParamID::DLOC_ARG_LB, BaseAqPeriod::AQPERIOD_30 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#008;ARP12=30\r", s.c_str());
-	p = { ParamID::DLOC_ARG_LB, 60U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP12=3\r", s.c_str());
+	p = { ParamID::DLOC_ARG_LB, BaseAqPeriod::AQPERIOD_60 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#008;ARP12=60\r", s.c_str());
-	p = { ParamID::DLOC_ARG_LB, 120U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP12=4\r", s.c_str());
+	p = { ParamID::DLOC_ARG_LB, BaseAqPeriod::AQPERIOD_120 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#009;ARP12=120\r", s.c_str());
-	p = { ParamID::DLOC_ARG_LB, 360U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP12=5\r", s.c_str());
+	p = { ParamID::DLOC_ARG_LB, BaseAqPeriod::AQPERIOD_360 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#009;ARP12=360\r", s.c_str());
-	p = { ParamID::DLOC_ARG_LB, 720U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP12=6\r", s.c_str());
+	p = { ParamID::DLOC_ARG_LB, BaseAqPeriod::AQPERIOD_720 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#009;ARP12=720\r", s.c_str());
-	p = { ParamID::DLOC_ARG_LB, 1440U };
+	STRCMP_EQUAL("$O;PARMR#007;ARP12=7\r", s.c_str());
+	p = { ParamID::DLOC_ARG_LB, BaseAqPeriod::AQPERIOD_1440 };
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#00A;ARP12=1440\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;ARP12=8\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LB_GNSS_HDOPFILT_THR)

@@ -34,7 +34,7 @@ protected:
 		/* NTRY_PER_MESSAGE */ 1U,
 		/* DUTY_CYCLE */ 0U,
 		/* GNSS_EN */ (bool)false,
-		/* DLOC_ARG_NOM */ 10U,
+		/* DLOC_ARG_NOM */ BaseAqPeriod::AQPERIOD_10,
 		/* ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* GPS_CONST_SELECT */ 0U, // Not implemented
 		/* GLONASS_CONST_SELECT */ 0U, // Not implemented
@@ -52,7 +52,7 @@ protected:
 		/* LB_ARGOS_MODE */ BaseArgosMode::OFF,
 		/* LB_ARGOS_DUTY_CYCLE */ 0U,
 		/* LB_GNSS_EN */ (bool)false,
-		/* DLOC_ARG_LB */ 60U,
+		/* DLOC_ARG_LB */ BaseAqPeriod::AQPERIOD_60,
 		/* LB_GNSS_HDOPFILT_THR */ 2U,
 		/* LB_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* LB_GNSS_ACQ_TIMEOUT */ 60U,

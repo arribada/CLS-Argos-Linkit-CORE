@@ -68,6 +68,7 @@ enum class BaseEncoding {
 	DEPTHPILE,
 	ARGOSMODE,
 	ARGOSPOWER,
+	AQPERIOD,
 	KEY_LIST,
 	KEY_VALUE_LIST
 };
@@ -97,6 +98,17 @@ enum class BaseArgosDepthPile {
 	DEPTH_PILE_16 = 16,
 	DEPTH_PILE_20 = 20,
 	DEPTH_PILE_24 = 24
+};
+
+enum class BaseAqPeriod {
+	AQPERIOD_10 = 1,
+	AQPERIOD_15,
+	AQPERIOD_30,
+	AQPERIOD_60,
+	AQPERIOD_120,
+	AQPERIOD_360,
+	AQPERIOD_720,
+	AQPERIOD_1440
 };
 
 enum class BaseZoneType : uint8_t {
@@ -185,7 +197,7 @@ using BaseName = std::string;
 using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
 
 // !!! Do not change the ordering of variants and also make sure std::string is the first entry !!!
-using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool>;
+using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, BaseAqPeriod, bool>;
 
 struct BaseMap {
 	BaseName 	   name;
