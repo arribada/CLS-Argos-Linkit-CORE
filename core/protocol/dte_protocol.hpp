@@ -423,14 +423,7 @@ protected:
 		encode(output, (unsigned int&)value);
 	}
 	static inline void encode(std::ostringstream& output, const BaseArgosPower& value) {
-		if (value == BaseArgosPower::POWER_250_MW)
-			output << "250";
-		else if (value == BaseArgosPower::POWER_500_MW)
-			output << "500";
-		else if (value == BaseArgosPower::POWER_750_MW)
-			output << "750";
-		else if (value == BaseArgosPower::POWER_1000_MW)
-			output << "1000";
+		encode(output, (unsigned int&)value);
 	}
 	static inline void encode(std::ostringstream& output, const std::time_t& value) {
 		output << std::put_time(std::gmtime(&value), "%c");
@@ -801,14 +794,14 @@ private:
 	}
 
 	static BaseArgosPower decode_power(std::string& s) {
-		if (s == "250") {
-			return BaseArgosPower::POWER_250_MW;
-		} else if (s == "500") {
+		if (s == "0") {
+			return BaseArgosPower::POWER_3_MW;
+		} else if (s == "1") {
+			return BaseArgosPower::POWER_40_MW;
+		} else if (s == "2") {
+			return BaseArgosPower::POWER_200_MW;
+		} else if (s == "3") {
 			return BaseArgosPower::POWER_500_MW;
-		} else if (s == "750") {
-			return BaseArgosPower::POWER_750_MW;
-		} else if (s == "1000") {
-			return BaseArgosPower::POWER_1000_MW;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;

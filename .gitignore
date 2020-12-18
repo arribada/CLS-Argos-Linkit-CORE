@@ -3,7 +3,6 @@ ports/nrf52840/CMakeFiles/*
 .ninja_deps
 build.ninja
 rules.ninja
-*.cmake
 tests/_deps/*
 tests/CMakeFiles/*
 tests/CLSGenTrackerTests
@@ -15,3 +14,5 @@ ports/nrf52840/GenTracker.elf
 ports/nrf52840/GenTracker_dfu.zip
 ports/nrf52840/GenTracker.map
 ports/nrf52840/GenTracker
+ports/nrf52840/cmake_install.cmake
+tests/cmake_install.cmake

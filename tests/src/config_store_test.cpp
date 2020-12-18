@@ -301,7 +301,7 @@ TEST(ConfigStore, PARAM_ARGOS_POWER)
 	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
-	BaseArgosPower t = BaseArgosPower::POWER_250_MW;
+	BaseArgosPower t = BaseArgosPower::POWER_200_MW;
 	store->write_param(ParamID::ARGOS_POWER, t);
 	CHECK_TRUE(t == store->read_param<BaseArgosPower>(ParamID::ARGOS_POWER));
 
@@ -590,7 +590,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_POWER)
 	store = new LFSConfigurationStore(*main_filesystem);
 	store->init();
 
-	BaseArgosPower t = BaseArgosPower::POWER_250_MW;
+	BaseArgosPower t = BaseArgosPower::POWER_200_MW;
 	store->write_param(ParamID::LB_ARGOS_POWER, t);
 	CHECK_TRUE(t == store->read_param<BaseArgosPower>(ParamID::LB_ARGOS_POWER));
 

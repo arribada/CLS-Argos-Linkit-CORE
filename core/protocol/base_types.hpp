@@ -81,10 +81,10 @@ enum class BaseArgosMode {
 };
 
 enum class BaseArgosPower {
-	POWER_250_MW,
-	POWER_500_MW,
-	POWER_750_MW,
-	POWER_1000_MW
+	POWER_3_MW,
+	POWER_40_MW,
+	POWER_200_MW,
+	POWER_500_MW
 };
 
 enum class BaseArgosDepthPile {

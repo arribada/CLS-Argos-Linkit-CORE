@@ -21,7 +21,7 @@ static const BaseMap param_map[] = {
 	{ "AOP_STATUS", "XXXXX", BaseEncoding::BASE64, 0, 0, {}, false },  // FIXME: missing parameter key
 	{ "ARGOS_AOP_DATE", "ART03", BaseEncoding::DATESTRING, 0, 0, {}, true },
 	{ "ARGOS_FREQ", "ARP03", BaseEncoding::FLOAT, 399.91, 401.68, {}, true },
-	{ "ARGOS_POWER", "ARP04", BaseEncoding::ARGOSPOWER, 0U, 0U, { 250U, 500U, 750U, 1000U }, true },
+	{ "ARGOS_POWER", "ARP04", BaseEncoding::ARGOSPOWER, 0, 0, { 0, 1, 2, 3 }, true },
 	{ "TR_NOM", "ARP05", BaseEncoding::UINT, 45U, 1200U, {}, true },
 	{ "ARGOS_MODE", "ARP01", BaseEncoding::ARGOSMODE, 0, 0, { 0, 1, 2, 3 }, true },
 	{ "NTRY_PER_MESSAGE", "ARP19", BaseEncoding::UINT, 0U, 86400U, {}, true },
