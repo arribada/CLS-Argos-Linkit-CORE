@@ -52,7 +52,6 @@ int main() {
 	LFSSpiFlashFileSystem lfs_file_system(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
 
 	lfs_file_system.init();
-	lfs_file_system.format();
 
 	if (lfs_file_system.mount())
 	{
