@@ -54,7 +54,7 @@ namespace BSP
                 .p_context = NULL, // Context passed to interrupt handler
                 .hwfc = NRF_UARTE_HWFC_DISABLED,
                 .parity = NRF_UARTE_PARITY_EXCLUDED,
-                .baudrate = NRF_UARTE_BAUDRATE_115200, // See table above
+                .baudrate = NRF_UARTE_BAUDRATE_460800, // See table above
                 .interrupt_priority = INTERRUPT_PRIORITY_UART_1,
             }
         }
@@ -105,7 +105,7 @@ namespace BSP
                     .sck_delay = 0, // SCK delay in units of 62.5 ns  <0-255>
                     .dpmen = false, // Deep power-down mode enable
                     .spi_mode = NRF_QSPI_MODE_0,
-                    .sck_freq = NRF_QSPI_FREQ_32MDIV2, // See table above
+                    .sck_freq = NRF_QSPI_FREQ_32MDIV1, // See table above
                 },
                 .irq_priority = INTERRUPT_PRIORITY_QSPI_0
             }

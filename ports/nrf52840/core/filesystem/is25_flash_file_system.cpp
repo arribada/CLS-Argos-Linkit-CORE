@@ -14,18 +14,18 @@ void Is25FlashFileSystem::init()
 	uint8_t rx_buffer[3];
 	uint8_t tx_buffer[1];
 
+	nrfx_qspi_init(&BSP::QSPI_Inits[BSP::QSPI_0].config, nullptr, nullptr);
+
     config.io2_level = false;
 	// Keep IO3 high during transfers as this is the reset line in SPI mode
 	// We'll make use of this line once the FLASH chip is in QSPI mode
     config.io3_level = true;
     config.wipwait   = false;
-    config.wren      = false;
 
 	// Read and check the SPI device ID matches the expected value
 	config.opcode = IS25LP128F::RDJDID;
 	config.length = NRF_QSPI_CINSTR_LEN_4B;
-
-	nrfx_qspi_init(&BSP::QSPI_Inits[BSP::QSPI_0].config, nullptr, nullptr);
+	config.wren = false;
 
 	nrfx_qspi_cinstr_xfer(&config, nullptr, rx_buffer);
 
@@ -36,6 +36,13 @@ void Is25FlashFileSystem::init()
 		DEBUG_ERROR("IS25LP128F not correctly identified");
         return;
     }
+
+	// Set FLASH output drive to 12.5%
+    config.opcode = IS25LP128F::SERPV;
+    tx_buffer[0] = 1 << 5;
+	config.length = NRF_QSPI_CINSTR_LEN_2B;
+	config.wren = true;
+    nrfx_qspi_cinstr_xfer(&config, tx_buffer, nullptr);
 
 	// Switch to QSPI mode
 	config.opcode = IS25LP128F::WRSR;
@@ -59,11 +66,6 @@ void Is25FlashFileSystem::init()
 // The maximum read size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
 int Is25FlashFileSystem::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
 {
-	// Ensure any previous writes/erases have completed
-	int sync_ret = sync();
-	if (sync_ret)
-		return sync_ret;
-
 	//DEBUG_TRACE("QSPI Flash read(%lu %lu %lu)", block, off, size);
 	nrfx_err_t ret = nrfx_qspi_read(buffer, size, block * get_block_size() + off);
 	if (ret != NRFX_SUCCESS)
@@ -79,11 +81,6 @@ int Is25FlashFileSystem::read(lfs_block_t block, lfs_off_t off, void * buffer, l
 int Is25FlashFileSystem::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
 {
 	//DEBUG_TRACE("QSPI Flash prog(%lu %lu %lu)", block, off, size);
-
-	// Ensure any previous writes/erases have completed
-	int sync_ret = sync();
-	if (sync_ret)
-		return sync_ret;
 
 	nrfx_err_t ret = nrfx_qspi_write(buffer, size, block * get_block_size() + off);
 	if (ret != NRFX_SUCCESS)
@@ -110,11 +107,6 @@ int Is25FlashFileSystem::prog(lfs_block_t block, lfs_off_t off, const void *buff
 int Is25FlashFileSystem::erase(lfs_block_t block)
 {
 	//DEBUG_TRACE("QSPI Flash erase(%lu)", block);
-
-	// Ensure any previous writes/erases have completed
-	int sync_ret = sync();
-	if (sync_ret)
-		return sync_ret;
 
 	nrfx_err_t qspi_ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * get_block_size());
 	if (qspi_ret != NRFX_SUCCESS)
