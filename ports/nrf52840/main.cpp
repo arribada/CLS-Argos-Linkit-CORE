@@ -4,7 +4,7 @@
 #include "nrf_log_redirect.h"
 #include "ble_interface.hpp"
 #include "dte_handler.hpp"
-#include "spi_flash_file_system.hpp"
+#include "is25_flash_file_system.hpp"
 #include "nrf_memory_access.hpp"
 #include "config_store_fs.hpp"
 #include "debug.hpp"
@@ -13,10 +13,6 @@
 #include "bsp.hpp"
 
 #define RED_LED_GPIO (NRF_GPIO_PIN_MAP(1, 7))
-
-#define BLOCK_COUNT   (4096)
-#define BLOCK_SIZE    (4*1024)
-#define PAGE_SIZE     (256)
 
 ConfigurationStore *configuration_store;
 MemoryAccess *memory_access;
@@ -49,7 +45,7 @@ int main() {
 	nrf_gpio_cfg_output(RED_LED_GPIO);
 	nrf_gpio_pin_clear(RED_LED_GPIO);
 
-	LFSSpiFlashFileSystem lfs_file_system(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+	Is25FlashFileSystem lfs_file_system;
 
 	lfs_file_system.init();
 

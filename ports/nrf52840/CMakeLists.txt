@@ -140,7 +140,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
     ${PROJ_DIR}/bsp/horizon_v4.0/bsp.cpp
-    ${PROJ_DIR}/core/filesystem/spi_flash_file_system.cpp
+    ${PROJ_DIR}/core/filesystem/is25_flash_file_system.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
     ${PROJ_DIR}/drivers/nrf_log_redirect/nrf_log_redirect.c
     ${PROJ_DIR}/main.cpp

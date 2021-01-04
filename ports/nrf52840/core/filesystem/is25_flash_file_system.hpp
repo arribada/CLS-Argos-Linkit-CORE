@@ -2,9 +2,13 @@
 
 #include "filesystem.hpp"
 
-class LFSSpiFlashFileSystem : public LFSFileSystem {
+#define IS25_BLOCK_COUNT   (4096)
+#define IS25_BLOCK_SIZE    (4*1024)
+#define IS25_PAGE_SIZE     (256)
+
+class Is25FlashFileSystem : public LFSFileSystem {
 public:
-	LFSSpiFlashFileSystem(unsigned int block_size, unsigned int blocks, unsigned int page_size) : LFSFileSystem(block_size, blocks, page_size) {}
+	Is25FlashFileSystem() : LFSFileSystem(IS25_BLOCK_COUNT, IS25_BLOCK_SIZE, IS25_PAGE_SIZE) {}
 	void init();
 
 private:

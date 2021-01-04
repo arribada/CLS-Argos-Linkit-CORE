@@ -1,11 +1,11 @@
 #include <algorithm>
 #include <vector>
-#include "spi_flash_file_system.hpp"
+#include "is25_flash_file_system.hpp"
 #include "IS25LP128F.hpp"
 #include "bsp.hpp"
 #include "debug.hpp"
 
-void LFSSpiFlashFileSystem::init()
+void Is25FlashFileSystem::init()
 {
 	// Initialise the IS25LP128F flash chip and set it up for QSPI
 
@@ -57,7 +57,7 @@ void LFSSpiFlashFileSystem::init()
 }
 
 // The maximum read size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
-int LFSSpiFlashFileSystem::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
+int Is25FlashFileSystem::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
 {
 	// Ensure any previous writes/erases have completed
 	int sync_ret = sync();
@@ -76,7 +76,7 @@ int LFSSpiFlashFileSystem::read(lfs_block_t block, lfs_off_t off, void * buffer,
 }
 
 // The maximum program size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
-int LFSSpiFlashFileSystem::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
+int Is25FlashFileSystem::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
 {
 	//DEBUG_TRACE("QSPI Flash prog(%lu %lu %lu)", block, off, size);
 
@@ -107,7 +107,7 @@ int LFSSpiFlashFileSystem::prog(lfs_block_t block, lfs_off_t off, const void *bu
 	return LFS_ERR_OK;
 }
 
-int LFSSpiFlashFileSystem::erase(lfs_block_t block)
+int Is25FlashFileSystem::erase(lfs_block_t block)
 {
 	//DEBUG_TRACE("QSPI Flash erase(%lu)", block);
 
@@ -141,7 +141,7 @@ int LFSSpiFlashFileSystem::erase(lfs_block_t block)
 	return LFS_ERR_OK;
 }
 
-int LFSSpiFlashFileSystem::sync()
+int Is25FlashFileSystem::sync()
 {
 	//DEBUG_TRACE("QSPI Sync()");
 	nrfx_err_t ret;
