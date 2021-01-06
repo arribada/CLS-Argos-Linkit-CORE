@@ -1,5 +1,4 @@
-#ifndef __TIMER_HPP_
-#define __TIMER_HPP_
+#pragma once
 
 #include <cstdint>
 #include <optional>
@@ -18,5 +17,3 @@ public:
 	virtual void start() = 0;
 	virtual void stop() = 0;
 };
-
-#endif

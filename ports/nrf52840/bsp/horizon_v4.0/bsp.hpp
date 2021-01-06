@@ -4,10 +4,12 @@
 #include "sdk_config.h"
 #include "nrfx_uarte.h"
 #include "nrfx_qspi.h"
+#include "nrfx_rtc.h"
+
+#define RTC_TIMER      BSP::RTC::RTC_1
 
 namespace BSP
 {
-
     // Interrupt priorities (0, 1, 4  are reserved for the softdevice)
     static constexpr uint8_t INTERRUPT_PRIORITY_WATCHDOG  = 2;
     static constexpr uint8_t INTERRUPT_PRIORITY_RTC_1     = 2;
@@ -66,4 +68,27 @@ namespace BSP
     };
 
     extern const QSPI_InitTypeDefAndInst QSPI_Inits[QSPI_TOTAL_NUMBER];
+
+    ////////////////////////////////// RTC definitions /////////////////////////////////
+    enum RTC
+    {
+    #if NRFX_CHECK(NRFX_RTC0_ENABLED)
+        RTC_RESERVED, // Reserved by the softdevice
+    #endif
+    #if NRFX_CHECK(NRFX_RTC1_ENABLED)
+        RTC_1,
+    #endif
+    #if NRFX_CHECK(NRFX_RTC2_ENABLED)
+        RTC_2,
+    #endif
+        RTC_TOTAL_NUMBER
+    };
+
+    typedef struct
+    {
+        nrfx_rtc_t rtc;
+        uint8_t irq_priority;
+    } RTC_InitTypeDefAndInst_t;
+
+    extern const RTC_InitTypeDefAndInst_t RTC_Inits[RTC_TOTAL_NUMBER];
 }

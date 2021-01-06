@@ -7,6 +7,7 @@ project(CLSGenTrackerTests
 
 set(ROOT_DIR "..")
 set(LINUX_DIR "${ROOT_DIR}/ports/linux")
+set(NRF_DIR "${ROOT_DIR}/ports/nrf52840")
 
 # CppUTest
 include(FetchContent)
@@ -79,6 +80,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/scheduling"
     "${ROOT_DIR}/ports/linux"
     "${ROOT_DIR}/core/protocol"
+    "${NRF_DIR}/core/hardware"
     "mocks"
     "fakes"
 )
@@ -87,6 +89,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/littlefs/lfs_util.c"
     "${ROOT_DIR}/libraries/littlefs/lfs.c"
     "${LINUX_DIR}/interrupt_lock.cpp"
+    "${NRF_DIR}/core/hardware/nrf_timer.cpp"
     "src/timer_test.cpp"
     "src/filesystem_test.cpp"
     "src/scheduler_test.cpp"
@@ -94,8 +97,10 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/encoder_test.cpp"
 	"src/decoder_test.cpp"
 	"src/config_store_test.cpp"
-	"src/dte_handler_test.cpp"
+    "src/dte_handler_test.cpp"
+    "src/nrf_timer_test.cpp"
     "src/main.cpp"
+    "fakes/nrfx_rtc.c"
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CppUTest CppUTestExt ${CMAKE_THREAD_LIBS_INIT})

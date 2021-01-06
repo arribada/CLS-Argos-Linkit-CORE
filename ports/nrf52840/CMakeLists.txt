@@ -93,7 +93,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CORE_DIR}/util
     ${CORE_DIR}/logging
     ${CORE_DIR}/sm
-    #${CORE_DIR}/scheduling
+    ${CORE_DIR}/scheduling
     ${PROJ_DIR}/core/hardware
     ${PROJ_DIR}/core/interface
     ${PROJ_DIR}/core/filesystem
@@ -141,6 +141,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
     ${PROJ_DIR}/bsp/horizon_v4.0/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash_file_system.cpp
+    ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
     ${PROJ_DIR}/drivers/nrf_log_redirect/nrf_log_redirect.c
     ${PROJ_DIR}/main.cpp

@@ -51,7 +51,7 @@ public:
 		schedule.m_func = task_func;
 		schedule.m_target_counter_value = target_count;
 
-		// Add this schedule to our list in priority order
+		// Add this schedule to our list in time order
 		auto iter = m_schedules.begin();
 		while (iter != m_schedules.end())
 		{
@@ -149,7 +149,7 @@ private:
 							// If the front schedule is not due to be run then we can assume none of them are
 							// This is because the list is sorted
 							break;
-						}						
+						}
 					}
 
 					if (execute_this_schedule)

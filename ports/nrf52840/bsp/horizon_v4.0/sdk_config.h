@@ -3155,7 +3155,7 @@
 // <e> NRFX_RTC_ENABLED - nrfx_rtc - RTC peripheral driver
 //==========================================================
 #ifndef NRFX_RTC_ENABLED
-#define NRFX_RTC_ENABLED 0
+#define NRFX_RTC_ENABLED 1
 #endif
 // <q> NRFX_RTC0_ENABLED  - Enable RTC0 instance
  
@@ -3168,7 +3168,7 @@
  
 
 #ifndef NRFX_RTC1_ENABLED
-#define NRFX_RTC1_ENABLED 0
+#define NRFX_RTC1_ENABLED 1
 #endif
 
 // <q> NRFX_RTC2_ENABLED  - Enable RTC2 instance
@@ -5250,63 +5250,6 @@
 #endif
 
 // </e>
-
-// <e> RTC_ENABLED - nrf_drv_rtc - RTC peripheral driver - legacy layer
-//==========================================================
-#ifndef RTC_ENABLED
-#define RTC_ENABLED 0
-#endif
-// <o> RTC_DEFAULT_CONFIG_FREQUENCY - Frequency  <16-32768> 
-
-
-#ifndef RTC_DEFAULT_CONFIG_FREQUENCY
-#define RTC_DEFAULT_CONFIG_FREQUENCY 32768
-#endif
-
-// <q> RTC_DEFAULT_CONFIG_RELIABLE  - Ensures safe compare event triggering
- 
-
-#ifndef RTC_DEFAULT_CONFIG_RELIABLE
-#define RTC_DEFAULT_CONFIG_RELIABLE 0
-#endif
-
-// <o> RTC_DEFAULT_CONFIG_IRQ_PRIORITY  - Interrupt priority
- 
-
-// <i> Priorities 0,2 (nRF51) and 0,1,4,5 (nRF52) are reserved for SoftDevice
-// <0=> 0 (highest) 
-// <1=> 1 
-// <2=> 2 
-// <3=> 3 
-// <4=> 4 
-// <5=> 5 
-// <6=> 6 
-// <7=> 7 
-
-#ifndef RTC_DEFAULT_CONFIG_IRQ_PRIORITY
-#define RTC_DEFAULT_CONFIG_IRQ_PRIORITY 6
-#endif
-
-// <q> RTC0_ENABLED  - Enable RTC0 instance
- 
-
-#ifndef RTC0_ENABLED
-#define RTC0_ENABLED 0
-#endif
-
-// <q> RTC1_ENABLED  - Enable RTC1 instance
- 
-
-#ifndef RTC1_ENABLED
-#define RTC1_ENABLED 0
-#endif
-
-// <q> RTC2_ENABLED  - Enable RTC2 instance
- 
-
-#ifndef RTC2_ENABLED
-#define RTC2_ENABLED 0
-#endif
 
 // <o> NRF_MAXIMUM_LATENCY_US - Maximum possible time[us] in highest priority interrupt 
 #ifndef NRF_MAXIMUM_LATENCY_US
