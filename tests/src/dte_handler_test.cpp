@@ -122,7 +122,7 @@ TEST(DTEHandler, PROFW_PROFR_REQ)
 TEST(DTEHandler, SECUR_REQ)
 {
 	std::string resp;
-	std::string req = "$SECUR#000;\r";
+	std::string req = "$SECUR#004;1234\r";
 	CHECK_TRUE(DTEAction::SECUR == dte_handler->handle_dte_message(req, resp));
 	STRCMP_EQUAL("$O;SECUR#000;\r", resp.c_str());
 }

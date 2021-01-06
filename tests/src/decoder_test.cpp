@@ -404,9 +404,10 @@ TEST(Decoder, PASPW_REQ)
 TEST(Decoder, SECUR_REQ)
 {
 	std::string s;
-	s = "$SECUR#000;\r";
+	s = "$SECUR#004;1234\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::SECUR_REQ == command);
+	CHECK_EQUAL(0x1234U, std::get<unsigned int>(arg_list[0]));
 }
 
 TEST(Decoder, DUMPM_REQ)

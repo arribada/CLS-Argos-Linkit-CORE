@@ -149,7 +149,10 @@ public:
 		return DTEEncoder::encode(DTECommand::PROFR_RESP, error_code, configuration_store->read_param<std::string>(ParamID::PROFILE_NAME));
 	}
 
-	static std::string SECUR_REQ(int error_code) {
+	static std::string SECUR_REQ(int error_code, std::vector<BaseType>& arg_list) {
+
+		// TODO: the accesscode parameter is presently ignored
+		(void)arg_list;
 
 		return DTEEncoder::encode(DTECommand::SECUR_RESP, error_code);
 
@@ -340,7 +343,7 @@ public:
 			resp = PROFR_REQ(error_code);
 			break;
 		case DTECommand::SECUR_REQ:
-			resp = SECUR_REQ(error_code);
+			resp = SECUR_REQ(error_code, arg_list);
 			if (!error_code) action = DTEAction::SECUR;
 			break;
 		case DTECommand::RSTBW_REQ:

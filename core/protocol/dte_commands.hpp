@@ -161,6 +161,15 @@ static const DTECommandMap command_map[] = {
 		.command = DTECommand::SECUR_REQ,
 		.prototype = 
 		{
+				{
+					.name = "accesscode",
+					.key = "",
+					.encoding = BaseEncoding::HEXADECIMAL,
+					.min_value = 0U,
+					.max_value = 0U,
+					.permitted_values = {},
+					.is_implemented = false
+				},
 		}
 	},
 	{

@@ -152,8 +152,8 @@ TEST(Encoder, PASPW_RESP)
 TEST(Encoder, SECUR_REQ)
 {
 	std::string s;
-	s = DTEEncoder::encode(DTECommand::SECUR_REQ);
-	STRCMP_EQUAL("$SECUR#000;\r", s.c_str());
+	s = DTEEncoder::encode(DTECommand::SECUR_REQ, 0x1234U);
+	STRCMP_EQUAL("$SECUR#004;1234\r", s.c_str());
 }
 
 TEST(Encoder, SECUR_RESP)
