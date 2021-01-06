@@ -68,6 +68,8 @@ int main() {
 	ConsoleLog console_sensor_log;
 	sensor_log = &console_sensor_log;
 
+	DTEHandler dte_handler;
+
     BleInterface::get_instance().advertising_start();
 
 	for(;;)
@@ -79,18 +81,19 @@ int main() {
 		if (req.size())
 		{
 			DEBUG_TRACE("received: %s", req.c_str());
-
 			std::string resp;
-			auto action = DTEHandler::handle_dte_message(req, resp);
-			(void) action;
+			DTEAction action;
 
-			if (resp.size())
+			do
 			{
-				DEBUG_TRACE("responded: %s", resp.c_str());
-				BleInterface::get_instance().write(resp);
-			}			
+				action = dte_handler.handle_dte_message(req, resp);
+				if (resp.size())
+				{
+					DEBUG_TRACE("responded: %s", resp.c_str());
+					BleInterface::get_instance().write(resp);
+				}
+			} while (action == DTEAction::AGAIN);
 		}
-		
 	}
 
 	return 0;

@@ -17,7 +17,6 @@ enum class DTECommand {
 	PASPW_REQ,
 	SECUR_REQ,
 	DUMPM_REQ,
-	DUMPL_REQ,
 	DUMPD_REQ,
 	RSTBW_REQ,
 	FACTW_REQ,
@@ -33,7 +32,6 @@ enum class DTECommand {
 	PASPW_RESP,
 	SECUR_RESP,
 	DUMPM_RESP,
-	DUMPL_RESP,
 	DUMPD_RESP,
 	RSTBW_RESP,
 	FACTW_RESP,
@@ -191,17 +189,19 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 	{
-		.name = "DUMPL",
-		.command = DTECommand::DUMPL_REQ,
-		.prototype = 
-		{
-		}
-	},
-	{
 		.name = "DUMPD",
 		.command = DTECommand::DUMPD_REQ,
 		.prototype = 
 		{
+			{
+				.name = "d_type",
+				.key = "",
+				.encoding = BaseEncoding::HEXADECIMAL,
+				.min_value = 0U,
+				.max_value = 1U,
+				.permitted_values = {},
+				.is_implemented = false
+			},
 		}
 	},
 	{
@@ -350,26 +350,28 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 	{
-		.name = "DUMPL",
-		.command = DTECommand::DUMPL_RESP,
-		.prototype = 
-		{
-			{
-				.name = "data",
-				.key = "",
-				.encoding = BaseEncoding::BASE64,
-				.min_value = 0,
-				.max_value = 0,
-				.permitted_values = {},
-				.is_implemented = false
-			}
-		}
-	},
-	{
 		.name = "DUMPD",
 		.command = DTECommand::DUMPD_RESP,
 		.prototype = 
 		{
+			{
+				.name = "mmm",
+				.key = "",
+				.encoding = BaseEncoding::HEXADECIMAL,
+				.min_value = 0U,
+				.max_value = 0xFFFU,
+				.permitted_values = {},
+				.is_implemented = false
+			},
+			{
+				.name = "MMM",
+				.key = "",
+				.encoding = BaseEncoding::HEXADECIMAL,
+				.min_value = 0U,
+				.max_value = 0xFFFU,
+				.permitted_values = {},
+				.is_implemented = false
+			},
 			{
 				.name = "data",
 				.key = "",

@@ -419,20 +419,18 @@ TEST(Decoder, DUMPM_REQ)
 	CHECK_EQUAL(0x200U, std::get<unsigned int>(arg_list[1]));
 }
 
-TEST(Decoder, DUMPL_REQ)
-{
-	std::string s;
-	s = "$DUMPL#000;\r";
-	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::DUMPL_REQ == command);
-}
-
 TEST(Decoder, DUMPD_REQ)
 {
 	std::string s;
-	s = "$DUMPD#000;\r";
+	s = "$DUMPD#001;0\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::DUMPD_REQ == command);
+	CHECK_EQUAL(0U, std::get<unsigned int>(arg_list[0]));
+	s = "$DUMPD#001;1\r";
+	arg_list.clear();
+	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
+	CHECK_TRUE(DTECommand::DUMPD_REQ == command);
+	CHECK_EQUAL(1U, std::get<unsigned int>(arg_list[0]));
 }
 
 TEST(Decoder, RSTBW_REQ)
@@ -554,24 +552,16 @@ TEST(Decoder, DUMPM_RESP)
 	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
 }
 
-TEST(Decoder, DUMPL_RESP)
-{
-	std::string dummy_file = "Dummy Data For A Dump File";
-	std::string s;
-	s = "$O;DUMPL#024;" + websocketpp::base64_encode(dummy_file) + "\r";
-	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::DUMPL_RESP == command);
-	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
-}
-
 TEST(Decoder, DUMPD_RESP)
 {
 	std::string dummy_file = "Dummy Data For A Dump File";
 	std::string s;
-	s = "$O;DUMPD#024;" + websocketpp::base64_encode(dummy_file) + "\r";
+	s = "$O;DUMPD#028;0,1," + websocketpp::base64_encode(dummy_file) + "\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::DUMPD_RESP == command);
-	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
+	CHECK_EQUAL(0U, std::get<unsigned int>(arg_list[0]));
+	CHECK_EQUAL(1U, std::get<unsigned int>(arg_list[1]));
+	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[2]).c_str());
 }
 
 TEST(Decoder, RSTBW_RESP)

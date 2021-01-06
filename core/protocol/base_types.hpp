@@ -73,6 +73,10 @@ enum class BaseEncoding {
 	KEY_VALUE_LIST
 };
 
+enum class BaseLogDType {
+	INTERNAL,
+	SENSOR
+};
 
 enum class BaseArgosMode {
 	OFF,

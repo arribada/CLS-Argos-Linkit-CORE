@@ -1146,6 +1146,7 @@ public:
 				}
 				case BaseEncoding::HEXADECIMAL:
 				{
+					DEBUG_TRACE("BaseEncoding::HEXADECIMAL");
 					unsigned int val = decode<unsigned int>(ss, true);
 					DTEEncoder::validate(cmd_ref->prototype[arg_index], val);
 					arg_list.push_back(val);
@@ -1153,6 +1154,7 @@ public:
 				}
 				case BaseEncoding::UINT:
 				{
+					DEBUG_TRACE("BaseEncoding::UINT");
 					unsigned int val = decode<unsigned int>(ss);
 					DTEEncoder::validate(cmd_ref->prototype[arg_index], val);
 					arg_list.push_back(val);
@@ -1160,6 +1162,7 @@ public:
 				}
 				case BaseEncoding::BOOLEAN:
 				{
+					DEBUG_TRACE("BaseEncoding::BOOLEAN");
 					bool val = decode<bool>(ss);
 					arg_list.push_back(val);
 					break;
@@ -1167,6 +1170,7 @@ public:
 				break;
 				case BaseEncoding::FLOAT:
 				{
+					DEBUG_TRACE("BaseEncoding::FLOAT");
 					double val = decode<double>(ss);
 					DTEEncoder::validate(cmd_ref->prototype[arg_index], val);
 					arg_list.push_back(val);
@@ -1174,12 +1178,14 @@ public:
 				}
 				case BaseEncoding::TEXT:
 				{
+					DEBUG_TRACE("BaseEncoding::TEXT");
 					std::string val = decode(ss);
 					arg_list.push_back(val);
 					break;
 				}
 				case BaseEncoding::BASE64:
 				{
+					DEBUG_TRACE("BaseEncoding::BASE64");
 					arg_list.push_back(websocketpp::base64_decode(decode(ss)));
 					break;
 				}
@@ -1189,6 +1195,7 @@ public:
 				case BaseEncoding::ARGOSPOWER:
 				case BaseEncoding::AQPERIOD:
 				default:
+					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;
 				}
 			}

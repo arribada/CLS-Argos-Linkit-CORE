@@ -12,6 +12,7 @@ using namespace std::literals::string_literals;
 
 enum class DTEAction {
 	NONE,    // Default action is none
+	AGAIN,   // More data is remaining in a multi-message response, call the handler again with the same input message
 	RESET,   // Deferred action since DTE must respond first before reset can be performed
 	FACTR,   // Deferred action since DTE must respond first before factory reset can be performed
 	SECUR    // DTE service must be notified when SECUR is requested to grant privileges for OTA FW commands
@@ -34,6 +35,15 @@ extern Logger *system_log;
 
 class DTEHandler {
 private:
+	unsigned int m_dumpd_count;
+	unsigned int m_dumpd_offset;
+
+public:
+	DTEHandler() {
+		m_dumpd_count = 0;
+		m_dumpd_offset = 0;
+	}
+
 	static std::string PARML_REQ(int error_code) {
 
 		if (error_code) {
@@ -219,34 +229,61 @@ private:
 		return DTEEncoder::encode(DTECommand::PASPW_RESP, error_code);
 	}
 
-	static std::string DUMPX_REQ(int error_code, DTECommand resp, Logger *logger) {
+	std::string DUMPD_REQ(int error_code, std::vector<BaseType>& arg_list, DTEAction& action) {
+
+		action = DTEAction::NONE;
 
 		if (error_code) {
-			return DTEEncoder::encode(resp, error_code);
+			// Reset state variables back to zero if an error arises
+			m_dumpd_count = 0;
+			m_dumpd_offset = 0;
+			return DTEEncoder::encode(DTECommand::DUMPD_RESP, error_code);
+		}
+
+		Logger *logger;
+
+		// Extract the d_type parameter from arg_list to determine which log file to use
+		unsigned int d_type = std::get<unsigned int>(arg_list[0]);
+		if ((unsigned int)BaseLogDType::INTERNAL == d_type)
+		{
+			logger = system_log;
+		} else {
+			logger = sensor_log;
+		}
+
+		// Check to see if this is the first item
+		unsigned int total_entries = logger->num_entries();
+		if (0 == m_dumpd_count) {
+			m_dumpd_count = (total_entries + (DTE_HANDLER_MAX_LOG_DUMP_ENTRIES-1)) / DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
+			m_dumpd_offset = 0;
 		}
 
 		LogEntry log_entries[DTE_HANDLER_MAX_LOG_DUMP_ENTRIES];
 		BaseRawData raw_data;
-		unsigned int start_index = 0;
-		unsigned int num_entries = logger->num_entries();
+		unsigned int start_index = m_dumpd_offset * DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
+		unsigned int num_entries = total_entries - start_index;
 		raw_data.ptr = log_entries;
 		raw_data.length = std::min(DTE_HANDLER_MAX_LOG_DUMP_ENTRIES, num_entries);
-
-		// Set the start index to reflect the last "N" entries being retrieved
-		if (num_entries > DTE_HANDLER_MAX_LOG_DUMP_ENTRIES) {
-			start_index = num_entries - DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
-		}
 
 		for (unsigned int i = 0; i < raw_data.length; i++)
 			logger->read(&log_entries[i], i + start_index);
 
 		raw_data.length *= sizeof(LogEntry);
 
-		return DTEEncoder::encode(resp, error_code, raw_data);
+		std::string msg = DTEEncoder::encode(DTECommand::DUMPD_RESP, error_code, m_dumpd_offset, m_dumpd_count, raw_data);
+
+		m_dumpd_offset++; // Increment in readiness for next iteration
+		if (m_dumpd_offset == m_dumpd_count) {
+			m_dumpd_count = 0; // Marks the sequence as complete
+		} else {
+			action = DTEAction::AGAIN;  // Inform caller that we need another iteration
+		}
+
+		return msg;
 	}
 
 public:
-	static DTEAction handle_dte_message(const std::string& req, std::string& resp) {
+	DTEAction handle_dte_message(const std::string& req, std::string& resp) {
 		DTECommand command;
 		std::vector<ParamID> params;
 		std::vector<ParamValue> param_values;
@@ -327,10 +364,7 @@ public:
 			resp = PASPW_REQ(error_code, arg_list);
 			break;
 		case DTECommand::DUMPD_REQ:
-			resp = DUMPX_REQ(error_code, DTECommand::DUMPD_RESP, sensor_log);
-			break;
-		case DTECommand::DUMPL_REQ:
-			resp = DUMPX_REQ(error_code, DTECommand::DUMPL_RESP, system_log);
+			resp = DUMPD_REQ(error_code, arg_list, action);
 			break;
 		default:
 			break;
