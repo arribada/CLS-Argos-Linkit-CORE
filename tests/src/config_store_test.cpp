@@ -727,3 +727,250 @@ TEST(ConfigStore, PARAM_LB_GNSS_ACQ_TIMEOUT)
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_GNSS_ACQ_TIMEOUT));
 	delete store;
 }
+
+TEST(ConfigStore, RetrieveGPSConfigDefaultMode)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();
+
+	// Set default params and LB params
+	unsigned int hdop_filter_threshold = 10;
+	bool hdop_filter_enable = true;
+	bool gnss_en = true;
+	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440;
+	unsigned int acquisition_timeout = 10;
+	bool lb_en = false;
+	unsigned int lb_hdop_filter_threshold = 5;
+	bool lb_gnss_en = false;
+	BaseAqPeriod lb_dloc_arg_nom = BaseAqPeriod::AQPERIOD_720;
+	unsigned int lb_acquisition_timeout = 30;
+
+	store->write_param(ParamID::GNSS_HDOPFILT_THR, hdop_filter_threshold);
+	store->write_param(ParamID::GNSS_HDOPFILT_EN, hdop_filter_enable);
+	store->write_param(ParamID::GNSS_EN, gnss_en);
+	store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	store->write_param(ParamID::GNSS_ACQ_TIMEOUT, acquisition_timeout);
+	store->write_param(ParamID::LB_EN, lb_en);
+	store->write_param(ParamID::LB_GNSS_HDOPFILT_THR, lb_hdop_filter_threshold);
+	store->write_param(ParamID::LB_GNSS_EN, lb_gnss_en);
+	store->write_param(ParamID::DLOC_ARG_LB, lb_dloc_arg_nom);
+	store->write_param(ParamID::LB_GNSS_ACQ_TIMEOUT, lb_acquisition_timeout);
+
+	GNSSConfig gnss_config;
+	store->get_gnss_configuration(gnss_config);
+
+	CHECK_EQUAL(acquisition_timeout, gnss_config.acquisition_timeout);
+	CHECK_TRUE(dloc_arg_nom == gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(gnss_en, gnss_config.enable);
+	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
+	CHECK_EQUAL(hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+}
+
+TEST(ConfigStore, RetrieveGPSConfigLBMode)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();
+
+	// Set default params and LB params
+	unsigned int hdop_filter_threshold = 10;
+	bool hdop_filter_enable = true;
+	bool gnss_en = true;
+	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440;
+	unsigned int acquisition_timeout = 10;
+	bool lb_en = true;
+	unsigned int lb_hdop_filter_threshold = 5;
+	bool lb_gnss_en = false;
+	BaseAqPeriod lb_dloc_arg_nom = BaseAqPeriod::AQPERIOD_720;
+	unsigned int lb_acquisition_timeout = 30;
+	unsigned int lb_thresh = 10;
+
+	store->write_param(ParamID::GNSS_HDOPFILT_THR, hdop_filter_threshold);
+	store->write_param(ParamID::GNSS_HDOPFILT_EN, hdop_filter_enable);
+	store->write_param(ParamID::GNSS_EN, gnss_en);
+	store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	store->write_param(ParamID::GNSS_ACQ_TIMEOUT, acquisition_timeout);
+	store->write_param(ParamID::LB_EN, lb_en);
+	store->write_param(ParamID::LB_GNSS_HDOPFILT_THR, lb_hdop_filter_threshold);
+	store->write_param(ParamID::LB_GNSS_EN, lb_gnss_en);
+	store->write_param(ParamID::DLOC_ARG_LB, lb_dloc_arg_nom);
+	store->write_param(ParamID::LB_GNSS_ACQ_TIMEOUT, lb_acquisition_timeout);
+	store->write_param(ParamID::LB_TRESHOLD, lb_thresh);
+
+	// Notify battery level above threshold
+	store->notify_battery_level(100U);
+
+	GNSSConfig gnss_config;
+	store->get_gnss_configuration(gnss_config);
+
+	CHECK_EQUAL(acquisition_timeout, gnss_config.acquisition_timeout);
+	CHECK_TRUE(dloc_arg_nom == gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(gnss_en, gnss_config.enable);
+	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
+	CHECK_EQUAL(hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+
+	// Notify battery level equal threshold
+	store->notify_battery_level(10U);
+
+	store->get_gnss_configuration(gnss_config);
+
+	CHECK_EQUAL(lb_acquisition_timeout, gnss_config.acquisition_timeout);
+	CHECK_TRUE(lb_dloc_arg_nom == gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(lb_gnss_en, gnss_config.enable);
+	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
+	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+
+	// Notify battery level below threshold
+	store->notify_battery_level(1U);
+
+	store->get_gnss_configuration(gnss_config);
+
+	CHECK_EQUAL(lb_acquisition_timeout, gnss_config.acquisition_timeout);
+	CHECK_TRUE(lb_dloc_arg_nom == gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(lb_gnss_en, gnss_config.enable);
+	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
+	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+
+}
+
+TEST(ConfigStore, RetrieveArgosConfigDefaultMode)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();
+
+	// Set default params and LB params
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_12;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0xFFFFFFU;
+	double frequency = 0;
+	BaseArgosMode mode = BaseArgosMode::DUTY_CYCLE;
+	unsigned int ntry_per_message = 1;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 12;
+	bool lb_en = false;
+	BaseArgosDepthPile lb_depth_pile = BaseArgosDepthPile::DEPTH_PILE_4;
+	unsigned int lb_duty_cycle = 0xAAAAAAU;
+	BaseArgosMode lb_mode = BaseArgosMode::LEGACY;
+	BaseArgosPower lb_power = BaseArgosPower::POWER_40_MW;
+	unsigned int lb_tr_nom = 120;
+
+	store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	store->write_param(ParamID::ARGOS_FREQ, frequency);
+	store->write_param(ParamID::ARGOS_MODE, mode);
+	store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	store->write_param(ParamID::ARGOS_POWER, power);
+	store->write_param(ParamID::TR_NOM, tr_nom);
+	store->write_param(ParamID::TX_COUNTER, tx_counter);
+	store->write_param(ParamID::LB_EN, lb_en);
+	store->write_param(ParamID::LB_ARGOS_DEPTH_PILE, lb_depth_pile);
+	store->write_param(ParamID::LB_ARGOS_DUTY_CYCLE, lb_duty_cycle);
+	store->write_param(ParamID::LB_ARGOS_MODE, lb_mode);
+	store->write_param(ParamID::LB_ARGOS_POWER, lb_power);
+	store->write_param(ParamID::TR_LB, lb_tr_nom);
+
+	ArgosConfig argos_config;
+	store->get_argos_configuration(argos_config);
+
+	CHECK_EQUAL((unsigned int)depth_pile, (unsigned int)argos_config.depth_pile);
+	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
+	CHECK_EQUAL(duty_cycle, argos_config.duty_cycle);
+	CHECK_EQUAL(frequency, argos_config.frequency);
+	CHECK_EQUAL((unsigned int)mode, (unsigned int)argos_config.mode);
+	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL((unsigned int)power, (unsigned int)argos_config.power);
+	CHECK_EQUAL(tr_nom, argos_config.tr_nom);
+	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+}
+
+TEST(ConfigStore, RetrieveArgosConfigLBMode)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();
+
+	// Set default params and LB params
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_12;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0xFFFFFFU;
+	double frequency = 0;
+	BaseArgosMode mode = BaseArgosMode::DUTY_CYCLE;
+	unsigned int ntry_per_message = 1;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 12;
+	bool lb_en = true;
+	BaseArgosDepthPile lb_depth_pile = BaseArgosDepthPile::DEPTH_PILE_4;
+	unsigned int lb_duty_cycle = 0xAAAAAAU;
+	BaseArgosMode lb_mode = BaseArgosMode::LEGACY;
+	BaseArgosPower lb_power = BaseArgosPower::POWER_40_MW;
+	unsigned int lb_tr_nom = 120;
+	unsigned int lb_thresh = 10U;
+
+	store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	store->write_param(ParamID::ARGOS_FREQ, frequency);
+	store->write_param(ParamID::ARGOS_MODE, mode);
+	store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	store->write_param(ParamID::ARGOS_POWER, power);
+	store->write_param(ParamID::TR_NOM, tr_nom);
+	store->write_param(ParamID::TX_COUNTER, tx_counter);
+	store->write_param(ParamID::LB_EN, lb_en);
+	store->write_param(ParamID::LB_ARGOS_DEPTH_PILE, lb_depth_pile);
+	store->write_param(ParamID::LB_ARGOS_DUTY_CYCLE, lb_duty_cycle);
+	store->write_param(ParamID::LB_ARGOS_MODE, lb_mode);
+	store->write_param(ParamID::LB_ARGOS_POWER, lb_power);
+	store->write_param(ParamID::TR_LB, lb_tr_nom);
+	store->write_param(ParamID::LB_TRESHOLD, lb_thresh);
+
+	// Notify battery level above threshold
+	store->notify_battery_level(100U);
+
+	ArgosConfig argos_config;
+	store->get_argos_configuration(argos_config);
+
+	CHECK_EQUAL((unsigned int)depth_pile, (unsigned int)argos_config.depth_pile);
+	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
+	CHECK_EQUAL(duty_cycle, argos_config.duty_cycle);
+	CHECK_EQUAL(frequency, argos_config.frequency);
+	CHECK_EQUAL((unsigned int)mode, (unsigned int)argos_config.mode);
+	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL((unsigned int)power, (unsigned int)argos_config.power);
+	CHECK_EQUAL(tr_nom, argos_config.tr_nom);
+	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+
+	// Notify battery level equal threshold
+	store->notify_battery_level(10U);
+
+	store->get_argos_configuration(argos_config);
+
+	CHECK_EQUAL((unsigned int)lb_depth_pile, (unsigned int)argos_config.depth_pile);
+	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
+	CHECK_EQUAL(lb_duty_cycle, argos_config.duty_cycle);
+	CHECK_EQUAL(frequency, argos_config.frequency);
+	CHECK_EQUAL((unsigned int)lb_mode, (unsigned int)argos_config.mode);
+	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
+	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
+	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+
+	// Notify battery level below threshold
+	store->notify_battery_level(1U);
+
+	store->get_argos_configuration(argos_config);
+
+	CHECK_EQUAL((unsigned int)lb_depth_pile, (unsigned int)argos_config.depth_pile);
+	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
+	CHECK_EQUAL(lb_duty_cycle, argos_config.duty_cycle);
+	CHECK_EQUAL(frequency, argos_config.frequency);
+	CHECK_EQUAL((unsigned int)lb_mode, (unsigned int)argos_config.mode);
+	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
+	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
+	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+}
