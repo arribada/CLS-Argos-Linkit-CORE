@@ -57,6 +57,9 @@ static ble_uuid_t m_adv_uuids[]          =                                      
 
 void BleInterface::init()
 {
+    m_carriage_return_received = false;
+    m_receive_buffer_len = 0;
+
     timers_init();
     ble_stack_init();
     gap_params_init();
@@ -66,24 +69,31 @@ void BleInterface::init()
     conn_params_init();
 }
 
+void BleInterface::start(std::function<void()> const &on_connected, std::function<void()> const &on_disconnected, std::function<void()> const &on_received)
+{
+    m_on_connected = on_connected;
+    m_on_disconnected = on_disconnected;
+    m_on_received = on_received;
+
+    advertising_start();
+}
+
+void BleInterface::stop()
+{
+    advertising_stop();
+}
+
 std::string BleInterface::read_line()
 {
     std::string str;
 
-    // Check ring buffer for a carriage return, if so we have a string to return
-
-    uint32_t contents = m_ring_buffer.occupancy();
-
-    for (uint32_t i = 0; i < contents; ++i)
+    if (m_carriage_return_received)
     {
-        if (m_ring_buffer.peek_at(i) == '\r')
-        {
-            // String found, lets extract it
-            for (uint32_t j = 0; j <= i; ++j)
-                str.push_back(m_ring_buffer.remove());
-            
-            break;
-        }
+        for (uint32_t i = 0; i < m_receive_buffer_len; ++i)
+            str.push_back(m_receive_buffer[i]);
+
+        m_receive_buffer_len = 0;
+        m_carriage_return_received = false;
     }
     
     return str;
@@ -272,12 +282,16 @@ void BleInterface::ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
             APP_ERROR_CHECK(err_code);
+            if (m_on_connected)
+                m_on_connected();
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected for reason 0x%02X", p_ble_evt->evt.gap_evt.params.disconnected.reason);
             // LED indication will be changed when advertising starts.
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
+            if (m_on_disconnected)
+                m_on_disconnected();
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
@@ -361,12 +375,35 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
 {
     if (p_evt->type == BLE_NUS_EVT_RX_DATA)
     {
+        if (!m_carriage_return_received)
+        {
+            // If receiving this data would overrun our buffer then we need to discard what we already have to prevent the buffer from filling and not being cleared
+            if (m_receive_buffer_len + p_evt->params.rx_data.length > sizeof(m_receive_buffer))
+                m_receive_buffer_len = 0;
+
+            if (p_evt->params.rx_data.length > sizeof(m_receive_buffer))
+            {
+                NRF_LOG_WARNING("Received data from BLE NUS larger than buffer.");
+            }
+            else
+            {
+                memcpy(m_receive_buffer, p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+                m_receive_buffer_len += p_evt->params.rx_data.length;
+                if (m_receive_buffer[m_receive_buffer_len - 1] == '\r')
+                    m_carriage_return_received = true;
+                
+                // Notify the user that we have a string waiting to be read with readline()
+                if (m_on_received)
+                    m_on_received();
+            }
+        }
+        else
+        {
+            NRF_LOG_WARNING("Received data from BLE NUS. But discarded as buffer already contains a string.");
+        }
+
         NRF_LOG_DEBUG("Received data from BLE NUS. Writing data on UART.");
         NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
-
-        // Append the received data to our ring buffer
-        for (uint32_t i = 0; i < p_evt->params.rx_data.length; i++)
-            m_ring_buffer.insert(p_evt->params.rx_data.p_data[i]);
     }
 
 }

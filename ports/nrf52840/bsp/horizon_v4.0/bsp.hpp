@@ -6,7 +6,7 @@
 #include "nrfx_qspi.h"
 #include "nrfx_rtc.h"
 
-#define RTC_TIMER      BSP::RTC::RTC_1
+#define RTC_TIMER      BSP::RTC::RTC_2
 
 namespace BSP
 {
@@ -76,7 +76,7 @@ namespace BSP
         RTC_RESERVED, // Reserved by the softdevice
     #endif
     #if NRFX_CHECK(NRFX_RTC1_ENABLED)
-        RTC_1,
+        RTC_1, // Used by the app timer (there is likely scope to free this up by modifying the BLE connection handling)
     #endif
     #if NRFX_CHECK(NRFX_RTC2_ENABLED)
         RTC_2,

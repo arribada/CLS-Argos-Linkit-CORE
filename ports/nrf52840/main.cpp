@@ -11,14 +11,38 @@
 #include "console_log.hpp"
 #include "debug.hpp"
 #include "bsp.hpp"
+#include "gentracker.hpp"
+#include "nrf_timer.hpp"
+#include "fake_switch.hpp"
+#include "fake_led.hpp"
+#include "ota_update_service.hpp"
+#include "fake_gps_scheduler.hpp"
+#include "fake_comms_scheduler.hpp"
 
 #define RED_LED_GPIO (NRF_GPIO_PIN_MAP(1, 7))
 
+FileSystem *main_filesystem;
+
 ConfigurationStore *configuration_store;
+BLEService *dte_service;
+BLEService *ota_update_service;
+CommsScheduler *comms_scheduler;
+GPSScheduler *gps_scheduler;
 MemoryAccess *memory_access;
 Logger *sensor_log;
 Logger *system_log;
 ConsoleLog *console_log;
+Timer *system_timer;
+Scheduler *system_scheduler;
+Led *red_led;
+Led *green_led;
+Led *blue_led;
+Switch *saltwater_switch;
+Switch *reed_switch;
+DTEHandler *dte_handler;
+
+// FSM initial state -> BootState
+FSM_INITIAL_STATE(GenTracker, BootState)
 
 // Redirect std::cout and printf output to debug UART
 // We have to define this as extern "C" as we are overriding a weak C function
@@ -37,8 +61,26 @@ int main() {
 	console_log = &console_console_log;
 
     nrf_log_redirect_init();
-	
+
+	// Set up fakes
+	FakeSwitch fake_reed_switch(0, 0);
+	reed_switch = &fake_reed_switch;
+	FakeSwitch fake_saltwater_switch(0, 0);
+	saltwater_switch = &fake_saltwater_switch;
+	FakeLed fake_red_led("Red");
+	red_led = &fake_red_led;
+	FakeLed fake_green_led("Green");
+	green_led = &fake_green_led;
+	FakeLed fake_blue_led("Blue");
+	blue_led = &fake_blue_led;
+
     BleInterface::get_instance().init();
+
+	system_timer = &NrfTimer::get_instance();
+	NrfTimer::get_instance().init();
+
+	Scheduler scheduler(system_timer);
+	system_scheduler = &scheduler;
 
 	printf("GenTracker Booted\r\n");
 
@@ -46,18 +88,13 @@ int main() {
 	nrf_gpio_pin_clear(RED_LED_GPIO);
 
 	Is25FlashFileSystem lfs_file_system;
+	main_filesystem = &lfs_file_system;
 
 	lfs_file_system.init();
 
-	if (lfs_file_system.mount())
-	{
-		lfs_file_system.format();
-		lfs_file_system.mount();
-	}
-
 	LFSConfigurationStore store(lfs_file_system);
 	configuration_store = &store;
-	store.init();
+	//store.init();
 
 	NrfMemoryAccess nrf_memory_access;
 	memory_access = &nrf_memory_access;
@@ -68,32 +105,33 @@ int main() {
 	ConsoleLog console_sensor_log;
 	sensor_log = &console_sensor_log;
 
-	DTEHandler dte_handler;
+	DTEHandler dte_handler_local;
+	dte_handler = &dte_handler_local;
 
-    BleInterface::get_instance().advertising_start();
+	dte_service = &BleInterface::get_instance();
 
-	for(;;)
-	{
-		nrf_gpio_pin_toggle(RED_LED_GPIO);
+	OTAUpdateService ota_service;
+	ota_update_service = &ota_service;
 
-		auto req = BleInterface::get_instance().read_line();
+	FakeCommsScheduler fake_comms_scheduler;
+	comms_scheduler = &fake_comms_scheduler;
 
-		if (req.size())
-		{
-			DEBUG_TRACE("received: %s", req.c_str());
-			std::string resp;
-			DTEAction action;
+	FakeGPSScheduler fake_gps_scheduler;
+	gps_scheduler = &fake_gps_scheduler;
 
-			do
-			{
-				action = dte_handler.handle_dte_message(req, resp);
-				if (resp.size())
-				{
-					DEBUG_TRACE("responded: %s", resp.c_str());
-					BleInterface::get_instance().write(resp);
-				}
-			} while (action == DTEAction::AGAIN);
+	// This will initialise the FSM
+	GenTracker::start();
+
+
+	// The scheduler should run forever.  Any run-time exceptions should be handled and passed to FSM.
+	try {
+		while (true) {
+			system_scheduler->run();
 		}
+	} catch (ErrorCode e) {
+		ErrorEvent event;
+		event.error_code = e;
+		GenTracker::dispatch(event);
 	}
 
 	return 0;

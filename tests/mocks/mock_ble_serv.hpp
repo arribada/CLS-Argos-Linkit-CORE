@@ -4,11 +4,17 @@
 #include "ble_service.hpp"
 
 class MockBLEService : public BLEService {
-	void start(void (*on_connected)(void), void (*on_disconnected)(void)) {
-		mock().actualCall("start").onObject(this).withParameter("on_connected", on_connected).withParameter("on_disconnected", on_disconnected);
+	void start(const std::function<void ()> & on_connected, const std::function<void ()> & on_disconnected, const std::function<void ()> & on_received) {
+		mock().actualCall("BLEService::start").onObject(this).withParameterOfType("()>", "on_connected", &on_connected).withParameterOfType("()>", "on_disconnected", &on_disconnected).withParameterOfType("()>", "on_received", &on_received);
 	}
 	void stop() {
-		mock().actualCall("stop").onObject(this);
+		mock().actualCall("BLEService::stop").onObject(this);
+	}
+	void write(std::string str) {
+		mock().actualCall("BLEService::write").onObject(this).withParameterOfType("std::string", "str", &str);
+	}
+	std::string read_line() {
+		return *static_cast<const std::string*>(mock().actualCall("BLEService::read_line").onObject(this).returnConstPointerValue());
 	}
 };
 

@@ -4,6 +4,7 @@
 #include "config_store.hpp"
 #include "gps_scheduler.hpp"
 #include "comms_scheduler.hpp"
+#include "dte_handler.hpp"
 #include "scheduler.hpp"
 #include "logger.hpp"
 #include "ble_service.hpp"
@@ -22,6 +23,7 @@ Timer *system_timer;
 ConfigurationStore *configuration_store;
 GPSScheduler *gps_scheduler;
 CommsScheduler *comms_scheduler;
+DTEHandler *dte_handler;
 Scheduler *system_scheduler;
 Logger *sensor_log;
 Logger *system_log;

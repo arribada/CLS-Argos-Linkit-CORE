@@ -28,6 +28,7 @@ extern Timer *system_timer;
 extern ConfigurationStore *configuration_store;
 extern GPSScheduler *gps_scheduler;
 extern CommsScheduler *comms_scheduler;
+extern DTEHandler *dte_handler;
 extern Scheduler *system_scheduler;
 extern Logger *sensor_log;
 extern Logger *system_log;
@@ -60,6 +61,7 @@ TEST_GROUP(Sm)
 		configuration_store = new MockConfigurationStore;
 		gps_scheduler = new MockGPSScheduler;
 		comms_scheduler = new MockCommsScheduler;
+		dte_handler = new DTEHandler;
 		system_scheduler = new Scheduler(system_timer);
 		sensor_log = new MockLog;
 		system_log = new MockLog;

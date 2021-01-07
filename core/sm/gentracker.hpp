@@ -8,7 +8,7 @@
 #include "comms_scheduler.hpp"
 #include "scheduler.hpp"
 #include "ota_update_service.hpp"
-#include "dte_service.hpp"
+#include "dte_handler.hpp"
 #include "filesystem.hpp"
 #include "config_store.hpp"
 #include "error.hpp"
@@ -28,6 +28,7 @@ extern Logger *system_log;
 extern ConfigurationStore *configuration_store;
 extern BLEService *dte_service;
 extern BLEService *ota_update_service;
+extern DTEHandler *dte_handler;
 extern Switch *saltwater_switch;
 extern Switch *reed_switch;
 extern Led *red_led;
@@ -191,17 +192,8 @@ class ConfigurationState : public GenTracker
 		// waiting for a connection
 		blue_led->flash();
 
-		dte_service->start([] {
-			// Indicate DTE connection is made
-			blue_led->on();
-		},
-		[]() {
-			// After a DTE disconnection, re-evaluate if the configuration store
-			// is valid and notify all event listeners
-			system_scheduler->post_task_prio(notify_config_store_state);
-			blue_led->off();
-		});
-		ota_update_service->start([]{}, []{});
+		dte_service->start(on_dte_connected, on_dte_disconnected, on_dte_received);
+		ota_update_service->start(nullptr, nullptr, nullptr);
 	}
 
 	void exit() {
@@ -209,6 +201,46 @@ class ConfigurationState : public GenTracker
 		dte_service->stop();
 		ota_update_service->stop();
 		blue_led->off();
+	}
+
+	static void on_dte_connected() {
+		DEBUG_INFO("DTE Connected");
+			// Indicate DTE connection is made
+			blue_led->on();
+	}
+
+	static void on_dte_disconnected() {
+		DEBUG_INFO("DTE Disconnected");
+			// After a DTE disconnection, re-evaluate if the configuration store
+			// is valid and notify all event listeners
+			system_scheduler->post_task_prio(notify_config_store_state);
+			blue_led->off();
+	}
+
+	static void on_dte_received() {
+		DEBUG_TRACE("DTE Received");
+		system_scheduler->post_task_prio(process_received_data);
+	}
+
+	static void process_received_data() {
+		auto req = dte_service->read_line();
+
+		if (req.size())
+		{
+			DEBUG_TRACE("received: %s", req.c_str());
+			std::string resp;
+			DTEAction action;
+
+			do
+			{
+				action = dte_handler->handle_dte_message(req, resp);
+				if (resp.size())
+				{
+					DEBUG_TRACE("responded: %s", resp.c_str());
+					dte_service->write(resp);
+				}
+			} while (action == DTEAction::AGAIN);
+		}
 	}
 };
 

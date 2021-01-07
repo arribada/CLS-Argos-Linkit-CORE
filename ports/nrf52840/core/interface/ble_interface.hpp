@@ -1,29 +1,28 @@
 #pragma once
 
-#include "interface.hpp"
+#include "ble_service.hpp"
 #include "ble.h"
 #include "nrf_ble_gatt.h"
 #include "ble_nus.h"
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "ble_conn_params.h"
-#include "ring_buffer.hpp"
 
-class BleInterface : public Interface
+class BleInterface : public BLEService
 {
 public:
     void init();
-    void advertising_start();
-    void advertising_stop();
+
+	void start(std::function<void()> const &on_connected, std::function<void()> const &on_disconnected, std::function<void()> const &on_received) override;
+	void stop() override;
+    void write(std::string str) override;
+    std::string read_line() override;
 
     static BleInterface& get_instance()
     {
         static BleInterface instance;
         return instance;
     }
-
-    std::string read_line() override;
-    void write(std::string str) override;
 
 private:
     // Prevent copies to enforce this as a singleton
@@ -38,6 +37,9 @@ private:
     void services_init();
     void advertising_init();
     void conn_params_init();
+
+    void advertising_start();
+    void advertising_stop();
     
     // Callbacks
     void gatt_evt_handler(nrf_ble_gatt_t * p_gatt, nrf_ble_gatt_evt_t const * p_evt);
@@ -57,5 +59,10 @@ private:
     static void static_on_conn_params_evt(ble_conn_params_evt_t * p_evt) { get_instance().on_conn_params_evt(p_evt); };
     static void static_conn_params_error_handler(uint32_t nrf_error) { get_instance().conn_params_error_handler(nrf_error); }
 
-    RingBuffer<1024> m_ring_buffer;
+    uint8_t m_receive_buffer[1024];
+    volatile size_t m_receive_buffer_len;
+    volatile bool m_carriage_return_received;
+    std::function<void()> m_on_connected;
+    std::function<void()> m_on_disconnected;
+    std::function<void()> m_on_received;
 };

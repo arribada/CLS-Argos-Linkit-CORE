@@ -1,3 +1,6 @@
+#ifndef __DTE_HANDLER_HPP_
+#define __DTE_HANDLER_HPP_
+
 #include <algorithm>
 
 #include "dte_protocol.hpp"
@@ -379,3 +382,5 @@ public:
 #pragma GCC diagnostic pop
 
 };
+
+#endif // __DTE_HANDLER_HPP_

@@ -6,8 +6,10 @@
 
 class OTAUpdateService : public BLEService {
 public:
-	void start(void (*on_connected)(void), void (*on_disconnected)(void)) { (void)on_connected; (void)on_disconnected; }
-	void stop() {}
+	void start(std::function<void()> const &on_connected, std::function<void()> const &on_disconnected, std::function<void()> const &on_received) override;
+	void stop() override;
+	void write(std::string str) override;
+	std::string read_line() override;
 };
 
 #endif // __OTA_UPDATE_SERVICE_HPP_
