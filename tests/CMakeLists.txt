@@ -80,6 +80,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/scheduling"
     "${ROOT_DIR}/ports/linux"
     "${ROOT_DIR}/core/protocol"
+    "${ROOT_DIR}/core/util"
     "${NRF_DIR}/core/hardware"
     "mocks"
     "fakes"
@@ -88,6 +89,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/littlefs/lfs_util.c"
     "${ROOT_DIR}/libraries/littlefs/lfs.c"
+    "${ROOT_DIR}/core/util/haversine.cpp"
     "${LINUX_DIR}/interrupt_lock.cpp"
     "${NRF_DIR}/core/hardware/nrf_timer.cpp"
     "src/timer_test.cpp"

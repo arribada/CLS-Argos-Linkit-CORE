@@ -261,6 +261,46 @@ private:
 		}
 	}
 
+	static double convert_longitude_to_decimal(uint32_t longitude) {
+		double d;
+		if (longitude < (360*1E4)) { // E
+			d = longitude * 5*1E-5;
+		} else { // W
+			d = ((longitude - (360*1E4)) * -5*1E-5);
+		}
+		return d;
+	}
+
+	static uint32_t convert_decimal_to_longitude(double longitude) {
+		uint32_t l;
+		if (longitude > 0) { // E
+			l = (uint32_t)(2*1E4 * longitude);
+		} else { // W
+			l = (uint32_t)((-2*1E4 * longitude) + (360*1E4));
+		}
+		return l;
+	}
+
+	static double convert_latitude_to_decimal(uint32_t latitude) {
+		double d;
+		if (latitude < (180*1E4)) { // S
+			d = latitude * (-5 * 1E-5);
+		} else { // N
+			d = (latitude - (180*1E4)) * (5 * 1E-5);
+		}
+		return d;
+	}
+
+	static uint32_t convert_decimal_to_latitude(double latitude) {
+		uint32_t l;
+		if (latitude < 0) { // S
+			l = (uint32_t)(-2E4 * latitude);
+		} else { // N
+			l = (uint32_t)((2E4 * latitude) + (180*1E4));
+		}
+		return l;
+	}
+
 public:
 	static void decode(const std::string& data, BaseZone& zone) {
 		unsigned int base_pos = 0;
@@ -294,8 +334,12 @@ public:
 		EXTRACT_BITS(zone.gnss_extra_flags_enable, data, base_pos, 1);
 		EXTRACT_BITS(zone.hdop_filter_threshold, data, base_pos, 4);
 		EXTRACT_BITS(zone.gnss_acquisition_timeout_seconds, data, base_pos, 8);
-		EXTRACT_BITS(zone.center_longitude_x, data, base_pos, 23);
-		EXTRACT_BITS(zone.center_latitude_y, data, base_pos, 22);
+		uint32_t center_longitude_x;
+		EXTRACT_BITS(center_longitude_x, data, base_pos, 23);
+		zone.center_longitude_x = convert_longitude_to_decimal(center_longitude_x);
+		uint32_t center_latitude_y;
+		EXTRACT_BITS(center_latitude_y, data, base_pos, 22);
+		zone.center_latitude_y = convert_latitude_to_decimal(center_latitude_y);
 		EXTRACT_BITS(zone.radius_m, data, base_pos, 12);
 	}
 
@@ -333,8 +377,10 @@ public:
 		PACK_BITS(zone.gnss_extra_flags_enable, data, base_pos, 1);
 		PACK_BITS(zone.hdop_filter_threshold, data, base_pos, 4);
 		PACK_BITS(zone.gnss_acquisition_timeout_seconds, data, base_pos, 8);
-		PACK_BITS(zone.center_longitude_x, data, base_pos, 23);
-		PACK_BITS(zone.center_latitude_y, data, base_pos, 22);
+		uint32_t center_longitude_x = convert_decimal_to_longitude(zone.center_longitude_x);
+		PACK_BITS(center_longitude_x, data, base_pos, 23);
+		uint32_t center_latitude_y = convert_decimal_to_latitude(zone.center_latitude_y);
+		PACK_BITS(center_latitude_y, data, base_pos, 22);
 		PACK_BITS(zone.radius_m, data, base_pos, 12);
 	}
 };

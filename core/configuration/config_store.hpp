@@ -4,10 +4,13 @@
 #include <array>
 #include <type_traits>
 #include <iostream>
+#include <ctime>
 #include "base_types.hpp"
 #include "error.hpp"
 #include "debug.hpp"
 #include "messages.hpp"
+#include "haversine.hpp"
+
 
 #define MAX_CONFIG_ITEMS  50
 
@@ -19,6 +22,7 @@ struct GNSSConfig {
 	unsigned int hdop_filter_threshold;
 	unsigned int acquisition_timeout;
 	BaseAqPeriod dloc_arg_nom;
+	bool underwater_en;
 };
 
 struct ArgosConfig {
@@ -31,7 +35,20 @@ struct ArgosConfig {
 	unsigned int duty_cycle;
 	BaseArgosDepthPile depth_pile;
 	unsigned int dry_time_before_tx;
+	bool underwater_en;
 };
+
+static std::time_t convert_epochtime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t min, uint8_t sec) {
+	struct tm t;
+	t.tm_sec = sec;
+	t.tm_min = min;
+	t.tm_hour = hour;
+	t.tm_mday = day;
+	t.tm_mon = month - 1;
+	t.tm_year = year - 1900;
+	std::time_t et = std::mktime(&t);
+	return et;
+}
 
 class ConfigurationStore {
 
@@ -185,6 +202,32 @@ public:
 		m_battery_level = battery_level;
 	}
 
+	bool is_zone_exclusion(void) {
+		if (m_zone.enable_monitoring &&
+			m_zone.enable_out_of_zone_detection_mode &&
+			m_zone.zone_type == BaseZoneType::CIRCLE &&
+			m_last_gps_log_entry.valid) {
+
+			if (!m_zone.enable_activation_date || (
+				convert_epochtime(m_zone.year, m_zone.month, m_zone.day, m_zone.hour, m_zone.minute, 0) <=
+				convert_epochtime(m_last_gps_log_entry.year, m_last_gps_log_entry.month, m_last_gps_log_entry.day, m_last_gps_log_entry.hour, m_last_gps_log_entry.min, 0)
+				)) {
+
+				// Compute distance between two points of longitude and latitude using haversine formula
+				double d_km = haversine_distance(m_zone.center_longitude_x,
+												 m_zone.center_latitude_y,
+												 m_last_gps_log_entry.lon,
+												 m_last_gps_log_entry.lat);
+
+				// Check if outside zone radius for exclusion parameter triggering
+				if (d_km > ((double)m_zone.radius_m/1000)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	void get_gnss_configuration(GNSSConfig& gnss_config) {
 		auto lb_en = read_param<bool>(ParamID::LB_EN);
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
@@ -196,14 +239,27 @@ public:
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::LB_GNSS_ACQ_TIMEOUT);
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);  // FIXME: should there be a LB_xxx variant?
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::LB_GNSS_HDOPFILT_THR);
+			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
+		} else if (is_zone_exclusion()) {
+			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
+			gnss_config.dloc_arg_nom = read_param<BaseAqPeriod>(ParamID::DLOC_ARG_NOM);
+			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
+			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
+			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT);
+			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR);
+			// Apply zone exclusion where applicable
+			if (m_zone.gnss_extra_flags_enable) {
+				gnss_config.acquisition_timeout = m_zone.gnss_acquisition_timeout_seconds;
+				gnss_config.hdop_filter_threshold = m_zone.hdop_filter_threshold;
+			}
 		} else {
-			// TODO: check zone exclusion params
 			// Use default params
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
 			gnss_config.dloc_arg_nom = read_param<BaseAqPeriod>(ParamID::DLOC_ARG_NOM);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT);
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR);
+			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 		}
 	}
 
@@ -221,8 +277,27 @@ public:
 			argos_config.power = read_param<BaseArgosPower>(ParamID::LB_ARGOS_POWER);
 			argos_config.tr_nom = read_param<unsigned int>(ParamID::TR_LB);
 			argos_config.dry_time_before_tx = read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
+			argos_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
+		} else if (is_zone_exclusion()) {
+			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
+			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
+			argos_config.depth_pile = read_param<BaseArgosDepthPile>(ParamID::ARGOS_DEPTH_PILE);
+			argos_config.duty_cycle = read_param<unsigned int>(ParamID::DUTY_CYCLE);
+			argos_config.frequency = read_param<double>(ParamID::ARGOS_FREQ);
+			argos_config.ntry_per_message = read_param<unsigned int>(ParamID::NTRY_PER_MESSAGE);
+			argos_config.power = read_param<BaseArgosPower>(ParamID::ARGOS_POWER);
+			argos_config.tr_nom = read_param<unsigned int>(ParamID::TR_NOM);
+			argos_config.dry_time_before_tx = read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
+			argos_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
+			// Apply zone exclusion where applicable
+			if (m_zone.argos_extra_flags_enable) {
+				argos_config.mode = m_zone.argos_mode;
+				argos_config.depth_pile = m_zone.argos_depth_pile;
+				argos_config.duty_cycle = m_zone.argos_duty_cycle;
+				argos_config.power = m_zone.argos_power;
+				argos_config.tr_nom = m_zone.argos_time_repetition_seconds;
+			}
 		} else {
-			// TODO: check zone exclusion params
 			// Use default params
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
@@ -233,6 +308,7 @@ public:
 			argos_config.power = read_param<BaseArgosPower>(ParamID::ARGOS_POWER);
 			argos_config.tr_nom = read_param<unsigned int>(ParamID::TR_NOM);
 			argos_config.dry_time_before_tx = read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
+			argos_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 		}
 	}
 
