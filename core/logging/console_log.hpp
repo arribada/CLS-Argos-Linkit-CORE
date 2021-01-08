@@ -11,11 +11,48 @@ class ConsoleLog : public Logger {
 
 private:
 	void debug_formatter(const char *level, const char *msg) {
-		printf("[%s] %s\r\n", level, msg);
+		printf("[%s]\t%s\r\n", level, msg);
 	}
-	void gps_formatter(const GPSLogEntry *gps) {
-		const char *level = log_type_name[gps->header.log_type];
-		printf("[%s] lat: %ld lon %ld\r\n", level, gps->lat, gps->lon);
+	void gps_formatter(const GPSLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tlat: %lf lon: %lf\r\n", name, entry->lat, entry->lon);
+	}
+	void startup_formatter(const SystemStartupLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tstartup_cause: %u", name, entry->cause);
+	}
+	void artic_formatter(const ArticTransceiverLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tartic_event: %u", name, entry->event);
+		if (entry->event == ArticTransceiverEvent::TX)
+			printf(" mode: %u msg_index: %u tx_counter: %u burst_counter: %u tx_power: %u paylooad_type: %u",
+					entry->mode, entry->msg_index, entry->tx_counter,
+					entry->burst_counter, entry->tx_power, entry->payload_type);
+		printf("\r\n");
+	}
+	void underwater_formatter(const UnderwaterLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tunderwater_state: %u\r\n", name, entry->event);
+	}
+	void battery_formatter(const BatteryLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tbatt_event: %u v: %u mV\r\n", name, entry->event, entry->voltage);
+	}
+	void zone_formatter(const ZoneLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tzone_event: %u zone_id: %u\r\n", name, entry->event, entry->zone_id);
+	}
+	void ota_update_formatter(const OTAFWUpdateLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tota_event: %u file_id: %u\r\n", name, entry->event, entry->file_id);
+	}
+	void ble_formatter(const BLEActionLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tble_state: %u cause: %u\r\n", name, entry->event, entry->cause);
+	}
+	void state_formatter(const StateChangeLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tnew_state: %u\r\n", name, entry->event);
 	}
 
 public:
@@ -33,6 +70,30 @@ public:
 			break;
 		case LOG_GPS:
 			gps_formatter((const GPSLogEntry *)entry);
+			break;
+		case LOG_STATE:
+			state_formatter((const StateChangeLogEntry *)entry);
+			break;
+		case LOG_BATTERY:
+			battery_formatter((const BatteryLogEntry *)entry);
+			break;
+		case LOG_ARTIC:
+			artic_formatter((const ArticTransceiverLogEntry *)entry);
+			break;
+		case LOG_STARTUP:
+			startup_formatter((const SystemStartupLogEntry *)entry);
+			break;
+		case LOG_ZONE:
+			zone_formatter((const ZoneLogEntry *)entry);
+			break;
+		case LOG_UNDERWATER:
+			underwater_formatter((const UnderwaterLogEntry *)entry);
+			break;
+		case LOG_BLE:
+			ble_formatter((const BLEActionLogEntry *)entry);
+			break;
+		case LOG_OTA_UPDATE:
+			ota_update_formatter((const OTAFWUpdateLogEntry *)entry);
 			break;
 		default:
 			// Not yet supported

@@ -2,11 +2,20 @@
 #define __MESSAGES_HPP_
 
 #include <stdint.h>
+#include "base_types.hpp"
 
 #define MAX_LOG_PAYLOAD    120
 
-static constexpr const char *log_type_name[8] = {
+static constexpr const char *log_type_name[16] = {
 	"GPS",
+	"STARTUP",
+	"ARTIC",
+	"UNDERWATER",
+	"BATTERY",
+	"STATE",
+	"ZONE",
+	"OTA_UPDATE",
+	"BLE",
 	"ERROR",
 	"WARN",
 	"INFO",
@@ -15,6 +24,14 @@ static constexpr const char *log_type_name[8] = {
 
 enum LogType : uint8_t {
 	LOG_GPS,
+	LOG_STARTUP,
+	LOG_ARTIC,
+	LOG_UNDERWATER,
+	LOG_BATTERY,
+	LOG_STATE,
+	LOG_ZONE,
+	LOG_OTA_UPDATE,
+	LOG_BLE,
 	LOG_ERROR,
 	LOG_WARN,
 	LOG_INFO,
@@ -82,6 +99,117 @@ struct __attribute__((packed)) GPSLogEntry {
 		uint8_t data[MAX_LOG_PAYLOAD];
 	};
 };
+
+enum class StartupCause : uint8_t { BROWNOUT, WATCHDOG, HARD_RESET, FACTORY_RESET, SOFT_RESET };
+
+struct __attribute__((packed)) SystemStartupLogEntry {
+	LogHeader header;
+	union {
+		struct {
+			StartupCause cause;
+		};
+		uint8_t data[MAX_LOG_PAYLOAD];
+	};
+};
+
+
+enum class ArticTransceiverEvent : uint8_t { OFF, ON, TX };
+enum class ArticPayloadType : uint8_t { SHORT, LONG };
+
+
+struct __attribute__((packed)) ArticTransceiverLogEntry {
+	LogHeader header;
+	union {
+		struct {
+			ArticTransceiverEvent event;
+			ArticPayloadType      payload_type;
+			uint32_t			  msg_index;
+			uint32_t			  tx_counter;
+			BaseArgosPower		  tx_power;
+			uint32_t			  burst_counter;
+			BaseArgosMode		  mode;
+		};
+		uint8_t data[MAX_LOG_PAYLOAD];
+	};
+};
+
+enum class UnderwaterEvent : uint8_t { DRY, WET };
+
+struct __attribute__((packed)) UnderwaterLogEntry {
+	LogHeader header;
+	union {
+		struct {
+			UnderwaterEvent event;
+		};
+		uint8_t data[MAX_LOG_PAYLOAD];
+	};
+};
+
+enum class BatteryEvent : uint8_t { VUPDATE, LOW_THRESHOLD, CHARGING_ON, CHARGING_OFF };
+
+struct __attribute__((packed)) BatteryLogEntry {
+	LogHeader header;
+	union {
+		struct {
+			BatteryEvent event;
+			uint16_t 	 voltage;
+		};
+		uint8_t data[MAX_LOG_PAYLOAD];
+	};
+};
+
+enum class StateChangeEvent : uint8_t { BOOT, CONFIGURATION, OPERATIONAL };
+
+struct __attribute__((packed)) StateChangeLogEntry {
+	LogHeader header;
+	union {
+		struct {
+			StateChangeEvent event;
+		};
+		uint8_t data[MAX_LOG_PAYLOAD];
+	};
+};
+
+enum class ZoneEvent : uint8_t { WRITE, ENTER, EXIT };
+
+struct __attribute__((packed)) ZoneLogEntry {
+	LogHeader header;
+	union {
+		struct {
+			ZoneEvent event;
+			uint8_t   zone_id;
+		};
+		uint8_t data[MAX_LOG_PAYLOAD];
+	};
+};
+
+enum class OTAFWUpdateEvent : uint8_t { START, SUCCESS, FAIL, ABORT };
+
+struct __attribute__((packed)) OTAFWUpdateLogEntry {
+	LogHeader header;
+	union {
+		struct {
+			OTAFWUpdateEvent event;
+			uint8_t          file_id;
+		};
+		uint8_t data[MAX_LOG_PAYLOAD];
+	};
+};
+
+enum class BLEEvent : uint8_t { OFF, ON };
+enum class BLEEventCause : uint8_t { REEDSWITCH, CLIENT, TIMEOUT };
+
+struct __attribute__((packed)) BLEActionLogEntry {
+	LogHeader header;
+	union {
+		struct {
+			BLEEvent event;
+			BLEEventCause cause;
+		};
+		uint8_t data[MAX_LOG_PAYLOAD];
+	};
+};
+
 
 #endif // __MESSAGES_HPP_
 
