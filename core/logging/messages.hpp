@@ -59,8 +59,8 @@ struct __attribute__((packed)) GPSLogEntry {
 			int32_t    nano;
 			GPSFixType fixType;
 			uint8_t    numSV;
-			int32_t    lon;
-			int32_t    lat;
+			double     lon;
+			double     lat;
 			int32_t    height;
 			int32_t    hMSL;
 			uint32_t   hAcc;

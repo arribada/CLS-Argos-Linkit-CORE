@@ -149,8 +149,8 @@ struct BaseZone {
 	bool               gnss_extra_flags_enable;
 	uint8_t            hdop_filter_threshold;
 	uint8_t            gnss_acquisition_timeout_seconds;
-	uint32_t           center_longitude_x;
-	uint32_t           center_latitude_y;
+	double             center_longitude_x;
+	double             center_latitude_y;
 	uint32_t           radius_m;
 };
 
