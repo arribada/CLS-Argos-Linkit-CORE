@@ -63,6 +63,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -Wno-maybe-uninitialized
     -Wno-unused-function
     -Wno-format
+    
+    #-DDEBUG_ENABLE
 
     # Always output coloured text from GCC
     -fdiagnostics-color=always
@@ -90,6 +92,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/littlefs/lfs_util.c"
     "${ROOT_DIR}/libraries/littlefs/lfs.c"
     "${ROOT_DIR}/core/util/haversine.cpp"
+    "${ROOT_DIR}/core/scheduling/argos_scheduler.cpp"
     "${LINUX_DIR}/interrupt_lock.cpp"
     "${NRF_DIR}/core/hardware/nrf_timer.cpp"
     "src/timer_test.cpp"
@@ -101,6 +104,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 	"src/config_store_test.cpp"
     "src/dte_handler_test.cpp"
     "src/nrf_timer_test.cpp"
+    "src/argos_test.cpp"
     "src/main.cpp"
     "fakes/nrfx_rtc.c"
 )

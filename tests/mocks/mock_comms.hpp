@@ -16,6 +16,9 @@ public:
 		DEBUG_TRACE("MockCommsScheduler: notify_saltwater_switch_state");
 		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
 	}
+	void notify_sensor_log_update() {
+		mock().actualCall("notify_sensor_log_update").onObject(this);
+	}
 };
 
 #endif // __MOCK_COMMS_HPP_

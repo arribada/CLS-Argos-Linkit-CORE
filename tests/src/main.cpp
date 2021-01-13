@@ -11,6 +11,7 @@
 #include "led.hpp"
 #include "switch.hpp"
 #include "memory_access.hpp"
+#include "rtc.hpp"
 
 #include "CppUTest/CommandLineTestRunner.h"
 #include "CppUTest/TestRegistry.h"
@@ -35,6 +36,7 @@ Led *red_led;
 Led *green_led;
 Led *blue_led;
 MemoryAccess *memory_access;
+RTC *rtc;
 
 MockSupportPlugin mockPlugin;
 

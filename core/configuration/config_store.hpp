@@ -10,7 +10,7 @@
 #include "debug.hpp"
 #include "messages.hpp"
 #include "haversine.hpp"
-
+#include "timeutils.hpp"
 
 #define MAX_CONFIG_ITEMS  50
 
@@ -35,20 +35,9 @@ struct ArgosConfig {
 	unsigned int duty_cycle;
 	BaseArgosDepthPile depth_pile;
 	unsigned int dry_time_before_tx;
+	unsigned int argos_id;
 	bool underwater_en;
 };
-
-static std::time_t convert_epochtime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t min, uint8_t sec) {
-	struct tm t;
-	t.tm_sec = sec;
-	t.tm_min = min;
-	t.tm_hour = hour;
-	t.tm_mday = day;
-	t.tm_mon = month - 1;
-	t.tm_year = year - 1900;
-	std::time_t et = std::mktime(&t);
-	return et;
-}
 
 class ConfigurationStore {
 
@@ -278,6 +267,7 @@ public:
 			argos_config.tr_nom = read_param<unsigned int>(ParamID::TR_LB);
 			argos_config.dry_time_before_tx = read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
 			argos_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
+			argos_config.argos_id = read_param<unsigned int>(ParamID::ARGOS_HEXID);
 		} else if (is_zone_exclusion()) {
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
@@ -289,6 +279,7 @@ public:
 			argos_config.tr_nom = read_param<unsigned int>(ParamID::TR_NOM);
 			argos_config.dry_time_before_tx = read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
 			argos_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
+			argos_config.argos_id = read_param<unsigned int>(ParamID::ARGOS_HEXID);
 			// Apply zone exclusion where applicable
 			if (m_zone.argos_extra_flags_enable) {
 				argos_config.mode = m_zone.argos_mode;
@@ -309,7 +300,13 @@ public:
 			argos_config.tr_nom = read_param<unsigned int>(ParamID::TR_NOM);
 			argos_config.dry_time_before_tx = read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
 			argos_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
+			argos_config.argos_id = read_param<unsigned int>(ParamID::ARGOS_HEXID);
 		}
+	}
+
+	void increment_tx_counter() {
+		unsigned int tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER) + 1;
+		write_param(ParamID::TX_COUNTER, tx_counter);
 	}
 
 };

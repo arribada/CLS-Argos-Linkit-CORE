@@ -115,6 +115,19 @@ enum class BaseAqPeriod {
 	AQPERIOD_1440
 };
 
+enum class BaseDeltaTimeLoc {
+	DELTA_T_10MIN = 1,
+	DELTA_T_15MIN,
+	DELTA_T_30MIN,
+	DELTA_T_1HR,
+	DELTA_T_2HR,
+	DELTA_T_3HR,
+	DELTA_T_4HR,
+	DELTA_T_6HR,
+	DELTA_T_12HR,
+	DELTA_T_24HR
+};
+
 enum class BaseZoneType : uint8_t {
 	CIRCLE = 1
 };
