@@ -64,7 +64,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -Wno-unused-function
     -Wno-format
     
-    #-DDEBUG_ENABLE
+    -DDEBUG_ENABLE
 
     # Always output coloured text from GCC
     -fdiagnostics-color=always
@@ -105,6 +105,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/dte_handler_test.cpp"
     "src/nrf_timer_test.cpp"
     "src/argos_test.cpp"
+    "src/bch_test.cpp"
+    "src/crc8_test.cpp"
     "src/main.cpp"
     "fakes/nrfx_rtc.c"
 )

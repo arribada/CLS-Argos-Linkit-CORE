@@ -87,6 +87,17 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
+	gps_entry.batt_voltage = 3960;
+	gps_entry.day = 7;
+	gps_entry.hour = 15;
+	gps_entry.min = 6;
+	gps_entry.valid = 1;
+	gps_entry.lon = -0.2271;
+	gps_entry.lat = 51.3279;
+	gps_entry.height = 0;
+	gps_entry.gSpeed = 0;
+	gps_entry.headMot = 0;
+
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	system_scheduler->run();
@@ -142,6 +153,16 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
+	gps_entry.batt_voltage = 3960;
+	gps_entry.day = 7;
+	gps_entry.hour = 15;
+	gps_entry.min = 6;
+	gps_entry.valid = 1;
+	gps_entry.lon = -0.2271;
+	gps_entry.lat = 51.3279;
+	gps_entry.height = 0;
+	gps_entry.gSpeed = 0;
+	gps_entry.headMot = 0;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	system_scheduler->run();
