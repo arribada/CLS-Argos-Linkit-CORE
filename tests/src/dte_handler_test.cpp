@@ -225,13 +225,12 @@ TEST(DTEHandler, ZONER_REQ)
 
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::ZONER_REQ, 1);
-	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;ZONER#01C;ge8iACAKjA2rqqoWHgAAAAAAAAA=\r"s, resp);
 
-	std::string zone_resp_bits = websocketpp::base64_decode("ge8iACAKjA2rqqoWHgAAAAAAAAA="s);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	CHECK_EQUAL("$O;ZONER#01C;A/cIQAKAYgbqqqqkeNu6Abd0AAA=\r"s, resp);
+	std::string zone_resp_bits = websocketpp::base64_decode("A/cIQAKAYgbqqqqkeNu6Abd0AAA="s);
 	BaseZone zone_resp_decoded;
 	ZoneCodec::decode(zone_resp_bits, zone_resp_decoded);
-
 	CHECK_TRUE(zone == zone_resp_decoded);
 }
 

@@ -41,6 +41,8 @@ public:
 	void periodic_algorithm();
 	void pass_prediction_algorithm();
 	void handle_packet(ArgosPacket const& packet, unsigned int total_bits);
+	unsigned int convert_latitude(double x);
+	unsigned int convert_longitude(double x);
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
 	void build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet);
 	BaseDeltaTimeLoc delta_time_loc(GPSLogEntry const& a, GPSLogEntry const& b);
