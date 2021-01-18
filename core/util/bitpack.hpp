@@ -46,7 +46,7 @@ static void pack_bits(std::string& output, uint32_t value, int start, int total_
 	int n_bits = std::min({8 - out_bit_offset, num_bits});
 
 	while (num_bits) {
-		unsigned int mask = ((1 << (total_bits - in_bit_offset))-1) >> (total_bits - in_bit_offset - n_bits);
+		unsigned int mask = ((total_bits - in_bit_offset) == 32 ? 0xFFFFFFFF : ((1 << (total_bits - in_bit_offset))-1)) >> (total_bits - in_bit_offset - n_bits);
 		output[out_byte_offset] |= (((value >> (total_bits - in_bit_offset - n_bits)) & mask) << (8-out_bit_offset-n_bits));
 		out_bit_offset = out_bit_offset + n_bits;
 		in_bit_offset = in_bit_offset + n_bits;
