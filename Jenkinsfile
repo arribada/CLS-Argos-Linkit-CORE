@@ -56,7 +56,7 @@ pipeline {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     dir('tests/build') {
-                        sh './CLSGenTrackerTests'
+                        sh './CLSGenTrackerTests -ojunit'
                     }
                 }
             }
