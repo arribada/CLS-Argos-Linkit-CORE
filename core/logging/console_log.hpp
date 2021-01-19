@@ -19,40 +19,40 @@ private:
 	}
 	void startup_formatter(const SystemStartupLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tstartup_cause: %u", name, entry->cause);
+		printf("[%s]\tstartup_cause: %d", name, static_cast<int>(entry->cause));
 	}
 	void artic_formatter(const ArticTransceiverLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tartic_event: %u", name, entry->event);
+		printf("[%s]\tartic_event: %d", name, static_cast<int>(entry->event));
 		if (entry->event == ArticTransceiverEvent::TX)
-			printf(" mode: %u msg_index: %u tx_counter: %u burst_counter: %u tx_power: %u paylooad_type: %u",
-					entry->mode, entry->msg_index, entry->tx_counter,
-					entry->burst_counter, entry->tx_power, entry->payload_type);
+			printf(" mode: %d msg_index: %lu tx_counter: %lu burst_counter: %lu tx_power: %d paylooad_type: %d",
+					static_cast<int>(entry->mode), entry->msg_index, entry->tx_counter,
+					entry->burst_counter, static_cast<int>(entry->tx_power), static_cast<int>(entry->payload_type));
 		printf("\r\n");
 	}
 	void underwater_formatter(const UnderwaterLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tunderwater_state: %u\r\n", name, entry->event);
+		printf("[%s]\tunderwater_state: %d\r\n", name, static_cast<int>(entry->event));
 	}
 	void battery_formatter(const BatteryLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tbatt_event: %u v: %u mV\r\n", name, entry->event, entry->voltage);
+		printf("[%s]\tbatt_event: %d v: %u mV\r\n", name, static_cast<int>(entry->event), entry->voltage);
 	}
 	void zone_formatter(const ZoneLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tzone_event: %u zone_id: %u\r\n", name, entry->event, entry->zone_id);
+		printf("[%s]\tzone_event: %d zone_id: %u\r\n", name, static_cast<int>(entry->event), entry->zone_id);
 	}
 	void ota_update_formatter(const OTAFWUpdateLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tota_event: %u file_id: %u\r\n", name, entry->event, entry->file_id);
+		printf("[%s]\tota_event: %d file_id: %u\r\n", name, static_cast<int>(entry->event), entry->file_id);
 	}
 	void ble_formatter(const BLEActionLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tble_state: %u cause: %u\r\n", name, entry->event, entry->cause);
+		printf("[%s]\tble_state: %d cause: %d\r\n", name, static_cast<int>(entry->event), static_cast<int>(entry->cause));
 	}
 	void state_formatter(const StateChangeLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tnew_state: %u\r\n", name, entry->event);
+		printf("[%s]\tnew_state: %d\r\n", name, static_cast<int>(entry->event));
 	}
 
 public:

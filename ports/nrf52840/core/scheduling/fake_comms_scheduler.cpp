@@ -15,3 +15,8 @@ void FakeCommsScheduler::notify_saltwater_switch_state(bool state)
 {
 
 }
+
+void FakeCommsScheduler::notify_sensor_log_update() 
+{
+
+}
