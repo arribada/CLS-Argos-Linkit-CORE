@@ -15,21 +15,23 @@ pipeline {
 
         stage ('Compile Nordic Firmware') {
             steps {
-                sh 'mkdir -p ports/nrf52840/build'
-                dir('ports/nrf52840/build') {
-                    // Debug build
-                    sh 'cmake --no-cache -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain_arm_gcc_nrf52.cmake -DBOARD=HORIZON -DCMAKE_BUILD_TYPE=Debug ..'
-                    sh 'ninja'
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    sh 'mkdir -p ports/nrf52840/build'
+                    dir('ports/nrf52840/build') {
+                        // Debug build
+                        sh 'cmake --no-cache -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain_arm_gcc_nrf52.cmake -DBOARD=HORIZON -DCMAKE_BUILD_TYPE=Debug ..'
+                        sh 'ninja'
+                    }
+                    // Append the git commit details to the filename names
+                    sh '''
+                        folder=ports/nrf52840/build/
+                        for file in $folder*.hex $folder*.bin $folder*.map $folder*.out $folder*.zip; do
+                            basename=${file%.*}
+                            extension=${file##*.}
+                            mv "$file" "$basename"_"$(git describe --always --tags).$extension" || true
+                        done
+                    '''
                 }
-                // Append the git commit details to the filename names
-                sh '''
-                    folder=ports/nrf52840/build/
-                    for file in $folder*.hex $folder*.bin $folder*.map $folder*.out $folder*.zip; do
-                        basename=${file%.*}
-                        extension=${file##*.}
-                        mv "$file" "$basename"_"$(git describe --always --tags).$extension" || true
-                    done
-                '''
             }
             post { 
                 success { 
@@ -39,19 +41,23 @@ pipeline {
         }
 
         stage ('Compile Unit Tests') {
-            steps {
-                sh 'mkdir -p tests/build'
-                dir('tests/build') {
-                    sh 'cmake --no-cache -GNinja  ..'
-                    sh 'ninja'
+            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                steps {
+                    sh 'mkdir -p tests/build'
+                    dir('tests/build') {
+                        sh 'cmake --no-cache -GNinja  ..'
+                        sh 'ninja'
+                    }
                 }
             }
         }
 
         stage ('Run Unit Tests') {
-            steps {
-                dir('tests/build') {
-                    sh 'CLSGenTrackerTests'
+            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                steps {
+                    dir('tests/build') {
+                        sh 'CLSGenTrackerTests'
+                    }
                 }
             }
         }
