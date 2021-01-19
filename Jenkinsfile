@@ -41,8 +41,8 @@ pipeline {
         }
 
         stage ('Compile Unit Tests') {
-            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                steps {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     sh 'mkdir -p tests/build'
                     dir('tests/build') {
                         sh 'cmake --no-cache -GNinja  ..'
@@ -53,8 +53,8 @@ pipeline {
         }
 
         stage ('Run Unit Tests') {
-            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                steps {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     dir('tests/build') {
                         sh 'CLSGenTrackerTests'
                     }
