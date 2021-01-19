@@ -123,7 +123,46 @@ void ArgosScheduler::process_schedule() {
 }
 
 void ArgosScheduler::pass_prediction_algorithm() {
-	DEBUG_WARN("ArgosScheduler: mode PASS_PREDICTION algorithm not implemented");
+	unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
+	unsigned int index;
+	ArgosPacket packet;
+
+	DEBUG_TRACE("ArgosScheduler::pass_prediction_algorithm: m_msg_index=%u max_index=%u", m_msg_index, max_index);
+
+	// Find first eligible slot for transmission
+	while (m_msg_index < (m_msg_index + max_index)) {
+		index = m_msg_index % max_index;
+		if (m_gps_entries[index].size())
+		{
+			DEBUG_TRACE("ArgosScheduler::pass_prediction_algorithm: eligible slot=%u", index);
+			break;
+		}
+		m_msg_index++;
+	}
+
+	// No further action if no slot is eligible for transmission
+	if (m_msg_index == (m_msg_index + max_index)) {
+		DEBUG_TRACE("ArgosScheduler::pass_prediction_algorithm: no eligible slot found");
+		return;
+	}
+
+	if (m_gps_entries[index].size() == 1) {
+		build_short_packet(m_gps_entries[index][0], packet);
+		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE);
+	} else {
+		build_long_packet(m_gps_entries[index], packet);
+		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE);
+	}
+
+	configuration_store->increment_tx_counter();
+	m_msg_burst_counter[index]--;
+	m_msg_index++;
+
+	// Check if message burst count has reached zero and perform clean-up of this slot
+	if (m_msg_burst_counter[index] == 0) {
+		m_msg_burst_counter[index] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;
+		m_gps_entries[index].clear();
+	}
 }
 
 void ArgosScheduler::notify_sensor_log_update() {
@@ -131,8 +170,28 @@ void ArgosScheduler::notify_sensor_log_update() {
 
 	if (m_is_running) {
 		if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
-			DEBUG_WARN("ArgosScheduler: mode PASS_PREDICTION algorithm not implemented");
-			// TODO append new entry to GPS entries list
+			unsigned int msg_index;
+			unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
+			unsigned int span = std::min((unsigned int)MAX_GPS_ENTRIES_IN_PACKET, (unsigned int)m_argos_config.depth_pile);
+
+			DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: PASS_PREDICTION mode: max_index=%u span=%u", max_index, span);
+
+			// Find the first slot whose vector has less then depth pile entries in it
+			for (msg_index = 0; msg_index < max_index; msg_index++) {
+				if (m_gps_entries[msg_index].size() < span)
+					break;
+			}
+
+			// If a slot is found then append most recent sensor log entry to it
+			if (msg_index < max_index) {
+				GPSLogEntry gps_entry;
+				unsigned int idx = sensor_log->num_entries() - 1;  // Most recent entry in log
+				sensor_log->read(&gps_entry, idx);
+				m_gps_entries[msg_index].push_back(gps_entry);
+				DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: PASS_PREDICTION mode: appending entry=%u to msg_slot=%u", idx, msg_index);
+			} else {
+				DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: PASS_PREDICTION mode: no free slots");
+			}
 		} else {
 			// Reset the message burst counters
 			for (unsigned int i = 0; i < MAX_MSG_INDEX; i++)
