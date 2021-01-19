@@ -8,7 +8,9 @@ pipeline {
 
     stages {
         stage ('Clean Repo') {
-            sh 'git clean -fdx'
+            steps {
+                sh 'git clean -fdx'
+            }
         }
 
         stage ('Compile Nordic Firmware') {
