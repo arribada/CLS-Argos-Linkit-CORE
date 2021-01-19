@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
 RUN apt-get -qq update
-RUN apt-get -qq install -y wget unzip build-essential cmake ninja git
+RUN apt-get -qq install -y wget unzip build-essential cmake ninja-build git
 
 RUN mkdir tools
 
