@@ -5,12 +5,63 @@
 #include "nrfx_uarte.h"
 #include "nrfx_qspi.h"
 #include "nrfx_rtc.h"
+#include "nrfx_spim.h"
+#include "nrfx_gpiote.h"
 
+// Locate code in RAM
+#define __RAMFUNC __attribute__ ((long_call, optimize("Os"), section (".ramfunc")))
+
+// Logical device mappings to physical devices
 #define RTC_TIMER      BSP::RTC::RTC_2
+#define SPI_SATELLITE  BSP::SPI::SPI_2
 
 namespace BSP
 {
-    // Interrupt priorities (0, 1, 4  are reserved for the softdevice)
+	///////////////////////////////// GPIO definitions ////////////////////////////////
+	enum GPIO
+	{
+		GPIO_DEBUG,
+		GPIO_SAT_EN,
+		GPIO_SAT_RESET,
+		GPIO_INT1_SAT,
+		GPIO_INT2_SAT,
+		GPIO_EXT2_GPIO2,
+		GPIO_EXT2_GPIO3,
+		GPIO_EXT2_GPIO4,
+		GPIO_EXT2_GPIO5,
+		GPIO_EXT2_GPIO6,
+		GPIO_SWS,
+		GPIO_SWS_EN,
+		GPIO_REED_SW,
+		GPIO_GPOUT,
+		GPIO_LED_GREEN,
+		GPIO_LED_RED,
+		GPIO_LED_BLUE,
+		GPIO_INT_M,
+		GPIO_DEN_AG,
+		GPIO_INT1_AG,
+		GPIO_INT2_AG,
+		GPIO_FLASH_IO2,
+		GPIO_FLASH_IO3,
+		GPIO_GPS_EXT_INT,
+		GPIO_DFU_BOOT,
+		GPIO_TOTAL_NUMBER
+	};
+
+	typedef struct
+	{
+		uint32_t             pin_number;
+		nrf_gpio_pin_dir_t   dir;
+		nrf_gpio_pin_input_t input;
+		nrf_gpio_pin_pull_t  pull;
+		nrf_gpio_pin_drive_t drive;
+		nrf_gpio_pin_sense_t sense;
+		nrfx_gpiote_in_config_t gpiote_in_config;
+	} GPIO_InitTypeDefAndInst_t;
+
+	extern const GPIO_InitTypeDefAndInst_t GPIO_Inits[GPIO_TOTAL_NUMBER];
+
+	// Interrupt priorities (0, 1, 4  are reserved for the softdevice)
     static constexpr uint8_t INTERRUPT_PRIORITY_WATCHDOG  = 2;
     static constexpr uint8_t INTERRUPT_PRIORITY_RTC_1     = 2;
     static constexpr uint8_t INTERRUPT_PRIORITY_RTC_2     = 3;
@@ -91,4 +142,29 @@ namespace BSP
     } RTC_InitTypeDefAndInst_t;
 
     extern const RTC_InitTypeDefAndInst_t RTC_Inits[RTC_TOTAL_NUMBER];
+
+    enum SPI
+    {
+#if NRFX_SPIM0_ENABLED
+    	SPI_0,
+#endif
+#if NRFX_SPIM1_ENABLED
+		SPI_1,
+#endif
+#if NRFX_SPIM2_ENABLED
+		SPI_2,
+#endif
+#if NRFX_SPIM3_ENABLED
+		SPI_3,
+#endif
+		SPI_TOTAL_NUMBER
+    };
+
+    typedef struct
+    {
+        nrfx_spim_t spim;
+        nrfx_spim_config_t spim_config;
+    } SPI_InitTypeDefAndInst_t;
+
+    extern const SPI_InitTypeDefAndInst_t SPI_Inits[SPI_TOTAL_NUMBER];
 }

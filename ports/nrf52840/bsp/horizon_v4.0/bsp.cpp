@@ -3,7 +3,38 @@
 
 namespace BSP
 {
-    /////////////////////////////////// UART definitions ////////////////////////////////
+	///////////////////////////////// GPIO definitions ////////////////////////////////
+	const GPIO_InitTypeDefAndInst_t GPIO_Inits[GPIO_TOTAL_NUMBER] =
+	{
+		// pin number, direction, input, pull, drive sense
+		/* GPIO_DEBUG       */ {NRF_GPIO_PIN_MAP(0, 11), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_EXT1_GPIO1  */ {NRF_GPIO_PIN_MAP(1, 14), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_D0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_EXT1_GPIO2  */ {NRF_GPIO_PIN_MAP(1, 13), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0D1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_EXT1_GPIO3  */ {NRF_GPIO_PIN_MAP(1,  1), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0D1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_EXT2_GPIO1  */ {NRF_GPIO_PIN_MAP(1, 15), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_EXT2_GPIO2  */ {NRF_GPIO_PIN_MAP(0, 31), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0D1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_EXT2_GPIO3  */ {NRF_GPIO_PIN_MAP(1,  5), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_EXT2_GPIO4  */ {NRF_GPIO_PIN_MAP(0, 30), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_EXT2_GPIO5  */ {NRF_GPIO_PIN_MAP(0, 29), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_EXT2_GPIO6  */ {NRF_GPIO_PIN_MAP(0, 28), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_SWS         */ {NRF_GPIO_PIN_MAP(0,  2), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIO_PIN_NOPULL, false, true, false}},
+		/* GPIO_SWS_EN      */ {NRF_GPIO_PIN_MAP(0, 12), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_REED_SW     */ {NRF_GPIO_PIN_MAP(1,  3), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIO_PIN_NOPULL, false, true, false}},
+		/* GPIO_GPOUT       */ {NRF_GPIO_PIN_MAP(1, 12), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_LED_GREEN   */ {NRF_GPIO_PIN_MAP(1, 10), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_LED_RED     */ {NRF_GPIO_PIN_MAP(1,  7), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_LED_BLUE    */ {NRF_GPIO_PIN_MAP(1,  4), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_INT_M       */ {NRF_GPIO_PIN_MAP(1,  6), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_DEN_AG      */ {NRF_GPIO_PIN_MAP(0, 17), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_INT1_AG     */ {NRF_GPIO_PIN_MAP(1,  2), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_INT2_AG     */ {NRF_GPIO_PIN_MAP(0, 13), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_FLASH_IO2   */ {NRF_GPIO_PIN_MAP(0, 22), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_FLASH_IO3   */ {NRF_GPIO_PIN_MAP(1,  0), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_GPS_EXT_INT */ {NRF_GPIO_PIN_MAP(1, 11), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_DFU_BOOT    */ {NRF_GPIO_PIN_MAP(0, 25), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIO_PIN_PULLUP, false, true, false}},
+	};
+
+/////////////////////////////////// UART definitions ////////////////////////////////
 
     // Supported baudrates:
     // NRF_UARTE_BAUDRATE_1200
@@ -136,4 +167,76 @@ namespace BSP
     #endif
     };
 
+    ////////////////////////////////// SPI definitions /////////////////////////////////
+    const SPI_InitTypeDefAndInst_t SPI_Inits[SPI_TOTAL_NUMBER] =
+    {
+    #if NRFX_SPIM0_ENABLED
+        {
+            .spim = NRFX_SPIM_INSTANCE(0),
+            {
+                .sck_pin  = NRFX_SPIM_PIN_NOT_USED,
+                .mosi_pin = NRFX_SPIM_PIN_NOT_USED,
+                .miso_pin = NRFX_SPIM_PIN_NOT_USED,
+                .ss_pin   = NRFX_SPIM_PIN_NOT_USED,
+                .ss_active_high = false,
+                .irq_priority = INTERRUPT_PRIORITY_SPI_0,
+                .orc = 0xFF, // Over-run character
+                .frequency = NRF_SPIM_FREQ_4M,
+                .mode = NRF_SPIM_MODE_0,
+                .bit_order = NRF_SPIM_BIT_ORDER_MSB_FIRST
+            }
+        },
+    #endif
+    #if NRFX_SPIM1_ENABLED
+        {
+            .spim = NRFX_SPIM_INSTANCE(1),
+            {
+                .sck_pin  = NRFX_SPIM_PIN_NOT_USED,
+                .mosi_pin = NRFX_SPIM_PIN_NOT_USED,
+                .miso_pin = NRFX_SPIM_PIN_NOT_USED,
+                .ss_pin   = NRFX_SPIM_PIN_NOT_USED,
+                .ss_active_high = false,
+                .irq_priority = INTERRUPT_PRIORITY_SPI_1,
+                .orc = 0xFF, // Over-run character
+                .frequency = NRF_SPIM_FREQ_4M,
+                .mode = NRF_SPIM_MODE_0,
+                .bit_order = NRF_SPIM_BIT_ORDER_MSB_FIRST
+            }
+        },
+    #endif
+    #if NRFX_SPIM2_ENABLED
+        {
+            .spim = NRFX_SPIM_INSTANCE(2),
+            {
+                .sck_pin  = NRF_GPIO_PIN_MAP(0, 8),
+                .mosi_pin = NRF_GPIO_PIN_MAP(0, 6),
+                .miso_pin = NRF_GPIO_PIN_MAP(0, 7),
+                .ss_pin   = NRF_GPIO_PIN_MAP(0, 5),
+                .ss_active_high = false,
+                .irq_priority = INTERRUPT_PRIORITY_SPI_2,
+                .orc = 0xFF, // Over-run character
+                .frequency = NRF_SPIM_FREQ_8M,
+                .mode = NRF_SPIM_MODE_1,
+                .bit_order = NRF_SPIM_BIT_ORDER_MSB_FIRST
+            }
+        },
+    #endif
+    #if NRFX_SPIM3_ENABLED
+        {
+            .spim = NRFX_SPIM_INSTANCE(3),
+            {
+                .sck_pin  = NRF_GPIO_PIN_MAP(0, 19),
+                .mosi_pin = NRF_GPIO_PIN_MAP(0, 21),
+                .miso_pin = NRF_GPIO_PIN_MAP(0, 23),
+                .ss_pin   = NRF_GPIO_PIN_MAP(0, 24),
+                .ss_active_high = false,
+                .irq_priority = INTERRUPT_PRIORITY_SPI_3,
+                .orc = 0xFF, // Over-run character
+                .frequency = NRF_SPIM_FREQ_32M,
+                .mode = NRF_SPIM_MODE_0,
+                .bit_order = NRF_SPIM_BIT_ORDER_MSB_FIRST
+            }
+        }
+    #endif
+    };
 }

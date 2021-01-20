@@ -1,7 +1,9 @@
 #include <iostream>
+
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_log_redirect.h"
+#include "nrfx_spim.h"
 #include "ble_interface.hpp"
 #include "dte_handler.hpp"
 #include "is25_flash_file_system.hpp"
@@ -18,8 +20,10 @@
 #include "ota_update_service.hpp"
 #include "fake_gps_scheduler.hpp"
 #include "fake_comms_scheduler.hpp"
+#include "fake_rtc.hpp"
+#include "gpio.hpp"
+#include "artic.hpp"
 
-#define RED_LED_GPIO (NRF_GPIO_PIN_MAP(1, 7))
 
 FileSystem *main_filesystem;
 
@@ -40,6 +44,7 @@ Led *blue_led;
 Switch *saltwater_switch;
 Switch *reed_switch;
 DTEHandler *dte_handler;
+RTC *rtc;
 
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
@@ -52,7 +57,9 @@ extern "C" int _write(int file, char *ptr, int len)
 	return len;
 }
 
-int main() {
+int main()
+{
+	GPIOPins::initialise();
 
 	nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -63,6 +70,8 @@ int main() {
     nrf_log_redirect_init();
 
 	// Set up fakes
+    FakeRTC fake_rtc;
+    rtc = &fake_rtc;
 	FakeSwitch fake_reed_switch(0, 0);
 	reed_switch = &fake_reed_switch;
 	FakeSwitch fake_saltwater_switch(0, 0);
@@ -84,8 +93,7 @@ int main() {
 
 	printf("GenTracker Booted\r\n");
 
-	nrf_gpio_cfg_output(RED_LED_GPIO);
-	nrf_gpio_pin_clear(RED_LED_GPIO);
+	GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
 
 	Is25FlashFileSystem lfs_file_system;
 	main_filesystem = &lfs_file_system;
@@ -113,15 +121,14 @@ int main() {
 	OTAUpdateService ota_service;
 	ota_update_service = &ota_service;
 
-	FakeCommsScheduler fake_comms_scheduler;
-	comms_scheduler = &fake_comms_scheduler;
+	ArticTransceiver artic_transceiver;
+	comms_scheduler = &artic_transceiver;
 
 	FakeGPSScheduler fake_gps_scheduler;
 	gps_scheduler = &fake_gps_scheduler;
 
 	// This will initialise the FSM
 	GenTracker::start();
-
 
 	// The scheduler should run forever.  Any run-time exceptions should be handled and passed to FSM.
 	try {

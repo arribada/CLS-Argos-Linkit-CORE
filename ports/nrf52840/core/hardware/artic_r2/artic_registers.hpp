@@ -3,38 +3,28 @@
 
 #include <stdint.h>
 
+#include "bsp.hpp"
+
 #ifndef GTEST
-#define SYSHAL_SAT_TURN_ON_TIME_S  (16)
+#define SAT_TURN_ON_TIME_S  (16)
 #else
-#define SYSHAL_SAT_TURN_ON_TIME_S  ( 0) // Note: Unit testing makes more sense if we ignore this parameter
+#define SAT_TURN_ON_TIME_S  ( 0) // Note: Unit testing makes more sense if we ignore this parameter
 #endif
 
-#define SYSHAL_SAT_DELAY                         (1000)
-#define SYSHAL_SAT_ARTIC_DELAY_BOOT              (1000)
-#define SYSHAL_SAT_ARTIC_DELAY_POWER_ON          (1000)
-#define SYSHAL_SAT_ARTIC_DELAY_INTERRUPT         (10000)
-#define SYSHAL_SAT_ARTIC_DELAY_INTERRUPT_1_PROG  (1000)
-#define SYSHAL_SAT_ARTIC_TIMEOUT_SEND_TX         (20000)
-#define SYSHAL_SAT_ARTIC_DELAY_RESET             (5)
-#define SYSHAL_SAT_ARTIC_DELAY_BURST             (5)
-#define SYSHAL_SAT_ARTIC_DELAY_SET_BURST         (22)
-#define SYSHAL_SAT_ARTIC_DELAY_FINISH_BURST      (13)
-#define SYSHAL_SAT_ARTIC_DELAY_TRANSFER          (50)
-#define SYSHAL_SAT_ARTIC_DELAY_BURST             (5)
+#define SAT_DELAY                         (1000)
+#define SAT_ARTIC_DELAY_BOOT              (1000)
+#define SAT_ARTIC_DELAY_POWER_ON          (1000)
+#define SAT_ARTIC_DELAY_INTERRUPT         (10000)
+#define SAT_ARTIC_DELAY_INTERRUPT_1_PROG  (1000)
+#define SAT_ARTIC_TIMEOUT_SEND_TX         (20000)
+#define SAT_ARTIC_DELAY_RESET             (5)
+#define SAT_ARTIC_DELAY_BURST             (5)
+#define SAT_ARTIC_DELAY_SET_BURST         (22)
+#define SAT_ARTIC_DELAY_FINISH_BURST      (13)
+#define SAT_ARTIC_DELAY_TRANSFER          (50)
+#define SAT_ARTIC_DELAY_BURST             (5)
 
 #define NUM_FIRMWARE_FILES_ARTIC 3
-
-#if defined(BOARD_HORIZON)
-#define SYSHAL_SAT_GPIO_POWER_ON  (GPIO_EXT2_GPIO1)
-#define SYSHAL_SAT_GPIO_RESET     (GPIO_EXT2_GPIO2)
-#define SYSHAL_SAT_GPIO_INT_1     (GPIO_EXT2_GPIO3)
-#define SYSHAL_SAT_GPIO_INT_2     (GPIO_EXT2_GPIO4)
-#elif defined(BOARD_GENTRACKER)
-#define SYSHAL_SAT_GPIO_POWER_ON  (GPIO_SAT_EN)
-#define SYSHAL_SAT_GPIO_RESET     (GPIO_SAT_RESET)
-#define SYSHAL_SAT_GPIO_INT_1     (GPIO_INT1_SAT)
-#define SYSHAL_SAT_GPIO_INT_2     (GPIO_INT2_SAT)
-#endif
 
 #define BURST_ADDRESS  (0)
 #define ADDRESS_DSP    (1)
@@ -71,7 +61,6 @@
 #define INTERRUPT_2  (2)
 
 #define TOTAL_NUMBER_STATUS_FLAG  (25)
-
 
 
 #define ID_SIZE_BYTE (4)
@@ -180,7 +169,5 @@
 // Artic commands to clear interrupt flags
 #define ARTIC_CMD_CLEAR_INT1  (0x80)   // 10XXXXXXb
 #define ARTIC_CMD_CLEAR_INT2  (0xC0)   // 11XXXXXXb
-
-// Because of an issue with the MCP2210, not more than 8192 bytes can be transmitted at once.
 
 #endif // __ARTIC_REGS_HPP_

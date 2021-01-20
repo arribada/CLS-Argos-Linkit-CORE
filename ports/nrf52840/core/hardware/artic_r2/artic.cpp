@@ -1,63 +1,20 @@
 #include <stdint.h>
 #include <cstring>
 
-#include "error.hpp"
-#include "debug.hpp"
-#include "artic.hpp"
-
+#include "bsp.hpp"
 #include "artic_firmware.hpp"
 #include "artic_registers.hpp"
+#include "error.hpp"
+#include "debug.hpp"
+#include "artic_firmware.hpp"
+#include "artic.hpp"
+#include "gpio.hpp"
 
-extern "C" {
-#include "syshal_spi.h"
-#include "syshal_gpio.h"
-};
+#include "nrf_delay.h"
+#include "nrf_gpio.h"
 
-enum artic_cmd_t
-{
-    DSP_STATUS,
-    DSP_CONFIG,
-};
-
-enum mem_id_t
-{
-    XMEM,
-    YMEM,
-    PMEM,
-    IOMEM,
-    INVALID_MEM = 0xFF
-};
-
-struct firmware_header_t
-{
-    uint32_t XMEM_length;
-    uint32_t XMEM_CRC;
-    uint32_t YMEM_length;
-    uint32_t YMEM_CRC;
-    uint32_t PMEM_length;
-    uint32_t PMEM_CRC;
-};
-
-
-#define SYSHAL_SAT_ARTIC_DELAY_TICK_INTERRUPT_MS 10
+#define SAT_ARTIC_DELAY_TICK_INTERRUPT_MS 10
 #define INVALID_MEM_SELECTION (0xFF)
-
-#define SINGLE_POSITION_DATA_PAYLOAD_LEN_BITS (99)
-#define SINGLE_POSITION_BCH_LEN_BITS (21)
-#define SINGLE_POSITION_FULL_SIZE_BYTES (24)
-
-#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
-#define BYTE_TO_BINARY(byte)  \
-  (byte & 0x80 ? '1' : '0'), \
-  (byte & 0x40 ? '1' : '0'), \
-  (byte & 0x20 ? '1' : '0'), \
-  (byte & 0x10 ? '1' : '0'), \
-  (byte & 0x08 ? '1' : '0'), \
-  (byte & 0x04 ? '1' : '0'), \
-  (byte & 0x02 ? '1' : '0'), \
-  (byte & 0x01 ? '1' : '0')
-
-static int print_status(void);
 
 static constexpr const char *const status_string[] =
 {
@@ -90,7 +47,7 @@ static constexpr const char *const status_string[] =
     "dsp2mcu_int2",
 };
 
-static inline uint8_t convert_mem_sel(mem_id_t mode)
+inline uint8_t ArticTransceiver::convert_mem_sel(mem_id_t mode)
 {
     switch (mode)
     {
@@ -106,13 +63,14 @@ static inline uint8_t convert_mem_sel(mem_id_t mode)
         case IOMEM:
             return 3;
             break;
+        case INVALID_MEM:
         default:
             return INVALID_MEM_SELECTION;
             break;
     }
 }
 
-static inline mem_id_t convert_mode(uint8_t mem_sel)
+inline ArticTransceiver::mem_id_t ArticTransceiver::convert_mode(uint8_t mem_sel)
 {
     switch (mem_sel)
     {
@@ -140,7 +98,7 @@ static void reverse_memcpy(uint8_t *dst, const uint8_t *src, size_t size)
         dst[i] = src[size - 1 - i];
 }
 
-static void send_artic_command(artic_cmd_t cmd, uint32_t *response)
+void ArticTransceiver::send_artic_command(artic_cmd_t cmd, uint32_t *response)
 {
     uint8_t buffer_rx[4] = {0};
     uint8_t buffer_tx[4] = {0};
@@ -159,52 +117,51 @@ static void send_artic_command(artic_cmd_t cmd, uint32_t *response)
             break;
     }
 
-    int ret = syshal_spi_transfer(SPI_SATALLITE, buffer_tx, buffer_rx, 4);
+    int ret = m_nrf_spim->transfer(buffer_tx, buffer_rx, 4);
     if (ret) {
-    	throw ErrorCode:SPI_COMMS_ERROR;
+    	throw ErrorCode::SPI_COMMS_ERROR;
     }
     if (response)
         *response = (buffer_rx[1] << 16) | (buffer_rx[2] << 8) | buffer_rx[3];
 }
 
 
-static void check_crc(firmware_header_t *firmware_header)
+void ArticTransceiver::check_crc(firmware_header_t *firmware_header)
 {
     uint32_t crc;
     uint8_t crc_buffer[NUM_FIRMWARE_FILES_ARTIC * SIZE_SPI_REG_XMEM_YMEM_IOMEM]; // 3 bytes CRC for each firmware file
-    int ret;
 
     spi_read(XMEM, CRC_ADDRESS, crc_buffer, NUM_FIRMWARE_FILES_ARTIC * SIZE_SPI_REG_XMEM_YMEM_IOMEM ); // 3 bytes CRC for each firmware local_file_id
 
     // Check CRC Value PMEM
     crc = 0;
     reverse_memcpy((uint8_t *)&crc, &crc_buffer[0], SIZE_SPI_REG_XMEM_YMEM_IOMEM);
-    if (firmware_header.PMEM_CRC != crc)
+    if (firmware_header->PMEM_CRC != crc)
     {
-        DEBUG_ERROR("PMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header.PMEM_CRC);
+        DEBUG_ERROR("PMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->PMEM_CRC);
         throw ErrorCode::ARTIC_CRC_FAILURE;
     }
 
     // Check CRC Value XMEM
     crc = 0;
     reverse_memcpy((uint8_t *)&crc, &crc_buffer[3], SIZE_SPI_REG_XMEM_YMEM_IOMEM);
-    if (firmware_header.XMEM_CRC != crc)
+    if (firmware_header->XMEM_CRC != crc)
     {
-        DEBUG_ERROR("XMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header.XMEM_CRC);
+        DEBUG_ERROR("XMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->XMEM_CRC);
         throw ErrorCode::ARTIC_CRC_FAILURE;
     }
 
     // Check CRC Value YMEM
     crc = 0;
     reverse_memcpy((uint8_t *)&crc, &crc_buffer[6], SIZE_SPI_REG_XMEM_YMEM_IOMEM);
-    if (firmware_header.YMEM_CRC != crc)
+    if (firmware_header->YMEM_CRC != crc)
     {
-        DEBUG_ERROR("YMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header.YMEM_CRC);
+        DEBUG_ERROR("YMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->YMEM_CRC);
         throw ErrorCode::ARTIC_CRC_FAILURE;
     }
 }
 
-static void configure_burst(mem_id_t mode, bool read, uint32_t start_address)
+void ArticTransceiver::configure_burst(mem_id_t mode, bool read, uint32_t start_address)
 {
     uint8_t buffer_rx[4] = {0};
     uint8_t buffer_tx[4] = {0};
@@ -227,15 +184,15 @@ static void configure_burst(mem_id_t mode, bool read, uint32_t start_address)
     buffer_tx[2] = burst_reg >> 8;
     buffer_tx[3] = burst_reg;
 
-    ret = syshal_spi_transfer(SPI_SATALLITE, buffer_tx, buffer_rx, 4);
+    ret = m_nrf_spim->transfer(buffer_tx, buffer_rx, 4);
     if (ret) {
         throw ErrorCode::SPI_COMMS_ERROR;
     }
 
-    syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_SET_BURST);
+    nrf_delay_ms(SAT_ARTIC_DELAY_SET_BURST);
 }
 
-static void burst_access(mem_id_t mode, uint32_t start_address, const uint8_t *tx_data, uint8_t *rx_data, size_t size, bool read )
+void ArticTransceiver::burst_access(mem_id_t mode, uint32_t start_address, const uint8_t *tx_data, uint8_t *rx_data, size_t size, bool read )
 {
     uint8_t length_transfer;
 
@@ -250,11 +207,12 @@ static void burst_access(mem_id_t mode, uint32_t start_address, const uint8_t *t
     send_burst(tx_data, rx_data, size, length_transfer, read);
 
     // Deactivate SSN pin
-    syshal_spi_finish_transfer(SPI_SATALLITE);
-    syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_FINISH_BURST);
+    m_nrf_spim->finish_transfer();
+
+    nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST);
 }
 
-static void send_burst(const uint8_t *tx_data, uint8_t *rx_data, size_t size, uint8_t length_transfer, bool read)
+void ArticTransceiver::send_burst(const uint8_t *tx_data, uint8_t *rx_data, size_t size, uint8_t length_transfer, bool read)
 {
     uint16_t num_transfer = size / length_transfer;
 
@@ -270,17 +228,17 @@ static void send_burst(const uint8_t *tx_data, uint8_t *rx_data, size_t size, ui
     {
         for (uint32_t i = 0; i < num_transfer; ++i)
         {
-            ret = syshal_spi_transfer_continous(SPI_SATALLITE, buffer, &rx_data[i * length_transfer], length_transfer);
+            ret = m_nrf_spim->transfer_continuous(buffer, &rx_data[i * length_transfer], length_transfer);
             if (ret) {
                 throw ErrorCode::SPI_COMMS_ERROR;
             }
 
             delay_count += length_transfer;
-            syshal_time_delay_us(SYSHAL_SAT_ARTIC_DELAY_TRANSFER);
+            nrf_delay_us(SAT_ARTIC_DELAY_TRANSFER);
             if (delay_count > NUM_BYTES_BEFORE_WAIT)
             {
                 delay_count = 0;
-                syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_BURST);
+                nrf_delay_ms(SAT_ARTIC_DELAY_BURST);
             }
 
         }
@@ -289,28 +247,28 @@ static void send_burst(const uint8_t *tx_data, uint8_t *rx_data, size_t size, ui
     {
         for (uint32_t i = 0; i < num_transfer; ++i)
         {
-            ret = syshal_spi_transfer_continous(SPI_SATALLITE, &tx_data[i * length_transfer], buffer, length_transfer);
+            ret = m_nrf_spim->transfer_continuous(&tx_data[i * length_transfer], buffer, length_transfer);
             if (ret) {
                 throw ErrorCode::SPI_COMMS_ERROR;
             }
             delay_count += length_transfer;
-            syshal_time_delay_us(SYSHAL_SAT_ARTIC_DELAY_TRANSFER);
+            nrf_delay_us(SAT_ARTIC_DELAY_TRANSFER);
             if (delay_count > NUM_BYTES_BEFORE_WAIT)
             {
                 delay_count = 0;
-                syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_BURST);
+                nrf_delay_ms(SAT_ARTIC_DELAY_BURST);
             }
         }
     }
 }
 
-static void spi_read(mem_id_t mode, uint32_t start_address, uint8_t *buffer_read, size_t size)
+void ArticTransceiver::spi_read(mem_id_t mode, uint32_t start_address, uint8_t *buffer_read, size_t size)
 {
     std::memset(buffer_read, 0, size);
     burst_access(mode, start_address, NULL, buffer_read, size, true);
 }
 
-static void print_status(void)
+void ArticTransceiver::print_status(void)
 {
     uint32_t status;
     get_status_register(&status);
@@ -322,7 +280,7 @@ static void print_status(void)
     }
 }
 
-static void clear_interrupt(uint8_t interrupt_num)
+void ArticTransceiver::clear_interrupt(uint8_t interrupt_num)
 {
     switch (interrupt_num)
     {
@@ -338,46 +296,42 @@ static void clear_interrupt(uint8_t interrupt_num)
     }
 }
 
-static void send_command(uint8_t command)
+void ArticTransceiver::send_command(uint8_t command)
 {
     uint8_t buffer_read;
     int ret;
 
-    ret = syshal_spi_transfer(SPI_SATALLITE, &command, &buffer_read, sizeof(command));
+    ret = m_nrf_spim->transfer(&command, &buffer_read, sizeof(command));
     if (ret) {
         throw ErrorCode::SPI_COMMS_ERROR;
     }
 }
 
-static void wait_interrupt(uint32_t timeout, uint8_t interrupt_num)
+void ArticTransceiver::wait_interrupt(uint32_t timeout, uint8_t interrupt_num)
 {
-    uint32_t init_time;
-    uint32_t time_running = 0;
-    uint8_t gpio_port;
+    BSP::GPIO gpio_port;
     bool int_status;
 
     if (interrupt_num == INTERRUPT_1)
-        gpio_port = SYSHAL_SAT_GPIO_INT_1;
+        gpio_port = BSP::GPIO::GPIO_INT1_SAT;
     else
-        gpio_port = SYSHAL_SAT_GPIO_INT_2;
+        gpio_port = BSP::GPIO::GPIO_INT2_SAT;
 
-    init_time = syshal_time_get_ticks_ms();
     do
     {
-        syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_TICK_INTERRUPT_MS);
-        time_running =  syshal_time_get_ticks_ms() - init_time;
-        int_status = syshal_gpio_get_input(gpio_port);
+        nrf_delay_ms(SAT_ARTIC_DELAY_TICK_INTERRUPT_MS);
+        int_status = GPIOPins::value(gpio_port);
     }
-    while (time_running < timeout && !int_status);
+    while (timeout-- && !int_status);
 
     if (int_status == false)
     {
-        DEBUG_TRACE("Waiting for interrupt_%u timed out", interrupt_num);
+        DEBUG_TRACE("ArticTransceiver::wait_interrupt: Waiting for interrupt_%u timed out", interrupt_num);
         throw ErrorCode::ARTIC_IRQ_TIMEOUT;
     }
 }
 
-static void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout)
+void ArticTransceiver::send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout)
 {
     uint32_t status = 0;
 
@@ -393,26 +347,15 @@ static void send_command_check_clean(uint8_t command, uint8_t interrupt_number, 
     clear_interrupt(interrupt_number);
 }
 
-void hardware_init()
+void ArticTransceiver::hardware_init()
 {
-    syshal_gpio_init(SYSHAL_SAT_GPIO_RESET);
-    syshal_gpio_init(SYSHAL_SAT_GPIO_INT_1);
-    syshal_gpio_init(SYSHAL_SAT_GPIO_INT_2);
-    syshal_gpio_init(SYSHAL_SAT_GPIO_POWER_ON);
-    syshal_gpio_init(GPIO_G8_33);
-    syshal_gpio_init(GPIO_G16_33);
-
-    syshal_gpio_set_output_low(SYSHAL_SAT_GPIO_RESET);
-    syshal_gpio_set_output_low(SYSHAL_SAT_GPIO_POWER_ON);
-
-    syshal_gpio_set_output_low(GPIO_G8_33);
-    syshal_gpio_set_output_low(GPIO_G16_33);
+	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
+	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
 }
 
-static void send_fw_files(void)
+void ArticTransceiver::send_fw_files(void)
 {
     uint8_t buffer[MAXIMUM_READ_FIRMWARE_OPERATION];
-    uint32_t bytes_read;
     mem_id_t order_mode[NUM_FIRMWARE_FILES_ARTIC] = {XMEM, YMEM, PMEM};
     firmware_header_t firmware_header;
     ArticFirmwareFile firmware_file;
@@ -421,12 +364,11 @@ static void send_fw_files(void)
 
 	for (uint8_t mem_sel = 0; mem_sel < NUM_FIRMWARE_FILES_ARTIC; mem_sel++)
     {
-        int ret;
         uint32_t size;
         uint8_t length_transfer;
         uint8_t rx_buffer[4];
         uint32_t start_address = 0;
-        uint8_t *write_buffer;
+        uint8_t write_buffer[MAX_BURST];
         uint32_t bytes_written = 0;
         uint32_t last_address = 0;
         uint32_t bytes_total_read = 0;
@@ -440,17 +382,19 @@ static void send_fw_files(void)
         switch (mode)
         {
             case PMEM:
-                size = firmware_header->PMEM_length;
+                size = firmware_header.PMEM_length;
                 length_transfer = SIZE_SPI_REG_PMEM;
                 break;
             case XMEM:
-                size = firmware_header->XMEM_length;
+                size = firmware_header.XMEM_length;
                 length_transfer = SIZE_SPI_REG_XMEM_YMEM_IOMEM;
                 break;
             case YMEM:
-                size = firmware_header->YMEM_length;
+                size = firmware_header.YMEM_length;
                 length_transfer = SIZE_SPI_REG_XMEM_YMEM_IOMEM;
                 break;
+            case INVALID_MEM:
+            case IOMEM:
             default:
                 break;
         }
@@ -489,7 +433,7 @@ static void send_fw_files(void)
         if (bytes_written > 0)
         {
             // Wait few ms to continue the operations 13 ms, just in case we send very small amount of bytes
-            syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_FINISH_BURST);
+            nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST);
             burst_access(mode, start_address, write_buffer, rx_buffer, bytes_written, false);
         }
     }
@@ -501,7 +445,7 @@ static void send_fw_files(void)
     DEBUG_TRACE("Waiting for interrupt 1");
 
     // Interrupt 1 will be high when start-up is complete
-    wait_interrupt(SYSHAL_SAT_ARTIC_DELAY_INTERRUPT_1_PROG, INTERRUPT_1);
+    wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT_1_PROG, INTERRUPT_1);
 
     DEBUG_TRACE("Artic booted");
 
@@ -511,17 +455,17 @@ static void send_fw_files(void)
     check_crc(&firmware_header);
 }
 
-static void program_firmware(void)
+void ArticTransceiver::program_firmware(void)
 {
-    DEBUG_TRACE("WAIT DSP IN RESET");
+    DEBUG_TRACE("ArticTransceiver::program_firmware: WAIT DSP RESET");
 
     // Wait until the device's status register contains 85
     // NOTE: This 85 value is undocumentated but can be seen in the supplied Artic_evalboard.py file
-    int retries = SYSHAL_SAT_MAX_RETRIES;
+    int retries = 3;
     do
     {
         uint32_t artic_response;
-        syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_BOOT);
+        nrf_delay_ms(SAT_ARTIC_DELAY_BOOT);
 
         try {
         	send_artic_command(DSP_STATUS, &artic_response);
@@ -529,7 +473,7 @@ static void program_firmware(void)
         	// No action
         }
 
-        DEBUG_TRACE("Artic resp: %lu", artic_response);
+        DEBUG_TRACE("ArticTransceiver::program_firmware: resp: %lu", artic_response);
 
         if (artic_response == 85)
             break;
@@ -537,22 +481,21 @@ static void program_firmware(void)
 
     if (retries < 0)
     {
-        DEBUG_ERROR("ARTIC ERROR BOOT");
+        DEBUG_ERROR("ArticTransceiver::program_firmware: BOOT ERROR");
         throw ErrorCode::ARTIC_BOOT_TIMEOUT;
     }
 
-    DEBUG_TRACE("Uploading firmware to ARTIC");
+    DEBUG_TRACE("ArticTransceiver::program_firmware: Uploading firmware to ARTIC");
     send_fw_files();
 }
 
-static void set_tcxo_warmup_time(uint8_t time_s)
+void ArticTransceiver::set_tcxo_warmup_time(uint8_t time_s)
 {
     burst_access(XMEM, TCXO_WARMUP_TIME_ADDRESS, &time_s, NULL, sizeof(time_s), false);
 }
 
-static void get_status_register(uint32_t *status)
+void ArticTransceiver::get_status_register(uint32_t *status)
 {
-    int ret;
     uint8_t buffer[SIZE_SPI_REG_XMEM_YMEM_IOMEM];
 
     burst_access(IOMEM, INTERRUPT_ADDRESS, NULL, buffer, SIZE_SPI_REG_XMEM_YMEM_IOMEM,  true);
@@ -562,43 +505,43 @@ static void get_status_register(uint32_t *status)
 
 void ArticTransceiver::power_off() {
 
-    syshal_gpio_set_output_low(SYSHAL_SAT_GPIO_RESET);
-    syshal_gpio_set_output_low(SYSHAL_SAT_GPIO_POWER_ON);
-    syshal_gpio_set_output_low(GPIO_G8_33);
-    syshal_gpio_set_output_low(GPIO_G16_33);
+	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
+	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
 
-    syshal_spi_term(SPI_SATALLITE);
+	delete m_nrf_spim;
 
-	nrf_gpio_cfg_output(SPI_Inits[SPI_SATALLITE].spim_config.ss_pin);
-	nrf_gpio_pin_clear(SPI_Inits[SPI_SATALLITE].spim_config.ss_pin);
-    nrf_gpio_cfg_input(SPI_Inits[SPI_SATALLITE].spim_config.mosi_pin, NRF_GPIO_PIN_PULLDOWN);
-    nrf_gpio_cfg_input(SPI_Inits[SPI_SATALLITE].spim_config.miso_pin, NRF_GPIO_PIN_PULLDOWN);
-    nrf_gpio_cfg_input(SPI_Inits[SPI_SATALLITE].spim_config.sck_pin, NRF_GPIO_PIN_PULLDOWN);
+	// FIXME: should this be moved into the NrfSPIM driver?
+	nrf_gpio_cfg_output(BSP::SPI_Inits[SPI_SATELLITE].spim_config.ss_pin);
+	nrf_gpio_pin_clear(BSP::SPI_Inits[SPI_SATELLITE].spim_config.ss_pin);
+    nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].spim_config.mosi_pin, NRF_GPIO_PIN_PULLDOWN);
+    nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].spim_config.miso_pin, NRF_GPIO_PIN_PULLDOWN);
+    nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].spim_config.sck_pin, NRF_GPIO_PIN_PULLDOWN);
+}
+
+ArticTransceiver::ArticTransceiver() {
+	hardware_init();
 }
 
 void ArticTransceiver::power_on()
 {
-	// Power on device
-    syshal_gpio_set_output_high(GPIO_G8_33);
-    syshal_gpio_set_output_high(GPIO_G16_33);
-    syshal_spi_init(SPI_SATALLITE);
+	m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
 
-    syshal_gpio_set_output_high(SYSHAL_SAT_GPIO_POWER_ON);
-    syshal_gpio_set_output_high(SYSHAL_SAT_GPIO_RESET);
+    GPIOPins::set(BSP::GPIO::GPIO_SAT_EN);
+    GPIOPins::set(BSP::GPIO::GPIO_SAT_RESET);
 
     // Wait for the Artic device to power on
-    syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_POWER_ON);
+    nrf_delay_ms(SAT_ARTIC_DELAY_POWER_ON);
 
     // Reset the Artic device
-    syshal_gpio_set_output_low(SYSHAL_SAT_GPIO_RESET);
+    GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
 
     // Wait few ms to allow the device to detect the reset
-    syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_RESET);
+    nrf_delay_ms(SAT_ARTIC_DELAY_RESET);
 
     // Exit reset on the device to enter boot mode
-    syshal_gpio_set_output_high(SYSHAL_SAT_GPIO_RESET);
+    GPIOPins::set(BSP::GPIO::GPIO_SAT_RESET);
 
-    syshal_time_delay_ms(SYSHAL_SAT_ARTIC_DELAY_RESET);
+    nrf_delay_ms(SAT_ARTIC_DELAY_RESET);
 
     // Program firmware
     program_firmware();
@@ -611,17 +554,15 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 
     // It could be a problem if we set less data than we are already sending, just be careful and in case change TOTAL
     // Burst transfer the tx payload
-    burst_access(XMEM, TX_PAYLOAD_ADDRESS, packet, NULL, total_bits, false);
+    burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)packet.c_str(), NULL, total_bits, false);
 
-#ifndef DEBUG_DISABLED
     print_status();
-#endif
 
     // Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
     send_command_check_clean(ARTIC_CMD_START_TX_1M_SLEEP, 1, TX_FINISHED, true, SAT_ARTIC_TIMEOUT_SEND_TX);
 
     // If there is a problem wait until interrupt 2 is launched and get the status response
-    wait_interrupt(SYSHAL_SAT_ARTIC_DELAY_INTERRUPT, INTERRUPT_2);
+    wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT, INTERRUPT_2);
     clear_interrupt(INTERRUPT_2);
 }
 
