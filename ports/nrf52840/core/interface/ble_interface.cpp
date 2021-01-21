@@ -81,6 +81,22 @@ void BleInterface::start(std::function<void()> const &on_connected, std::functio
 void BleInterface::stop()
 {
     advertising_stop();
+
+    // Disconnect if we were connected
+    if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+    {
+        NRF_LOG_DEBUG("Disconnecting...");
+
+        ret_code_t err_code;
+        err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+
+        if (err_code != NRF_SUCCESS)
+            NRF_LOG_ERROR("sd_ble_gap_disconnect() failed: 0x%08lX", err_code);
+    }
+
+    // Discard any received data
+    m_carriage_return_received = false;
+    m_receive_buffer_len = 0;
 }
 
 std::string BleInterface::read_line()
