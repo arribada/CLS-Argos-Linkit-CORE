@@ -1,0 +1,37 @@
+# Structures:
+
+* prediction_pass_configuration -> PredictionPassConfiguration_t (content changed, renaming)
+* aop_satellite_entry_t -> AopSatelliteEntry_t (content changed, renaming)
+* satellite_next_pass_prediction_u -> struct SatelliteNextPassPrediction_t (content changed, renaming)
+* element -> SatPassLinkedListElement_t (content changed, renaming)
+
+
+# Functions:
+
+## changed APIs (renaming):
+
+llist* vSATPASSTSK_compute_new_prediction_pass_times(prediction_pass_configuration     * __p_pc, 
+        aop_satellite_entry_t     * __p_po,
+        uint8_t __u8_max_nSats);
+
+changed to :
+
+struct SatPassLinkedListElement_t*
+PREVIPASS_compute_new_prediction_pass_times
+(
+    struct PredictionPassConfiguration_t *config,
+    struct AopSatelliteEntry_t           *aopTable,
+    uint8_t                        nbSatsInAopTable,
+    bool                          *memoryPoolOverflow
+);
+
+## new APIs (refer to doxygen documentation for details)
+
+* PREVIPASS_status_format_a_to_generic
+* PREVIPASS_status_format_b_to_generic
+* PREVIPASS_status_generic_to_format_a
+* PREVIPASS_compute_new_prediction_pass_times
+* PREVIPASS_compute_new_prediction_pass_times_with_status
+* PREVIPASS_process_existing_sorted_passes
+* PREVIPASS_compute_next_pass
+* PREVIPASS_compute_next_pass_with_status

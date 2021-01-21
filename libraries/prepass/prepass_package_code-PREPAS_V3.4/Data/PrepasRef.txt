@@ -1,0 +1,104 @@
+sat SR date begin 2020/03/28 03:14:59 duration (min) 5.533333 site Max (deg)  8
+sat SR date begin 2020/03/28 04:49:58 duration (min) 12.066667 site Max (deg)  58
+sat NP date begin 2020/03/28 05:15:58 duration (min) 12.566667 site Max (deg)  34
+sat SR date begin 2020/03/28 06:30:58 duration (min) 9.566667 site Max (deg)  17
+sat NK date begin 2020/03/28 06:33:28 duration (min) 11.066667 site Max (deg)  27
+sat NP date begin 2020/03/28 06:56:58 duration (min) 12.066667 site Max (deg)  34
+sat NK date begin 2020/03/28 08:12:58 duration (min) 12.066667 site Max (deg)  40
+sat MB date begin 2020/03/28 08:13:58 duration (min) 8.566667 site Max (deg)  11
+sat MA date begin 2020/03/28 08:37:28 duration (min) 12.566667 site Max (deg)  49
+sat NN date begin 2020/03/28 08:42:28 duration (min) 12.566667 site Max (deg)  33
+sat MC date begin 2020/03/28 09:05:28 duration (min) 12.066667 site Max (deg)  34
+sat MB date begin 2020/03/28 09:52:28 duration (min) 13.066667 site Max (deg)  83
+sat MA date begin 2020/03/28 10:18:28 duration (min) 10.566667 site Max (deg)  23
+sat NN date begin 2020/03/28 10:23:28 duration (min) 12.066667 site Max (deg)  35
+sat MC date begin 2020/03/28 10:45:28 duration (min) 12.066667 site Max (deg)  32
+sat MB date begin 2020/03/28 11:33:58 duration (min) 8.566667 site Max (deg)  13
+sat NP date begin 2020/03/28 15:05:58 duration (min) 8.566667 site Max (deg)  11
+sat NP date begin 2020/03/28 16:43:28 duration (min) 13.066667 site Max (deg)  73
+sat SR date begin 2020/03/28 17:00:58 duration (min) 10.066667 site Max (deg)  18
+sat NK date begin 2020/03/28 17:54:27 duration (min) 12.100000 site Max (deg)  48
+sat MA date begin 2020/03/28 18:23:27 duration (min) 9.100000 site Max (deg)  13
+sat NP date begin 2020/03/28 18:26:28 duration (min) 9.566667 site Max (deg)  15
+sat NN date begin 2020/03/28 18:32:57 duration (min) 8.100000 site Max (deg)  11
+sat SR date begin 2020/03/28 18:39:57 duration (min) 12.100000 site Max (deg)  56
+sat MC date begin 2020/03/28 18:52:27 duration (min) 7.100000 site Max (deg)  9
+sat NK date begin 2020/03/28 19:34:57 duration (min) 11.100000 site Max (deg)  22
+sat MB date begin 2020/03/28 19:36:57 duration (min) 11.100000 site Max (deg)  24
+sat MA date begin 2020/03/28 20:00:57 duration (min) 12.600000 site Max (deg)  86
+sat NN date begin 2020/03/28 20:09:57 duration (min) 13.100000 site Max (deg)  69
+sat SR date begin 2020/03/28 20:21:27 duration (min) 5.600000 site Max (deg)  7
+sat MC date begin 2020/03/28 20:28:27 duration (min) 13.100000 site Max (deg)  63
+sat MB date begin 2020/03/28 21:15:57 duration (min) 12.600000 site Max (deg)  48
+sat MA date begin 2020/03/28 21:43:57 duration (min) 8.100000 site Max (deg)  11
+sat NN date begin 2020/03/28 21:52:57 duration (min) 10.100000 site Max (deg)  16
+sat MC date begin 2020/03/28 22:10:27 duration (min) 10.100000 site Max (deg)  17
+2020-03-28T03:15:00 A3|A3|3
+2020-03-28T03:20:35 __|__|4
+2020-03-28T04:50:00 A3|A3|3
+2020-03-28T05:02:05 __|__|4
+2020-03-28T05:16:00 A3|__|1
+2020-03-28T05:28:35 __|__|4
+2020-03-28T06:31:00 A3|A3|3
+2020-03-28T06:33:30 A2|A3|5
+2020-03-28T06:40:35 A2|__|1
+2020-03-28T06:44:35 __|__|4
+2020-03-28T06:57:00 A3|__|1
+2020-03-28T07:09:05 __|__|4
+2020-03-28T08:13:00 A2|__|1
+2020-03-28T08:25:05 __|__|4
+2020-03-28T08:37:30 A3|A3|3
+2020-03-28T08:42:30 A2|A3|5
+2020-03-28T08:50:05 A2|__|1
+2020-03-28T08:55:05 __|__|4
+2020-03-28T09:05:30 A3|A3|3
+2020-03-28T09:17:35 __|__|4
+2020-03-28T09:52:30 A3|__|1
+2020-03-28T10:05:35 __|__|4
+2020-03-28T10:18:30 A3|A3|3
+2020-03-28T10:23:30 A2|A3|5
+2020-03-28T10:29:05 A2|__|1
+2020-03-28T10:35:35 __|__|4
+2020-03-28T10:45:30 A3|A3|3
+2020-03-28T10:57:35 __|__|4
+2020-03-28T11:34:00 A3|__|1
+2020-03-28T11:42:35 __|__|4
+2020-03-28T15:06:00 A3|__|1
+2020-03-28T15:14:35 __|__|4
+2020-03-28T16:43:30 A3|__|1
+2020-03-28T16:56:35 __|__|4
+2020-03-28T17:01:00 A3|A3|3
+2020-03-28T17:11:05 __|__|4
+2020-03-28T17:54:30 A2|__|1
+2020-03-28T18:06:35 __|__|4
+2020-03-28T18:23:30 A3|A3|3
+2020-03-28T18:32:35 A3|__|1
+2020-03-28T18:33:00 A2|__|5
+2020-03-28T18:40:00 A2|A3|3
+2020-03-28T18:41:05 A3|A3|5
+2020-03-28T18:52:05 __|__|4
+2020-03-28T18:52:30 A3|A3|3
+2020-03-28T18:59:35 __|__|4
+2020-03-28T19:35:00 A2|__|1
+2020-03-28T19:46:05 A3|__|5
+2020-03-28T19:48:05 __|__|4
+2020-03-28T20:01:00 A3|A3|3
+2020-03-28T20:10:00 A2|A3|5
+2020-03-28T20:13:35 A2|__|1
+2020-03-28T20:21:30 A2|A3|3
+2020-03-28T20:23:05 A3|A3|5
+2020-03-28T20:27:05 __|__|4
+2020-03-28T20:28:30 A3|A3|3
+2020-03-28T20:41:35 __|__|4
+2020-03-28T21:16:00 A3|__|1
+2020-03-28T21:28:35 __|__|4
+2020-03-28T21:44:00 A3|A3|3
+2020-03-28T21:52:05 __|__|4
+2020-03-28T21:53:00 A2|__|1
+2020-03-28T22:03:05 __|__|4
+2020-03-28T22:10:30 A3|A3|3
+2020-03-28T22:20:35 __|__|4
+sat SR date begin 2020/03/28 03:14:59 duration (min) 5.533333 site Max (deg)  8
+sat NN date begin 2020/03/28 10:23:28 duration (min) 12.066667 site Max (deg)  35
+sat MC date begin 2020/03/28 10:45:28 duration (min) 12.066667 site Max (deg)  32
+sat MC date begin 2020/03/28 10:45:28 duration (min) 12.066667 site Max (deg)  32

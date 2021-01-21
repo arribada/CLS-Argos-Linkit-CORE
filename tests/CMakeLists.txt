@@ -64,6 +64,10 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -Wno-unused-function
     -Wno-format
     
+    # Compile prepass library for embedded systems
+    -DPREPAS_EMBEDDED
+    
+    # For enabling debug output
     -DDEBUG_ENABLE
 
     # Always output coloured text from GCC
@@ -73,6 +77,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 # Test related includes
 target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/littlefs"
+    "${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4"
     "${ROOT_DIR}/core/hardware"
     "${ROOT_DIR}/core/sm"
     "${ROOT_DIR}/core/ble_services"
@@ -91,6 +96,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/littlefs/lfs_util.c"
     "${ROOT_DIR}/libraries/littlefs/lfs.c"
+    "${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c"
+    "${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c"
     "${ROOT_DIR}/core/util/haversine.cpp"
     "${ROOT_DIR}/core/scheduling/argos_scheduler.cpp"
     "${LINUX_DIR}/interrupt_lock.cpp"
@@ -107,8 +114,11 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/argos_test.cpp"
     "src/bch_test.cpp"
     "src/crc8_test.cpp"
+    "src/previpass_test.cpp"
     "src/main.cpp"
     "fakes/nrfx_rtc.c"
 )
+
+set_source_files_properties(${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-switch-enum -Wno-switch")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CppUTest CppUTestExt ${CMAKE_THREAD_LIBS_INIT})
