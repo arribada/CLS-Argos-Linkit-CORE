@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <climits>
 #include <iomanip>
+#include <ctime>
 
 #include "messages.hpp"
 #include "argos_scheduler.hpp"
@@ -12,6 +13,10 @@
 #include "timeutils.hpp"
 #include "bch.hpp"
 #include "crc8.hpp"
+
+extern "C" {
+	#include "previpass.h"
+}
 
 #define INVALID_SCHEDULE    (std::time_t)-1
 
@@ -55,11 +60,11 @@ ArgosScheduler::ArgosScheduler() {
 	m_is_running = false;
 	m_switch_state = false;
 	m_earliest_tx = 0;
+	m_last_longitude = INVALID_GEODESIC;
+	m_last_latitude = INVALID_GEODESIC;
 }
 
 void ArgosScheduler::reschedule() {
-	deschedule();
-
 	std::time_t schedule = INVALID_SCHEDULE;
 	if (m_argos_config.mode == BaseArgosMode::OFF) {
 		DEBUG_WARN("ArgosScheduler: mode is OFF -- not scheduling");
@@ -74,9 +79,10 @@ void ArgosScheduler::reschedule() {
 	}
 
 	if (INVALID_SCHEDULE != schedule) {
+		deschedule();
 		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this), Scheduler::DEFAULT_PRIORITY, MS_PER_SEC * schedule);
 	} else {
-		DEBUG_WARN("ArgosScheduler: no valid schedule found");
+		DEBUG_WARN("ArgosScheduler: not rescheduling");
 	}
 }
 
@@ -110,8 +116,67 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 }
 
 std::time_t ArgosScheduler::next_prepass() {
-	DEBUG_WARN("ArgosScheduler: mode PASS_PREDICTION not implemented");
-	return 0;
+
+	DEBUG_TRACE("ArgosScheduler::next_prepass");
+
+	// We must have a previous GPS location to proceed
+	if (m_last_latitude == INVALID_GEODESIC) {
+		DEBUG_WARN("ArgosScheduler::next_prepass: current GPS location is not presently known - aborting");
+		return INVALID_SCHEDULE;
+	}
+
+	std::time_t curr_time = rtc->gettime();
+
+	if (m_next_prepass != INVALID_SCHEDULE &&
+		curr_time < m_next_prepass) {
+		DEBUG_WARN("ArgosScheduler::next_prepass: prepass already scheduled for epoch=%lu", m_next_prepass);
+		return INVALID_SCHEDULE;
+	}
+
+	std::time_t stop_time = curr_time + (std::time_t)(24 * SECONDS_PER_DAY);
+	struct tm *p_tm = std::gmtime(&curr_time);
+	struct tm tm_start = *p_tm;
+	p_tm = std::gmtime(&stop_time);
+	struct tm tm_stop = *p_tm;
+
+	BasePassPredict& pass_predict = configuration_store->read_pass_predict();
+	SatelliteNextPassPrediction_t next_pass;
+	PredictionPassConfiguration_t config = {
+		(float)m_last_latitude,
+		(float)m_last_longitude,
+		{ (uint16_t)tm_start.tm_year, (uint8_t)(tm_start.tm_mon + 1), (uint8_t)tm_start.tm_mday, (uint8_t)tm_start.tm_hour, (uint8_t)tm_start.tm_min, (uint8_t)tm_start.tm_sec },
+		{ (uint16_t)tm_stop.tm_year, (uint8_t)(tm_stop.tm_mon + 1), (uint8_t)tm_stop.tm_mday, (uint8_t)tm_stop.tm_hour, (uint8_t)tm_stop.tm_min, (uint8_t)tm_stop.tm_sec },
+        5.0f,                         //< Minimum elevation of passes [0, 90] (default 5 deg)
+        90.0f,                        //< Maximum elevation of passes  [maxElevation >= < minElevation] (default 90 deg)
+        5.0f,                         //< Minimum duration (default 5 minutes)
+        1000,                         //< Maximum number of passes per satellite (default < 1000)
+        5,                            //< Linear time margin (in minutes/6months) (default < 5 minutes/6months)
+        30                            //< Computation step (default 30s)
+	};
+
+	if (PREVIPASS_compute_next_pass(
+    		&config,
+			pass_predict.records,
+			pass_predict.num_records,
+			&next_pass)) {
+
+		DEBUG_TRACE("ArgosScheduler::next_prepass: hex_id=%01x now=%lu epoch=%lu duration=%u elevation_max=%f ul_status=%u",
+					next_pass.satHexId, curr_time, next_pass.epoch, next_pass.duration, next_pass.elevationMax, next_pass.uplinkStatus);
+
+		std::time_t schedule = (std::time_t)next_pass.epoch;
+		std::time_t now = rtc->gettime();
+		if (now < schedule) {
+			// Compute delay until epoch arrives for scheduling
+			return schedule - now;
+		} else {
+			DEBUG_ERROR("ArgosScheduler::next_prepass: computed prepass epoch=%lu is not in future", next_pass.epoch);
+			return INVALID_SCHEDULE;
+		}
+	} else {
+		// No passes reported
+		DEBUG_WARN("ArgosScheduler::next_prepass: PREVIPASS_compute_next_pass returned no passes");
+		return INVALID_SCHEDULE;
+	}
 }
 
 void ArgosScheduler::process_schedule() {
@@ -143,6 +208,7 @@ void ArgosScheduler::pass_prediction_algorithm() {
 	// No further action if no slot is eligible for transmission
 	if (m_msg_index == (m_msg_index + max_index)) {
 		DEBUG_TRACE("ArgosScheduler::pass_prediction_algorithm: no eligible slot found");
+		m_next_prepass = INVALID_SCHEDULE;
 		return;
 	}
 
@@ -157,6 +223,7 @@ void ArgosScheduler::pass_prediction_algorithm() {
 	configuration_store->increment_tx_counter();
 	m_msg_burst_counter[index]--;
 	m_msg_index++;
+	m_next_prepass = INVALID_SCHEDULE;
 
 	// Check if message burst count has reached zero and perform clean-up of this slot
 	if (m_msg_burst_counter[index] == 0) {
@@ -176,6 +243,18 @@ void ArgosScheduler::notify_sensor_log_update() {
 
 			DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: PASS_PREDICTION mode: max_index=%u span=%u", max_index, span);
 
+			// Read the most recent GPS entry out of the sensor log
+			GPSLogEntry gps_entry;
+			unsigned int idx = sensor_log->num_entries() - 1;  // Most recent entry in log
+			sensor_log->read(&gps_entry, idx);
+
+			// Update last known position if the GPS entry is valid (otherwise we preserve the last one)
+			if (gps_entry.valid) {
+				DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: updated last known GPS position");
+				m_last_longitude = gps_entry.lon;
+				m_last_latitude = gps_entry.lat;
+			}
+
 			// Find the first slot whose vector has less then depth pile entries in it
 			for (msg_index = 0; msg_index < max_index; msg_index++) {
 				if (m_gps_entries[msg_index].size() < span)
@@ -184,9 +263,6 @@ void ArgosScheduler::notify_sensor_log_update() {
 
 			// If a slot is found then append most recent sensor log entry to it
 			if (msg_index < max_index) {
-				GPSLogEntry gps_entry;
-				unsigned int idx = sensor_log->num_entries() - 1;  // Most recent entry in log
-				sensor_log->read(&gps_entry, idx);
 				m_gps_entries[msg_index].push_back(gps_entry);
 				DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: PASS_PREDICTION mode: appending entry=%u to msg_slot=%u", idx, msg_index);
 			} else {
@@ -474,6 +550,7 @@ void ArgosScheduler::periodic_algorithm() {
 void ArgosScheduler::start() {
 	m_is_running = true;
 	m_msg_index = 0;
+	m_next_prepass = INVALID_SCHEDULE;
 	configuration_store->get_argos_configuration(m_argos_config);
 	for (unsigned int i = 0; i < MAX_MSG_INDEX; i++) {
 		m_msg_burst_counter[i] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;

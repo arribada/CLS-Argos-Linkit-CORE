@@ -307,17 +307,72 @@ public:
 	}
 };
 
+// IMPORTANT NOTE: This codec relies upon the fact that AllCast message types C7 and 5F come _after_
+// message type BE.
 
 class PassPredictCodec {
 private:
-	static void allcast_constellation_a_decode(const std::string& data, unsigned int &pos) {
+
+	static SatDownlinkStatus_t convert_dl_operating_status(uint8_t status) {
+		switch (status) {
+		case 1:
+			return SAT_DNLK_ON_WITH_A4;
+		case 3:
+			return SAT_DNLK_ON_WITH_A3;
+		default:
+			return SAT_DNLK_OFF;
+		}
+	}
+
+	static SatUplinkStatus_t convert_ul_operating_status(uint8_t status) {
+		switch (status) {
+		case 0:
+			return SAT_UPLK_ON_WITH_A3;
+		case 1:
+			return SAT_UPLK_ON_WITH_NEO;
+		case 2:
+			return SAT_UPLK_ON_WITH_A4;
+		default:
+			return SAT_UPLK_OFF;
+		}
+	}
+
+	static int find_prepass_record_by_hex_id(uint8_t hex_id, BasePassPredict& pass_predict) {
+		for (unsigned int i = 0; i < pass_predict.num_records; i++) {
+			if (pass_predict.records[i].satHexId == hex_id)
+				return i;
+		}
+		return -1;
+	}
+
+	static void allcast_constellation_status_decode(const std::string& data, unsigned int &pos, bool type_a, BasePassPredict& pass_predict) {
 		uint8_t num_operational_satellites;
 		EXTRACT_BITS(num_operational_satellites, data, pos, 4);
-		DEBUG_TRACE("allcast_constellation_a_decode: num_operational_satellites: %u", num_operational_satellites);
+		DEBUG_TRACE("allcast_constellation_status_decode: num_operational_satellites: %u", num_operational_satellites);
 		for (uint8_t i = 0; i < num_operational_satellites; i++) {
-			uint16_t sat_status;
-			EXTRACT_BITS(sat_status, data, pos, 12);
-			DEBUG_TRACE("allcast_constellation_a_decode: sat_status[%u]: %04x", i, sat_status);
+			uint8_t hex_id;
+			uint8_t a_dcs;
+			uint8_t dl_status;
+			uint8_t ul_status;
+			EXTRACT_BITS(hex_id, data, pos, 4);
+			EXTRACT_BITS(a_dcs, data, pos, 4);
+			if (type_a) {
+				EXTRACT_BITS(dl_status, data, pos, 2);
+				EXTRACT_BITS(ul_status, data, pos, 2);
+			} else {
+				EXTRACT_BITS(dl_status, data, pos, 1);
+				EXTRACT_BITS(ul_status, data, pos, 3);
+			}
+			DEBUG_TRACE("allcast_constellation_status_decode: sat=%u hex_id=%01x a_dcs=%01x dl_status=%01x ul_status=%01x", i,
+						hex_id, a_dcs, dl_status, ul_status);
+			int record_index = find_prepass_record_by_hex_id(hex_id, pass_predict);
+			if (record_index >= 0) {
+				DEBUG_TRACE("allcast_constellation_status_decode: updating status for prepass record %u", record_index);
+				pass_predict.records[record_index].downlinkStatus = convert_dl_operating_status(dl_status);
+				pass_predict.records[record_index].uplinkStatus = convert_ul_operating_status(ul_status);
+			} else {
+				DEBUG_WARN("allcast_constellation_status_decode: existing prepass entry not found");
+			}
 		}
 
 #if 0 // FIXME: the example messages supplied by CLS are incorrectly encoded and are not a multiple of 8 bits
@@ -330,17 +385,13 @@ private:
 #endif
 	}
 
-	static void allcast_constellation_b_decode(const std::string& data, unsigned int &pos) {
-		allcast_constellation_a_decode(data, pos);
-	}
-
 	static void allcast_sat_orbit_params_decode(const std::string& data, unsigned int &pos, AopSatelliteEntry_t &aop_entry) {
 		uint32_t working;
 
-		DEBUG_TRACE("allcast_sat_orbit_params_decode");
-
 		// 4 bits sat hex ID
 		EXTRACT_BITS(aop_entry.satHexId, data, pos, 4);
+
+		DEBUG_TRACE("allcast_sat_orbit_params_decode: satHexId=%01x", aop_entry.satHexId);
 
 		// 2 bites bulletin type (not used)
 		EXTRACT_BITS(working, data, pos, 2); // Type of bulletin
@@ -383,6 +434,10 @@ private:
 		aop_entry.semiMajorAxisDriftMeterPerDay = working * -0.1f;
 		EXTRACT_BITS(working, data, pos, 16); // inclination
 		aop_entry.inclinationDeg = (working / 10000.f) + 97;
+
+		// Mark as out of service until constellation status is parsed
+		aop_entry.downlinkStatus = SAT_DNLK_OFF;
+		aop_entry.uplinkStatus = SAT_UPLK_OFF;
 	}
 
 	static void allcast_packet_decode(const std::string& data, unsigned int &pos, BasePassPredict& pass_predict) {
@@ -407,10 +462,10 @@ private:
 
 		switch (addressee_identification) {
 		case 0xC7: // Constellation Satellite Status - version A
-			allcast_constellation_a_decode(data, pos);
+			allcast_constellation_status_decode(data, pos, true, pass_predict);
 			break;
 		case 0x5F: // Constellation Satellite Status - version B
-			allcast_constellation_b_decode(data, pos);
+			allcast_constellation_status_decode(data, pos, false, pass_predict);
 			break;
 		case 0xBE: // Satellite Orbit Parameters
 			DEBUG_TRACE("allcast_packet_decode: Satellite Orbit Parameters: sat=%u", pass_predict.num_records);

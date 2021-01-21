@@ -13,7 +13,7 @@
 
 
 #define MAX_MSG_INDEX    6
-
+#define INVALID_GEODESIC -1000
 
 using ArgosPacket = std::string;
 
@@ -24,7 +24,10 @@ private:
 	bool         m_switch_state;
 	bool         m_is_running;
 	std::time_t  m_earliest_tx;
+	std::time_t  m_next_prepass;
 	unsigned int m_msg_index;
+	double		 m_last_longitude;
+	double 		 m_last_latitude;
 	std::array<unsigned int, MAX_MSG_INDEX> m_msg_burst_counter;
 	std::array<std::vector<GPSLogEntry>, MAX_MSG_INDEX> m_gps_entries;
 
