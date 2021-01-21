@@ -1,7 +1,7 @@
 #include "interrupt_lock.hpp"
 #include <mutex>
 
-static std::mutex g_mtx;
+static std::recursive_mutex g_mtx;
 
 InterruptLock::InterruptLock()
 {
