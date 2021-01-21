@@ -7,6 +7,9 @@
 #include <variant>
 #include <ctime>
 
+extern "C" {
+	#include "previpass.h"
+}
 
 #define BASE_TEXT_MAX_LENGTH  128
 #define BASE_MAX_PAYLOAD_LENGTH 0xFFF
@@ -138,7 +141,7 @@ enum class BaseCommsVector : uint8_t {
 	CELLULAR_PREFERRED
 };
 
-struct BaseZone {
+struct __attribute__((packed)) BaseZone {
 	uint8_t 	       zone_id;
 	BaseZoneType       zone_type;
 	bool               enable_monitoring;
@@ -172,27 +175,9 @@ static bool operator==(const BaseZone& lhs, const BaseZone& rhs)
     return std::memcmp( &lhs, &rhs, sizeof(BaseZone) );
 }
 
-struct BasePassPredictRecord {
-	uint8_t  satellite_hex_id;
-	uint8_t  satellite_dcs_id;
-	uint8_t  uplink_status;
-	uint16_t year;
-	uint8_t  month;
-	uint8_t  day;
-	uint8_t  hour;
-	uint8_t  minute;
-	uint8_t  second;
-	uint32_t semi_major_axis;
-	uint32_t orbit_inclination;
-	uint32_t longitude_ascending_node;
-	uint32_t ascending_node_drift;
-	uint32_t orbit_period;
-	uint32_t drift_semi_major_axis;
-};
-
-struct BasePassPredict {
+struct __attribute__((packed)) BasePassPredict {
 	uint8_t num_records;
-	BasePassPredictRecord records[31];
+	AopSatelliteEntry_t records[40];
 };
 
 static bool operator==(const BasePassPredict& lhs, const BasePassPredict& rhs)

@@ -310,54 +310,130 @@ public:
 
 class PassPredictCodec {
 private:
+	static void allcast_constellation_a_decode(const std::string& data, unsigned int &pos) {
+		uint8_t num_operational_satellites;
+		EXTRACT_BITS(num_operational_satellites, data, pos, 4);
+		DEBUG_TRACE("allcast_constellation_a_decode: num_operational_satellites: %u", num_operational_satellites);
+		for (uint8_t i = 0; i < num_operational_satellites; i++) {
+			uint16_t sat_status;
+			EXTRACT_BITS(sat_status, data, pos, 12);
+			DEBUG_TRACE("allcast_constellation_a_decode: sat_status[%u]: %04x", i, sat_status);
+		}
+
+#if 0 // FIXME: the example messages supplied by CLS are incorrectly encoded and are not a multiple of 8 bits
+		// Skip reserved field if number of status words is even
+		if ((num_operational_satellites & 1) == 0) {
+			uint8_t reserved;
+			EXTRACT_BITS(reserved, data, pos, 4);
+			(void)reserved;
+		}
+#endif
+	}
+
+	static void allcast_constellation_b_decode(const std::string& data, unsigned int &pos) {
+		allcast_constellation_a_decode(data, pos);
+	}
+
+	static void allcast_sat_orbit_params_decode(const std::string& data, unsigned int &pos, AopSatelliteEntry_t &aop_entry) {
+		uint32_t working;
+
+		DEBUG_TRACE("allcast_sat_orbit_params_decode");
+
+		// 4 bits sat hex ID
+		EXTRACT_BITS(aop_entry.satHexId, data, pos, 4);
+
+		// 2 bites bulletin type (not used)
+		EXTRACT_BITS(working, data, pos, 2); // Type of bulletin
+
+		// 44 bits of date
+		aop_entry.bulletin.year = 2000;
+		EXTRACT_BITS(working, data, pos, 4); // 10s of year
+		aop_entry.bulletin.year += 10 * working;
+		EXTRACT_BITS(working, data, pos, 4); // Units of year
+		aop_entry.bulletin.year += working;
+		EXTRACT_BITS(working, data, pos, 4); // 100s of day
+		aop_entry.bulletin.day = 100 * working;
+		EXTRACT_BITS(working, data, pos, 4); // 10s of day
+		aop_entry.bulletin.day += 10 * working;
+		EXTRACT_BITS(working, data, pos, 4); // Units of day
+		aop_entry.bulletin.day += working;
+		EXTRACT_BITS(working, data, pos, 4); // 10s of hour
+		aop_entry.bulletin.hour = 10 * working;
+		EXTRACT_BITS(working, data, pos, 4); // Units of hour
+		aop_entry.bulletin.hour += working;
+		EXTRACT_BITS(working, data, pos, 4); // 10s of minute
+		aop_entry.bulletin.minute = 10 * working;
+		EXTRACT_BITS(working, data, pos, 4); // Units of minute
+		aop_entry.bulletin.minute += working;
+		EXTRACT_BITS(working, data, pos, 4); // 10s of second
+		aop_entry.bulletin.second = 10 * working;
+		EXTRACT_BITS(working, data, pos, 4); // Units of second
+		aop_entry.bulletin.second += working;
+
+		// 86 bits of bulletin
+		EXTRACT_BITS(working, data, pos, 19); // Longitude of the ascending node
+		aop_entry.ascNodeLongitudeDeg = working / 1000.f;
+		EXTRACT_BITS(working, data, pos, 10); // angular separation between two successive ascending nodes
+		aop_entry.ascNodeDriftDeg = (working / 1000.f) - 26;
+		EXTRACT_BITS(working, data, pos, 14); // nodal period
+		aop_entry.orbitPeriodMin = (working / 1000.f) + 95;
+		EXTRACT_BITS(working, data, pos, 19); // semi-major axis
+		aop_entry.semiMajorAxisKm = (working / 1000.f) + 7000;
+		EXTRACT_BITS(working, data, pos, 8); // semi-major axis decay
+		aop_entry.semiMajorAxisDriftMeterPerDay = working * -0.1f;
+		EXTRACT_BITS(working, data, pos, 16); // inclination
+		aop_entry.inclinationDeg = (working / 10000.f) + 97;
+	}
+
+	static void allcast_packet_decode(const std::string& data, unsigned int &pos, BasePassPredict& pass_predict) {
+		uint32_t addressee_identification;
+		uint8_t  a_dcs;
+		uint8_t  service;
+
+		DEBUG_TRACE("allcast_packet_decode: pos: %u", pos);
+
+		EXTRACT_BITS(addressee_identification, data, pos, 28);
+		EXTRACT_BITS(a_dcs, data, pos, 4);
+		EXTRACT_BITS(service, data, pos, 8);
+
+		DEBUG_TRACE("allcast_packet_decode: addressee_identification: %08x", addressee_identification);
+		DEBUG_TRACE("allcast_packet_decode: a_dcs: %01x", a_dcs);
+		DEBUG_TRACE("allcast_packet_decode: service: %02x", service);
+
+		if (service != 0) {
+			DEBUG_ERROR("allcast_packet_decode: message service is not allcast (0x00)");
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+
+		switch (addressee_identification) {
+		case 0xC7: // Constellation Satellite Status - version A
+			allcast_constellation_a_decode(data, pos);
+			break;
+		case 0x5F: // Constellation Satellite Status - version B
+			allcast_constellation_b_decode(data, pos);
+			break;
+		case 0xBE: // Satellite Orbit Parameters
+			DEBUG_TRACE("allcast_packet_decode: Satellite Orbit Parameters: sat=%u", pass_predict.num_records);
+			pass_predict.records[pass_predict.num_records].satDcsId = a_dcs;
+			allcast_sat_orbit_params_decode(data, pos, pass_predict.records[pass_predict.num_records++]);
+			break;
+		default:
+			DEBUG_ERROR("allcast_packet_decode: unrecognised allcast packet ID (%08x)", addressee_identification);
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+			break;
+		}
+
+		uint16_t fcs;
+		EXTRACT_BITS(fcs, data, pos, 16);
+		DEBUG_TRACE("allcast_packet_decode: fcs: %04x", fcs);
+	}
 public:
 	static void decode(const std::string& data, BasePassPredict& pass_predict) {
 		unsigned int base_pos = 0;
-		EXTRACT_BITS(pass_predict.num_records, data, base_pos, 5);
-		for (unsigned int i = 0; i < pass_predict.num_records; i++) {
-			EXTRACT_BITS(pass_predict.records[i].satellite_hex_id, data, base_pos, 4);
-			EXTRACT_BITS(pass_predict.records[i].satellite_dcs_id, data, base_pos, 4);
-			EXTRACT_BITS(pass_predict.records[i].uplink_status, data, base_pos, 2);
-			EXTRACT_BITS(pass_predict.records[i].year, data, base_pos, 5);
-			EXTRACT_BITS(pass_predict.records[i].month, data, base_pos, 4);
-			EXTRACT_BITS(pass_predict.records[i].day, data, base_pos, 5);
-			EXTRACT_BITS(pass_predict.records[i].hour, data, base_pos, 5);
-			EXTRACT_BITS(pass_predict.records[i].minute, data, base_pos, 6);
-			EXTRACT_BITS(pass_predict.records[i].second, data, base_pos, 6);
-			EXTRACT_BITS(pass_predict.records[i].semi_major_axis, data, base_pos, 32);
-			EXTRACT_BITS(pass_predict.records[i].orbit_inclination, data, base_pos, 32);
-			EXTRACT_BITS(pass_predict.records[i].longitude_ascending_node, data, base_pos, 32);
-			EXTRACT_BITS(pass_predict.records[i].ascending_node_drift, data, base_pos, 32);
-			EXTRACT_BITS(pass_predict.records[i].orbit_period, data, base_pos, 32);
-			EXTRACT_BITS(pass_predict.records[i].drift_semi_major_axis, data, base_pos, 32);
-		}
-	}
+		pass_predict.num_records = 0;
 
-	static void encode(const BasePassPredict& pass_predict, std::string& data) {
-		unsigned int base_pos = 0;
-
-		// Zero out the data buffer to the required number of bytes -- this will round up to
-		// the nearest number of bytes and zero all bytes before encoding
-		unsigned int total_bits = (233 * pass_predict.num_records) + 5;
-		data.assign((total_bits + 4) / 8, 0);
-
-		PACK_BITS(pass_predict.num_records, data, base_pos, 5);
-		for (unsigned int i = 0; i < pass_predict.num_records; i++) {
-			PACK_BITS(pass_predict.records[i].satellite_hex_id, data, base_pos, 4);
-			PACK_BITS(pass_predict.records[i].satellite_dcs_id, data, base_pos, 4);
-			PACK_BITS(pass_predict.records[i].uplink_status, data, base_pos, 2);
-			PACK_BITS(pass_predict.records[i].year, data, base_pos, 5);
-			PACK_BITS(pass_predict.records[i].month, data, base_pos, 4);
-			PACK_BITS(pass_predict.records[i].day, data, base_pos, 5);
-			PACK_BITS(pass_predict.records[i].hour, data, base_pos, 5);
-			PACK_BITS(pass_predict.records[i].minute, data, base_pos, 6);
-			PACK_BITS(pass_predict.records[i].second, data, base_pos, 6);
-			PACK_BITS(pass_predict.records[i].semi_major_axis, data, base_pos, 32);
-			PACK_BITS(pass_predict.records[i].orbit_inclination, data, base_pos, 32);
-			PACK_BITS(pass_predict.records[i].longitude_ascending_node, data, base_pos, 32);
-			PACK_BITS(pass_predict.records[i].ascending_node_drift, data, base_pos, 32);
-			PACK_BITS(pass_predict.records[i].orbit_period, data, base_pos, 32);
-			PACK_BITS(pass_predict.records[i].drift_semi_major_axis, data, base_pos, 32);
+		while (base_pos < (8 * data.length())) {
+			allcast_packet_decode(data, base_pos, pass_predict);
 		}
 	}
 };
