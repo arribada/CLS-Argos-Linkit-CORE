@@ -5,7 +5,7 @@
 
 void GPIOPins::initialise()
 {
-	for (uint32_t i = 0; i < (unsigned int)BSP::GPIO::GPIO_TOTAL_NUMBER; i++)
+	for (uint32_t i = 0; i < (uint32_t)BSP::GPIO::GPIO_TOTAL_NUMBER; i++)
 	{
 		nrf_gpio_cfg(i,
 					 BSP::GPIO_Inits[i].dir, BSP::GPIO_Inits[i].input, BSP::GPIO_Inits[i].pull,
@@ -13,17 +13,17 @@ void GPIOPins::initialise()
 	}
 }
 
-void GPIOPins::set(BSP::GPIO pin)
+void GPIOPins::set(uint32_t pin)
 {
-	nrf_gpio_pin_set((uint32_t)pin);
+	nrf_gpio_pin_set(pin);
 }
 
-void GPIOPins::clear(BSP::GPIO pin)
+void GPIOPins::clear(uint32_t pin)
 {
-	nrf_gpio_pin_clear((uint32_t)pin);
+	nrf_gpio_pin_clear(pin);
 }
 
-uint32_t GPIOPins::value(BSP::GPIO pin)
+uint32_t GPIOPins::value(uint32_t pin)
 {
-	return nrf_gpio_pin_read((uint32_t)pin);
+	return nrf_gpio_pin_read(pin);
 }
