@@ -60,13 +60,11 @@ void BleInterface::init()
     m_carriage_return_received = false;
     m_receive_buffer_len = 0;
 
-    timers_init();
     ble_stack_init();
     gap_params_init();
     gatt_init();
     services_init();
     advertising_init();
-    conn_params_init();
 }
 
 void BleInterface::start(std::function<void()> const &on_connected, std::function<void()> const &on_disconnected, std::function<void()> const &on_received)
@@ -146,12 +144,6 @@ void BleInterface::write(std::string str)
         }
 
     } while (length || (err_code == NRF_ERROR_RESOURCES));
-}
-
-void BleInterface::timers_init()
-{
-    ret_code_t err_code = app_timer_init();
-    APP_ERROR_CHECK(err_code);
 }
 
 void BleInterface::ble_stack_init()
@@ -252,26 +244,6 @@ void BleInterface::advertising_init()
     APP_ERROR_CHECK(err_code);
 
     ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
-}
-
-void BleInterface::conn_params_init()
-{
-    uint32_t               err_code;
-    ble_conn_params_init_t cp_init;
-
-    memset(&cp_init, 0, sizeof(cp_init));
-
-    cp_init.p_conn_params                  = NULL;
-    cp_init.first_conn_params_update_delay = FIRST_CONN_PARAMS_UPDATE_DELAY;
-    cp_init.next_conn_params_update_delay  = NEXT_CONN_PARAMS_UPDATE_DELAY;
-    cp_init.max_conn_params_update_count   = MAX_CONN_PARAMS_UPDATE_COUNT;
-    cp_init.start_on_notify_cccd_handle    = BLE_GATT_HANDLE_INVALID;
-    cp_init.disconnect_on_fail             = false;
-    cp_init.evt_handler                    = static_on_conn_params_evt;
-    cp_init.error_handler                  = static_conn_params_error_handler;
-
-    err_code = ble_conn_params_init(&cp_init);
-    APP_ERROR_CHECK(err_code);
 }
 
 void BleInterface::advertising_start()

@@ -107,7 +107,6 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${LIB_DIR}/littlefs/lfs.c
     ${SDK_ROOT}/components/ble/common/ble_advdata.c
     ${SDK_ROOT}/components/ble/ble_advertising/ble_advertising.c
-    ${SDK_ROOT}/components/ble/common/ble_conn_params.c
     ${SDK_ROOT}/components/ble/common/ble_conn_state.c
     ${SDK_ROOT}/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c
     ${SDK_ROOT}/components/ble/common/ble_srv_common.c
@@ -126,7 +125,6 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/components/libraries/util/app_util_platform.c
     ${SDK_ROOT}/components/libraries/atomic_flags/nrf_atflags.c
     ${SDK_ROOT}/components/libraries/atomic/nrf_atomic.c
-    ${SDK_ROOT}/components/libraries/timer/app_timer2.c
     ${SDK_ROOT}/components/libraries/atomic_fifo/nrf_atfifo.c
     ${SDK_ROOT}/components/libraries/util/app_error.c
     ${SDK_ROOT}/components/libraries/util/app_error_handler_gcc.c
@@ -163,8 +161,6 @@ target_sources(${PROJECT_NAME} PRIVATE
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     DEBUG
     DEBUG_ENABLE
-    APP_TIMER_V2
-    APP_TIMER_V2_RTC1_ENABLED
     BOARD_PCA10059
     CONFIG_GPIO_AS_PINRESET
     CONFIG_NFCT_PINS_AS_GPIOS
