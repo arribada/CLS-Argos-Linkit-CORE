@@ -20,7 +20,7 @@
 #include "ota_update_service.hpp"
 #include "fake_gps_scheduler.hpp"
 #include "fake_comms_scheduler.hpp"
-#include "fake_rtc.hpp"
+#include "nrf_rtc.hpp"
 #include "gpio.hpp"
 #include "artic.hpp"
 
@@ -70,8 +70,6 @@ int main()
     nrf_log_redirect_init();
 
 	// Set up fakes
-    FakeRTC fake_rtc;
-    rtc = &fake_rtc;
 	FakeSwitch fake_reed_switch(0, 0);
 	reed_switch = &fake_reed_switch;
 	FakeSwitch fake_saltwater_switch(0, 0);
@@ -87,6 +85,9 @@ int main()
 
 	system_timer = &NrfTimer::get_instance();
 	NrfTimer::get_instance().init();
+
+	rtc = &NrfRTC::get_instance();
+	NrfRTC::get_instance().init();
 
 	Scheduler scheduler(system_timer);
 	system_scheduler = &scheduler;
