@@ -15,6 +15,7 @@
 #include "dte_commands.hpp"
 #include "error.hpp"
 #include "bitpack.hpp"
+#include "timeutils.hpp"
 
 using namespace std::literals::string_literals;
 
@@ -386,7 +387,7 @@ private:
 	}
 
 	static void allcast_sat_orbit_params_decode(const std::string& data, unsigned int &pos, AopSatelliteEntry_t &aop_entry) {
-		uint32_t working;
+		uint32_t working, day_of_year;
 
 		// 4 bits sat hex ID
 		EXTRACT_BITS(aop_entry.satHexId, data, pos, 4);
@@ -403,11 +404,11 @@ private:
 		EXTRACT_BITS(working, data, pos, 4); // Units of year
 		aop_entry.bulletin.year += working;
 		EXTRACT_BITS(working, data, pos, 4); // 100s of day
-		aop_entry.bulletin.day = 100 * working;
+		day_of_year = 100 * working;
 		EXTRACT_BITS(working, data, pos, 4); // 10s of day
-		aop_entry.bulletin.day += 10 * working;
+		day_of_year += 10 * working;
 		EXTRACT_BITS(working, data, pos, 4); // Units of day
-		aop_entry.bulletin.day += working;
+		day_of_year += working;
 		EXTRACT_BITS(working, data, pos, 4); // 10s of hour
 		aop_entry.bulletin.hour = 10 * working;
 		EXTRACT_BITS(working, data, pos, 4); // Units of hour
@@ -420,6 +421,9 @@ private:
 		aop_entry.bulletin.second = 10 * working;
 		EXTRACT_BITS(working, data, pos, 4); // Units of second
 		aop_entry.bulletin.second += working;
+
+		// Compute the actual day of month and month from the day of year
+		convert_day_of_year(aop_entry.bulletin.year, day_of_year, aop_entry.bulletin.month, aop_entry.bulletin.day);
 
 		// 86 bits of bulletin
 		EXTRACT_BITS(working, data, pos, 19); // Longitude of the ascending node

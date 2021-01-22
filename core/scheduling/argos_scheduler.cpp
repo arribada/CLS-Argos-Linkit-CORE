@@ -133,19 +133,23 @@ std::time_t ArgosScheduler::next_prepass() {
 		return INVALID_SCHEDULE;
 	}
 
-	std::time_t stop_time = curr_time + (std::time_t)(24 * SECONDS_PER_DAY);
+	std::time_t stop_time = curr_time + (std::time_t)(24 * SECONDS_PER_HOUR);
 	struct tm *p_tm = std::gmtime(&curr_time);
 	struct tm tm_start = *p_tm;
 	p_tm = std::gmtime(&stop_time);
 	struct tm tm_stop = *p_tm;
+
+	DEBUG_TRACE("ArgosScheduler::next_prepass: window start=(%u,%u,%u,%u,%u,%u) stop=(%u,%u,%u,%u,%u,%u)",
+			(uint16_t)(1900 + tm_start.tm_year), (uint8_t)(tm_start.tm_mon + 1), (uint8_t)tm_start.tm_mday, (uint8_t)tm_start.tm_hour, (uint8_t)tm_start.tm_min, (uint8_t)tm_start.tm_sec,
+			(uint16_t)(1900 + tm_stop.tm_year), (uint8_t)(tm_stop.tm_mon + 1), (uint8_t)tm_stop.tm_mday, (uint8_t)tm_stop.tm_hour, (uint8_t)tm_stop.tm_min, (uint8_t)tm_stop.tm_sec);
 
 	BasePassPredict& pass_predict = configuration_store->read_pass_predict();
 	SatelliteNextPassPrediction_t next_pass;
 	PredictionPassConfiguration_t config = {
 		(float)m_last_latitude,
 		(float)m_last_longitude,
-		{ (uint16_t)tm_start.tm_year, (uint8_t)(tm_start.tm_mon + 1), (uint8_t)tm_start.tm_mday, (uint8_t)tm_start.tm_hour, (uint8_t)tm_start.tm_min, (uint8_t)tm_start.tm_sec },
-		{ (uint16_t)tm_stop.tm_year, (uint8_t)(tm_stop.tm_mon + 1), (uint8_t)tm_stop.tm_mday, (uint8_t)tm_stop.tm_hour, (uint8_t)tm_stop.tm_min, (uint8_t)tm_stop.tm_sec },
+		{ (uint16_t)(1900 + tm_start.tm_year), (uint8_t)(tm_start.tm_mon + 1), (uint8_t)tm_start.tm_mday, (uint8_t)tm_start.tm_hour, (uint8_t)tm_start.tm_min, (uint8_t)tm_start.tm_sec },
+		{ (uint16_t)(1900 + tm_stop.tm_year), (uint8_t)(tm_stop.tm_mon + 1), (uint8_t)tm_stop.tm_mday, (uint8_t)tm_stop.tm_hour, (uint8_t)tm_stop.tm_min, (uint8_t)tm_stop.tm_sec },
         5.0f,                         //< Minimum elevation of passes [0, 90] (default 5 deg)
         90.0f,                        //< Maximum elevation of passes  [maxElevation >= < minElevation] (default 90 deg)
         5.0f,                         //< Minimum duration (default 5 minutes)
@@ -165,8 +169,10 @@ std::time_t ArgosScheduler::next_prepass() {
 
 		std::time_t schedule = (std::time_t)next_pass.epoch;
 		std::time_t now = rtc->gettime();
-		if (now < schedule) {
+		if (now <= schedule) {
 			// Compute delay until epoch arrives for scheduling
+			DEBUG_TRACE("ArgosScheduler::next_prepass: scheduled for %u seconds in future", schedule - now);
+			m_next_prepass = schedule;
 			return schedule - now;
 		} else {
 			DEBUG_ERROR("ArgosScheduler::next_prepass: computed prepass epoch=%lu is not in future", next_pass.epoch);

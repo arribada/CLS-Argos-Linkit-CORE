@@ -16,4 +16,14 @@ static std::time_t convert_epochtime(uint16_t year, uint8_t month, uint8_t day, 
 	return et;
 }
 
+static void convert_day_of_year(const uint16_t year, const uint8_t day_of_year, uint8_t& month, uint16_t& day) {
+	std::time_t t = convert_epochtime(year, 1, 1, 0, 0, 0); // Epoch time at start of year
+	t += day_of_year * 24 * 3600;   // Add day of year in seconds
+	struct tm *tm = std::gmtime(&t); // Convert back to struct tm
+
+	// Return back to caller the month and day of month
+	month = tm->tm_mon + 1;
+	day = tm->tm_mday;
+}
+
 #endif // __TIMEUTILS_HPP_H
