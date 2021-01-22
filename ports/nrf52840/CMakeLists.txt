@@ -85,6 +85,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJ_DIR}/drivers/nrf_log_redirect
     ${PROJ_DIR}/bsp/horizon_v4.0
     ${LIB_DIR}/littlefs
+    ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4
     ${CORE_DIR}/ble_services
     ${CORE_DIR}/hardware
     ${CORE_DIR}/configuration
@@ -105,6 +106,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_sources(${PROJECT_NAME} PRIVATE
     ${LIB_DIR}/littlefs/lfs_util.c
     ${LIB_DIR}/littlefs/lfs.c
+    ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c
+    ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c
     ${SDK_ROOT}/components/ble/common/ble_advdata.c
     ${SDK_ROOT}/components/ble/ble_advertising/ble_advertising.c
     ${SDK_ROOT}/components/ble/common/ble_conn_state.c
@@ -221,6 +224,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     # Always output coloured text from GCC
     -fdiagnostics-color=always
 )
+
+set_source_files_properties(${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-switch-enum -Wno-switch")
 
 target_link_options(${PROJECT_NAME} PRIVATE
     -L${CMAKE_SOURCE_DIR}/${SDK_ROOT}/modules/nrfx/mdk

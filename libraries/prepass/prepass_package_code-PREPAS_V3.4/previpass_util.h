@@ -52,14 +52,19 @@
 // -------------------------------------------------------------------------- //
 
 //! Returns the minimum between two values.
+#ifndef MIN
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
+#endif
 
 //! Returns the minimum between two values.
+#ifndef MAX
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
+#endif
 
 //! Returns the absolute value of a number.
+#ifndef ABS
 #define ABS(N) ((N) >= 0 ? (N) : -(N))
-
+#endif
 
 // -------------------------------------------------------------------------- //
 //! Computation configuration

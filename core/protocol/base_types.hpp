@@ -141,7 +141,7 @@ enum class BaseCommsVector : uint8_t {
 	CELLULAR_PREFERRED
 };
 
-struct __attribute__((packed)) BaseZone {
+struct BaseZone {
 	uint8_t 	       zone_id;
 	BaseZoneType       zone_type;
 	bool               enable_monitoring;
@@ -175,7 +175,7 @@ static bool operator==(const BaseZone& lhs, const BaseZone& rhs)
     return std::memcmp( &lhs, &rhs, sizeof(BaseZone) );
 }
 
-struct __attribute__((packed)) BasePassPredict {
+struct BasePassPredict {
 	uint8_t num_records;
 	AopSatelliteEntry_t records[40];
 };
