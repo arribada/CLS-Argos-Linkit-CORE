@@ -16,6 +16,12 @@
 #define SAT_ARTIC_DELAY_TICK_INTERRUPT_MS 10
 #define INVALID_MEM_SELECTION (0xFF)
 
+#ifndef DEFAULT_TCXO_WARMUP_TIME_SECONDS
+#define DEFAULT_TCXO_WARMUP_TIME_SECONDS 3
+#endif
+
+#define TX_FREQUENCY_ARGOS_2_3_BAND_START		401.62
+
 static constexpr const char *const status_string[] =
 {
     "IDLE",                                   //The firmware is idle and ready to accept commands.
@@ -545,11 +551,17 @@ void ArticTransceiver::power_on()
 
     // Program firmware
     program_firmware();
+
+    // Set TCXO warm-up time
+    set_tcxo_warmup_time(DEFAULT_TCXO_WARMUP_TIME_SECONDS);
 }
 
 void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total_bits)
 {
     // Set ARGOS TX MODE in ARTIC device and wait for the status response
+
+	// TODO: the code assume A2 protocol mode is used all the time; this may not be possible as it is unclear
+	// if all sats support A2.  Moreover, the TX frequency could be set outside the A2/A3 band.
     send_command_check_clean(ARTIC_CMD_SET_PTT_A2_TX_MODE, 1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT);
 
     // It could be a problem if we set less data than we are already sending, just be careful and in case change TOTAL
@@ -567,11 +579,42 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 }
 
 void ArticTransceiver::set_frequency(const double freq) {
-	(void)freq;
-	// TODO
+	unsigned int fractional_part;
+	fractional_part = (unsigned int)((((4 * freq * 1E6) / 26E6) - 61) * 4194304);
+	// Argos 2 and 3 band starts at 401.62 MHz and so we can only program the frequency if the value falls inside
+	// the Argos 2 and 3 band range
+	if (freq >= TX_FREQUENCY_ARGOS_2_3_BAND_START)
+		burst_access(XMEM, TX_FREQUENCY_ARGOS_2_3, (const uint8_t *)&fractional_part, NULL, sizeof(fractional_part), false);
+	// Argos 4 band supported in any TX frequency
+	burst_access(XMEM, TX_FREQUENCY_ARGOS_4, (const uint8_t *)&fractional_part, NULL, sizeof(fractional_part), false);
 }
 
 void ArticTransceiver::set_tx_power(const BaseArgosPower power) {
+#ifndef CLSGENTRACKER_BOARD
 	(void)power;
-	// TODO
+#else
+	// GA16 and GA8 pins allows PA gain to be set only coarsely as:
+	// 0dB   - 00
+	// 8dB   - 01
+	// 16dB  - 10
+	// 24dB  - 11
+	GPIOPins::clear(GPIO_PA_G8);
+	GPIOPins::clear(GPIO_PA_G16);
+	switch (power) {
+	case BaseArgosPower::POWER_40_MW:
+		GPIOPins::set(GPIO_PA_G16);
+		break;
+	case BaseArgosPower::POWER_500_MW:
+	case BaseArgosPower::POWER_200_MW:
+		GPIOPins::set(GPIO_PA_G8);
+		GPIOPins::set(GPIO_PA_G16);
+		break;
+	case BaseArgosPower::POWER_3_MW:
+		GPIOPins::set(GPIO_PA_G8);
+		break;
+	default:
+		break;
+
+	}
+#endif
 }

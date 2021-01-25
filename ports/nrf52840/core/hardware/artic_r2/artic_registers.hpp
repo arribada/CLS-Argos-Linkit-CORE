@@ -45,6 +45,9 @@
 #define TX_PAYLOAD_ADDRESS       (0x0273)
 #define TCXO_WARMUP_TIME_ADDRESS (0x036F)
 
+#define TX_FREQUENCY_ARGOS_2_3	 (0x034F)
+#define TX_FREQUENCY_ARGOS_4   	 (0x035F)
+
 #define FIRMWARE_ADDRESS_LENGTH       (3)
 #define SIZE_SPI_REG_XMEM_YMEM_IOMEM  (3)
 #define SIZE_SPI_REG_PMEM             (4)
