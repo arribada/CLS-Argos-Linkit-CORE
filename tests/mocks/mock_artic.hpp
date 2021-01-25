@@ -9,9 +9,9 @@ public:
 
 	void power_off() override { mock().actualCall("power_off").onObject(this); }
 	void power_on() override { mock().actualCall("power_on").onObject(this); }
-	void send_packet(ArgosPacket const& packet, unsigned int total_bits) override {
+	void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) override {
 		m_last_packet = packet;
-		mock().actualCall("send_packet").onObject(this).withParameter("total_bits", total_bits);
+		mock().actualCall("send_packet").onObject(this).withParameter("total_bits", total_bits).withParameter("mode", (unsigned int)mode);
 	}
 	void set_frequency(const double freq) override {
 		mock().actualCall("set_frequency").onObject(this).withParameter("freq", freq);

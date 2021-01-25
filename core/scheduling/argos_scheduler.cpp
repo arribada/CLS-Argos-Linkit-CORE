@@ -144,7 +144,6 @@ std::time_t ArgosScheduler::next_prepass() {
 			(uint16_t)(1900 + tm_stop.tm_year), (uint8_t)(tm_stop.tm_mon + 1), (uint8_t)tm_stop.tm_mday, (uint8_t)tm_stop.tm_hour, (uint8_t)tm_stop.tm_min, (uint8_t)tm_stop.tm_sec);
 
 	BasePassPredict& pass_predict = configuration_store->read_pass_predict();
-	SatelliteNextPassPrediction_t next_pass;
 	PredictionPassConfiguration_t config = {
 		(float)m_last_latitude,
 		(float)m_last_longitude,
@@ -157,6 +156,7 @@ std::time_t ArgosScheduler::next_prepass() {
         5,                            //< Linear time margin (in minutes/6months) (default < 5 minutes/6months)
         30                            //< Computation step (default 30s)
 	};
+	SatelliteNextPassPrediction_t next_pass;
 
 	if (PREVIPASS_compute_next_pass(
     		&config,
@@ -164,15 +164,16 @@ std::time_t ArgosScheduler::next_prepass() {
 			pass_predict.num_records,
 			&next_pass)) {
 
-		DEBUG_TRACE("ArgosScheduler::next_prepass: hex_id=%01x now=%lu epoch=%lu duration=%u elevation_max=%f ul_status=%u",
-					next_pass.satHexId, curr_time, next_pass.epoch, next_pass.duration, next_pass.elevationMax, next_pass.uplinkStatus);
+		DEBUG_TRACE("ArgosScheduler::next_prepass: hex_id=%01x now=%lu epoch=%lu duration=%u elevation_max=%u ul_status=%01x",
+					next_pass.satHexId, curr_time, next_pass.epoch, next_pass.duration, next_pass.elevationMax, (unsigned char)next_pass.uplinkStatus);
 
 		std::time_t schedule = (std::time_t)next_pass.epoch;
 		std::time_t now = rtc->gettime();
 		if (now <= schedule) {
-			// Compute delay until epoch arrives for scheduling
+			// Compute delay until epoch arrives for scheduling and select Argos transmission mode
 			DEBUG_TRACE("ArgosScheduler::next_prepass: scheduled for %u seconds in future", schedule - now);
 			m_next_prepass = schedule;
+			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
 			return schedule - now;
 		} else {
 			DEBUG_ERROR("ArgosScheduler::next_prepass: computed prepass epoch=%lu is not in future", next_pass.epoch);
@@ -220,10 +221,10 @@ void ArgosScheduler::pass_prediction_algorithm() {
 
 	if (m_gps_entries[index].size() == 1) {
 		build_short_packet(m_gps_entries[index][0], packet);
-		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE);
+		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
 	} else {
 		build_long_packet(m_gps_entries[index], packet);
-		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE);
+		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
 	}
 
 	configuration_store->increment_tx_counter();
@@ -493,9 +494,9 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	PACK_BITS(code_word, packet, base_pos, BCHEncoder::B255_223_4_CODE_LEN);
 }
 
-void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total_bits) {
-	DEBUG_TRACE("ArgosScheduler::handle_packet: bytes=%u total_bits=%u freq=%lf power=%u",
-			packet.size(), total_bits, m_argos_config.frequency, m_argos_config.power);
+void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) {
+	DEBUG_TRACE("ArgosScheduler::handle_packet: bytes=%u total_bits=%u freq=%lf power=%u mode=%u",
+			packet.size(), total_bits, m_argos_config.frequency, m_argos_config.power, (unsigned int)mode);
 	DEBUG_TRACE("ArgosScheduler::handle_packet: data=");
 #ifdef DEBUG_ENABLE
 	for (unsigned int i = 0; i < packet.size(); i++)
@@ -505,7 +506,7 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	power_on();
 	set_frequency(m_argos_config.frequency);
 	set_tx_power(m_argos_config.power);
-	send_packet(packet, total_bits);
+	send_packet(packet, total_bits, mode);
 	power_off();
 }
 
@@ -535,7 +536,7 @@ void ArgosScheduler::periodic_algorithm() {
 		DEBUG_TRACE("read gps_entry=%u", idx);
 		sensor_log->read(&gps_entry, idx);
 		build_short_packet(gps_entry, packet);
-		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE);
+		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
 	} else {
 		std::vector<GPSLogEntry> gps_entries;
 		for (unsigned int k = 0; k < span; k++) {
@@ -545,7 +546,7 @@ void ArgosScheduler::periodic_algorithm() {
 			gps_entries.push_back(gps_entry);
 		}
 		build_long_packet(gps_entries, packet);
-		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE);
+		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
 	}
 
 	configuration_store->increment_tx_counter();

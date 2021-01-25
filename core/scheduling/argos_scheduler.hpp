@@ -17,6 +17,11 @@
 
 using ArgosPacket = std::string;
 
+enum class ArgosMode {
+	ARGOS_2,
+	ARGOS_3
+};
+
 class ArgosScheduler : public CommsScheduler {
 private:
 	Scheduler::TaskHandle m_argos_task;
@@ -25,6 +30,7 @@ private:
 	bool         m_is_running;
 	std::time_t  m_earliest_tx;
 	std::time_t  m_next_prepass;
+	ArgosMode    m_next_mode;
 	unsigned int m_msg_index;
 	double		 m_last_longitude;
 	double 		 m_last_latitude;
@@ -43,7 +49,7 @@ public:
 	void process_schedule();
 	void periodic_algorithm();
 	void pass_prediction_algorithm();
-	void handle_packet(ArgosPacket const& packet, unsigned int total_bits);
+	void handle_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode);
 	unsigned int convert_latitude(double x);
 	unsigned int convert_longitude(double x);
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
@@ -55,7 +61,7 @@ public:
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	virtual void power_off() = 0;
 	virtual void power_on() = 0;
-	virtual void send_packet(ArgosPacket const& packet, unsigned int total_bits) = 0;
+	virtual void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) = 0;
 	virtual void set_frequency(const double freq) = 0;
 	virtual void set_tx_power(const BaseArgosPower power) = 0;
 };

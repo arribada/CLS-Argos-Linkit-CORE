@@ -556,13 +556,19 @@ void ArticTransceiver::power_on()
     set_tcxo_warmup_time(DEFAULT_TCXO_WARMUP_TIME_SECONDS);
 }
 
-void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total_bits)
+void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode)
 {
     // Set ARGOS TX MODE in ARTIC device and wait for the status response
 
-	// TODO: the code assume A2 protocol mode is used all the time; this may not be possible as it is unclear
-	// if all sats support A2.  Moreover, the TX frequency could be set outside the A2/A3 band.
-    send_command_check_clean(ARTIC_CMD_SET_PTT_A2_TX_MODE, 1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT);
+	switch (mode) {
+	default:
+	case ArgosMode::ARGOS_2:
+		send_command_check_clean(ARTIC_CMD_SET_PTT_A2_TX_MODE, 1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT);
+		break;
+	case ArgosMode::ARGOS_3:
+		send_command_check_clean(ARTIC_CMD_SET_PTT_A3_TX_MODE, 1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT);
+		break;
+	}
 
     // It could be a problem if we set less data than we are already sending, just be careful and in case change TOTAL
     // Burst transfer the tx payload
@@ -581,12 +587,8 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 void ArticTransceiver::set_frequency(const double freq) {
 	unsigned int fractional_part;
 	fractional_part = (unsigned int)((((4 * freq * 1E6) / 26E6) - 61) * 4194304);
-	// Argos 2 and 3 band starts at 401.62 MHz and so we can only program the frequency if the value falls inside
-	// the Argos 2 and 3 band range
-	if (freq >= TX_FREQUENCY_ARGOS_2_3_BAND_START)
-		burst_access(XMEM, TX_FREQUENCY_ARGOS_2_3, (const uint8_t *)&fractional_part, NULL, sizeof(fractional_part), false);
-	// Argos 4 band supported in any TX frequency
-	burst_access(XMEM, TX_FREQUENCY_ARGOS_4, (const uint8_t *)&fractional_part, NULL, sizeof(fractional_part), false);
+	// Only supports Argos 2 and 3 band
+	burst_access(XMEM, TX_FREQUENCY_ARGOS_2_3, (const uint8_t *)&fractional_part, NULL, sizeof(fractional_part), false);
 }
 
 void ArticTransceiver::set_tx_power(const BaseArgosPower power) {
