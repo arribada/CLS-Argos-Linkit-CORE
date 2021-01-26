@@ -127,6 +127,25 @@ TEST(DTEHandler, SECUR_REQ)
 	STRCMP_EQUAL("$O;SECUR#000;\r", resp.c_str());
 }
 
+TEST(DTEHandler, RSTVW_REQ)
+{
+	unsigned int tx_counter;
+
+	// Increment TX_COUNTER to 1
+	configuration_store->increment_tx_counter();
+	tx_counter = configuration_store->read_param<unsigned int>(ParamID::TX_COUNTER);
+	CHECK_EQUAL(1U, tx_counter);
+
+	// This should reset TX_COUNTER to zero
+	std::string resp;
+	std::string req = "$RSTVW#001;1\r";
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;RSTVW#000;\r", resp.c_str());
+
+	tx_counter = configuration_store->read_param<unsigned int>(ParamID::TX_COUNTER);
+	CHECK_EQUAL(0U, tx_counter);
+}
+
 TEST(DTEHandler, RSTBW_REQ)
 {
 	std::string resp;

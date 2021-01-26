@@ -18,6 +18,7 @@ enum class DTECommand {
 	SECUR_REQ,
 	DUMPM_REQ,
 	DUMPD_REQ,
+	RSTVW_REQ,
 	RSTBW_REQ,
 	FACTW_REQ,
 	STATR_REQ,
@@ -33,6 +34,7 @@ enum class DTECommand {
 	SECUR_RESP,
 	DUMPM_RESP,
 	DUMPD_RESP,
+	RSTVW_RESP,
 	RSTBW_RESP,
 	FACTW_RESP,
 	STATR_RESP,
@@ -214,6 +216,22 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 	{
+		.name = "RSTVW",
+		.command = DTECommand::RSTVW_REQ,
+		.prototype =
+		{
+				{
+					.name = "index",
+					.key = "",
+					.encoding = BaseEncoding::HEXADECIMAL,
+					.min_value = 0U,
+					.max_value = 0U,
+					.permitted_values = { 1U },
+					.is_implemented = false
+				},
+		}
+	},
+	{
 		.name = "RSTBW",
 		.command = DTECommand::RSTBW_REQ,
 		.prototype = 
@@ -390,6 +408,13 @@ static const DTECommandMap command_map[] = {
 				.permitted_values = {},
 				.is_implemented = false
 			}
+		}
+	},
+	{
+		.name = "RSTVW",
+		.command = DTECommand::RSTVW_RESP,
+		.prototype =
+		{
 		}
 	},
 	{

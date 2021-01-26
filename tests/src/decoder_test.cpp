@@ -434,6 +434,15 @@ TEST(Decoder, DUMPD_REQ)
 	CHECK_EQUAL(1U, std::get<unsigned int>(arg_list[0]));
 }
 
+TEST(Decoder, RSTVW_REQ)
+{
+	std::string s;
+	s = "$RSTVW#001;1\r";
+	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
+	CHECK_TRUE(DTECommand::RSTVW_REQ == command);
+	CHECK_EQUAL(1U, std::get<unsigned int>(arg_list[0]));
+}
+
 TEST(Decoder, RSTBW_REQ)
 {
 	std::string s;
@@ -563,6 +572,14 @@ TEST(Decoder, DUMPD_RESP)
 	CHECK_EQUAL(0U, std::get<unsigned int>(arg_list[0]));
 	CHECK_EQUAL(1U, std::get<unsigned int>(arg_list[1]));
 	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[2]).c_str());
+}
+
+TEST(Decoder, RSTVW_RESP)
+{
+	std::string s;
+	s = "$O;RSTVW#000;\r";
+	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
+	CHECK_TRUE(DTECommand::RSTVW_RESP == command);
 }
 
 TEST(Decoder, RSTBW_RESP)

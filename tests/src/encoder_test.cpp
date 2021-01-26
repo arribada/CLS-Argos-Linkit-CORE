@@ -224,6 +224,27 @@ TEST(Encoder, FACTW_RESP)
 	STRCMP_EQUAL("$O;FACTW#000;\r", s.c_str());
 }
 
+TEST(Encoder, RSTVW_REQ)
+{
+	std::string s;
+	s = DTEEncoder::encode(DTECommand::RSTVW_REQ, 1U);
+	STRCMP_EQUAL("$RSTVW#001;1\r", s.c_str());
+}
+
+TEST(Encoder, RSTVW_REQ_OutOfRangeCheck)
+{
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::RSTVW_REQ, 2U));
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::RSTVW_REQ, 0U));
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::RSTVW_REQ, 3U));
+}
+
+TEST(Encoder, RSTVW_RESP)
+{
+	std::string s;
+	s = DTEEncoder::encode(DTECommand::RSTVW_RESP, 0);
+	STRCMP_EQUAL("$O;RSTVW#000;\r", s.c_str());
+}
+
 TEST(Encoder, RSTBW_REQ)
 {
 	std::string s;

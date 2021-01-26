@@ -161,6 +161,21 @@ public:
 
 	}
 
+	static std::string RSTVW_REQ(int error_code, std::vector<BaseType>& arg_list) {
+
+		(void)arg_list;  // We only support TX_COUNTER reset -- all other options are rejected beforehand
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::RSTVW_RESP, error_code);
+		}
+
+		// Only permitted variable to reset is TX_COUNTER
+		unsigned int zero = 0;
+		configuration_store->write_param(ParamID::TX_COUNTER, zero);
+
+		return DTEEncoder::encode(DTECommand::RSTVW_RESP, error_code);
+	}
+
 	static std::string RSTBW_REQ(int error_code) {
 
 		return DTEEncoder::encode(DTECommand::RSTBW_RESP, error_code);
@@ -348,6 +363,9 @@ public:
 		case DTECommand::SECUR_REQ:
 			resp = SECUR_REQ(error_code, arg_list);
 			if (!error_code) action = DTEAction::SECUR;
+			break;
+		case DTECommand::RSTVW_REQ:
+			resp = RSTVW_REQ(error_code, arg_list);
 			break;
 		case DTECommand::RSTBW_REQ:
 			resp = RSTBW_REQ(error_code);

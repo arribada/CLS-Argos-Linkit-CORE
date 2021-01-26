@@ -60,7 +60,7 @@ protected:
 	}
 
 	void serialize_config(ParamID param_id) override {
-		DEBUG_TRACE("serial_config(%u)", (unsigned)param_id);
+		DEBUG_TRACE("serialize_config(%u)", (unsigned)param_id);
 		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY);
 		if (f.seek((signed)param_id * BASE_TEXT_MAX_LENGTH) != (signed)param_id * BASE_TEXT_MAX_LENGTH ||
 			!serialize_config_entry(f, m_params.at((unsigned)param_id))) {
