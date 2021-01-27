@@ -118,10 +118,11 @@ public:
 		}
 	}
 
-	void run() {
+	bool run() {
 
 		// Run through our queue of tasks in order and run them
 		// As our queue is in priority order so will our run order
+		bool tasks_ran = false;
 
 		while (true)
 		{
@@ -132,14 +133,16 @@ public:
 			{
 				InterruptLock lock;
 				if (!m_tasks.size())
-					return;
+					return tasks_ran;
 
 				task = m_tasks.front();
 				m_tasks.pop_front();
 			}
 
-			if (task.m_func)
+			if (task.m_func) {
+				tasks_ran = true;
 				task.m_func();
+			}
 		}
 	}
 
@@ -186,6 +189,11 @@ public:
 		}
 	}
 	
+	bool is_any_task_scheduled()
+	{
+		return m_tasks.size();
+	}
+
 private:
 
 	std::list<Task> m_tasks;

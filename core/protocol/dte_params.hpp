@@ -43,6 +43,7 @@ static const BaseMap param_map[] = {
 	{ "UNDERWATER_EN", "UNP01", BaseEncoding::BOOLEAN, 0, 0, {}, true },
 	{ "DRY_TIME_BEFORE_TX", "UNP02", BaseEncoding::UINT, 1U, 1440U, {}, true },
 	{ "SAMPLING_UNDER_FREQ", "UNP03", BaseEncoding::UINT, 1U, 1440U, {}, true },
+	{ "SAMPLING_SURF_FREQ", "UNP04", BaseEncoding::UINT, 1U, 1440U, {}, true },
 	{ "LB_EN", "LBP01", BaseEncoding::BOOLEAN, 0, 0, {}, true },
 	{ "LB_TRESHOLD", "LBP02", BaseEncoding::UINT, 0U, 100U, {}, true },
 	{ "LB_ARGOS_POWER", "LBP03", BaseEncoding::ARGOSPOWER, 0, 0, { 0, 1, 2, 3 }, true },

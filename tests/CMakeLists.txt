@@ -100,6 +100,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c"
     "${ROOT_DIR}/core/util/haversine.cpp"
     "${ROOT_DIR}/core/scheduling/argos_scheduler.cpp"
+    "${ROOT_DIR}/core/hardware/sws.cpp"
     "${LINUX_DIR}/interrupt_lock.cpp"
     "${NRF_DIR}/core/hardware/nrf_timer.cpp"
     "src/timer_test.cpp"
@@ -115,8 +116,10 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/bch_test.cpp"
     "src/crc8_test.cpp"
     "src/previpass_test.cpp"
+    "src/sws_test.cpp"
     "src/main.cpp"
     "fakes/nrfx_rtc.c"
+    "mocks/mock_gpio.cpp"
 )
 
 set_source_files_properties(${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-switch-enum -Wno-switch")
