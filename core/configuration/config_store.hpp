@@ -72,7 +72,6 @@ protected:
 		/* UNDERWATER_EN */ (bool)false,
 		/* DRY_TIME_BEFORE_TX */ 1U,
 		/* SAMPLING_UNDER_FREQ */ 1U,
-		/* SAMPLING_SURF_FREQ */ 1U,
 		/* LB_EN */ (bool)false,
 		/* LB_TRESHOLD */ 0U,
 		/* LB_ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
