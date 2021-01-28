@@ -205,16 +205,16 @@ class ConfigurationState : public GenTracker
 
 	static void on_dte_connected() {
 		DEBUG_INFO("DTE Connected");
-			// Indicate DTE connection is made
-			blue_led->on();
+		// Indicate DTE connection is made
+		blue_led->on();
 	}
 
 	static void on_dte_disconnected() {
 		DEBUG_INFO("DTE Disconnected");
-			// After a DTE disconnection, re-evaluate if the configuration store
-			// is valid and notify all event listeners
-			system_scheduler->post_task_prio(notify_config_store_state);
-			blue_led->off();
+		// After a DTE disconnection, re-evaluate if the configuration store
+		// is valid and notify all event listeners
+		system_scheduler->post_task_prio(notify_config_store_state);
+		blue_led->off();
 	}
 
 	static void on_dte_received() {
