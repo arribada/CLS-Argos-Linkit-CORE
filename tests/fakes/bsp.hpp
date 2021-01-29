@@ -22,4 +22,17 @@ namespace BSP
     } RTC_InitTypeDefAndInst_t;
 
     extern const RTC_InitTypeDefAndInst_t RTC_Inits[RTC_TOTAL_NUMBER];
+
+    enum GPIO
+	{
+    	GPIO_SWITCH,
+		GPIO_TOTAL_NUMBER
+	};
+
+    typedef struct
+    {
+    	void *gpiote_in_config;
+    } GPIO_InitTypeDefAndInst_t;
+
+    extern const GPIO_InitTypeDefAndInst_t GPIO_Inits[GPIO_TOTAL_NUMBER];
 }

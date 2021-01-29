@@ -2,12 +2,17 @@
 #define __NRF_SWITCH_HPP_
 
 #include "switch.hpp"
+#include "scheduler.hpp"
 
 class NrfSwitchManager;
 
 class NrfSwitch : public Switch {
 private:
+	Scheduler::TaskHandle m_task_handle;
+
 	void process_event(bool state);
+	void update_state(bool state);
+
 public:
 	NrfSwitch(int pin, unsigned int hystersis_time_ms);
 	~NrfSwitch();

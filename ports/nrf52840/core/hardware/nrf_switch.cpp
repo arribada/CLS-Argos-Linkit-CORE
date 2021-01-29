@@ -1,16 +1,25 @@
 #include <functional>
 #include <map>
 
+#include "nrfx_gpiote.h"
 #include "switch.hpp"
 #include "nrf_switch.hpp"
-#include "nrfx_gpiote.h"
 #include "gpio.hpp"
 #include "bsp.hpp"
+#include "scheduler.hpp"
+#include "error.hpp"
+#include "debug.hpp"
 
+
+extern Scheduler *system_scheduler;
+
+// This class maps the pin number to an NrfSwitch object -- this is largely needed because
+// the Nordic GPIOTE driver callback does not have a user-defined context and only passes
+// back the pin number
 
 class NrfSwitchManager {
 private:
-	static std::map<int, NrfSwitch *> m_map;
+	static inline std::map<int, NrfSwitch *> m_map;
 
 public:
 	static void add(int pin, NrfSwitch *ref) {
@@ -25,6 +34,7 @@ public:
 	}
 };
 
+// Handle events from GPIOTE here and propagate them back to corresponding NrfSwitch object
 static void nrfx_gpiote_in_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
 	switch (action)  {
 	case NRF_GPIOTE_POLARITY_LOTOHI:
@@ -43,6 +53,7 @@ static void nrfx_gpiote_in_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polar
 }
 
 NrfSwitch::NrfSwitch(int pin, unsigned int hysteresis_time_ms) : Switch(pin, hysteresis_time_ms) {
+	// Initialise the library if it is not yet initialised
 	if (!nrfx_gpiote_is_init())
 		nrfx_gpiote_init();
 }
@@ -54,17 +65,33 @@ NrfSwitch::~NrfSwitch() {
 void NrfSwitch::start(std::function<void(bool)> func) {
 	Switch::start(func);
 	NrfSwitchManager::add(m_pin, this);
-	nrfx_gpiote_in_init(m_pin, &BSP::GPIO_Inits[m_pin].gpiote_in_config, nrfx_gpiote_in_event_handler);
+	if (NRFX_SUCCESS != nrfx_gpiote_in_init(m_pin, &BSP::GPIO_Inits[m_pin].gpiote_in_config, nrfx_gpiote_in_event_handler)) {
+		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
+	}
 	nrfx_gpiote_in_event_enable(m_pin, true);
 }
 
 void NrfSwitch::stop() {
-	Switch::stop();
+	system_scheduler->cancel_task(m_task_handle);
 	nrfx_gpiote_in_event_disable(m_pin);
 	nrfx_gpiote_in_uninit(m_pin);
 	NrfSwitchManager::remove(m_pin);
+	Switch::stop();
+}
+
+void NrfSwitch::update_state(bool state) {
+	DEBUG_TRACE("NrfSwitch::update_state: state=%u old=%u", state, m_current_state);
+	// Call state change handler if state has changed
+	if (state != m_current_state) {
+		m_current_state = state;
+		m_state_change_handler(state);
+	}
 }
 
 void NrfSwitch::process_event(bool state) {
-	// TODO
+	DEBUG_TRACE("NrfSwitch::process_event: state=%u hysteresis=%u", state, m_hysteresis_time_ms);
+	// Each time we get a new event we trigger the task to post it after the hysteresis time.
+	// If we receive another event, we cancel the previous task and start a new one.
+	system_scheduler->cancel_task(m_task_handle);
+	m_task_handle = system_scheduler->post_task_prio(std::bind(&NrfSwitch::update_state, this, state), Scheduler::DEFAULT_PRIORITY, m_hysteresis_time_ms);
 }
