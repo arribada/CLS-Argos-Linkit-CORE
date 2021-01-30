@@ -41,6 +41,11 @@ public:
 		return m_counter_value;
 	}
 
+	void set_counter(uint64_t t)
+	{
+		m_counter_value = t;
+	}
+
 	TimerHandle add_schedule(std::function<void()> const &task_func, uint64_t target_count) override
 	{
 		Schedule schedule;
@@ -124,6 +129,8 @@ private:
 			{
 				parent->m_counter_value++;
 
+				//std::cout << "m_counter_value=" << parent->m_counter_value << std::endl;
+
 				// Check the current schedule for any functions that are due to be called
 				while (true)
 				{
@@ -138,6 +145,8 @@ private:
 							break;
 						
 						schedule = parent->m_schedules.front();
+
+						//std::cout << "m_target_counter_value=" << schedule.m_target_counter_value << std::endl;
 
 						if (schedule.m_target_counter_value == parent->m_counter_value)
 						{

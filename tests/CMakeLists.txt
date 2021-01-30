@@ -101,6 +101,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/util/haversine.cpp"
     "${ROOT_DIR}/core/scheduling/argos_scheduler.cpp"
     "${ROOT_DIR}/core/hardware/sws.cpp"
+    "${ROOT_DIR}/core/sm/gentracker.cpp"
     "${LINUX_DIR}/interrupt_lock.cpp"
     "${NRF_DIR}/core/hardware/nrf_timer.cpp"
     "${NRF_DIR}/core/hardware/nrf_switch.cpp"

@@ -7,6 +7,7 @@
 #include <memory>
 #include <map>
 #include <list>
+#include <iostream>
 
 #include "interrupt_lock.hpp"
 #include "timer.hpp"
@@ -36,10 +37,10 @@ public:
 	
 	public:
 		TaskHandle() : m_parent(nullptr) {}
+		std::optional<unsigned int> m_id;
 
 	private:
 		Scheduler *m_parent;
-		std::optional<unsigned int> m_id;
 	};
 
 	// Used for queuing a static or free function as a task
@@ -84,6 +85,7 @@ public:
 	}
 
 	void cancel_task(TaskHandle &task) {
+
 		if (task.m_parent != this)
 			return; // This handle belongs to another scheduler
 
@@ -191,7 +193,7 @@ public:
 	
 	bool is_any_task_scheduled()
 	{
-		return m_tasks.size();
+		return m_tasks.size() + m_timer_schedules.size();
 	}
 
 private:

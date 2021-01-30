@@ -15,8 +15,8 @@
 #include "mock_logger.hpp"
 #include "mock_timer.hpp"
 #include "scheduler.hpp"
-
-
+#include "dte_handler.hpp"
+#include "linux_timer.hpp"
 
 #define BLOCK_COUNT   (256)
 #define BLOCK_SIZE    (64*1024)
@@ -53,11 +53,13 @@ TEST_GROUP(Sm)
 	FakeLed *fake_red_led;
 	FakeLed *fake_green_led;
 	FakeLed *fake_blue_led;
+	LinuxTimer *linux_timer;
 
 	void setup() {
 		MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
 		main_filesystem = new MockFileSystem;
-		system_timer = new MockTimer;
+		linux_timer = new LinuxTimer;
+		system_timer = linux_timer;
 		configuration_store = new MockConfigurationStore;
 		gps_scheduler = new MockGPSScheduler;
 		comms_scheduler = new MockCommsScheduler;
@@ -81,7 +83,7 @@ TEST_GROUP(Sm)
 
 	void teardown() {
 		delete main_filesystem;
-		delete system_timer;
+		delete linux_timer;
 		delete system_scheduler;
 		delete gps_scheduler;
 		delete comms_scheduler;
@@ -98,7 +100,6 @@ TEST_GROUP(Sm)
 
 TEST(Sm, CheckBootFileSystemMountOk)
 {
-	mock().expectOneCall("start").onObject(system_timer);
 	mock().expectOneCall("create").onObject(sensor_log);
 	mock().expectOneCall("create").onObject(system_log);
 	mock().expectOneCall("init").onObject(configuration_store);
@@ -109,7 +110,6 @@ TEST(Sm, CheckBootFileSystemMountOk)
 
 TEST(Sm, CheckBootFileSystemFirstMountFail)
 {
-	mock().expectOneCall("start").onObject(system_timer);
 	mock().expectOneCall("create").onObject(sensor_log);
 	mock().expectOneCall("create").onObject(system_log);
 	mock().expectOneCall("init").onObject(configuration_store);
@@ -141,127 +141,159 @@ TEST(Sm, CheckBootFileSystemFormatFailAndEnterErrorState)
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
 }
 
-TEST(Sm, CheckBootStateInvokesSchedulerToCheckConfigStore)
+TEST(Sm, CheckBootStateTransitionsToOffState)
 {
-	mock().expectOneCall("start").onObject(system_timer);
 	mock().expectOneCall("create").onObject(sensor_log);
 	mock().expectOneCall("create").onObject(system_log);
 	mock().expectOneCall("init").onObject(configuration_store);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
 	fsm_handle::start();
-	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 	CHECK_TRUE(fake_reed_switch->is_started());
-	CHECK_TRUE(fake_saltwater_switch->is_started());
+	CHECK_FALSE(fake_saltwater_switch->is_started());
+	CHECK_TRUE(fake_red_led->is_flashing());
+	CHECK_TRUE(fake_green_led->is_flashing());
+	CHECK_TRUE(fake_blue_led->is_flashing());
+	linux_timer->set_counter(5999); // RED LED should go off at after 6 seconds
+	while(!system_scheduler->run());
+	CHECK_FALSE(fake_red_led->is_flashing());
+	CHECK_FALSE(fake_red_led->get_state());
+	CHECK_FALSE(fake_green_led->is_flashing());
+	CHECK_FALSE(fake_green_led->get_state());
+	CHECK_FALSE(fake_blue_led->is_flashing());
+	CHECK_FALSE(fake_blue_led->get_state());
 }
 
-TEST(Sm, CheckBootTransitionsToOperationalWithValidConfig)
+TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigValid)
 {
+	mock().disable();
+	fsm_handle::start();
+	while(!system_scheduler->run());
+	linux_timer->set_counter(5999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+
+	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+
+	// Swipe gesture
+	fake_reed_switch->set_state(true);
+	fake_reed_switch->set_state(false);
+	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
+	CHECK_FALSE(fake_red_led->get_state());
+	CHECK_TRUE(fake_green_led->get_state());
+	CHECK_FALSE(fake_blue_led->get_state());
+
+	// After 120 seconds, transition to operational with green LED flashing
 	mock().expectOneCall("start").onObject(gps_scheduler);
 	mock().expectOneCall("start").onObject(comms_scheduler);
-	mock().disable();
-	fsm_handle::start();
-	mock().enable();
-	ConfigurationStatusEvent e;
-	e.is_valid = true;
-	fsm_handle::dispatch(e);
+	linux_timer->set_counter(125999);
+	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_TRUE(fake_green_led->is_flashing());
-}
+	CHECK_FALSE(fake_red_led->is_flashing());
+	CHECK_FALSE(fake_blue_led->is_flashing());
 
-TEST(Sm, CheckOperationalStateTransitionsToConfigState)
-{
-	mock().disable();
-	fsm_handle::start();
-	ConfigurationStatusEvent e;
-	e.is_valid = true;
-	fsm_handle::dispatch(e);
-	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
-	fake_reed_switch->set_state(true);
-	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
-	mock().enable();
+	// Green LED should go off
+	linux_timer->set_counter(130999);
+	while(!system_scheduler->run());
 	CHECK_FALSE(fake_green_led->is_flashing());
-	CHECK_TRUE(fake_blue_led->is_flashing());
 }
 
-TEST(Sm, CheckRemainInBootStateWithoutValidConfig)
+TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToErrorConfigInvalid)
 {
 	mock().disable();
 	fsm_handle::start();
+	while(!system_scheduler->run());
+	linux_timer->set_counter(5999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+
 	mock().enable();
-	ConfigurationStatusEvent e;
-	e.is_valid = false;
-	fsm_handle::dispatch(e);
-	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
+
+	// Swipe gesture, red led should go solid
+	fake_reed_switch->set_state(true);
+	fake_reed_switch->set_state(false);
+	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
+	CHECK_TRUE(fake_red_led->get_state());
+	CHECK_FALSE(fake_red_led->is_flashing());
+	CHECK_FALSE(fake_blue_led->is_flashing());
+
+	// After 120 seconds, transition to error with red LED flashing
+	linux_timer->set_counter(125999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
+	CHECK_TRUE(fake_red_led->is_flashing());
+
+	// Red LED should go off after 5 seconds and then transition to off state with red LED flashing once more
+	linux_timer->set_counter(130999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 }
 
-TEST(Sm, CheckBootEnterConfigStateOnReedSwitchActive)
+TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToConfigurationState)
 {
+	mock().disable();
+	fsm_handle::start();
+	while(!system_scheduler->run());
+	linux_timer->set_counter(5999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+
+	// Swipe gesture and hold for 3 seconds
+	fake_reed_switch->set_state(true);
+	linux_timer->set_counter(8999);
+	mock().enable();
 	mock().expectOneCall("start").onObject(dte_service).ignoreOtherParameters();
 	mock().expectOneCall("start").onObject(ota_update_service).ignoreOtherParameters();
-	mock().disable();
-	fsm_handle::start();
-	mock().enable();
-
-	// Inject the event directly
-	ReedSwitchEvent e;
-	e.state = true;
-	fsm_handle::dispatch(e);
-	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
-	CHECK_TRUE(fake_blue_led->is_flashing());
-
-	// Inject the event from fake switch notification
-	mock().disable();
-	fsm_handle::start();
-	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
-	fake_reed_switch->set_state(true);
+	while(!system_scheduler->run());
+	fake_reed_switch->set_state(false);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 	CHECK_TRUE(fake_blue_led->is_flashing());
 }
 
-TEST(Sm, CheckSaltwaterSwitchNotificationsDuringOperationalState)
+TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
 {
 	mock().disable();
 	fsm_handle::start();
+	while(!system_scheduler->run());
+	linux_timer->set_counter(5999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 
-	{
-		ConfigurationStatusEvent e;
-		e.is_valid = true;
-		fsm_handle::dispatch(e);
-	}
+	// Swipe gesture and hold for 3 seconds
+	fake_reed_switch->set_state(true);
+	linux_timer->set_counter(8999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 
-	mock().enable();
+	// Continue to hold for 7 more seconds
+	linux_timer->set_counter(15999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+	fake_reed_switch->set_state(false);
+}
 
-	// Inject events directly
+TEST(Sm, CheckBLEInactivityTimeout)
+{
+	mock().disable();
+	fsm_handle::start();
+	while(!system_scheduler->run());
+	linux_timer->set_counter(5999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", true);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(gps_scheduler).withParameter("state", true);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(configuration_store).withParameter("state", true);
+	// Swipe gesture and hold for 3 seconds
+	fake_reed_switch->set_state(true);
+	linux_timer->set_counter(8999);
+	while(!system_scheduler->run());
+	fake_reed_switch->set_state(false);
+	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 
-	{
-		SaltwaterSwitchEvent e;
-		e.state = true;
-		fsm_handle::dispatch(e);
-	}
-
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", false);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(gps_scheduler).withParameter("state", false);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(configuration_store).withParameter("state", false);
-
-	{
-		SaltwaterSwitchEvent e;
-		e.state = false;
-		fsm_handle::dispatch(e);
-	}
-
-	// Inject events from fake switch
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", true);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(gps_scheduler).withParameter("state", true);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(configuration_store).withParameter("state", true);
-	fake_saltwater_switch->set_state(true);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", false);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(gps_scheduler).withParameter("state", false);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(configuration_store).withParameter("state", false);
-	fake_saltwater_switch->set_state(false);
+	// Wait until BLE inactivity timeout
+	linux_timer->set_counter(368999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 }

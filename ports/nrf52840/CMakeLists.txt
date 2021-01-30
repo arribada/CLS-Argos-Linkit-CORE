@@ -146,6 +146,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_spim.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_rtc.c
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
+    ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/util/haversine.cpp
     ${PROJ_DIR}/bsp/horizon_v4.0/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash_file_system.cpp
