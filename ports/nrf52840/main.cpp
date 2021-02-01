@@ -31,7 +31,7 @@ ConfigurationStore *configuration_store;
 BLEService *dte_service;
 BLEService *ota_update_service;
 CommsScheduler *comms_scheduler;
-GPSScheduler *gps_scheduler;
+LocationScheduler *location_scheduler;
 MemoryAccess *memory_access;
 Logger *sensor_log;
 Logger *system_log;
@@ -125,8 +125,8 @@ int main()
 	ArticTransceiver artic_transceiver;
 	comms_scheduler = &artic_transceiver;
 
-	M8QGnss m8q_gnss;
-	gps_scheduler = &m8q_gnss;
+	M8QReceiver m8q_gnss;
+	location_scheduler = &m8q_gnss;
 
 	// This will initialise the FSM
 	GenTracker::start();

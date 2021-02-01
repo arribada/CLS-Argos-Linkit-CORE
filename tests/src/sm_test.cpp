@@ -11,7 +11,7 @@
 #include "mock_comms.hpp"
 #include "mock_config_store.hpp"
 #include "mock_fs.hpp"
-#include "mock_gps.hpp"
+#include "mock_location.hpp"
 #include "mock_logger.hpp"
 #include "mock_timer.hpp"
 #include "scheduler.hpp"
@@ -26,7 +26,7 @@
 extern FileSystem *main_filesystem ;
 extern Timer *system_timer;
 extern ConfigurationStore *configuration_store;
-extern GPSScheduler *gps_scheduler;
+extern LocationScheduler *location_scheduler;
 extern CommsScheduler *comms_scheduler;
 extern DTEHandler *dte_handler;
 extern Scheduler *system_scheduler;
@@ -61,7 +61,7 @@ TEST_GROUP(Sm)
 		linux_timer = new LinuxTimer;
 		system_timer = linux_timer;
 		configuration_store = new MockConfigurationStore;
-		gps_scheduler = new MockGPSScheduler;
+		location_scheduler = new MockLocationScheduler;
 		comms_scheduler = new MockCommsScheduler;
 		dte_handler = new DTEHandler;
 		system_scheduler = new Scheduler(system_timer);
@@ -85,7 +85,7 @@ TEST_GROUP(Sm)
 		delete main_filesystem;
 		delete linux_timer;
 		delete system_scheduler;
-		delete gps_scheduler;
+		delete location_scheduler;
 		delete comms_scheduler;
 		delete sensor_log;
 		delete system_log;
@@ -189,7 +189,7 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigVal
 	CHECK_FALSE(fake_blue_led->get_state());
 
 	// After 120 seconds, transition to operational with green LED flashing
-	mock().expectOneCall("start").onObject(gps_scheduler);
+	mock().expectOneCall("start").onObject(location_scheduler);
 	mock().expectOneCall("start").onObject(comms_scheduler);
 	linux_timer->set_counter(125999);
 	while(!system_scheduler->run());

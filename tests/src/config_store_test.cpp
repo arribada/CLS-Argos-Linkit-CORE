@@ -738,12 +738,12 @@ TEST(ConfigStore, RetrieveGPSConfigDefaultMode)
 	unsigned int hdop_filter_threshold = 10;
 	bool hdop_filter_enable = true;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440;
+	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440_MINS;
 	unsigned int acquisition_timeout = 10;
 	bool lb_en = false;
 	unsigned int lb_hdop_filter_threshold = 5;
 	bool lb_gnss_en = false;
-	BaseAqPeriod lb_dloc_arg_nom = BaseAqPeriod::AQPERIOD_720;
+	BaseAqPeriod lb_dloc_arg_nom = BaseAqPeriod::AQPERIOD_720_MINS;
 	unsigned int lb_acquisition_timeout = 30;
 
 	store->write_param(ParamID::GNSS_HDOPFILT_THR, hdop_filter_threshold);
@@ -777,12 +777,12 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	unsigned int hdop_filter_threshold = 10;
 	bool hdop_filter_enable = true;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440;
+	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440_MINS;
 	unsigned int acquisition_timeout = 10;
 	bool lb_en = true;
 	unsigned int lb_hdop_filter_threshold = 5;
 	bool lb_gnss_en = false;
-	BaseAqPeriod lb_dloc_arg_nom = BaseAqPeriod::AQPERIOD_720;
+	BaseAqPeriod lb_dloc_arg_nom = BaseAqPeriod::AQPERIOD_720_MINS;
 	unsigned int lb_acquisition_timeout = 30;
 	unsigned int lb_thresh = 10;
 
@@ -1182,7 +1182,7 @@ TEST(ConfigStore, RetrieveGPSConfigZoneExclusionMode)
 	unsigned int hdop_filter_threshold = 10;
 	bool hdop_filter_enable = true;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440;
+	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440_MINS;
 	unsigned int acquisition_timeout = 10;
 	bool lb_en = false;
 

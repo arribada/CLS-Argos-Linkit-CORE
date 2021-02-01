@@ -22,7 +22,7 @@ FileSystem *main_filesystem ;
 ConsoleLog *console_log = new ConsoleLog;
 Timer *system_timer;
 ConfigurationStore *configuration_store;
-GPSScheduler *gps_scheduler;
+LocationScheduler *location_scheduler;
 CommsScheduler *comms_scheduler;
 DTEHandler *dte_handler;
 Scheduler *system_scheduler;

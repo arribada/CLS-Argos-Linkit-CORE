@@ -2,7 +2,7 @@
 
 #include "gps_scheduler.hpp"
 
-class M8QGnss : public GPSScheduler {
+class M8QReceiver : public GPSScheduler {
 private:
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	void power_off() override;

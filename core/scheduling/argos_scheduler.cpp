@@ -554,7 +554,7 @@ void ArgosScheduler::periodic_algorithm() {
 	m_msg_index++;
 }
 
-void ArgosScheduler::start() {
+void ArgosScheduler::start()  {
 	m_is_running = true;
 	m_msg_index = 0;
 	m_next_prepass = INVALID_SCHEDULE;

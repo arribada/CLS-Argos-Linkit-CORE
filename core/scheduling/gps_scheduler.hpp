@@ -3,14 +3,15 @@
 
 #include <functional>
 #include "config_store.hpp"
+#include "location_scheduler.hpp"
 #include "scheduler.hpp"
 
-class GPSScheduler {
+class GPSScheduler : public LocationScheduler {
 public:
 	virtual ~GPSScheduler() {}
-	void start(std::function<void()> data_notification_callback = nullptr);
-	void stop();
-	void notify_saltwater_switch_state(bool state);
+	void start(std::function<void()> data_notification_callback = nullptr) override;
+	void stop() override;
+	void notify_saltwater_switch_state(bool state) override;
 
 protected:
 	struct GNSSData {

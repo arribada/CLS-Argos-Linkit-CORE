@@ -1,7 +1,7 @@
 #include "gentracker.hpp"
 #include "logger.hpp"
 #include "config_store.hpp"
-#include "gps_scheduler.hpp"
+#include "location_scheduler.hpp"
 #include "comms_scheduler.hpp"
 #include "scheduler.hpp"
 #include "ota_update_service.hpp"
@@ -19,7 +19,7 @@ extern FileSystem *main_filesystem;
 extern Scheduler *system_scheduler;
 extern Timer *system_timer;
 extern CommsScheduler *comms_scheduler;
-extern GPSScheduler *gps_scheduler;
+extern LocationScheduler *location_scheduler;
 extern Logger *sensor_log;
 extern Logger *system_log;
 extern ConfigurationStore *configuration_store;
@@ -164,7 +164,7 @@ void OperationalState::react(SaltwaterSwitchEvent const &event)
 {
 	DEBUG_TRACE("react: SaltwaterSwitchEvent");
 	configuration_store->notify_saltwater_switch_state(event.state);
-	gps_scheduler->notify_saltwater_switch_state(event.state);
+	location_scheduler->notify_saltwater_switch_state(event.state);
 	comms_scheduler->notify_saltwater_switch_state(event.state);
 };
 
@@ -175,15 +175,15 @@ void OperationalState::entry() {
 	// red_led->flash();
 	system_scheduler->post_task_prio([](){ green_led->off(); red_led->off(); }, Scheduler::DEFAULT_PRIORITY, LED_INDICATION_PERIOD_MS);
 	saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
-	gps_scheduler->start();
 	comms_scheduler->start();
+	location_scheduler->start([]() { comms_scheduler->notify_sensor_log_update(); });
 }
 
 void OperationalState::exit() {
 	DEBUG_TRACE("exit: OperationalState");
 	green_led->off();
 	red_led->off();
-	gps_scheduler->stop();
+	location_scheduler->stop();
 	comms_scheduler->stop();
 	saltwater_switch->stop();
 }
