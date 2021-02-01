@@ -24,7 +24,7 @@
 #include "gpio.hpp"
 #include "artic.hpp"
 #include "nrf_led.hpp"
-
+#include "fake_battery_mon.hpp"
 
 FileSystem *main_filesystem;
 
@@ -46,6 +46,7 @@ Switch *saltwater_switch;
 Switch *reed_switch;
 DTEHandler *dte_handler;
 RTC *rtc;
+BatteryMonitor *battery_monitor;
 
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
@@ -69,6 +70,10 @@ int main()
 	console_log = &console_console_log;
 
     nrf_log_redirect_init();
+
+    // Fake battery monitor
+    FakeBatteryMonitor fake_battery_monitor;
+    battery_monitor = &fake_battery_monitor;
 
 	NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_SWS, 50);
 	reed_switch = &nrf_reed_switch;
