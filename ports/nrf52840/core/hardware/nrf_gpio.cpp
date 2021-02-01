@@ -23,6 +23,11 @@ void GPIOPins::clear(uint32_t pin)
 	nrf_gpio_pin_clear(pin);
 }
 
+void GPIOPins::toggle(uint32_t pin)
+{
+	nrf_gpio_pin_toggle(pin);
+}
+
 uint32_t GPIOPins::value(uint32_t pin)
 {
 	return nrf_gpio_pin_read(pin);

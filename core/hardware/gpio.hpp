@@ -8,6 +8,7 @@ public:
 	static void initialise();
 	static void set(uint32_t pin);
 	static void clear(uint32_t pin);
+	static void toggle(uint32_t pin);
 	static uint32_t value(uint32_t pin);
 };
 

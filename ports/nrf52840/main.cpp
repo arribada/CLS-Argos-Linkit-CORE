@@ -15,14 +15,15 @@
 #include "bsp.hpp"
 #include "gentracker.hpp"
 #include "nrf_timer.hpp"
-#include "fake_switch.hpp"
-#include "fake_led.hpp"
+#include "nrf_switch.hpp"
+#include "sws.hpp"
 #include "ota_update_service.hpp"
 #include "fake_gps_scheduler.hpp"
 #include "fake_comms_scheduler.hpp"
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
 #include "artic.hpp"
+#include "nrf_led.hpp"
 
 
 FileSystem *main_filesystem;
@@ -69,17 +70,16 @@ int main()
 
     nrf_log_redirect_init();
 
-	// Set up fakes
-	FakeSwitch fake_reed_switch(0, 0);
-	reed_switch = &fake_reed_switch;
-	FakeSwitch fake_saltwater_switch(0, 0);
-	saltwater_switch = &fake_saltwater_switch;
-	FakeLed fake_red_led("Red");
-	red_led = &fake_red_led;
-	FakeLed fake_green_led("Green");
-	green_led = &fake_green_led;
-	FakeLed fake_blue_led("Blue");
-	blue_led = &fake_blue_led;
+	NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_SWS, 50);
+	reed_switch = &nrf_reed_switch;
+	SWS nrf_saltwater_switch;
+	saltwater_switch = &nrf_saltwater_switch;
+	NrfLed nrf_red_led("Red", BSP::GPIO::GPIO_LED_RED);
+	red_led = &nrf_red_led;
+	NrfLed nrf_green_led("Green", BSP::GPIO::GPIO_LED_GREEN);
+	green_led = &nrf_green_led;
+	NrfLed nrf_blue_led("Blue", BSP::GPIO::GPIO_LED_BLUE);
+	blue_led = &nrf_blue_led;
 
     BleInterface::get_instance().init();
 

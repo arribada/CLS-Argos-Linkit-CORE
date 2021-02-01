@@ -145,6 +145,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_spim.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_rtc.c
+    ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_gpiote.c
+    ${CORE_DIR}/hardware/sws.cpp
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/util/haversine.cpp
