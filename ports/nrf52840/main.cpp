@@ -18,11 +18,11 @@
 #include "fake_switch.hpp"
 #include "fake_led.hpp"
 #include "ota_update_service.hpp"
-#include "fake_gps_scheduler.hpp"
 #include "fake_comms_scheduler.hpp"
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
 #include "artic.hpp"
+#include "m8q.hpp"
 
 
 FileSystem *main_filesystem;
@@ -125,8 +125,8 @@ int main()
 	ArticTransceiver artic_transceiver;
 	comms_scheduler = &artic_transceiver;
 
-	FakeGPSScheduler fake_gps_scheduler;
-	gps_scheduler = &fake_gps_scheduler;
+	M8QGnss m8q_gnss;
+	gps_scheduler = &m8q_gnss;
 
 	// This will initialise the FSM
 	GenTracker::start();

@@ -101,6 +101,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJ_DIR}/core/filesystem
     ${PROJ_DIR}/core/scheduling
     ${PROJ_DIR}/core/hardware/artic_r2
+    ${PROJ_DIR}/core/hardware/m8q
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
@@ -147,10 +148,12 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_rtc.c
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
+    ${CORE_DIR}/scheduling/gps_scheduler.cpp
     ${CORE_DIR}/util/haversine.cpp
     ${PROJ_DIR}/bsp/horizon_v4.0/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash_file_system.cpp
     ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
+    ${PROJ_DIR}/core/hardware/m8q/m8q.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp
     ${PROJ_DIR}/core/hardware/nrf_spim.cpp
@@ -158,7 +161,6 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/nrf_switch.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
     ${PROJ_DIR}/core/interface/fake_ota_update_service.cpp
-    ${PROJ_DIR}/core/scheduling/fake_gps_scheduler.cpp
     ${PROJ_DIR}/core/scheduling/interrupt_lock.cpp
     ${PROJ_DIR}/drivers/nrf_log_redirect/nrf_log_redirect.c
     ${PROJ_DIR}/main.cpp

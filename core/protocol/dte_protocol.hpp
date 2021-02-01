@@ -923,21 +923,21 @@ private:
 
 	static BaseAqPeriod decode_acquisition_period(std::string& s) {
 		if (s == "1") {
-			return BaseAqPeriod::AQPERIOD_10;
+			return BaseAqPeriod::AQPERIOD_10_MINS;
 		} else if (s == "2") {
-			return BaseAqPeriod::AQPERIOD_15;
+			return BaseAqPeriod::AQPERIOD_15_MINS;
 		} else if (s == "3") {
-			return BaseAqPeriod::AQPERIOD_30;
+			return BaseAqPeriod::AQPERIOD_30_MINS;
 		} else if (s == "4") {
-			return BaseAqPeriod::AQPERIOD_60;
+			return BaseAqPeriod::AQPERIOD_60_MINS;
 		} else if (s == "5") {
-			return BaseAqPeriod::AQPERIOD_120;
+			return BaseAqPeriod::AQPERIOD_120_MINS;
 		} else if (s == "6") {
-			return BaseAqPeriod::AQPERIOD_360;
+			return BaseAqPeriod::AQPERIOD_360_MINS;
 		} else if (s == "7") {
-			return BaseAqPeriod::AQPERIOD_720;
+			return BaseAqPeriod::AQPERIOD_720_MINS;
 		} else if (s == "8") {
-			return BaseAqPeriod::AQPERIOD_1440;
+			return BaseAqPeriod::AQPERIOD_1440_MINS;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
