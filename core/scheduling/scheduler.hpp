@@ -37,10 +37,10 @@ public:
 	
 	public:
 		TaskHandle() : m_parent(nullptr) {}
-		std::optional<unsigned int> m_id;
 
 	private:
 		Scheduler *m_parent;
+		std::optional<unsigned int> m_id;
 	};
 
 	// Used for queuing a static or free function as a task

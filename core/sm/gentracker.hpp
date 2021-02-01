@@ -42,7 +42,7 @@ public:
 class OffState : public GenTracker
 {
 private:
-	static inline const unsigned int OFF_LED_PERIOD_MS = 6000;
+	static inline const unsigned int OFF_LED_PERIOD_MS = 5000;
 
 public:
 	void entry() override;

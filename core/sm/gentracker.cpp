@@ -13,6 +13,7 @@
 #include "debug.hpp"
 #include "switch.hpp"
 #include "led.hpp"
+#include "battery.hpp"
 
 // These contexts must be created before the FSM is initialised
 extern FileSystem *main_filesystem;
@@ -31,6 +32,7 @@ extern Switch *reed_switch;
 extern Led *red_led;
 extern Led *green_led;
 extern Led *blue_led;
+extern BatteryMonitor *battery_monitor;
 
 
 void GenTracker::react(tinyfsm::Event const &) { }
@@ -43,7 +45,6 @@ void GenTracker::react(ReedSwitchEvent const &event)
 		m_reed_trigger_start_time = system_timer->get_counter();
 		m_task_trigger_config_state = system_scheduler->post_task_prio([this](){ transit<ConfigurationState>(); }, Scheduler::DEFAULT_PRIORITY, TRANSIT_CONFIG_HOLD_TIME_MS);
 		m_task_trigger_off_state = system_scheduler->post_task_prio([this](){ transit<OffState>(); }, Scheduler::DEFAULT_PRIORITY, TRANSIT_OFF_HOLD_TIME_MS);
-		DEBUG_TRACE("m_task_trigger_config_state: %u m_task_trigger_off_state: %u", *m_task_trigger_config_state.m_id, *m_task_trigger_off_state.m_id);
 	} else {
 		// Cancel any pending hold gestures
 		system_scheduler->cancel_task(m_task_trigger_config_state);
@@ -75,6 +76,9 @@ void BootState::entry() {
 
 	DEBUG_TRACE("entry: BootState");
 
+	// Ensure the system timer is started to allow scheduling to work
+	system_timer->start();
+
 	// If we can't mount the filesystem then try to format it first and retry
 	DEBUG_TRACE("mount filesystem");
 	if (main_filesystem->mount() < 0)
@@ -88,11 +92,11 @@ void BootState::entry() {
 		}
 	}
 
-	// Ensure the system timer is started to allow scheduling to work
-	system_timer->start();
-
 	// Start reed switch monitoring and dispatch events to state machine
 	reed_switch->start([](bool s) { ReedSwitchEvent e; e.state = s; dispatch(e); });
+
+	// Start battery monitor
+	battery_monitor->start();
 
 	// Turn on all LEDs to indicate boot state
 	red_led->on();
@@ -128,6 +132,7 @@ void BootState::exit() {
 
 void OffState::entry() {
 	DEBUG_TRACE("entry: OffState");
+	battery_monitor->stop();
 	red_led->flash();
 	green_led->flash();
 	blue_led->flash();
@@ -139,14 +144,15 @@ void OffState::exit() {
 	red_led->off();
 	green_led->off();
 	blue_led->off();
+	battery_monitor->start();
 }
 
 void IdleState::entry() {
 	DEBUG_TRACE("entry: IdleState");
 	if (configuration_store->is_valid()) {
 		green_led->on();
-		// TODO: check battery low and set red LED on if battery is low
-		// red_led->on();
+		if (configuration_store->is_battery_level_low())
+			red_led->on();
 		m_idle_state_task = system_scheduler->post_task_prio([this](){ transit<OperationalState>(); }, Scheduler::DEFAULT_PRIORITY, IDLE_PERIOD_MS);
 	} else {
 		red_led->on();
@@ -171,8 +177,8 @@ void OperationalState::react(SaltwaterSwitchEvent const &event)
 void OperationalState::entry() {
 	DEBUG_TRACE("entry: OperationalState");
 	green_led->flash();
-	// TODO: check battery low and set red LED on if battery is low
-	// red_led->flash();
+	if (configuration_store->is_battery_level_low())
+		red_led->flash();
 	system_scheduler->post_task_prio([](){ green_led->off(); red_led->off(); }, Scheduler::DEFAULT_PRIORITY, LED_INDICATION_PERIOD_MS);
 	saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
 	gps_scheduler->start();

@@ -1,6 +1,7 @@
 #include "dte_handler.hpp"
 #include "config_store_fs.hpp"
 #include "fake_memory_access.hpp"
+#include "fake_battery_mon.hpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
@@ -19,7 +20,7 @@ extern ConfigurationStore *configuration_store;
 extern MemoryAccess *memory_access;
 extern Logger *sensor_log;
 extern Logger *system_log;
-
+extern BatteryMonitor *battery_monitor;
 
 TEST_GROUP(DTEHandler)
 {
@@ -29,6 +30,7 @@ TEST_GROUP(DTEHandler)
 	MockLog *mock_system_log;
 	MockLog *mock_sensor_log;
 	DTEHandler *dte_handler;
+	FakeBatteryMonitor *fake_battery_monitor;
 
 	void setup() {
 		ram_filesystem = new LFSRamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
@@ -45,6 +47,10 @@ TEST_GROUP(DTEHandler)
 		mock_sensor_log = new MockLog;
 		sensor_log = mock_sensor_log;
 		dte_handler = new DTEHandler();
+		fake_battery_monitor = new FakeBatteryMonitor();
+		battery_monitor = fake_battery_monitor;
+		fake_battery_monitor->m_level = 0U;
+		fake_battery_monitor->m_voltage = 0U;
 	}
 
 	void teardown() {
@@ -52,6 +58,7 @@ TEST_GROUP(DTEHandler)
 		delete mock_sensor_log;
 		delete mock_system_log;
 		delete fake_memory_access;
+		delete fake_battery_monitor;
 		delete store;
 		ram_filesystem->umount();
 		delete ram_filesystem;

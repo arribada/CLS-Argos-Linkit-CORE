@@ -12,6 +12,7 @@
 #include "switch.hpp"
 #include "memory_access.hpp"
 #include "rtc.hpp"
+#include "battery.hpp"
 
 #include "CppUTest/CommandLineTestRunner.h"
 #include "CppUTest/TestRegistry.h"
@@ -37,6 +38,7 @@ Led *green_led;
 Led *blue_led;
 MemoryAccess *memory_access;
 RTC *rtc;
+BatteryMonitor *battery_monitor;
 
 MockSupportPlugin mockPlugin;
 

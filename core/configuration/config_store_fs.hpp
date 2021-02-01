@@ -5,6 +5,9 @@
 #include "config_store.hpp"
 #include "filesystem.hpp"
 #include "debug.hpp"
+#include "battery.hpp"
+
+extern BatteryMonitor *battery_monitor;
 
 class LFSConfigurationStore : public ConfigurationStore {
 
@@ -109,6 +112,11 @@ protected:
 		write_zone((BaseZone&)default_zone);
 	}
 
+	void update_battery_level() {
+		m_battery_level = battery_monitor->get_level();
+		m_battery_voltage = battery_monitor->get_voltage();
+	}
+
 private:
 	FileSystem &m_filesystem;
 
@@ -180,6 +188,14 @@ public:
 		m_pass_predict = value;
 		serialize_pass_predict();
 	}
+
+	bool is_battery_level_low() {
+		auto lb_en = read_param<bool>(ParamID::LB_EN);
+		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
+		update_battery_level();
+		return (lb_en && m_battery_level <= lb_threshold);
+	}
+
 };
 
 #endif // __CONFIG_STORE_FS_HPP_
