@@ -165,8 +165,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    DEBUG
-    DEBUG_ENABLE
+    $<$<CONFIG:DEBUG>:DEBUG>
+    $<$<CONFIG:DEBUG>:DEBUG_ENABLE>
     BOARD_PCA10059
     CONFIG_GPIO_AS_PINRESET
     CONFIG_NFCT_PINS_AS_GPIOS
@@ -225,6 +225,9 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 
     # Always output coloured text from GCC
     -fdiagnostics-color=always
+
+    # Optimise for size for the DEBUG build
+    $<$<CONFIG:DEBUG>:-Os>
 )
 
 set_source_files_properties(${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-switch-enum -Wno-switch")

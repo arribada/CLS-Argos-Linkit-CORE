@@ -364,6 +364,7 @@ private:
 				EXTRACT_BITS(dl_status, data, pos, 1);
 				EXTRACT_BITS(ul_status, data, pos, 3);
 			}
+			(void)a_dcs;
 			DEBUG_TRACE("allcast_constellation_status_decode: sat=%u hex_id=%01x a_dcs=%01x dl_status=%01x ul_status=%01x", i,
 						hex_id, a_dcs, dl_status, ul_status);
 			int record_index = find_prepass_record_by_hex_id(hex_id, pass_predict);
@@ -484,6 +485,7 @@ private:
 
 		uint16_t fcs;
 		EXTRACT_BITS(fcs, data, pos, 16);
+		(void)fcs;
 		DEBUG_TRACE("allcast_packet_decode: fcs: %04x", fcs);
 	}
 public:

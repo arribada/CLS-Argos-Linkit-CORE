@@ -281,8 +281,9 @@ void ArticTransceiver::print_status(void)
 
     for (int i = 0; i < TOTAL_NUMBER_STATUS_FLAG; ++i)
     {
-        if (status & (1 << i))
+        if (status & (1 << i)) {
             DEBUG_TRACE("%s", (char *)status_string[i]);
+        }
     }
 }
 
