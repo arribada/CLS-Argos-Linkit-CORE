@@ -106,6 +106,9 @@ TEST(Sm, CheckBootFileSystemMountOk)
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
+	CHECK_TRUE(fake_red_led->get_state());
+	CHECK_TRUE(fake_green_led->get_state());
+	CHECK_TRUE(fake_blue_led->get_state());
 }
 
 TEST(Sm, CheckBootFileSystemFirstMountFail)

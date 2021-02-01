@@ -36,6 +36,7 @@ class BootState : public GenTracker
 {
 public:
 	void entry() override;
+	void exit() override;
 };
 
 class OffState : public GenTracker

@@ -94,10 +94,10 @@ void BootState::entry() {
 	// Start reed switch monitoring and dispatch events to state machine
 	reed_switch->start([](bool s) { ReedSwitchEvent e; e.state = s; dispatch(e); });
 
-	// Turn off all LEDs
-	red_led->off();
-	green_led->off();
-	blue_led->off();
+	// Turn on all LEDs to indicate boot state
+	red_led->on();
+	green_led->on();
+	blue_led->on();
 
 	try {
 		// The underlying classes will create the files on the filesystem if they do not
@@ -106,10 +106,24 @@ void BootState::entry() {
 		system_log->create();
 		configuration_store->init();
 		// Transition immediately to OFF state after initialisation
-		system_scheduler->post_task_prio([this](){ transit<OffState>(); });
+		system_scheduler->post_task_prio([this](){
+			transit<OffState>();
+		},
+		Scheduler::DEFAULT_PRIORITY,
+		1000);
 	} catch (int e) {
 		system_scheduler->post_task_prio(notify_bad_filesystem_error);
 	}
+}
+
+void BootState::exit() {
+
+	DEBUG_TRACE("exit: BootState");
+
+	// Turn off all LEDs to indicate exit from boot state
+	red_led->off();
+	green_led->off();
+	blue_led->off();
 }
 
 void OffState::entry() {
