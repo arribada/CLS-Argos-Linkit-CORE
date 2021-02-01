@@ -196,7 +196,7 @@ void ArgosScheduler::process_schedule() {
 
 void ArgosScheduler::pass_prediction_algorithm() {
 	unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
-	unsigned int index;
+	unsigned int index = 0;
 	ArgosPacket packet;
 
 	DEBUG_TRACE("ArgosScheduler::pass_prediction_algorithm: m_msg_index=%u max_index=%u", m_msg_index, max_index);

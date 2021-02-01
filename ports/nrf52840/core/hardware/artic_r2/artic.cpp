@@ -370,8 +370,8 @@ void ArticTransceiver::send_fw_files(void)
 
 	for (uint8_t mem_sel = 0; mem_sel < NUM_FIRMWARE_FILES_ARTIC; mem_sel++)
     {
-        uint32_t size;
-        uint8_t length_transfer;
+        uint32_t size = 0;
+        uint8_t length_transfer = 0;
         uint8_t rx_buffer[4];
         uint32_t start_address = 0;
         uint8_t write_buffer[MAX_BURST];
@@ -470,7 +470,7 @@ void ArticTransceiver::program_firmware(void)
     int retries = 3;
     do
     {
-        uint32_t artic_response;
+        uint32_t artic_response = 0;
         nrf_delay_ms(SAT_ARTIC_DELAY_BOOT);
 
         try {
