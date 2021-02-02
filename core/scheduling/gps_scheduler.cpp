@@ -12,30 +12,6 @@ extern RTC *rtc;
 #define MS_PER_SEC  (1000)
 #define SEC_PER_MIN (60)
 
-/*
-enum class BaseAqPeriod {
-	AQPERIOD_10 = 1,
-	AQPERIOD_15,
-	AQPERIOD_30,
-	AQPERIOD_60,
-	AQPERIOD_120,
-	AQPERIOD_360,
-	AQPERIOD_720,
-	AQPERIOD_1440
-};
-*/
-
-/*
-struct GNSSConfig {
-	bool enable;
-	bool hdop_filter_enable;
-	unsigned int hdop_filter_threshold;
-	unsigned int acquisition_timeout;
-	BaseAqPeriod dloc_arg_nom;
-	bool underwater_en;
-};
-*/
-
 void GPSScheduler::start(std::function<void()> data_notification_callback)
 {
     configuration_store->get_gnss_configuration(m_gnss_config);
@@ -53,7 +29,7 @@ void GPSScheduler::stop()
 
 void GPSScheduler::notify_saltwater_switch_state(bool state)
 {
-    // Unused
+    (void) state; // Unused
 }
 
 void GPSScheduler::reschedule()

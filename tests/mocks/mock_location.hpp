@@ -6,17 +6,17 @@
 
 class MockLocationScheduler : public LocationScheduler {
 public:
-	void start(std::function<void()> data_notification_callback = nullptr) {
+	void start(std::function<void()> data_notification_callback = nullptr) override {
 
 		// Install a comparator for checking the equality of std::functions
 		mock().installComparator("std::function<void()>", m_comparator);
 
 		mock().actualCall("start").onObject(this).withParameterOfType("std::function<void()>", "data_notification_callback", &data_notification_callback);
 	}
-	void stop() {
+	void stop() override {
 		mock().actualCall("stop").onObject(this);
 	}
-	void notify_saltwater_switch_state(bool state) {
+	void notify_saltwater_switch_state(bool state) override {
 		DEBUG_TRACE("MockGPSScheduler: notify_saltwater_switch_state");
 		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
 	}

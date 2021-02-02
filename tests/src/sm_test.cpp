@@ -189,7 +189,7 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigVal
 	CHECK_FALSE(fake_blue_led->get_state());
 
 	// After 120 seconds, transition to operational with green LED flashing
-	mock().expectOneCall("start").onObject(location_scheduler);
+	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
 	mock().expectOneCall("start").onObject(comms_scheduler);
 	linux_timer->set_counter(125999);
 	while(!system_scheduler->run());

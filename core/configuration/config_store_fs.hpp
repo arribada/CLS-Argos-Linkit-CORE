@@ -113,7 +113,7 @@ private:
 	FileSystem &m_filesystem;
 
 public:
-	LFSConfigurationStore(FileSystem &filesystem) : m_filesystem(filesystem) {}
+	LFSConfigurationStore(FileSystem &filesystem) : m_is_pass_predict_valid(false), m_is_zone_valid(false), m_is_config_valid(false), m_filesystem(filesystem) {}
 
 	void init() {
 		m_is_zone_valid = false;
