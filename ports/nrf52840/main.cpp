@@ -24,7 +24,7 @@
 #include "gpio.hpp"
 #include "artic.hpp"
 #include "nrf_led.hpp"
-#include "fake_battery_mon.hpp"
+#include "nrf_battery_mon.hpp"
 
 FileSystem *main_filesystem;
 
@@ -71,10 +71,8 @@ int main()
 
     nrf_log_redirect_init();
 
-    // Fake battery monitor
-    FakeBatteryMonitor fake_battery_monitor;
-    battery_monitor = &fake_battery_monitor;
-
+    NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
+    battery_monitor = &nrf_battery_monitor;
 	NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_SWS, 50);
 	reed_switch = &nrf_reed_switch;
 	SWS nrf_saltwater_switch;

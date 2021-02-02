@@ -146,6 +146,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_spim.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_rtc.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_gpiote.c
+    ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_saadc.c
     ${CORE_DIR}/hardware/sws.cpp
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
@@ -158,6 +159,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/nrf_spim.cpp
     ${PROJ_DIR}/core/hardware/nrf_gpio.cpp
     ${PROJ_DIR}/core/hardware/nrf_switch.cpp
+    ${PROJ_DIR}/core/hardware/nrf_battery_mon.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
     ${PROJ_DIR}/core/interface/fake_ota_update_service.cpp
     ${PROJ_DIR}/core/scheduling/fake_gps_scheduler.cpp
