@@ -80,7 +80,7 @@ uint8_t NrfBatteryMonitor::get_level()
 
 	if (lut_index <= 0) {
 		return battery_voltage_lut[(unsigned)m_chem][0];
-	} else if (lut_index >= (BATT_LUT_ENTRIES - 1)) {
+	} else if (lut_index > (BATT_LUT_ENTRIES - 1)) {
 		return battery_voltage_lut[(unsigned)m_chem][BATT_LUT_ENTRIES - 1];
 	} else {
 		// Linear extrapolation
@@ -89,7 +89,7 @@ uint8_t NrfBatteryMonitor::get_level()
 		uint16_t upper_mV = BATT_LUT_MAX_V - ((lut_index-1)*100);
 		float t = (upper_mV - mV) / 100.0f;
 		float result = (float)upper + (t * ((float)lower - (float)upper));
-		DEBUG_TRACE("NrfBatteryMonitor::get_level: upper = %u lower=%u t=%f", upper, lower, (double)t);
+		DEBUG_TRACE("NrfBatteryMonitor::get_level: upper_mV=%u upper=%u lower=%u t=%f r=%f", upper_mV, upper, lower, (double)t, (double)result);
 		return (uint8_t)result;
 	}
 }
