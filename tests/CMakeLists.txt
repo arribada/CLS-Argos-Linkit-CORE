@@ -70,6 +70,9 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     # For enabling debug output
     -DDEBUG_ENABLE
 
+    # For setting default device model
+    -DDEVICE_MODEL_NAME="SURFACEBOX"s
+ 
     # Always output coloured text from GCC
     -fdiagnostics-color=always
 )

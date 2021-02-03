@@ -47,7 +47,7 @@ protected:
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
-		/* DEVICE_MODEL */ "GenTracker"s,
+		/* DEVICE_MODEL */ DEVICE_MODEL_NAME,
 		/* FW_APP_VERSION */ "V0.1"s,
 		/* LAST_TX */ static_cast<std::time_t>(0U),
 		/* TX_COUNTER */ 0U,

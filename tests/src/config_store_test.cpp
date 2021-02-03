@@ -52,7 +52,7 @@ TEST(ConfigStore, CreateConfigStoreWithDefaultParams)
 
 	// Check some defaults are correct
 	CHECK_EQUAL(0U, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
-	CHECK_EQUAL("GenTracker"s, store->read_param<std::string>(ParamID::DEVICE_MODEL));
+	CHECK_EQUAL(DEVICE_MODEL_NAME, store->read_param<std::string>(ParamID::DEVICE_MODEL));
 
 	delete store;
 }
