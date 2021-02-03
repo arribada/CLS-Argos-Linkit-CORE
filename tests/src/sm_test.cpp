@@ -58,7 +58,6 @@ TEST_GROUP(Sm)
 	MockBatteryMonitor *mock_battery_monitor;
 
 	void setup() {
-		MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
 		main_filesystem = new MockFileSystem;
 		linux_timer = new LinuxTimer;
 		system_timer = linux_timer;
@@ -101,7 +100,6 @@ TEST_GROUP(Sm)
 		delete fake_blue_led;
 		delete fake_reed_switch;
 		delete fake_saltwater_switch;
-		MemoryLeakWarningPlugin::restoreNewDeleteOverloads();
 	}
 };
 
@@ -217,6 +215,48 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigVal
 	while(!system_scheduler->run());
 	CHECK_FALSE(fake_green_led->is_flashing());
 }
+
+
+TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigValidBatteryLow)
+{
+	mock().disable();
+	fsm_handle::start();
+	while(!system_scheduler->run());
+	linux_timer->set_counter(4999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+
+	mock().enable();
+	mock().expectOneCall("start").onObject(mock_battery_monitor);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
+
+	// Swipe gesture
+	fake_reed_switch->set_state(true);
+	fake_reed_switch->set_state(false);
+	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
+	CHECK_TRUE(fake_red_led->get_state());
+	CHECK_TRUE(fake_green_led->get_state());
+	CHECK_FALSE(fake_blue_led->get_state());
+
+	// After 120 seconds, transition to operational with green and red LED flashing
+	mock().expectOneCall("start").onObject(gps_scheduler);
+	mock().expectOneCall("start").onObject(comms_scheduler);
+	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
+	linux_timer->set_counter(124999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	CHECK_TRUE(fake_green_led->is_flashing());
+	CHECK_TRUE(fake_red_led->is_flashing());
+	CHECK_FALSE(fake_blue_led->is_flashing());
+
+	// Green LED should go off
+	linux_timer->set_counter(129999);
+	while(!system_scheduler->run());
+	CHECK_FALSE(fake_green_led->is_flashing());
+	CHECK_FALSE(fake_red_led->is_flashing());
+}
+
 
 TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToErrorConfigInvalid)
 {
