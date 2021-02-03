@@ -15,10 +15,23 @@ set(PROJ_DIR      .)
 set(CORE_DIR      ../../core)
 set(LIB_DIR       ../../libraries)
 
-add_executable(${PROJECT_NAME})
+option(BOARD "Board to compile for" NONE)
+
+# Append board model to the target name
+if(${BOARD} MATCHES HORIZON)
+    set(TARGET_NAME ${PROJECT_NAME}_horizon_board)
+    set(BOARD_DIR     "${PROJ_DIR}/bsp/horizon_v4.0")
+elseif(${BOARD} MATCHES GENTRACKER)
+    set(TARGET_NAME ${PROJECT_NAME}_gentracker_board)
+    set(BOARD_DIR     "${PROJ_DIR}/bsp/gentracker_v1.0")
+else()
+    message(FATAL_ERROR "Board must be HORIZON or GENTRACKER")
+endif()
+
+add_executable(${TARGET_NAME})
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/ble/ble_services/ble_ancs_c
     ${SDK_ROOT}/components/ble/ble_services/ble_ias_c
     ${SDK_ROOT}/components/ble/ble_services/ble_gls
@@ -83,7 +96,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${SDK_ROOT}/integration/nrfx
     ${PROJ_DIR}
     ${PROJ_DIR}/drivers/nrf_log_redirect
-    ${PROJ_DIR}/bsp/horizon_v4.0
+    ${BOARD_DIR}
     ${LIB_DIR}/littlefs
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4
     ${CORE_DIR}/ble_services
@@ -103,7 +116,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/artic_r2
 )
 
-target_sources(${PROJECT_NAME} PRIVATE
+target_sources(${TARGET_NAME} PRIVATE
     ${LIB_DIR}/littlefs/lfs_util.c
     ${LIB_DIR}/littlefs/lfs.c
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c
@@ -151,7 +164,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/util/haversine.cpp
-    ${PROJ_DIR}/bsp/horizon_v4.0/bsp.cpp
+    ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash_file_system.cpp
     ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
@@ -168,10 +181,11 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${PROJ_DIR}/main.cpp
 )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE
+target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:DEBUG>:DEBUG>
     $<$<CONFIG:DEBUG>:DEBUG_ENABLE>
     BOARD_PCA10059
+    BOARD_${BOARD}
     CONFIG_GPIO_AS_PINRESET
     CONFIG_NFCT_PINS_AS_GPIOS
     FLOAT_ABI_HARD
@@ -186,7 +200,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     OLD_ZONE_FORMAT_WORKAROUND
 )
 
-target_compile_options(${PROJECT_NAME} PRIVATE
+target_compile_options(${TARGET_NAME} PRIVATE
     # Warnings
     -Wall
     -Wextra
@@ -236,7 +250,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 
 set_source_files_properties(${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-switch-enum -Wno-switch")
 
-target_link_options(${PROJECT_NAME} PRIVATE
+target_link_options(${TARGET_NAME} PRIVATE
     -L${CMAKE_SOURCE_DIR}/${SDK_ROOT}/modules/nrfx/mdk
     -T${PROJECT_SOURCE_DIR}/gcc_nrf52840.ld
     -mcpu=cortex-m4
@@ -251,7 +265,7 @@ target_link_options(${PROJECT_NAME} PRIVATE
     -Xlinker -Map=${PROJECT_NAME}.map
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${TARGET_NAME}
     m
     c
     nosys
@@ -266,9 +280,9 @@ function(create_dfu executable)
     )
 endfunction(create_dfu)
 
-create_bin(${PROJECT_NAME})
-create_hex(${PROJECT_NAME})
-create_dfu(${PROJECT_NAME})
+create_bin(${TARGET_NAME})
+create_hex(${TARGET_NAME})
+create_dfu(${TARGET_NAME})
 
 add_custom_target(flash
                   COMMENT "Flashing the softdevice & firmware"
@@ -277,4 +291,4 @@ add_custom_target(flash
                   COMMAND nrfjprog -f nrf52 --program ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.hex --sectorerase
                   COMMAND nrfjprog -f nrf52 --reset
 )
-add_dependencies(flash ${PROJECT_NAME})
+add_dependencies(flash ${TARGET_NAME})

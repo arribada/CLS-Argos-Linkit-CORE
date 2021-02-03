@@ -603,7 +603,7 @@ void ArticTransceiver::set_frequency(const double freq) {
 }
 
 void ArticTransceiver::set_tx_power(const BaseArgosPower power) {
-#ifndef CLSGENTRACKER_BOARD
+#ifndef BOARD_GENTRACKER
 	(void)power;
 #else
 	// GA16 and GA8 pins allows PA gain to be set only coarsely as:
@@ -611,19 +611,19 @@ void ArticTransceiver::set_tx_power(const BaseArgosPower power) {
 	// 8dB   - 01
 	// 16dB  - 10
 	// 24dB  - 11
-	GPIOPins::clear(GPIO_PA_G8);
-	GPIOPins::clear(GPIO_PA_G16);
+	GPIOPins::clear(BSP::GPIO::GPIO_G8_33);
+	GPIOPins::clear(BSP::GPIO::GPIO_G16_33);
 	switch (power) {
 	case BaseArgosPower::POWER_40_MW:
-		GPIOPins::set(GPIO_PA_G16);
+		GPIOPins::set(BSP::GPIO::GPIO_G16_33);
 		break;
 	case BaseArgosPower::POWER_500_MW:
 	case BaseArgosPower::POWER_200_MW:
-		GPIOPins::set(GPIO_PA_G8);
-		GPIOPins::set(GPIO_PA_G16);
+		GPIOPins::set(BSP::GPIO::GPIO_G8_33);
+		GPIOPins::set(BSP::GPIO::GPIO_G16_33);
 		break;
 	case BaseArgosPower::POWER_3_MW:
-		GPIOPins::set(GPIO_PA_G8);
+		GPIOPins::set(BSP::GPIO::GPIO_G8_33);
 		break;
 	default:
 		break;
