@@ -6,7 +6,6 @@
 #include "nrfx_spim.h"
 #include "ble_interface.hpp"
 #include "dte_handler.hpp"
-#include "is25_flash_file_system.hpp"
 #include "nrf_memory_access.hpp"
 #include "config_store_fs.hpp"
 #include "debug.hpp"
@@ -23,6 +22,7 @@
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
 #include "artic.hpp"
+#include "core/filesystem/is25_flash.hpp"
 #include "nrf_led.hpp"
 #include "nrf_battery_mon.hpp"
 
@@ -99,10 +99,11 @@ int main()
 
 	GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
 
-	Is25FlashFileSystem lfs_file_system;
-	main_filesystem = &lfs_file_system;
+	Is25Flash is25_flash;
+	is25_flash.init();
 
-	lfs_file_system.init();
+	LFSFileSystem lfs_file_system(&is25_flash);
+	main_filesystem = &lfs_file_system;
 
 	LFSConfigurationStore store(lfs_file_system);
 	configuration_store = &store;

@@ -171,7 +171,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/util/haversine.cpp
     ${BOARD_DIR}/bsp.cpp
-    ${PROJ_DIR}/core/filesystem/is25_flash_file_system.cpp
+    ${PROJ_DIR}/core/filesystem/is25_flash.cpp
     ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp

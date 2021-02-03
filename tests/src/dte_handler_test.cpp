@@ -24,7 +24,8 @@ extern BatteryMonitor *battery_monitor;
 
 TEST_GROUP(DTEHandler)
 {
-	LFSRamFileSystem *ram_filesystem;
+	RamFlash *ram_flash;
+	LFSFileSystem *ram_filesystem;
 	LFSConfigurationStore *store;
 	FakeMemoryAccess *fake_memory_access;
 	MockLog *mock_system_log;
@@ -33,7 +34,8 @@ TEST_GROUP(DTEHandler)
 	FakeBatteryMonitor *fake_battery_monitor;
 
 	void setup() {
-		ram_filesystem = new LFSRamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+		ram_flash = new RamFlash(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+		ram_filesystem = new LFSFileSystem(ram_flash);
 		ram_filesystem->format();
 		ram_filesystem->mount();
 		main_filesystem = ram_filesystem;

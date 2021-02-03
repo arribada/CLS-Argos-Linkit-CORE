@@ -6,9 +6,9 @@
 #define IS25_BLOCK_SIZE    (4*1024)
 #define IS25_PAGE_SIZE     (256)
 
-class Is25FlashFileSystem : public LFSFileSystem {
+class Is25Flash : public FlashInterface {
 public:
-	Is25FlashFileSystem() : LFSFileSystem(IS25_BLOCK_COUNT, IS25_BLOCK_SIZE, IS25_PAGE_SIZE) {}
+	Is25Flash() : FlashInterface(IS25_BLOCK_COUNT, IS25_BLOCK_SIZE, IS25_PAGE_SIZE) {}
 	void init();
 
 private:
