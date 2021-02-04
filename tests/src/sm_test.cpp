@@ -15,6 +15,7 @@
 #include "mock_logger.hpp"
 #include "mock_timer.hpp"
 #include "mock_battery_mon.hpp"
+#include "mock_ota_file_updater.hpp"
 #include "scheduler.hpp"
 #include "dte_handler.hpp"
 #include "linux_timer.hpp"
@@ -34,6 +35,7 @@ extern Scheduler *system_scheduler;
 extern Logger *sensor_log;
 extern Logger *system_log;
 extern BLEService *ble_service;
+extern OTAFileUpdater *ota_updater;
 extern Led *red_led;
 extern Led *green_led;
 extern Led *blue_led;
@@ -55,6 +57,7 @@ TEST_GROUP(Sm)
 	FakeLed *fake_blue_led;
 	LinuxTimer *linux_timer;
 	MockBatteryMonitor *mock_battery_monitor;
+	MockOTAFileUpdater *mock_ota_file_updater;
 
 	void setup() {
 		main_filesystem = new MockFileSystem;
@@ -63,6 +66,8 @@ TEST_GROUP(Sm)
 		configuration_store = new MockConfigurationStore;
 		gps_scheduler = new MockGPSScheduler;
 		comms_scheduler = new MockCommsScheduler;
+		mock_ota_file_updater = new MockOTAFileUpdater;
+		ota_updater = mock_ota_file_updater;
 		dte_handler = new DTEHandler;
 		system_scheduler = new Scheduler(system_timer);
 		sensor_log = new MockLog;
@@ -91,6 +96,7 @@ TEST_GROUP(Sm)
 		delete sensor_log;
 		delete system_log;
 		delete ble_service;
+		delete mock_ota_file_updater;
 		delete mock_battery_monitor;
 		delete fake_red_led;
 		delete fake_green_led;

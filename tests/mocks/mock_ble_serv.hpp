@@ -41,6 +41,7 @@ class MockBLEService : public BLEService {
 		// Install a comparator for checking the equality of std::functions
 		mock().installComparator("std::function<int(BLEServiceEvent&)>", m_comparator);
 		mock().actualCall("start").onObject(this).withParameterOfType("std::function<int(BLEServiceEvent&)>", "on_event", &on_event);
+		m_on_event = on_event;
 	}
 	void stop() {
 		mock().actualCall("stop").onObject(this);
@@ -52,8 +53,14 @@ class MockBLEService : public BLEService {
 		return *static_cast<const std::string*>(mock().actualCall("read_line").onObject(this).returnConstPointerValue());
 	}
 
+	int invoke_event(BLEServiceEvent& event) {
+		return m_on_event(event);
+	}
+
 private:
 	MockStdFunctionBLEServiceEventComparator m_comparator;
+	std::function<int(BLEServiceEvent&)> m_on_event;
+
 };
 
 #endif // __MOCK_BLE_HPP_

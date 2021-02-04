@@ -170,7 +170,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/util/haversine.cpp
-    ${CORE_DIR}/filesystem/ota_file_updater.cpp
+    ${CORE_DIR}/filesystem/ota_flash_file_updater.cpp
     ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
     ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp

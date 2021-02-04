@@ -1,9 +1,9 @@
-#include "ota_file_updater.hpp"
+#include "ota_flash_file_updater.hpp"
 #include "error.hpp"
 #include "crc32.hpp"
 
 
-OTAFileUpdater::OTAFileUpdater(LFSFileSystem *filesystem, FlashInterface *flash_if, lfs_off_t reserved_block_offset, lfs_size_t reserved_blocks)
+OTAFlashFileUpdater::OTAFlashFileUpdater(LFSFileSystem *filesystem, FlashInterface *flash_if, lfs_off_t reserved_block_offset, lfs_size_t reserved_blocks)
 {
 	m_filesystem = filesystem;
 	m_flash_if = flash_if;
@@ -12,13 +12,13 @@ OTAFileUpdater::OTAFileUpdater(LFSFileSystem *filesystem, FlashInterface *flash_
 	m_file_size = 0;
 }
 
-OTAFileUpdater::~OTAFileUpdater()
+OTAFlashFileUpdater::~OTAFlashFileUpdater()
 {
 	if (m_file_size && m_file_id != OTAFileIdentifier::MCU_FIRMWARE)
 		delete m_file;
 }
 
-void OTAFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_size_t length, uint32_t crc32) {
+void OTAFlashFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_size_t length, uint32_t crc32) {
 
 	if (m_file_size)
 		throw ErrorCode::OTA_TRANSFER_ALREADY_IN_PROGRESS;
@@ -49,7 +49,7 @@ void OTAFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_size_t l
 	m_crc32_calc = 0xFFFFFFFF;
 }
 
-void OTAFileUpdater::write_file_data(void * const data, lfs_size_t length)
+void OTAFlashFileUpdater::write_file_data(void * const data, lfs_size_t length)
 {
 	if (m_file_size == 0)
 		throw ErrorCode::OTA_TRANSFER_NOT_STARTED;
@@ -67,7 +67,7 @@ void OTAFileUpdater::write_file_data(void * const data, lfs_size_t length)
 	CRC32::checksum((uint8_t *)data, length, m_crc32_calc);
 }
 
-void OTAFileUpdater::abort_file_transfer()
+void OTAFlashFileUpdater::abort_file_transfer()
 {
 	if (m_file_size != 0 && m_file_id != OTAFileIdentifier::MCU_FIRMWARE) {
 		delete m_file;
@@ -75,7 +75,7 @@ void OTAFileUpdater::abort_file_transfer()
 	m_file_size = 0;
 }
 
-void OTAFileUpdater::complete_file_transfer()
+void OTAFlashFileUpdater::complete_file_transfer()
 {
 	if (m_file_size == 0)
 		throw ErrorCode::OTA_TRANSFER_NOT_STARTED;
@@ -87,7 +87,7 @@ void OTAFileUpdater::complete_file_transfer()
 		throw ErrorCode::OTA_TRANSFER_CRC_ERROR;
 }
 
-void OTAFileUpdater::apply_file_update() {
+void OTAFlashFileUpdater::apply_file_update() {
 	if (m_file_id == OTAFileIdentifier::MCU_FIRMWARE) {
 		// TODO: apply internal flash update from external flash
 	} else {

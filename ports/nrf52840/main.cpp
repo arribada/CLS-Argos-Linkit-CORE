@@ -6,7 +6,7 @@
 #include "nrf_log_redirect.h"
 #include "nrfx_spim.h"
 #include "ble_interface.hpp"
-#include "ota_file_updater.hpp"
+#include "ota_flash_file_updater.hpp"
 #include "dte_handler.hpp"
 #include "nrf_memory_access.hpp"
 #include "config_store_fs.hpp"
@@ -123,8 +123,8 @@ int main()
 	dte_handler = &dte_handler_local;
 
 	ble_service = &BleInterface::get_instance();
-	OTAFileUpdater ota_file_updater(&lfs_file_system, &is25_flash, 0, 0);
-	ota_updater = &ota_file_updater;
+	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &is25_flash, 0, 0);
+	ota_updater = &ota_flash_file_updater;
 
 	ArticTransceiver artic_transceiver;
 	comms_scheduler = &artic_transceiver;
