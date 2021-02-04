@@ -1,10 +1,11 @@
 #include "gentracker.hpp"
+
+#include "../filesystem/ota_file_updater.hpp"
 #include "logger.hpp"
 #include "config_store.hpp"
 #include "gps_scheduler.hpp"
 #include "comms_scheduler.hpp"
 #include "scheduler.hpp"
-#include "ota_update_service.hpp"
 #include "dte_handler.hpp"
 #include "filesystem.hpp"
 #include "config_store.hpp"
@@ -14,6 +15,7 @@
 #include "switch.hpp"
 #include "led.hpp"
 #include "battery.hpp"
+#include "ble_service.hpp"
 
 // These contexts must be created before the FSM is initialised
 extern FileSystem *main_filesystem;
@@ -24,8 +26,8 @@ extern GPSScheduler *gps_scheduler;
 extern Logger *sensor_log;
 extern Logger *system_log;
 extern ConfigurationStore *configuration_store;
-extern BLEService *dte_service;
-extern BLEService *ota_update_service;
+extern BLEService *ble_service;
+extern OTAFileUpdater *ota_updater;
 extern DTEHandler *dte_handler;
 extern Switch *saltwater_switch;
 extern Switch *reed_switch;
@@ -201,53 +203,74 @@ void ConfigurationState::entry() {
 	// waiting for a connection
 	blue_led->flash();
 
-	dte_service->start(std::bind(&ConfigurationState::on_dte_connected, this),
-			std::bind(&ConfigurationState::on_dte_disconnected, this),
-			std::bind(&ConfigurationState::on_dte_received, this));
-	ota_update_service->start(nullptr, nullptr, nullptr);
-
+	ble_service->start([this](BLEServiceEvent& event) -> int { return on_ble_event(event); } );
 	restart_inactivity_timeout();
 }
 
 void ConfigurationState::exit() {
 	DEBUG_TRACE("exit: ConfigurationState");
 	system_scheduler->cancel_task(m_ble_inactivity_timeout_task);
-	dte_service->stop();
-	ota_update_service->stop();
+	ble_service->stop();
 	blue_led->off();
 }
 
-void ConfigurationState::on_dte_connected() {
-	DEBUG_INFO("DTE Connected");
-	// Indicate DTE connection is made
-	blue_led->on();
-	restart_inactivity_timeout();
+int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
+	int rc = 0;
+
+	switch (event.event_type) {
+	case BLEServiceEventType::CONNECTED:
+		DEBUG_INFO("ConfigurationState::on_ble_event: CONNECTED");
+		// Indicate DTE connection is made
+		blue_led->on();
+		restart_inactivity_timeout();
+		break;
+	case BLEServiceEventType::DISCONNECTED:
+		DEBUG_INFO("ConfigurationState::on_ble_event: DISCONNECTED");
+		transit<OffState>();
+		break;
+	case BLEServiceEventType::DTE_DATA_RECEIVED:
+		DEBUG_TRACE("ConfigurationState::on_ble_event: DTE_DATA_RECEIVED");
+		restart_inactivity_timeout();
+		system_scheduler->post_task_prio(std::bind(&ConfigurationState::process_received_data, this));
+		break;
+	case BLEServiceEventType::OTA_START:
+		DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_START");
+		ota_updater->start_file_transfer((OTAFileIdentifier)event.file_id, event.file_size, event.crc32);
+		break;
+	case BLEServiceEventType::OTA_END:
+		DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_END");
+		ota_updater->complete_file_transfer();
+		system_scheduler->post_task_prio(std::bind(&OTAFileUpdater::apply_file_update, ota_updater));
+		break;
+	case BLEServiceEventType::OTA_ABORT:
+		DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_ABORT");
+		ota_updater->abort_file_transfer();
+		break;
+	case BLEServiceEventType::OTA_FILE_DATA:
+		DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_FILE_DATA");
+		rc = (int)ota_updater->write_file_data(event.data, event.length);
+		break;
+	default:
+		break;
+	}
+
+	return rc;
 }
 
-void ConfigurationState::on_dte_disconnected() {
-	DEBUG_INFO("DTE Disconnected");
+
+void ConfigurationState::on_ble_inactivity_timeout() {
+	DEBUG_INFO("BLE Inactivity Timeout");
 	transit<OffState>();
-}
-
-void ConfigurationState::on_dte_inactivity_timeout() {
-	DEBUG_INFO("DTE Inactivity Timeout");
-	transit<OffState>();
-}
-
-void ConfigurationState::on_dte_received() {
-	DEBUG_TRACE("DTE Received");
-	restart_inactivity_timeout();
-	system_scheduler->post_task_prio(std::bind(&ConfigurationState::process_received_data, this));
 }
 
 void ConfigurationState::restart_inactivity_timeout() {
-	DEBUG_TRACE("Restart DTE inactivity timeout: %lu", system_timer->get_counter());
+	DEBUG_TRACE("Restart BLE inactivity timeout: %lu", system_timer->get_counter());
 	system_scheduler->cancel_task(m_ble_inactivity_timeout_task);
-	m_ble_inactivity_timeout_task = system_scheduler->post_task_prio(std::bind(&ConfigurationState::on_dte_inactivity_timeout, this), Scheduler::DEFAULT_PRIORITY, BLE_INACTIVITY_TIMEOUT_MS);
+	m_ble_inactivity_timeout_task = system_scheduler->post_task_prio(std::bind(&ConfigurationState::on_ble_inactivity_timeout, this), Scheduler::DEFAULT_PRIORITY, BLE_INACTIVITY_TIMEOUT_MS);
 }
 
 void ConfigurationState::process_received_data() {
-	auto req = dte_service->read_line();
+	auto req = ble_service->read_line();
 
 	if (req.size())
 	{
@@ -261,7 +284,7 @@ void ConfigurationState::process_received_data() {
 			if (resp.size())
 			{
 				DEBUG_TRACE("responded: %s", resp.c_str());
-				dte_service->write(resp);
+				ble_service->write(resp);
 			}
 		} while (action == DTEAction::AGAIN);
 	}

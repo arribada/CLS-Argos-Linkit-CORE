@@ -4,6 +4,7 @@
 #include "tinyfsm.hpp"
 #include "scheduler.hpp"
 #include "error.hpp"
+#include "ble_service.hpp"
 
 struct ReedSwitchEvent              : tinyfsm::Event { bool state; };
 struct SaltwaterSwitchEvent         : tinyfsm::Event { bool state; };
@@ -76,11 +77,8 @@ class ConfigurationState : public GenTracker
 private:
 	static inline const unsigned int BLE_INACTIVITY_TIMEOUT_MS = 6 * 60 * 1000;
 	Scheduler::TaskHandle m_ble_inactivity_timeout_task;
-
-	void on_dte_connected();
-	void on_dte_disconnected();
-	void on_dte_inactivity_timeout();
-	void on_dte_received();
+	int on_ble_event(BLEServiceEvent&);
+	void on_ble_inactivity_timeout();
 	void restart_inactivity_timeout();
 	void process_received_data();
 

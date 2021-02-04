@@ -1,10 +1,12 @@
 #include <iostream>
 
+#include "../../core/filesystem/ota_file_updater.hpp"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_log_redirect.h"
 #include "nrfx_spim.h"
 #include "ble_interface.hpp"
+#include "ota_file_updater.hpp"
 #include "dte_handler.hpp"
 #include "nrf_memory_access.hpp"
 #include "config_store_fs.hpp"
@@ -16,7 +18,6 @@
 #include "nrf_timer.hpp"
 #include "nrf_switch.hpp"
 #include "sws.hpp"
-#include "ota_update_service.hpp"
 #include "fake_gps_scheduler.hpp"
 #include "fake_comms_scheduler.hpp"
 #include "nrf_rtc.hpp"
@@ -29,8 +30,8 @@
 FileSystem *main_filesystem;
 
 ConfigurationStore *configuration_store;
-BLEService *dte_service;
-BLEService *ota_update_service;
+BLEService *ble_service;
+OTAFileUpdater *ota_updater;
 CommsScheduler *comms_scheduler;
 GPSScheduler *gps_scheduler;
 MemoryAccess *memory_access;
@@ -121,10 +122,9 @@ int main()
 	DTEHandler dte_handler_local;
 	dte_handler = &dte_handler_local;
 
-	dte_service = &BleInterface::get_instance();
-
-	OTAUpdateService ota_service;
-	ota_update_service = &ota_service;
+	ble_service = &BleInterface::get_instance();
+	OTAFileUpdater ota_file_updater(&lfs_file_system, &is25_flash, 0, 0);
+	ota_updater = &ota_file_updater;
 
 	ArticTransceiver artic_transceiver;
 	comms_scheduler = &artic_transceiver;

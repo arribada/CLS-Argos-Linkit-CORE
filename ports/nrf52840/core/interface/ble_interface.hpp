@@ -13,7 +13,7 @@ class BleInterface : public BLEService
 public:
     void init();
 
-	void start(std::function<void()> const &on_connected, std::function<void()> const &on_disconnected, std::function<void()> const &on_received) override;
+	void start(std::function<int(BLEServiceEvent& event)> on_event) override;
 	void stop() override;
     void write(std::string str) override;
     std::string read_line() override;
@@ -62,7 +62,5 @@ private:
     uint8_t m_receive_buffer[1024];
     volatile size_t m_receive_buffer_len;
     volatile bool m_carriage_return_received;
-    std::function<void()> m_on_connected;
-    std::function<void()> m_on_disconnected;
-    std::function<void()> m_on_received;
+    std::function<int(BLEServiceEvent& event)> m_on_event;
 };

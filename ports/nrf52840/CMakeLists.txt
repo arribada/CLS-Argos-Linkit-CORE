@@ -170,6 +170,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/util/haversine.cpp
+    ${CORE_DIR}/filesystem/ota_file_updater.cpp
     ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
     ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
@@ -180,7 +181,6 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/nrf_switch.cpp
     ${PROJ_DIR}/core/hardware/nrf_battery_mon.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
-    ${PROJ_DIR}/core/interface/fake_ota_update_service.cpp
     ${PROJ_DIR}/core/scheduling/fake_gps_scheduler.cpp
     ${PROJ_DIR}/core/scheduling/interrupt_lock.cpp
     ${PROJ_DIR}/drivers/nrf_log_redirect/nrf_log_redirect.c

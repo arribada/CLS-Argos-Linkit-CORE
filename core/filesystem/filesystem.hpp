@@ -38,6 +38,7 @@ public:
 	virtual int sync() = 0;
 };
 
+
 class LFSFileSystem : public FileSystem {
 	friend class LFSFile;
 

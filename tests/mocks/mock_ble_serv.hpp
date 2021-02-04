@@ -3,16 +3,16 @@
 
 #include "ble_service.hpp"
 
-// Compares two "const std::function<void()>" for equality
-class MockStdFunctionVoidComparator : public MockNamedValueComparator
+// Compares two "const std::function<int(BLEServiceEvent&>" for equality
+class MockStdFunctionBLEServiceEventComparator : public MockNamedValueComparator
 {
 public:
     virtual bool isEqual(const void* object1, const void* object2)
 	{
 		typedef void(functionType)();
 
-		auto object1_func_ptr = reinterpret_cast< const std::function<void()>* >(object1);
-		auto object2_func_ptr = reinterpret_cast< const std::function<void()>* >(object2);
+		auto object1_func_ptr = reinterpret_cast< const std::function<int(BLEServiceEvent&)>* >(object1);
+		auto object2_func_ptr = reinterpret_cast< const std::function<int(BLEServiceEvent&)>* >(object2);
 
 		// Check function target is of the same type
 		if (object1_func_ptr->target_type() != object2_func_ptr->target_type())
@@ -37,12 +37,10 @@ public:
 };
 
 class MockBLEService : public BLEService {
-	void start(const std::function<void()> &on_connected, const std::function<void()> &on_disconnected, const std::function<void()> &on_received) {
-
+	void start(std::function<int(BLEServiceEvent&)> on_event) {
 		// Install a comparator for checking the equality of std::functions
-		mock().installComparator("std::function<void()>", m_comparator);
-
-		mock().actualCall("start").onObject(this).withParameterOfType("std::function<void()>", "on_connected", &on_connected).withParameterOfType("std::function<void()>", "on_disconnected", &on_disconnected).withParameterOfType("std::function<void()>", "on_received", &on_received);
+		mock().installComparator("std::function<int(BLEServiceEvent&)>", m_comparator);
+		mock().actualCall("start").onObject(this).withParameterOfType("std::function<int(BLEServiceEvent&)>", "on_event", &on_event);
 	}
 	void stop() {
 		mock().actualCall("stop").onObject(this);
@@ -55,7 +53,7 @@ class MockBLEService : public BLEService {
 	}
 
 private:
-	MockStdFunctionVoidComparator m_comparator;
+	MockStdFunctionBLEServiceEventComparator m_comparator;
 };
 
 #endif // __MOCK_BLE_HPP_

@@ -67,11 +67,9 @@ void BleInterface::init()
     advertising_init();
 }
 
-void BleInterface::start(std::function<void()> const &on_connected, std::function<void()> const &on_disconnected, std::function<void()> const &on_received)
+void BleInterface::start(std::function<int(BLEServiceEvent& event)> on_event)
 {
-    m_on_connected = on_connected;
-    m_on_disconnected = on_disconnected;
-    m_on_received = on_received;
+    m_on_event = on_event;
 
     advertising_start();
 }
@@ -270,16 +268,22 @@ void BleInterface::ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
             APP_ERROR_CHECK(err_code);
-            if (m_on_connected)
-                m_on_connected();
+            if (m_on_event) {
+            	BLEServiceEvent e;
+            	e.event_type = BLEServiceEventType::CONNECTED;
+                (void)m_on_event(e);
+            }
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected for reason 0x%02X", p_ble_evt->evt.gap_evt.params.disconnected.reason);
             // LED indication will be changed when advertising starts.
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
-            if (m_on_disconnected)
-                m_on_disconnected();
+            if (m_on_event) {
+            	BLEServiceEvent e;
+            	e.event_type = BLEServiceEventType::DISCONNECTED;
+                (void)m_on_event(e);
+            }
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
@@ -381,8 +385,11 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
                     m_carriage_return_received = true;
                 
                 // Notify the user that we have a string waiting to be read with readline()
-                if (m_on_received)
-                    m_on_received();
+                if (m_on_event) {
+                	BLEServiceEvent e;
+                	e.event_type = BLEServiceEventType::DTE_DATA_RECEIVED;
+                    (void)m_on_event(e);
+                }
             }
         }
         else
