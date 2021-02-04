@@ -205,6 +205,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     #LFS_YES_TRACE
     ARGOS_FREQ_MIN_WORKAROUND
     OLD_ZONE_FORMAT_WORKAROUND
+    ARGOS_USE_CRC8 
 )
 
 target_compile_options(${TARGET_NAME} PRIVATE

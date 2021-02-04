@@ -72,6 +72,9 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 
     # For setting default device model
     -DDEVICE_MODEL_NAME="SURFACEBOX"s
+
+	# Packet protocol option for including CRC8
+    -DARGOS_USE_CRC8
  
     # Always output coloured text from GCC
     -fdiagnostics-color=always
