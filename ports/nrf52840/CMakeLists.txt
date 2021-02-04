@@ -288,7 +288,17 @@ function(create_dfu executable)
     )
 endfunction(create_dfu)
 
+function(create_wrapped_bin executable)
+    add_custom_command(
+        TARGET ${executable}
+        POST_BUILD
+        COMMENT "Generating ${executable}.dat"
+        COMMAND stat -c %08s ${executable}.bin | xxd -r -p > ${executable}.dat && crc32 ${executable}.bin | xxd -r -p >> ${executable}.dat && cat ${executable}.bin >> ${executable}.dat
+    )
+endfunction(create_wrapped_bin)
+
 create_bin(${TARGET_NAME})
+create_wrapped_bin(${TARGET_NAME})
 create_hex(${TARGET_NAME})
 create_dfu(${TARGET_NAME})
 
