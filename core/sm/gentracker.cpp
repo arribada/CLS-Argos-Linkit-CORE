@@ -248,7 +248,7 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 		break;
 	case BLEServiceEventType::OTA_FILE_DATA:
 		DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_FILE_DATA");
-		rc = (int)ota_updater->write_file_data(event.data, event.length);
+		ota_updater->write_file_data(event.data, event.length);
 		break;
 	default:
 		break;
