@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "../../core/filesystem/ota_file_updater.hpp"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_log_redirect.h"
@@ -23,7 +22,7 @@
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
 #include "artic.hpp"
-#include "core/filesystem/is25_flash.hpp"
+#include "is25_flash.hpp"
 #include "nrf_led.hpp"
 #include "nrf_battery_mon.hpp"
 
@@ -52,6 +51,12 @@ BatteryMonitor *battery_monitor;
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
 
+// Reserve the last 1MB of IS25 flash memory for firmware updates
+#define OTA_UPDATE_RESERVED_BLOCKS ((1024 * 1024) / IS25_BLOCK_SIZE)
+
+// Reed switch debouncing time (ms)
+#define REED_SWITCH_DEBOUNCE_TIME_MS    50
+
 // Redirect std::cout and printf output to debug UART
 // We have to define this as extern "C" as we are overriding a weak C function
 extern "C" int _write(int file, char *ptr, int len)
@@ -74,7 +79,7 @@ int main()
 
     NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
     battery_monitor = &nrf_battery_monitor;
-	NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_SWS, 50);
+	NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS);
 	reed_switch = &nrf_reed_switch;
 	SWS nrf_saltwater_switch;
 	saltwater_switch = &nrf_saltwater_switch;
@@ -103,7 +108,7 @@ int main()
 	Is25Flash is25_flash;
 	is25_flash.init();
 
-	LFSFileSystem lfs_file_system(&is25_flash);
+	LFSFileSystem lfs_file_system(&is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);
 	main_filesystem = &lfs_file_system;
 
 	LFSConfigurationStore store(lfs_file_system);
@@ -123,7 +128,7 @@ int main()
 	dte_handler = &dte_handler_local;
 
 	ble_service = &BleInterface::get_instance();
-	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &is25_flash, 0, 0);
+	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS, OTA_UPDATE_RESERVED_BLOCKS);
 	ota_updater = &ota_flash_file_updater;
 
 	ArticTransceiver artic_transceiver;
