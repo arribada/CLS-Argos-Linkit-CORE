@@ -58,6 +58,7 @@ TEST_GROUP(Sm)
 	LinuxTimer *linux_timer;
 	MockBatteryMonitor *mock_battery_monitor;
 	MockOTAFileUpdater *mock_ota_file_updater;
+	MockBLEService * mock_ble_service;
 
 	void setup() {
 		main_filesystem = new MockFileSystem;
@@ -72,7 +73,8 @@ TEST_GROUP(Sm)
 		system_scheduler = new Scheduler(system_timer);
 		sensor_log = new MockLog;
 		system_log = new MockLog;
-		ble_service = new MockBLEService;
+		mock_ble_service = new MockBLEService;
+		ble_service = mock_ble_service;
 		mock_battery_monitor = new MockBatteryMonitor;
 		battery_monitor = mock_battery_monitor;
 		fake_red_led = new FakeLed("RED");
@@ -95,7 +97,7 @@ TEST_GROUP(Sm)
 		delete comms_scheduler;
 		delete sensor_log;
 		delete system_log;
-		delete ble_service;
+		delete mock_ble_service;
 		delete mock_ota_file_updater;
 		delete mock_battery_monitor;
 		delete fake_red_led;
@@ -358,4 +360,55 @@ TEST(Sm, CheckBLEInactivityTimeout)
 	linux_timer->set_counter(367999);
 	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+}
+
+
+TEST(Sm, CheckTransitionToConfigurationStateAndVerifyOTAUpdateEvents)
+{
+	// BootState -> OffState
+	mock().disable();
+	fsm_handle::start();
+	while(!system_scheduler->run());
+	linux_timer->set_counter(4999);
+	while(!system_scheduler->run());
+
+	// Swipe gesture and hold for 3 seconds -> ConfigurationState
+	fake_reed_switch->set_state(true);
+	linux_timer->set_counter(7999);
+	while(!system_scheduler->run());
+	fake_reed_switch->set_state(false);
+
+	// Trigger BLE connected event
+	BLEServiceEvent event;
+	event.event_type = BLEServiceEventType::CONNECTED;
+	mock_ble_service->invoke_event(event);
+	CHECK_TRUE(fake_blue_led->get_state());
+
+	// Trigger OTA_START
+	mock().enable();
+	event.event_type = BLEServiceEventType::OTA_START;
+	event.file_size = 0x12345678;
+	event.crc32 = 0x87654321;
+	event.file_id = (unsigned int)OTAFileIdentifier::MCU_FIRMWARE;
+	mock().expectOneCall("start_file_transfer").onObject(mock_ota_file_updater).withUnsignedIntParameter("file_id", event.file_id).withUnsignedIntParameter("length", event.file_size).withUnsignedIntParameter("crc32", event.crc32);
+	mock_ble_service->invoke_event(event);
+
+	// Trigger OTA_FILE_DATA
+	event.event_type = BLEServiceEventType::OTA_FILE_DATA;
+	event.data = (void *)0x12345678;
+	event.length = 0x87654321;
+	mock().expectOneCall("write_file_data").onObject(mock_ota_file_updater).withParameter("data", event.data).withParameter("length", event.length);
+	mock_ble_service->invoke_event(event);
+
+	// Trigger OTA_ABORT
+	event.event_type = BLEServiceEventType::OTA_ABORT;
+	mock().expectOneCall("abort_file_transfer");
+	mock_ble_service->invoke_event(event);
+
+	// Trigger OTA_END
+	event.event_type = BLEServiceEventType::OTA_END;
+	mock().expectOneCall("complete_file_transfer").onObject(mock_ota_file_updater);
+	mock_ble_service->invoke_event(event);
+	mock().expectOneCall("apply_file_update").onObject(mock_ota_file_updater);
+	while(!system_scheduler->run());
 }

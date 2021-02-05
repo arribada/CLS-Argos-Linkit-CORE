@@ -37,6 +37,7 @@ public:
 };
 
 class MockBLEService : public BLEService {
+public:
 	void start(std::function<int(BLEServiceEvent&)> on_event) {
 		// Install a comparator for checking the equality of std::functions
 		mock().installComparator("std::function<int(BLEServiceEvent&)>", m_comparator);
