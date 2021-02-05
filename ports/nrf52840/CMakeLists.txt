@@ -181,6 +181,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/nrf_switch.cpp
     ${PROJ_DIR}/core/hardware/nrf_battery_mon.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
+    ${PROJ_DIR}/core/interface/ble_stm_ota.c
     ${PROJ_DIR}/core/scheduling/fake_gps_scheduler.cpp
     ${PROJ_DIR}/core/scheduling/interrupt_lock.cpp
     ${PROJ_DIR}/drivers/nrf_log_redirect/nrf_log_redirect.c

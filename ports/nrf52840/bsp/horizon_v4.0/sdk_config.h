@@ -439,6 +439,13 @@
 #define BLE_LBS_ENABLED 0
 #endif
 
+// <q> BLE_STM_OTA_ENABLED  - ble_stm_ota - STM OTA Service
+
+
+#ifndef BLE_STM_OTA_ENABLED
+#define BLE_STM_OTA_ENABLED 1
+#endif
+
 // <q> BLE_LLS_ENABLED  - ble_lls - Link Loss Service
  
 
@@ -11225,6 +11232,13 @@
 
 #ifndef BLE_LBS_BLE_OBSERVER_PRIO
 #define BLE_LBS_BLE_OBSERVER_PRIO 2
+#endif
+
+// <o> BLE_STM_OTA_BLE_OBSERVER_PRIO
+// <i> Priority with which BLE events are dispatched to the STM OTAService.
+
+#ifndef BLE_STM_OTA_BLE_OBSERVER_PRIO
+#define BLE_STM_OTA_BLE_OBSERVER_PRIO 2
 #endif
 
 // <o> BLE_LBS_C_BLE_OBSERVER_PRIO  

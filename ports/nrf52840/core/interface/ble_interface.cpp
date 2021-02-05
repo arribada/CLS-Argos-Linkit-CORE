@@ -9,11 +9,14 @@
 #include "nrf_ble_qwr.h"
 #include "app_timer.h"
 #include "nrf_log.h"
+#include "ble_stm_ota.h"
+#include "error.hpp"
 
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
 #define DEVICE_NAME                     "GenTracker"                                /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
+#define STM_OTA_SERVICE_UUID_TYPE       BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the STM OTA Service (vendor specific). */
 
 #define APP_BLE_OBSERVER_PRIO           3                                           /**< Application's BLE observer priority. You shouldn't need to modify this value. */
 
@@ -44,6 +47,8 @@ static ble_nus_t m_nus = {
 };
 NRF_SDH_BLE_OBSERVER(m_nus_obs, BLE_NUS_BLE_OBSERVER_PRIO, ble_nus_on_ble_evt, &m_nus);
 
+BLE_STM_OTA_DEF(m_stm_ota);
+
 NRF_BLE_GATT_DEF(m_gatt);                                                           /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                                             /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising);                                                 /**< Advertising module instance. */
@@ -52,13 +57,15 @@ static uint16_t   m_conn_handle          = BLE_CONN_HANDLE_INVALID;             
 static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
 static ble_uuid_t m_adv_uuids[]          =                                          /**< Universally unique service identifier. */
 {
-    {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}
+    {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE},
+    {STM_OTA_UUID_SERVICE, STM_OTA_SERVICE_UUID_TYPE},
 };
 
 void BleInterface::init()
 {
     m_carriage_return_received = false;
     m_receive_buffer_len = 0;
+    m_is_first_ota_packet = false;
 
     ble_stack_init();
     gap_params_init();
@@ -202,6 +209,7 @@ void BleInterface::services_init()
 {
     uint32_t           err_code;
     ble_nus_init_t     nus_init;
+    ble_stm_ota_init_t stm_ota_init;
     nrf_ble_qwr_init_t qwr_init = {0};
 
     // Initialize Queued Write Module.
@@ -216,6 +224,14 @@ void BleInterface::services_init()
     nus_init.data_handler = static_nus_data_handler;
 
     err_code = ble_nus_init(&m_nus, &nus_init);
+    APP_ERROR_CHECK(err_code);
+
+    // Initialize STM OTA.
+    memset(&m_stm_ota, 0, sizeof(m_stm_ota));
+
+    stm_ota_init.event_handler = static_stm_ota_data_handler;
+
+    err_code = ble_stm_ota_init(&m_stm_ota, &stm_ota_init);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -353,6 +369,114 @@ void BleInterface::gatt_evt_handler(nrf_ble_gatt_t * p_gatt, nrf_ble_gatt_evt_t 
 void BleInterface::nrf_qwr_error_handler(uint32_t nrf_error)
 {
     APP_ERROR_HANDLER(nrf_error);
+}
+
+/**@brief Function for handling the events from the STM OTA BLE Service.
+ *
+ * @details This function will process the events received from the STM OTA BLE Service
+ *
+ * @param[in] p_evt       STM OTA Service event.
+ */
+/**@snippet [Handling the data received over BLE] */
+void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p_stm_ota, ble_stm_ota_event_t * p_evt)
+{
+	BLEServiceEvent s_evt;
+	switch (p_evt->event_type)
+	{
+		case STM_OTA_EVENT_ACTION:
+		{
+			if (p_evt->action == STM_OTA_ACTION_START_WIRELESS ||
+			    p_evt->action == STM_OTA_ACTION_START_USER_APP)
+			{
+				// The next receive raw data packet will contain at least 8 bytes
+				// which shall include the total file size and a CRC32 checksum
+				m_is_first_ota_packet = true;
+			}
+			else if (p_evt->action == STM_OTA_ACTION_STOP_ALL ||
+					p_evt->action == STM_OTA_ACTION_CANCEL)
+			{
+				s_evt.event_type = BLEServiceEventType::OTA_ABORT;
+				m_on_event(s_evt);
+				ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
+			}
+			else if (p_evt->action == STM_OTA_ACTION_UPLOAD_FINISHED)
+			{
+				s_evt.event_type = BLEServiceEventType::OTA_END;
+				try {
+					m_on_event(s_evt);
+				} catch (ErrorCode e) {
+					// Exception raised, indicate the procedure failed
+					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
+				}
+			}
+		}
+		break;
+		case STM_OTA_EVENT_RAW_DATA:
+		{
+			if (m_is_first_ota_packet)
+			{
+				// If the length is less than 8 bytes then flag an error
+				if (p_evt->length < 8)
+				{
+					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
+					return;
+				}
+
+				m_is_first_ota_packet = false;
+
+				s_evt.event_type = BLEServiceEventType::OTA_START;
+				s_evt.file_size = ((uint8_t *)p_evt->p_data)[0] |
+						((uint8_t *)p_evt->p_data)[1] << 8 |
+						((uint8_t *)p_evt->p_data)[2] << 16 |
+						((uint8_t *)p_evt->p_data)[3] << 24;
+				s_evt.crc32 = ((uint8_t *)p_evt->p_data)[4] |
+						((uint8_t *)p_evt->p_data)[5] << 8 |
+						((uint8_t *)p_evt->p_data)[6] << 16 |
+						((uint8_t *)p_evt->p_data)[7] << 24;
+
+				// Notify start event
+				try {
+					m_on_event(s_evt);
+				} catch (ErrorCode e) {
+					// Exception raised, indicate the procedure failed
+					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
+				}
+
+				// If any bytes remain then pass these on as file data
+				if (p_evt->length > 8)
+				{
+					s_evt.event_type = BLEServiceEventType::OTA_FILE_DATA;
+					s_evt.data = (uint8_t *)p_evt->p_data + 8;
+					s_evt.length = p_evt->length - 8;
+
+					// Notify file data
+					try {
+						m_on_event(s_evt);
+					} catch (ErrorCode e) {
+						// Exception raised, indicate the procedure failed
+						ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
+					}
+				}
+			}
+			else
+			{
+				s_evt.event_type = BLEServiceEventType::OTA_FILE_DATA;
+				s_evt.data = p_evt->p_data;
+				s_evt.length = p_evt->length;
+
+				try {
+					m_on_event(s_evt);
+				} catch (ErrorCode e) {
+					// Exception raised, indicate the procedure failed
+					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
+				}
+			}
+
+		}
+		break;
+		default:
+			break;
+	}
 }
 
 /**@brief Function for handling the data from the Nordic UART Service.
