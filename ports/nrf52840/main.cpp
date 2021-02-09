@@ -5,8 +5,8 @@
 #include "nrf_log_redirect.h"
 #include "nrfx_spim.h"
 #include "ble_interface.hpp"
+#include "ota_flash_file_updater.hpp"
 #include "dte_handler.hpp"
-#include "is25_flash_file_system.hpp"
 #include "nrf_memory_access.hpp"
 #include "config_store_fs.hpp"
 #include "debug.hpp"
@@ -15,21 +15,22 @@
 #include "bsp.hpp"
 #include "gentracker.hpp"
 #include "nrf_timer.hpp"
-#include "fake_switch.hpp"
-#include "fake_led.hpp"
-#include "ota_update_service.hpp"
+#include "nrf_switch.hpp"
+#include "sws.hpp"
 #include "fake_comms_scheduler.hpp"
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
 #include "artic.hpp"
+#include "is25_flash.hpp"
+#include "nrf_led.hpp"
+#include "nrf_battery_mon.hpp"
 #include "m8q.hpp"
-
 
 FileSystem *main_filesystem;
 
 ConfigurationStore *configuration_store;
-BLEService *dte_service;
-BLEService *ota_update_service;
+BLEService *ble_service;
+OTAFileUpdater *ota_updater;
 CommsScheduler *comms_scheduler;
 LocationScheduler *location_scheduler;
 MemoryAccess *memory_access;
@@ -45,9 +46,16 @@ Switch *saltwater_switch;
 Switch *reed_switch;
 DTEHandler *dte_handler;
 RTC *rtc;
+BatteryMonitor *battery_monitor;
 
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
+
+// Reserve the last 1MB of IS25 flash memory for firmware updates
+#define OTA_UPDATE_RESERVED_BLOCKS ((1024 * 1024) / IS25_BLOCK_SIZE)
+
+// Reed switch debouncing time (ms)
+#define REED_SWITCH_DEBOUNCE_TIME_MS    50
 
 // Redirect std::cout and printf output to debug UART
 // We have to define this as extern "C" as we are overriding a weak C function
@@ -69,17 +77,18 @@ int main()
 
     nrf_log_redirect_init();
 
-	// Set up fakes
-	FakeSwitch fake_reed_switch(0, 0);
-	reed_switch = &fake_reed_switch;
-	FakeSwitch fake_saltwater_switch(0, 0);
-	saltwater_switch = &fake_saltwater_switch;
-	FakeLed fake_red_led("Red");
-	red_led = &fake_red_led;
-	FakeLed fake_green_led("Green");
-	green_led = &fake_green_led;
-	FakeLed fake_blue_led("Blue");
-	blue_led = &fake_blue_led;
+    NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
+    battery_monitor = &nrf_battery_monitor;
+	NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS);
+	reed_switch = &nrf_reed_switch;
+	SWS nrf_saltwater_switch;
+	saltwater_switch = &nrf_saltwater_switch;
+	NrfLed nrf_red_led("Red", BSP::GPIO::GPIO_LED_RED);
+	red_led = &nrf_red_led;
+	NrfLed nrf_green_led("Green", BSP::GPIO::GPIO_LED_GREEN);
+	green_led = &nrf_green_led;
+	NrfLed nrf_blue_led("Blue", BSP::GPIO::GPIO_LED_BLUE);
+	blue_led = &nrf_blue_led;
 
     BleInterface::get_instance().init();
 
@@ -96,10 +105,11 @@ int main()
 
 	GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
 
-	Is25FlashFileSystem lfs_file_system;
-	main_filesystem = &lfs_file_system;
+	Is25Flash is25_flash;
+	is25_flash.init();
 
-	lfs_file_system.init();
+	LFSFileSystem lfs_file_system(&is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);
+	main_filesystem = &lfs_file_system;
 
 	LFSConfigurationStore store(lfs_file_system);
 	configuration_store = &store;
@@ -117,10 +127,9 @@ int main()
 	DTEHandler dte_handler_local;
 	dte_handler = &dte_handler_local;
 
-	dte_service = &BleInterface::get_instance();
-
-	OTAUpdateService ota_service;
-	ota_update_service = &ota_service;
+	ble_service = &BleInterface::get_instance();
+	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS, OTA_UPDATE_RESERVED_BLOCKS);
+	ota_updater = &ota_flash_file_updater;
 
 	ArticTransceiver artic_transceiver;
 	comms_scheduler = &artic_transceiver;

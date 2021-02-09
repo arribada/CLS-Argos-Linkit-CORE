@@ -7,6 +7,7 @@ class MockConfigurationStore : public ConfigurationStore {
 protected:
 	void serialize_config(ParamID) {}
 	void serialize_zone() {}
+	void update_battery_level() {}
 
 public:
 	BasePassPredict m_pass_predict;
@@ -34,6 +35,9 @@ public:
 	void write_pass_predict(BasePassPredict& value) {
 		mock().actualCall("write").onObject(this);
 		m_pass_predict = value;
+	}
+	bool is_battery_level_low() {
+		return mock().actualCall("is_battery_level_low").onObject(this).returnBoolValue();
 	}
 };
 

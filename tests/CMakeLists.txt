@@ -70,6 +70,12 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     # For enabling debug output
     -DDEBUG_ENABLE
 
+    # For setting default device model
+    -DDEVICE_MODEL_NAME="SURFACEBOX"s
+
+	# Packet protocol option for including CRC8
+    -DARGOS_USE_CRC8
+ 
     # Always output coloured text from GCC
     -fdiagnostics-color=always
 )
@@ -100,12 +106,13 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c"
     "${ROOT_DIR}/core/util/haversine.cpp"
     "${ROOT_DIR}/core/scheduling/argos_scheduler.cpp"
-    "${ROOT_DIR}/core/scheduling/gps_scheduler.cpp"
+    "${ROOT_DIR}/core/filesystem/ota_flash_file_updater.cpp"
     "${ROOT_DIR}/core/hardware/sws.cpp"
     "${ROOT_DIR}/core/sm/gentracker.cpp"
     "${LINUX_DIR}/interrupt_lock.cpp"
     "${NRF_DIR}/core/hardware/nrf_timer.cpp"
     "${NRF_DIR}/core/hardware/nrf_switch.cpp"
+    "${NRF_DIR}/core/hardware/nrf_battery_mon.cpp"
     "src/timer_test.cpp"
     "src/filesystem_test.cpp"
     "src/gps_test.cpp"
@@ -119,9 +126,11 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/argos_test.cpp"
     "src/bch_test.cpp"
     "src/crc8_test.cpp"
+    "src/crc32_test.cpp"
     "src/previpass_test.cpp"
     "src/sws_test.cpp"
     "src/nrf_switch_test.cpp"
+    "src/nrf_battery_test.cpp"
     "src/main.cpp"
     "fakes/nrfx_rtc.c"
     "mocks/mock_gpio.cpp"

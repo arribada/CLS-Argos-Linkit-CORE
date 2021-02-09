@@ -439,6 +439,13 @@
 #define BLE_LBS_ENABLED 0
 #endif
 
+// <q> BLE_STM_OTA_ENABLED  - ble_stm_ota - STM OTA Service
+
+
+#ifndef BLE_STM_OTA_ENABLED
+#define BLE_STM_OTA_ENABLED 1
+#endif
+
 // <q> BLE_LLS_ENABLED  - ble_lls - Link Loss Service
  
 
@@ -1413,7 +1420,7 @@
 // <e> GPIOTE_ENABLED - nrf_drv_gpiote - GPIOTE peripheral driver - legacy layer
 //==========================================================
 #ifndef GPIOTE_ENABLED
-#define GPIOTE_ENABLED 0
+#define GPIOTE_ENABLED 1
 #endif
 // <o> GPIOTE_CONFIG_NUM_OF_LOW_POWER_EVENTS - Number of lower power input pins 
 #ifndef GPIOTE_CONFIG_NUM_OF_LOW_POWER_EVENTS
@@ -3268,7 +3275,7 @@
 // <e> NRFX_SAADC_ENABLED - nrfx_saadc - SAADC peripheral driver
 //==========================================================
 #ifndef NRFX_SAADC_ENABLED
-#define NRFX_SAADC_ENABLED 0
+#define NRFX_SAADC_ENABLED 1
 #endif
 // <o> NRFX_SAADC_CONFIG_RESOLUTION  - Resolution
  
@@ -5260,9 +5267,9 @@
 
 // <e> SAADC_ENABLED - nrf_drv_saadc - SAADC peripheral driver - legacy layer
 //==========================================================
-#ifndef SAADC_ENABLED
-#define SAADC_ENABLED 0
-#endif
+//#ifndef SAADC_ENABLED
+//#define SAADC_ENABLED 0
+//#endif
 // <o> SAADC_CONFIG_RESOLUTION  - Resolution
  
 // <0=> 8 bit 
@@ -11225,6 +11232,13 @@
 
 #ifndef BLE_LBS_BLE_OBSERVER_PRIO
 #define BLE_LBS_BLE_OBSERVER_PRIO 2
+#endif
+
+// <o> BLE_STM_OTA_BLE_OBSERVER_PRIO
+// <i> Priority with which BLE events are dispatched to the STM OTAService.
+
+#ifndef BLE_STM_OTA_BLE_OBSERVER_PRIO
+#define BLE_STM_OTA_BLE_OBSERVER_PRIO 2
 #endif
 
 // <o> BLE_LBS_C_BLE_OBSERVER_PRIO  

@@ -7,6 +7,8 @@
 #include "nrfx_rtc.h"
 #include "nrfx_spim.h"
 #include "nrfx_gpiote.h"
+#include "nrfx_saadc.h"
+#include "nrf_gpio.h"
 
 // Locate code in RAM
 #define __RAMFUNC __attribute__ ((long_call, optimize("Os"), section (".ramfunc")))
@@ -15,7 +17,7 @@
 #define RTC_DATE_TIME  BSP::RTC::RTC_1
 #define RTC_TIMER      BSP::RTC::RTC_2
 #define SPI_SATELLITE  BSP::SPI::SPI_2
-#define UART_GPS       BSP::UART::UART_1
+#define BATTERY_ADC	   BSP::ADC::ADC_CHANNEL_0
 
 namespace BSP
 {
@@ -87,6 +89,8 @@ namespace BSP
     static constexpr uint8_t INTERRUPT_PRIORITY_ADC       = 6;
     static constexpr uint8_t INTERRUPT_PRIORITY_RTC_0     = 6;
 
+    ////////////////////////////////// UART definitions /////////////////////////////////
+
     enum UART
     {
     #if NRFX_UARTE0_ENABLED
@@ -105,6 +109,8 @@ namespace BSP
     };
 
     extern const UART_InitTypeDefAndInst UART_Inits[UART_TOTAL_NUMBER];
+
+    ////////////////////////////////// QSPI definitions /////////////////////////////////
 
     enum QSPI
     {
@@ -144,6 +150,8 @@ namespace BSP
 
     extern const RTC_InitTypeDefAndInst_t RTC_Inits[RTC_TOTAL_NUMBER];
 
+    ////////////////////////////////// SPI definitions /////////////////////////////////
+
     enum SPI
     {
 #if NRFX_SPIM0_ENABLED
@@ -168,4 +176,20 @@ namespace BSP
     } SPI_InitTypeDefAndInst_t;
 
     extern const SPI_InitTypeDefAndInst_t SPI_Inits[SPI_TOTAL_NUMBER];
+
+    ////////////////////////////////// ADC definitions /////////////////////////////////
+
+    enum ADC
+    {
+        ADC_CHANNEL_0,
+        ADC_TOTAL_CHANNELS
+    };
+
+    typedef struct
+    {
+    	nrfx_saadc_config_t saadc_config;
+        nrf_saadc_channel_config_t saadc_config_channel_config[ADC_TOTAL_CHANNELS];
+    } ADC_InitTypeDefAndInst_t;
+
+    extern const ADC_InitTypeDefAndInst_t ADC_Inits;
 }

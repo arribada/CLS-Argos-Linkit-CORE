@@ -10,14 +10,16 @@
 #define MAX_FILE_SIZE (4*1024*1024)
 
 
-static LFSRamFileSystem *fs;
-static uint8_t wr_buffer[128];
-static uint8_t rd_buffer[128];
-
 TEST_GROUP(RamFileSystem)
 {
+	RamFlash *ram_flash;
+	LFSFileSystem *fs;
+	uint8_t wr_buffer[128];
+	uint8_t rd_buffer[128];
+
 	void setup() {
-		fs = new LFSRamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+		ram_flash = new RamFlash(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+		fs = new LFSFileSystem(ram_flash);
 		fs->format();
 		fs->mount();
 		for (unsigned int i = 0; i < sizeof(wr_buffer); i++)
@@ -28,6 +30,7 @@ TEST_GROUP(RamFileSystem)
 	void teardown() {
 		fs->umount();
 		delete fs;
+		delete ram_flash;
 	}
 };
 

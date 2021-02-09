@@ -23,6 +23,7 @@ struct GNSSConfig {
 	unsigned int acquisition_timeout;
 	BaseAqPeriod dloc_arg_nom;
 	bool underwater_en;
+	uint16_t battery_voltage;
 };
 
 struct ArgosConfig {
@@ -39,13 +40,14 @@ struct ArgosConfig {
 	bool underwater_en;
 };
 
+
 class ConfigurationStore {
 
 protected:
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
-		/* DEVICE_MODEL */ "GenTracker"s,
+		/* DEVICE_MODEL */ DEVICE_MODEL_NAME,
 		/* FW_APP_VERSION */ "V0.1"s,
 		/* LAST_TX */ static_cast<std::time_t>(0U),
 		/* TX_COUNTER */ 0U,
@@ -116,12 +118,15 @@ protected:
 	std::array<BaseType, MAX_CONFIG_ITEMS> m_params;
 	BaseZone m_zone;
 	uint8_t m_battery_level;
+	uint16_t m_battery_voltage;
 	GPSLogEntry m_last_gps_log_entry;
 	virtual void serialize_config(ParamID) = 0;
 	virtual void serialize_zone() = 0;
+	virtual void update_battery_level() = 0;
 
 public:
 	ConfigurationStore() {
+		m_battery_voltage = 0U;
 		m_battery_level = 255U;  // Set battery level to some value that won't trigger LB mode until we get notified of a real battery level
 		m_last_gps_log_entry.valid = 0; // Mark last GPS entry as invalid
 	}
@@ -133,10 +138,17 @@ public:
 	virtual void factory_reset() = 0;
 	virtual BasePassPredict& read_pass_predict() = 0;
 	virtual void write_pass_predict(BasePassPredict& value) = 0;
+	virtual bool is_battery_level_low() = 0;
 
 	template <typename T>
 	T& read_param(ParamID param_id) {
 		if (is_valid()) {
+
+			if (param_id == ParamID::BATT_SOC) {
+				update_battery_level();
+				m_params.at((unsigned)param_id) = (unsigned int)m_battery_level;
+			}
+
 			if constexpr (std::is_same<T, BaseType>::value) {
 				return m_params.at((unsigned)param_id);
 			}
@@ -187,10 +199,6 @@ public:
 		m_last_gps_log_entry = gps_location;
 	}
 
-	void notify_battery_level(uint8_t battery_level) {
-		m_battery_level = battery_level;
-	}
-
 	bool is_zone_exclusion(void) {
 		if (m_zone.enable_monitoring &&
 			m_zone.enable_out_of_zone_detection_mode &&
@@ -220,6 +228,9 @@ public:
 	void get_gnss_configuration(GNSSConfig& gnss_config) {
 		auto lb_en = read_param<bool>(ParamID::LB_EN);
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
+		update_battery_level();
+
+		gnss_config.battery_voltage = m_battery_voltage;
 
 		if (lb_en && m_battery_level <= lb_threshold) {
 			// Use LB mode which takes priority
@@ -255,6 +266,7 @@ public:
 	void get_argos_configuration(ArgosConfig& argos_config) {
 		auto lb_en = read_param<bool>(ParamID::LB_EN);
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
+		update_battery_level();
 
 		if (lb_en && m_battery_level <= lb_threshold) {
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
@@ -308,7 +320,6 @@ public:
 		unsigned int tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER) + 1;
 		write_param(ParamID::TX_COUNTER, tx_counter);
 	}
-
 };
 
 #endif // __CONFIG_STORE_HPP_

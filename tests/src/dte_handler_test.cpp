@@ -1,6 +1,7 @@
 #include "dte_handler.hpp"
 #include "config_store_fs.hpp"
 #include "fake_memory_access.hpp"
+#include "fake_battery_mon.hpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
@@ -19,19 +20,22 @@ extern ConfigurationStore *configuration_store;
 extern MemoryAccess *memory_access;
 extern Logger *sensor_log;
 extern Logger *system_log;
-
+extern BatteryMonitor *battery_monitor;
 
 TEST_GROUP(DTEHandler)
 {
-	LFSRamFileSystem *ram_filesystem;
+	RamFlash *ram_flash;
+	LFSFileSystem *ram_filesystem;
 	LFSConfigurationStore *store;
 	FakeMemoryAccess *fake_memory_access;
 	MockLog *mock_system_log;
 	MockLog *mock_sensor_log;
 	DTEHandler *dte_handler;
+	FakeBatteryMonitor *fake_battery_monitor;
 
 	void setup() {
-		ram_filesystem = new LFSRamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+		ram_flash = new RamFlash(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+		ram_filesystem = new LFSFileSystem(ram_flash);
 		ram_filesystem->format();
 		ram_filesystem->mount();
 		main_filesystem = ram_filesystem;
@@ -45,6 +49,10 @@ TEST_GROUP(DTEHandler)
 		mock_sensor_log = new MockLog;
 		sensor_log = mock_sensor_log;
 		dte_handler = new DTEHandler();
+		fake_battery_monitor = new FakeBatteryMonitor();
+		battery_monitor = fake_battery_monitor;
+		fake_battery_monitor->m_level = 0U;
+		fake_battery_monitor->m_voltage = 0U;
 	}
 
 	void teardown() {
@@ -52,6 +60,7 @@ TEST_GROUP(DTEHandler)
 		delete mock_sensor_log;
 		delete mock_system_log;
 		delete fake_memory_access;
+		delete fake_battery_monitor;
 		delete store;
 		ram_filesystem->umount();
 		delete ram_filesystem;
@@ -81,7 +90,7 @@ TEST(DTEHandler, PARMR_REQ)
 	std::string resp;
 	std::string req = "$PARMR#0D7;IDT06,IDT07,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARMR#178;IDT06=0,IDT07=0,IDT02=GenTracker,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,IDP11=,ART03=Thu Jan  1 00:00:00 1970,ARP03=399.91,ARP04=4,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=1,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=4,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=4,LBP07=2,LBP08=1,LBP09=60\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARMR#178;IDT06=0,IDT07=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,IDP11=,ART03=Thu Jan  1 00:00:00 1970,ARP03=399.91,ARP04=4,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=1,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=4,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=4,LBP07=2,LBP08=1,LBP09=60\r", resp.c_str());
 }
 
 TEST(DTEHandler, STATR_REQ)
@@ -89,7 +98,7 @@ TEST(DTEHandler, STATR_REQ)
 	std::string resp;
 	std::string req = "$STATR#0D7;IDT06,IDT07,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;STATR#178;IDT06=0,IDT07=0,IDT02=GenTracker,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,IDP11=,ART03=Thu Jan  1 00:00:00 1970,ARP03=399.91,ARP04=4,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=1,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=4,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=4,LBP07=2,LBP08=1,LBP09=60\r", resp.c_str());
+	STRCMP_EQUAL("$O;STATR#178;IDT06=0,IDT07=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,IDP11=,ART03=Thu Jan  1 00:00:00 1970,ARP03=399.91,ARP04=4,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=1,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=4,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=4,LBP07=2,LBP08=1,LBP09=60\r", resp.c_str());
 }
 
 TEST(DTEHandler, STATR_REQ_CheckEmptyRequest)
@@ -97,7 +106,7 @@ TEST(DTEHandler, STATR_REQ_CheckEmptyRequest)
 	std::string resp;
 	std::string req = "$STATR#000;\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;STATR#098;IDT06=0,IDT07=0,IDT02=GenTracker,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,ART03=Thu Jan  1 00:00:00 1970\r", resp.c_str());
+	STRCMP_EQUAL("$O;STATR#098;IDT06=0,IDT07=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=Thu Jan  1 00:00:00 1970,ART02=0,POT03=0,POT05=Thu Jan  1 00:00:00 1970,ART03=Thu Jan  1 00:00:00 1970\r", resp.c_str());
 }
 
 TEST(DTEHandler, PARMR_REQ_CheckEmptyRequest)

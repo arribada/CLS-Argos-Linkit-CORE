@@ -8,10 +8,12 @@
 #include "scheduler.hpp"
 #include "logger.hpp"
 #include "ble_service.hpp"
+#include "ota_file_updater.hpp"
 #include "led.hpp"
 #include "switch.hpp"
 #include "memory_access.hpp"
 #include "rtc.hpp"
+#include "battery.hpp"
 
 #include "CppUTest/CommandLineTestRunner.h"
 #include "CppUTest/TestRegistry.h"
@@ -28,8 +30,8 @@ DTEHandler *dte_handler;
 Scheduler *system_scheduler;
 Logger *sensor_log;
 Logger *system_log;
-BLEService *dte_service;
-BLEService *ota_update_service;
+BLEService *ble_service;
+OTAFileUpdater *ota_updater;
 Switch *reed_switch;
 Switch *saltwater_switch;
 Led *red_led;
@@ -37,6 +39,7 @@ Led *green_led;
 Led *blue_led;
 MemoryAccess *memory_access;
 RTC *rtc;
+BatteryMonitor *battery_monitor;
 
 MockSupportPlugin mockPlugin;
 

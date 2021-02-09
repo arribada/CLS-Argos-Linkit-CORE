@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "nrfx_rtc.h"
+#include "nrfx_saadc.h"
 
 #define RTC_TIMER      BSP::RTC::RTC_1
 
@@ -35,4 +36,18 @@ namespace BSP
     } GPIO_InitTypeDefAndInst_t;
 
     extern const GPIO_InitTypeDefAndInst_t GPIO_Inits[GPIO_TOTAL_NUMBER];
+
+    enum ADC
+    {
+        ADC_CHANNEL_0,
+        ADC_TOTAL_CHANNELS
+    };
+
+    typedef struct
+    {
+    	nrfx_saadc_config_t saadc_config;
+        nrf_saadc_channel_config_t saadc_config_channel_config[ADC_TOTAL_CHANNELS];
+    } ADC_InitTypeDefAndInst_t;
+
+    extern const ADC_InitTypeDefAndInst_t ADC_Inits;
 }

@@ -4,6 +4,7 @@
 #include "ble.h"
 #include "nrf_ble_gatt.h"
 #include "ble_nus.h"
+#include "ble_stm_ota.h"
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "ble_conn_params.h"
@@ -13,7 +14,7 @@ class BleInterface : public BLEService
 public:
     void init();
 
-	void start(std::function<void()> const &on_connected, std::function<void()> const &on_disconnected, std::function<void()> const &on_received) override;
+	void start(std::function<int(BLEServiceEvent& event)> on_event) override;
 	void stop() override;
     void write(std::string str) override;
     std::string read_line() override;
@@ -46,6 +47,7 @@ private:
     void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context);
     void nrf_qwr_error_handler(uint32_t nrf_error);
     void nus_data_handler(ble_nus_evt_t * p_evt);
+    void stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p_stm_ota, ble_stm_ota_event_t * p_evt);
     void on_adv_evt(ble_adv_evt_t ble_adv_evt);
     void on_conn_params_evt(ble_conn_params_evt_t * p_evt);
     void conn_params_error_handler(uint32_t nrf_error);
@@ -55,6 +57,7 @@ private:
     static void static_ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context) { get_instance().ble_evt_handler(p_ble_evt, p_context); };
     static void static_nrf_qwr_error_handler(uint32_t nrf_error) { get_instance().nrf_qwr_error_handler(nrf_error); };
     static void static_nus_data_handler(ble_nus_evt_t * p_evt) { get_instance().nus_data_handler(p_evt); };
+    static void static_stm_ota_data_handler(uint16_t conn_handle, ble_stm_ota_t * p_stm_ota, ble_stm_ota_event_t * p_evt) { get_instance().stm_ota_event_handler(conn_handle, p_stm_ota, p_evt); };
     static void static_on_adv_evt(ble_adv_evt_t ble_adv_evt) { get_instance().on_adv_evt(ble_adv_evt); }
     static void static_on_conn_params_evt(ble_conn_params_evt_t * p_evt) { get_instance().on_conn_params_evt(p_evt); };
     static void static_conn_params_error_handler(uint32_t nrf_error) { get_instance().conn_params_error_handler(nrf_error); }
@@ -62,7 +65,6 @@ private:
     uint8_t m_receive_buffer[1024];
     volatile size_t m_receive_buffer_len;
     volatile bool m_carriage_return_received;
-    std::function<void()> m_on_connected;
-    std::function<void()> m_on_disconnected;
-    std::function<void()> m_on_received;
+    volatile bool m_is_first_ota_packet;
+    std::function<int(BLEServiceEvent& event)> m_on_event;
 };

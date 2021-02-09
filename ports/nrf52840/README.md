@@ -6,13 +6,13 @@ The instructions below describe how to build and flash this application.
 
 ### Debug Version
 ```
-cmake -DCMAKE_TOOLCHAIN_FILE=toolchain_arm_gcc_nrf52.cmake -DCMAKE_BUILD_TYPE=Debug .
+cmake -DCMAKE_TOOLCHAIN_FILE=toolchain_arm_gcc_nrf52.cmake -DCMAKE_BUILD_TYPE=Debug -DBOARD=<HORIZON|GENTRACKER> -DMODEL=<SURFACEBOX|UNDERWATER> .
 make 
 ```
 
 ### Release Version
 ```
-cmake -DCMAKE_TOOLCHAIN_FILE=toolchain_arm_gcc_nrf52.cmake -DCMAKE_BUILD_TYPE=Release .
+cmake -DCMAKE_TOOLCHAIN_FILE=toolchain_arm_gcc_nrf52.cmake -DCMAKE_BUILD_TYPE=Release  -DBOARD=<HORIZON|GENTRACKER> -DMODEL=<SURFACEBOX|UNDERWATER> .
 make
 ```
 

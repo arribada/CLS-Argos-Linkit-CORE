@@ -18,3 +18,7 @@ void GPIOPins::clear(uint32_t pin) {
 uint32_t GPIOPins::value(uint32_t pin) {
 	return mock().actualCall("value").withParameter("pin", pin).returnUnsignedLongIntValue();
 }
+
+void GPIOPins::toggle(uint32_t pin) {
+	mock().actualCall("toggle").withParameter("pin", pin);
+}

@@ -1,6 +1,7 @@
 #include "config_store_fs.hpp"
 
 #include "dte_protocol.hpp"
+#include "fake_battery_mon.hpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
@@ -13,7 +14,8 @@
 
 
 extern FileSystem *main_filesystem;
-static LFSRamFileSystem *ram_filesystem;
+extern BatteryMonitor *battery_monitor;
+static LFSFileSystem *ram_filesystem;
 
 using namespace std::literals::string_literals;
 
@@ -21,8 +23,14 @@ using namespace std::literals::string_literals;
 
 TEST_GROUP(ConfigStore)
 {
+	RamFlash *ram_flash;
+	FakeBatteryMonitor *fake_battery_monitor;
+
 	void setup() {
-		ram_filesystem = new LFSRamFileSystem(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+		fake_battery_monitor = new FakeBatteryMonitor;
+		battery_monitor = fake_battery_monitor;
+		ram_flash = new RamFlash(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
+		ram_filesystem = new LFSFileSystem(ram_flash);
 		ram_filesystem->format();
 		ram_filesystem->mount();
 		main_filesystem = ram_filesystem;
@@ -31,6 +39,8 @@ TEST_GROUP(ConfigStore)
 	void teardown() {
 		ram_filesystem->umount();
 		delete ram_filesystem;
+		delete ram_flash;
+		delete fake_battery_monitor;
 	}
 };
 
@@ -45,7 +55,7 @@ TEST(ConfigStore, CreateConfigStoreWithDefaultParams)
 
 	// Check some defaults are correct
 	CHECK_EQUAL(0U, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
-	CHECK_EQUAL("GenTracker"s, store->read_param<std::string>(ParamID::DEVICE_MODEL));
+	CHECK_EQUAL(DEVICE_MODEL_NAME, store->read_param<std::string>(ParamID::DEVICE_MODEL));
 
 	delete store;
 }
@@ -228,18 +238,6 @@ TEST(ConfigStore, PARAM_TX_COUNTER)
 	delete store;
 }
 
-
-TEST(ConfigStore, PARAM_BATT_SOC)
-{
-	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore(*main_filesystem);
-	store->init();
-
-	unsigned int t = 50U;
-	store->write_param(ParamID::BATT_SOC, t);
-	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::BATT_SOC));
-	delete store;
-}
 
 TEST(ConfigStore, PARAM_LAST_FULL_CHARGE_DATE)
 {
@@ -799,7 +797,7 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	store->write_param(ParamID::LB_TRESHOLD, lb_thresh);
 
 	// Notify battery level above threshold
-	store->notify_battery_level(100U);
+	fake_battery_monitor->m_level = 100;
 
 	GNSSConfig gnss_config;
 	store->get_gnss_configuration(gnss_config);
@@ -811,7 +809,7 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(hdop_filter_threshold, gnss_config.hdop_filter_threshold);
 
 	// Notify battery level equal threshold
-	store->notify_battery_level(10U);
+	fake_battery_monitor->m_level = 10;
 
 	store->get_gnss_configuration(gnss_config);
 
@@ -822,7 +820,7 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
 
 	// Notify battery level below threshold
-	store->notify_battery_level(1U);
+	fake_battery_monitor->m_level = 1;
 
 	store->get_gnss_configuration(gnss_config);
 
@@ -929,7 +927,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	store->write_param(ParamID::LB_TRESHOLD, lb_thresh);
 
 	// Notify battery level above threshold
-	store->notify_battery_level(100U);
+	fake_battery_monitor->m_level = 100;
 
 	ArgosConfig argos_config;
 	store->get_argos_configuration(argos_config);
@@ -945,7 +943,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
 
 	// Notify battery level equal threshold
-	store->notify_battery_level(10U);
+	fake_battery_monitor->m_level = 10;
 
 	store->get_argos_configuration(argos_config);
 
@@ -960,7 +958,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
 
 	// Notify battery level below threshold
-	store->notify_battery_level(1U);
+	fake_battery_monitor->m_level = 1;
 
 	store->get_argos_configuration(argos_config);
 

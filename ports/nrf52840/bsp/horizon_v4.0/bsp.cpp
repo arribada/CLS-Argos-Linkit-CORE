@@ -1,5 +1,4 @@
 #include "bsp.hpp"
-#include "nrf_gpio.h"
 
 namespace BSP
 {
@@ -238,5 +237,30 @@ namespace BSP
             }
         }
     #endif
+    };
+
+    ////////////////////////////////// ADC definitions /////////////////////////////////
+    const ADC_InitTypeDefAndInst_t ADC_Inits =
+    {
+        {
+            NRF_SAADC_RESOLUTION_14BIT,
+            NRF_SAADC_OVERSAMPLE_DISABLED,
+            INTERRUPT_PRIORITY_ADC,
+            false
+        },
+        {
+            {
+                // ADC_CHANNEL_0
+                NRF_SAADC_RESISTOR_DISABLED,
+                NRF_SAADC_RESISTOR_DISABLED,
+                NRF_SAADC_GAIN1_6,
+                NRF_SAADC_REFERENCE_INTERNAL,
+                NRF_SAADC_ACQTIME_40US,
+                NRF_SAADC_MODE_SINGLE_ENDED,
+                NRF_SAADC_BURST_DISABLED,
+                NRF_SAADC_INPUT_AIN1,
+                NRF_SAADC_INPUT_DISABLED
+            }
+        }
     };
 }
