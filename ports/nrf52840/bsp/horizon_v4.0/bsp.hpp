@@ -15,6 +15,7 @@
 #define RTC_DATE_TIME  BSP::RTC::RTC_1
 #define RTC_TIMER      BSP::RTC::RTC_2
 #define SPI_SATELLITE  BSP::SPI::SPI_2
+#define UART_GPS       BSP::UART::UART_1
 
 namespace BSP
 {

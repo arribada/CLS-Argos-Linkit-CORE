@@ -154,6 +154,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${PROJ_DIR}/core/filesystem/is25_flash_file_system.cpp
     ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
     ${PROJ_DIR}/core/hardware/m8q/m8q.cpp
+    ${PROJ_DIR}/core/hardware/m8q/nrf_uart_m8.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp
     ${PROJ_DIR}/core/hardware/nrf_spim.cpp

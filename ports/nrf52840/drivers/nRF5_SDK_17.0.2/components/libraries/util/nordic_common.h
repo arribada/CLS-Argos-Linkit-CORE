@@ -94,10 +94,15 @@ extern "C" {
 
 /** Leaves the minimum of the two 32-bit arguments */
 /*lint -emacro(506, MIN) */ /* Suppress "Constant value Boolean */
+#ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 /** Leaves the maximum of the two 32-bit arguments */
 /*lint -emacro(506, MAX) */ /* Suppress "Constant value Boolean */
+#ifndef MAX
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
+#endif
 
 /**@brief Concatenates two parameters.
  *
