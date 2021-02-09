@@ -12,6 +12,7 @@
 
 
 extern Scheduler *system_scheduler;
+extern Timer *system_timer;
 
 // This class maps the pin number to an NrfSwitch object -- this is largely needed because
 // the Nordic GPIOTE driver callback does not have a user-defined context and only passes
@@ -89,7 +90,7 @@ void NrfSwitch::update_state(bool state) {
 }
 
 void NrfSwitch::process_event(bool state) {
-	DEBUG_TRACE("NrfSwitch::process_event: state=%u hysteresis=%u", state, m_hysteresis_time_ms);
+	DEBUG_TRACE("NrfSwitch::process_event: state=%u hysteresis=%u timer=%lu", state, m_hysteresis_time_ms, system_timer->get_counter());
 	// Each time we get a new event we trigger the task to post it after the hysteresis time.
 	// If we receive another event, we cancel the previous task and start a new one.
 	system_scheduler->cancel_task(m_task_handle);

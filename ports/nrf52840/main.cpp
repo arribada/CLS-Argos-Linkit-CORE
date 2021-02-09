@@ -23,8 +23,9 @@
 #include "gpio.hpp"
 #include "artic.hpp"
 #include "is25_flash.hpp"
-#include "nrf_led.hpp"
+#include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
+#include "fs_log.hpp"
 
 FileSystem *main_filesystem;
 
@@ -39,9 +40,7 @@ Logger *system_log;
 ConsoleLog *console_log;
 Timer *system_timer;
 Scheduler *system_scheduler;
-Led *red_led;
-Led *green_led;
-Led *blue_led;
+RGBLed *status_led;
 Switch *saltwater_switch;
 Switch *reed_switch;
 DTEHandler *dte_handler;
@@ -77,66 +76,82 @@ int main()
 
     nrf_log_redirect_init();
 
+    DEBUG_INFO("Running main setup code...");
+
+    DEBUG_INFO("Battery monitor...");
+
     NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
     battery_monitor = &nrf_battery_monitor;
-	NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS);
+
+    DEBUG_INFO("Reed switch...");
+    NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS);
 	reed_switch = &nrf_reed_switch;
+
+	DEBUG_INFO("SWS...");
 	SWS nrf_saltwater_switch;
 	saltwater_switch = &nrf_saltwater_switch;
-	NrfLed nrf_red_led("Red", BSP::GPIO::GPIO_LED_RED);
-	red_led = &nrf_red_led;
-	NrfLed nrf_green_led("Green", BSP::GPIO::GPIO_LED_GREEN);
-	green_led = &nrf_green_led;
-	NrfLed nrf_blue_led("Blue", BSP::GPIO::GPIO_LED_BLUE);
-	blue_led = &nrf_blue_led;
 
+	DEBUG_INFO("LED...");
+	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
+	status_led = &nrf_status_led;
+
+    DEBUG_INFO("BLE...");
     BleInterface::get_instance().init();
 
+    DEBUG_INFO("Timer...");
 	system_timer = &NrfTimer::get_instance();
 	NrfTimer::get_instance().init();
 
+    DEBUG_INFO("RTC...");
 	rtc = &NrfRTC::get_instance();
 	NrfRTC::get_instance().init();
 
+    DEBUG_INFO("Scheduler...");
 	Scheduler scheduler(system_timer);
 	system_scheduler = &scheduler;
 
-	printf("GenTracker Booted\r\n");
-
-	GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
-
+    DEBUG_INFO("IS25 flash...");
 	Is25Flash is25_flash;
 	is25_flash.init();
 
+    DEBUG_INFO("LFS filesystem...");
 	LFSFileSystem lfs_file_system(&is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);
 	main_filesystem = &lfs_file_system;
 
+    DEBUG_INFO("LFS System Log...");
+	FsLog fs_system_log(&lfs_file_system, "system.log", 1024*1024);
+	system_log = &fs_system_log;
+
+    DEBUG_INFO("LFS Sensor Log...");
+	FsLog fs_sensor_log(&lfs_file_system, "sensor.log", 1024*1024);
+	sensor_log = &fs_sensor_log;
+
+    DEBUG_INFO("Configuration store...");
 	LFSConfigurationStore store(lfs_file_system);
 	configuration_store = &store;
-	//store.init();
 
+    DEBUG_INFO("RAM access...");
 	NrfMemoryAccess nrf_memory_access;
 	memory_access = &nrf_memory_access;
 
-	ConsoleLog console_system_log;
-	system_log = &console_system_log;
-
-	ConsoleLog console_sensor_log;
-	sensor_log = &console_sensor_log;
-
+    DEBUG_INFO("DTE handler...");
 	DTEHandler dte_handler_local;
 	dte_handler = &dte_handler_local;
 
+    DEBUG_INFO("OTA updater...");
 	ble_service = &BleInterface::get_instance();
 	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS, OTA_UPDATE_RESERVED_BLOCKS);
 	ota_updater = &ota_flash_file_updater;
 
+    DEBUG_INFO("Artic R2...");
 	ArticTransceiver artic_transceiver;
 	comms_scheduler = &artic_transceiver;
 
+    DEBUG_INFO("GPS Scheduler...");
 	FakeGPSScheduler fake_gps_scheduler;
 	gps_scheduler = &fake_gps_scheduler;
 
+    DEBUG_INFO("Entering main SM...");
 	// This will initialise the FSM
 	GenTracker::start();
 

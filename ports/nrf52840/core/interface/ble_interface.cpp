@@ -58,7 +58,9 @@ static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;        
 static ble_uuid_t m_adv_uuids[]          =                                          /**< Universally unique service identifier. */
 {
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE},
+#if 0
     {STM_OTA_UUID_SERVICE, STM_OTA_SERVICE_UUID_TYPE},
+#endif
 };
 
 void BleInterface::init()
@@ -209,7 +211,7 @@ void BleInterface::services_init()
 {
     uint32_t           err_code;
     ble_nus_init_t     nus_init;
-    ble_stm_ota_init_t stm_ota_init;
+    //ble_stm_ota_init_t stm_ota_init;
     nrf_ble_qwr_init_t qwr_init = {0};
 
     // Initialize Queued Write Module.
@@ -226,6 +228,7 @@ void BleInterface::services_init()
     err_code = ble_nus_init(&m_nus, &nus_init);
     APP_ERROR_CHECK(err_code);
 
+#if 0
     // Initialize STM OTA.
     memset(&m_stm_ota, 0, sizeof(m_stm_ota));
 
@@ -233,6 +236,7 @@ void BleInterface::services_init()
 
     err_code = ble_stm_ota_init(&m_stm_ota, &stm_ota_init);
     APP_ERROR_CHECK(err_code);
+#endif
 }
 
 void BleInterface::advertising_init()

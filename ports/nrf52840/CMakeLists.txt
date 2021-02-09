@@ -316,4 +316,4 @@ add_custom_target(dfu_app
                   COMMAND nrfutil dfu usb-serial -p /dev/ttyACM0 -pkg ${executable}_dfu.zip
 )
 
-add_dependencies(flash ${TARGET_NAME})
+add_dependencies(flash_softdev dfu_app ${TARGET_NAME})

@@ -2,7 +2,7 @@
 #include "debug.hpp"
 
 #include "fake_switch.hpp"
-#include "fake_led.hpp"
+#include "fake_rgb_led.hpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
@@ -19,6 +19,7 @@
 #include "scheduler.hpp"
 #include "dte_handler.hpp"
 #include "linux_timer.hpp"
+#include "bsp.hpp"
 
 #define BLOCK_COUNT   (256)
 #define BLOCK_SIZE    (64*1024)
@@ -36,9 +37,7 @@ extern Logger *sensor_log;
 extern Logger *system_log;
 extern BLEService *ble_service;
 extern OTAFileUpdater *ota_updater;
-extern Led *red_led;
-extern Led *green_led;
-extern Led *blue_led;
+extern RGBLed *status_led;
 extern Switch *saltwater_switch;
 extern Switch *reed_switch;
 extern BatteryMonitor *battery_monitor;
@@ -52,9 +51,7 @@ TEST_GROUP(Sm)
 {
 	FakeSwitch *fake_reed_switch;
 	FakeSwitch *fake_saltwater_switch;
-	FakeLed *fake_red_led;
-	FakeLed *fake_green_led;
-	FakeLed *fake_blue_led;
+	FakeRGBLed *fake_status_led;
 	LinuxTimer *linux_timer;
 	MockBatteryMonitor *mock_battery_monitor;
 	MockOTAFileUpdater *mock_ota_file_updater;
@@ -77,12 +74,8 @@ TEST_GROUP(Sm)
 		ble_service = mock_ble_service;
 		mock_battery_monitor = new MockBatteryMonitor;
 		battery_monitor = mock_battery_monitor;
-		fake_red_led = new FakeLed("RED");
-		red_led = fake_red_led;
-		fake_green_led = new FakeLed("GREEN");
-		green_led = fake_green_led;
-		fake_blue_led = new FakeLed("BLUE");
-		blue_led = fake_blue_led;
+		fake_status_led = new FakeRGBLed("STATUS");
+		status_led = fake_status_led;
 		fake_saltwater_switch = new FakeSwitch(0, 0);
 		saltwater_switch = fake_saltwater_switch;
 		fake_reed_switch = new FakeSwitch(0, 0);
@@ -100,9 +93,7 @@ TEST_GROUP(Sm)
 		delete mock_ble_service;
 		delete mock_ota_file_updater;
 		delete mock_battery_monitor;
-		delete fake_red_led;
-		delete fake_green_led;
-		delete fake_blue_led;
+		delete fake_status_led;
 		delete fake_reed_switch;
 		delete fake_saltwater_switch;
 	}
@@ -117,9 +108,7 @@ TEST(Sm, CheckBootFileSystemMountOk)
 	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
-	CHECK_TRUE(fake_red_led->get_state());
-	CHECK_TRUE(fake_green_led->get_state());
-	CHECK_TRUE(fake_blue_led->get_state());
+	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)fake_status_led->get_state());
 }
 
 TEST(Sm, CheckBootFileSystemFirstMountFail)
@@ -156,69 +145,50 @@ TEST(Sm, CheckBootFileSystemFormatFailAndEnterErrorState)
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
 }
 
-TEST(Sm, CheckBootStateTransitionsToOffState)
+TEST(Sm, CheckBootStateTransitionsToIdleState)
 {
 	mock().expectOneCall("create").onObject(sensor_log);
 	mock().expectOneCall("create").onObject(system_log);
 	mock().expectOneCall("init").onObject(configuration_store);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("start").onObject(mock_battery_monitor);
-	mock().expectOneCall("stop").onObject(mock_battery_monitor);
 	fsm_handle::start();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	while(!system_scheduler->run());
-	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
 	CHECK_TRUE(fake_reed_switch->is_started());
 	CHECK_FALSE(fake_saltwater_switch->is_started());
-	CHECK_TRUE(fake_red_led->is_flashing());
-	CHECK_TRUE(fake_green_led->is_flashing());
-	CHECK_TRUE(fake_blue_led->is_flashing());
-	linux_timer->set_counter(4999); // RED LED should go off at after 6 seconds
-	while(!system_scheduler->run());
-	CHECK_FALSE(fake_red_led->is_flashing());
-	CHECK_FALSE(fake_red_led->get_state());
-	CHECK_FALSE(fake_green_led->is_flashing());
-	CHECK_FALSE(fake_green_led->get_state());
-	CHECK_FALSE(fake_blue_led->is_flashing());
-	CHECK_FALSE(fake_blue_led->get_state());
 }
 
 TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigValid)
 {
 	mock().disable();
 	fsm_handle::start();
-	while(!system_scheduler->run());
-	linux_timer->set_counter(4999);
-	while(!system_scheduler->run());
-	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 
 	mock().enable();
-	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 
-	// Swipe gesture
-	fake_reed_switch->set_state(true);
-	fake_reed_switch->set_state(false);
+	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
-	CHECK_FALSE(fake_red_led->get_state());
-	CHECK_TRUE(fake_green_led->get_state());
-	CHECK_FALSE(fake_blue_led->get_state());
+	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
 
 	// After 120 seconds, transition to operational with green LED flashing
 	mock().expectOneCall("start").onObject(gps_scheduler);
 	mock().expectOneCall("start").onObject(comms_scheduler);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
-	linux_timer->set_counter(124999);
+	linux_timer->set_counter(120999);
 	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
-	CHECK_TRUE(fake_green_led->is_flashing());
-	CHECK_FALSE(fake_red_led->is_flashing());
-	CHECK_FALSE(fake_blue_led->is_flashing());
+	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
 
-	// Green LED should go off
-	linux_timer->set_counter(129999);
+	// Green LED should go off after 5 seconds
+	linux_timer->set_counter(125999);
 	while(!system_scheduler->run());
-	CHECK_FALSE(fake_green_led->is_flashing());
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 }
 
 
@@ -226,96 +196,79 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigVal
 {
 	mock().disable();
 	fsm_handle::start();
-	while(!system_scheduler->run());
-	linux_timer->set_counter(4999);
-	while(!system_scheduler->run());
-	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 
 	mock().enable();
-	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
 
-	// Swipe gesture
-	fake_reed_switch->set_state(true);
-	fake_reed_switch->set_state(false);
+	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
-	CHECK_TRUE(fake_red_led->get_state());
-	CHECK_TRUE(fake_green_led->get_state());
-	CHECK_FALSE(fake_blue_led->get_state());
+	CHECK_EQUAL((int)RGBLedColor::YELLOW, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
 
-	// After 120 seconds, transition to operational with green and red LED flashing
+	// After 120 seconds, transition to operational with yellow LED flashing
 	mock().expectOneCall("start").onObject(gps_scheduler);
 	mock().expectOneCall("start").onObject(comms_scheduler);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
-	linux_timer->set_counter(124999);
+	linux_timer->set_counter(120999);
 	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
-	CHECK_TRUE(fake_green_led->is_flashing());
-	CHECK_TRUE(fake_red_led->is_flashing());
-	CHECK_FALSE(fake_blue_led->is_flashing());
+	CHECK_EQUAL((int)RGBLedColor::YELLOW, (int)status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
 
-	// Green LED should go off
-	linux_timer->set_counter(129999);
+	// Green LED should go off after 5 seconds
+	linux_timer->set_counter(125999);
 	while(!system_scheduler->run());
-	CHECK_FALSE(fake_green_led->is_flashing());
-	CHECK_FALSE(fake_red_led->is_flashing());
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 }
 
 
 TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToErrorConfigInvalid)
 {
 	mock().disable();
+
 	fsm_handle::start();
-	while(!system_scheduler->run());
-	linux_timer->set_counter(4999);
-	while(!system_scheduler->run());
-	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 
 	mock().enable();
-	mock().expectOneCall("start").onObject(mock_battery_monitor).ignoreOtherParameters();
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
 
-	// Swipe gesture, red led should go solid
-	fake_reed_switch->set_state(true);
-	fake_reed_switch->set_state(false);
+	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
-	CHECK_TRUE(fake_red_led->get_state());
-	CHECK_FALSE(fake_red_led->is_flashing());
-	CHECK_FALSE(fake_blue_led->is_flashing());
+	CHECK_FALSE(status_led->is_flashing());
+	CHECK_EQUAL((int)RGBLedColor::RED, (int)status_led->get_state());
 
 	// After 120 seconds, transition to error with red LED flashing
-	linux_timer->set_counter(125999);
+	linux_timer->set_counter(120999);
 	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
-	CHECK_TRUE(fake_red_led->is_flashing());
+	CHECK_TRUE(status_led->is_flashing());
+	CHECK_EQUAL((int)RGBLedColor::RED, (int)status_led->get_state());
 
-	// Red LED should go off after 5 seconds and then transition to off state with red LED flashing once more
+	// Red LED should go off after 5 seconds and then transition to off state with white LED flashing
 	mock().expectOneCall("stop").onObject(mock_battery_monitor).ignoreOtherParameters();
-	linux_timer->set_counter(129999);
+	linux_timer->set_counter(125999);
 	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+	CHECK_TRUE(status_led->is_flashing());
+	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)status_led->get_state());
 }
 
 TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToConfigurationState)
 {
 	mock().disable();
+
 	fsm_handle::start();
 	while(!system_scheduler->run());
-	linux_timer->set_counter(4999);
-	while(!system_scheduler->run());
-	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
 
 	// Swipe gesture and hold for 3 seconds
 	fake_reed_switch->set_state(true);
-	linux_timer->set_counter(7999);
-	mock().enable();
-	mock().expectOneCall("start").onObject(mock_battery_monitor).ignoreOtherParameters();
-	mock().expectOneCall("start").onObject(ble_service).ignoreOtherParameters();
+	linux_timer->set_counter(3999);
 	while(!system_scheduler->run());
 	fake_reed_switch->set_state(false);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
-	CHECK_TRUE(fake_blue_led->is_flashing());
+	CHECK_TRUE(status_led->is_flashing());
+	CHECK_EQUAL((int)RGBLedColor::BLUE, (int)status_led->get_state());
 }
 
 TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
@@ -323,21 +276,28 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
 	mock().disable();
 	fsm_handle::start();
 	while(!system_scheduler->run());
-	linux_timer->set_counter(4999);
-	while(!system_scheduler->run());
-	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
 
 	// Swipe gesture and hold for 3 seconds
 	fake_reed_switch->set_state(true);
-	linux_timer->set_counter(7999);
+	linux_timer->set_counter(3999);
 	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 
 	// Continue to hold for 7 more seconds
-	linux_timer->set_counter(14999);
+	linux_timer->set_counter(10999);
 	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 	fake_reed_switch->set_state(false);
+	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+
+	// Continue to hold for 5 more seconds
+	mock().enable();
+	mock().expectOneCall("clear").withIntParameter("pin", BSP::GPIO::GPIO_POWER_CONTROL);
+	linux_timer->set_counter(15999);
+	while(!system_scheduler->run());
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 }
 
 TEST(Sm, CheckBLEInactivityTimeout)
@@ -345,19 +305,17 @@ TEST(Sm, CheckBLEInactivityTimeout)
 	mock().disable();
 	fsm_handle::start();
 	while(!system_scheduler->run());
-	linux_timer->set_counter(4999);
-	while(!system_scheduler->run());
-	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
 
 	// Swipe gesture and hold for 3 seconds
 	fake_reed_switch->set_state(true);
-	linux_timer->set_counter(7999);
+	linux_timer->set_counter(3999);
 	while(!system_scheduler->run());
 	fake_reed_switch->set_state(false);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 
 	// Wait until BLE inactivity timeout
-	linux_timer->set_counter(367999);
+	linux_timer->set_counter(363999);
 	while(!system_scheduler->run());
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 }
@@ -365,16 +323,14 @@ TEST(Sm, CheckBLEInactivityTimeout)
 
 TEST(Sm, CheckTransitionToConfigurationStateAndVerifyOTAUpdateEvents)
 {
-	// BootState -> OffState
+	// BootState -> IdleState
 	mock().disable();
 	fsm_handle::start();
-	while(!system_scheduler->run());
-	linux_timer->set_counter(4999);
 	while(!system_scheduler->run());
 
 	// Swipe gesture and hold for 3 seconds -> ConfigurationState
 	fake_reed_switch->set_state(true);
-	linux_timer->set_counter(7999);
+	linux_timer->set_counter(3999);
 	while(!system_scheduler->run());
 	fake_reed_switch->set_state(false);
 
@@ -382,7 +338,8 @@ TEST(Sm, CheckTransitionToConfigurationStateAndVerifyOTAUpdateEvents)
 	BLEServiceEvent event;
 	event.event_type = BLEServiceEventType::CONNECTED;
 	mock_ble_service->invoke_event(event);
-	CHECK_TRUE(fake_blue_led->get_state());
+	CHECK_EQUAL((int)RGBLedColor::BLUE, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
 
 	// Trigger OTA_START
 	mock().enable();

@@ -27,6 +27,7 @@ namespace BSP
     enum GPIO
 	{
     	GPIO_SWITCH,
+		GPIO_POWER_CONTROL,
 		GPIO_TOTAL_NUMBER
 	};
 

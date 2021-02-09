@@ -8,7 +8,7 @@ class FsLog : public Logger {
 
 private:
 	LFSFileSystem *m_filesystem;
-	const unsigned int m_max_size;
+	unsigned int m_max_size;
 	const char *m_filename;
 
 public:
@@ -20,7 +20,6 @@ public:
 	}
 
 	void create() {
-		LFSCircularFile *f;
 		try {
 			// See if an existing file exists
 			LFSCircularFile f(m_filesystem, m_filename, LFS_O_RDONLY, m_max_size);
