@@ -26,11 +26,15 @@ static const constexpr uint8_t battery_voltage_lut[][BATT_LUT_ENTRIES] = {
 	{ 100, 94, 83, 59, 50, 33, 15, 6, 0, 0, 0 }
 };
 
+static void nrfx_saadc_event_handler(nrfx_saadc_evt_t * const p_event)
+{
+	(void)p_event;
+}
 
 NrfBatteryMonitor::NrfBatteryMonitor(uint8_t adc_channel, BatteryChemistry chem)
 {
 	// One-time initialise the driver (assumes we are the only instance)
-    nrfx_saadc_init(&BSP::ADC_Inits.saadc_config, [](nrfx_saadc_evt_t const * p_event){});
+    nrfx_saadc_init(&BSP::ADC_Inits.saadc_config, nrfx_saadc_event_handler);
     nrfx_saadc_calibrate_offset();
 
     DEBUG_TRACE("Enter ADC calibration...");
