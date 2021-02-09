@@ -1,6 +1,6 @@
 #include "gentracker.hpp"
 
-#include "../filesystem/ota_file_updater.hpp"
+#include "ota_file_updater.hpp"
 #include "logger.hpp"
 #include "config_store.hpp"
 #include "gps_scheduler.hpp"

@@ -286,7 +286,7 @@ function(create_dfu executable)
         TARGET ${executable}
         POST_BUILD
         COMMENT "Generating ${executable}_dfu.zip"
-        COMMAND nrfutil pkg generate --hw-version 52 --sd-req 0xAE,0xB6 --application-version ${VERSION_NUMBER} --application ${CMAKE_CURRENT_BINARY_DIR}/${executable}.hex --key-file ${PROJECT_SOURCE_DIR}/${PROJ_DIR}/nrfutil_pkg_key.pem ${CMAKE_CURRENT_BINARY_DIR}/${executable}_dfu.zip
+        COMMAND nrfutil pkg generate --hw-version 52 --sd-req 0x0100 --application-version 0 --application ${CMAKE_CURRENT_BINARY_DIR}/${executable}.hex --key-file ${PROJECT_SOURCE_DIR}/${PROJ_DIR}/nrfutil_pkg_key.pem ${CMAKE_CURRENT_BINARY_DIR}/${executable}_dfu.zip
     )
 endfunction(create_dfu)
 
@@ -304,11 +304,16 @@ create_wrapped_bin(${TARGET_NAME})
 create_hex(${TARGET_NAME})
 create_dfu(${TARGET_NAME})
 
-add_custom_target(flash
-                  COMMENT "Flashing the softdevice & firmware"
+add_custom_target(flash_softdev
+                  COMMENT "Flashing the softdevice using JLink..."
                   COMMAND nrfjprog -f nrf52 --eraseall
                   COMMAND nrfjprog -f nrf52 --program ${PROJECT_SOURCE_DIR}/${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --sectoranduicrerase
-                  COMMAND nrfjprog -f nrf52 --program ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.hex --sectorerase
                   COMMAND nrfjprog -f nrf52 --reset
 )
+
+add_custom_target(dfu_app
+                  COMMENT "Sending application image over DFU (reset device with DEBUG pin jumpered!)..."
+                  COMMAND nrfutil dfu usb-serial -p /dev/ttyACM0 -pkg ${executable}_dfu.zip
+)
+
 add_dependencies(flash ${TARGET_NAME})
