@@ -1,5 +1,5 @@
 #include "bsp.hpp"
-#include "gpio.hpp"
+#include "pmu.hpp"
 #include "ota_file_updater.hpp"
 #include "logger.hpp"
 #include "config_store.hpp"
@@ -127,7 +127,7 @@ void OffState::entry() {
 	DEBUG_TRACE("entry: OffState");
 	battery_monitor->stop();
 	status_led->flash(RGBLedColor::WHITE);
-	system_scheduler->post_task_prio([](){ status_led->off(); GPIOPins::clear(BSP::GPIO::GPIO_POWER_CONTROL); }, Scheduler::DEFAULT_PRIORITY, OFF_LED_PERIOD_MS);
+	system_scheduler->post_task_prio([](){ status_led->off(); PMU::powerdown(); }, Scheduler::DEFAULT_PRIORITY, OFF_LED_PERIOD_MS);
 }
 
 void OffState::exit() {
@@ -277,6 +277,29 @@ void ConfigurationState::process_received_data() {
 				DEBUG_TRACE("responded: %s", resp.c_str());
 				ble_service->write(resp);
 			}
+
+			if (action == DTEAction::FACTR)
+			{
+				DEBUG_TRACE("Perform factory reset of configuration store");
+				configuration_store->factory_reset();
+
+				// After formatting the filesystem we must do a system reset so that
+				// the boot up procedure can repopulate files
+				PMU::reset();
+			}
+			else if (action == DTEAction::RESET)
+			{
+				DEBUG_TRACE("Perform device reset");
+
+				// Execute this after 3 seconds to allow time for the BLE response to be sent
+				system_scheduler->post_task_prio([](){ PMU::reset(); }, Scheduler::DEFAULT_PRIORITY, 3000);
+			}
+			else if (action == DTEAction::SECUR)
+			{
+				// TODO: add secure procedure
+				DEBUG_TRACE("Perform secure procedure");
+			}
+
 		} while (action == DTEAction::AGAIN);
 	}
 }

@@ -178,6 +178,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp
     ${PROJ_DIR}/core/hardware/nrf_spim.cpp
     ${PROJ_DIR}/core/hardware/nrf_gpio.cpp
+    ${PROJ_DIR}/core/hardware/nrf_pmu.cpp
     ${PROJ_DIR}/core/hardware/nrf_switch.cpp
     ${PROJ_DIR}/core/hardware/nrf_battery_mon.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp

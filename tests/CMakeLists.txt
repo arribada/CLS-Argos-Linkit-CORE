@@ -133,6 +133,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/main.cpp"
     "fakes/nrfx_rtc.c"
     "mocks/mock_gpio.cpp"
+    "mocks/mock_pmu.cpp"
 )
 
 set_source_files_properties(${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-switch-enum -Wno-switch")

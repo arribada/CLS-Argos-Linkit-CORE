@@ -294,7 +294,7 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
 
 	// Continue to hold for 5 more seconds
 	mock().enable();
-	mock().expectOneCall("clear").withIntParameter("pin", BSP::GPIO::GPIO_POWER_CONTROL);
+	mock().expectOneCall("powerdown");
 	linux_timer->set_counter(15999);
 	while(!system_scheduler->run());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
