@@ -2,6 +2,7 @@
 #include "CppUTestExt/MockSupport.h"
 
 #include <iostream>
+#include "bsp.hpp"
 #include "sws.hpp"
 #include "fake_config_store.hpp"
 #include "linux_timer.hpp"
@@ -47,9 +48,9 @@ TEST(SWS, UnderwaterEvent)
 	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
 
 	for (unsigned int i = 0; i < 5; i++) {
-		mock().expectOneCall("set").withUnsignedIntParameter("pin", 0);
-		mock().expectOneCall("clear").withUnsignedIntParameter("pin", 0);
-		mock().expectOneCall("value").withUnsignedIntParameter("pin", 1).andReturnValue(1);
+		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("clear").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_RX).andReturnValue(1);
 		DEBUG_TRACE("t=%lu", linux_timer->get_counter());
 		while (!system_scheduler->run());
 	}
@@ -76,9 +77,9 @@ TEST(SWS, SurfacedEvent)
 	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
 
 	for (unsigned int i = 0; i < 1; i++) {
-		mock().expectOneCall("set").withUnsignedIntParameter("pin", 0);
-		mock().expectOneCall("clear").withUnsignedIntParameter("pin", 0);
-		mock().expectOneCall("value").withUnsignedIntParameter("pin", 1).andReturnValue(0);
+		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("clear").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_RX).andReturnValue(0);
 		DEBUG_TRACE("t=%lu", linux_timer->get_counter());
 		while (!system_scheduler->run());
 	}
@@ -106,9 +107,9 @@ TEST(SWS, SchedulingPeriodSurfaced)
 
 	// Sampling should happen every 2 seconds when surfaced
 	for (unsigned int i = 0; i < 5; i++) {
-		mock().expectOneCall("set").withUnsignedIntParameter("pin", 0);
-		mock().expectOneCall("clear").withUnsignedIntParameter("pin", 0);
-		mock().expectOneCall("value").withUnsignedIntParameter("pin", 1).andReturnValue(0);
+		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("clear").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_RX).andReturnValue(0);
 		DEBUG_TRACE("t=%lu", linux_timer->get_counter());
 		while (!system_scheduler->run());
 	}
@@ -135,9 +136,9 @@ TEST(SWS, SchedulingPeriodUnderwater)
 	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
 
 	for (unsigned int i = 0; i < 10; i++) {
-		mock().expectOneCall("set").withUnsignedIntParameter("pin", 0);
-		mock().expectOneCall("clear").withUnsignedIntParameter("pin", 0);
-		mock().expectOneCall("value").withUnsignedIntParameter("pin", 1).andReturnValue(1);
+		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("clear").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_RX).andReturnValue(1);
 		DEBUG_TRACE("t=%lu", linux_timer->get_counter());
 		while (!system_scheduler->run());
 	}

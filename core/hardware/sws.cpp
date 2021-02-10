@@ -1,3 +1,4 @@
+#include "bsp.hpp"
 #include "sws.hpp"
 #include "config_store.hpp"
 #include "scheduler.hpp"
@@ -8,12 +9,6 @@ extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
 
 
-// TODO: these pins definitions should be in the BSP header file
-#ifndef GPIO_SLOW_SWS_SEND
-#define GPIO_SLOW_SWS_SEND    0
-#define GPIO_SLOW_SWS_RX      1
-#endif
-
 #define SAMPLING_ITERATIONS	  5
 #define SAMPLING_PERIOD_MS	  1000
 
@@ -23,9 +18,9 @@ void SWS::sample_sws() {
 	DEBUG_TRACE("SWS::sample_sws: m_sample_iteration=%u", m_sample_iteration);
 
 	// Sample the SWS pin
-	GPIOPins::set(GPIO_SLOW_SWS_SEND);
-	new_state = GPIOPins::value(GPIO_SLOW_SWS_RX);
-	GPIOPins::clear(GPIO_SLOW_SWS_SEND);
+	GPIOPins::set(BSP::GPIO::GPIO_SLOW_SWS_SEND);
+	new_state = GPIOPins::value(BSP::GPIO::GPIO_SLOW_SWS_RX);
+	GPIOPins::clear(BSP::GPIO::GPIO_SLOW_SWS_SEND);
 
 	DEBUG_TRACE("SWS::sample_sws: state=%u", new_state);
 
