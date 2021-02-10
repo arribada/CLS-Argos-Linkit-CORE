@@ -26,7 +26,7 @@ static const constexpr uint8_t battery_voltage_lut[][BATT_LUT_ENTRIES] = {
 	{ 100, 94, 83, 59, 50, 33, 15, 6, 0, 0, 0 }
 };
 
-static void nrfx_saadc_event_handler(nrfx_saadc_evt_t * const p_event)
+static void nrfx_saadc_event_handler(nrfx_saadc_evt_t const *p_event)
 {
 	(void)p_event;
 }

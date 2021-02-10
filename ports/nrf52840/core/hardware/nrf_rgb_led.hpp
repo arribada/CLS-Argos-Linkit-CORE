@@ -18,6 +18,7 @@ private:
 	int m_pin_green;
 	int m_pin_blue;
 	RGBLedColor m_color;
+	RGBLedColor m_flash_color;
 	bool m_is_flashing;
 	bool m_flash_state;
 	const char *m_name;
@@ -25,7 +26,7 @@ private:
 
 	void toggle_led(void) {
 		if (m_flash_state)
-			set(m_color);
+			set(m_flash_color);
 		else
 			off();
 		m_is_flashing = true;
@@ -98,7 +99,7 @@ public:
 	}
 	void flash(RGBLedColor color) {
 		system_scheduler->cancel_task(m_led_task);
-		m_color = color;
+		m_flash_color = color;
 		m_is_flashing = true;
 		m_flash_state = true;
 		toggle_led();
