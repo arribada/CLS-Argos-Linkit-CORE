@@ -6,8 +6,9 @@
 #include "bsp.hpp"
 
 static constexpr uint16_t RTC_TIMER_PRESCALER = 32;
-static constexpr double RTC_TIMER_FREQ = (RTC_INPUT_FREQ / (RTC_TIMER_PRESCALER + 1.0f));
-static constexpr double MS_PER_TICK = ((RTC_TIMER_PRESCALER + 1.0f) * 1000.0f) / RTC_INPUT_FREQ;
+
+#define TICKS_TO_MS(ticks)  (((ticks) * 1000000ULL) / 992969ULL);
+#define MS_TO_TICKS(ms)     (((ms) * 992969ULL) / 1000000ULL);
 
 namespace BSP
 {
@@ -54,7 +55,8 @@ TEST(NrfTimer, StartStop)
 
 	for (unsigned int i = 0; i < 10000; ++i)
 	{
-		CHECK_EQUAL( std::floor(i * MS_PER_TICK), nrf_timer.get_counter());
+		uint64_t x = TICKS_TO_MS(i);
+		CHECK_EQUAL( x, nrf_timer.get_counter());
 		nrfx_rtc_increment_tick();
 	}
 
@@ -62,7 +64,8 @@ TEST(NrfTimer, StartStop)
 
 	for (unsigned int i = 0; i < 10000; ++i)
 	{
-		CHECK_EQUAL(std::floor(10000 * MS_PER_TICK), nrf_timer.get_counter());
+		uint64_t x = TICKS_TO_MS(10000);
+		CHECK_EQUAL(x, nrf_timer.get_counter());
 		nrfx_rtc_increment_tick();
 	}
 }
@@ -73,7 +76,8 @@ TEST(NrfTimer, 10000Ticks)
 
 	for (unsigned int i = 0; i < 10000; ++i)
 	{
-		CHECK_EQUAL( std::floor(i * MS_PER_TICK), nrf_timer.get_counter());
+		uint64_t x = TICKS_TO_MS(i);
+		CHECK_EQUAL( x, nrf_timer.get_counter());
 		nrfx_rtc_increment_tick();
 	}
 }
@@ -84,7 +88,8 @@ TEST(NrfTimer, MultipleOverflows)
 
 	for (unsigned int i = 0; i < std::pow(2, 26); ++i)
 	{
-		CHECK_EQUAL( std::floor(i * MS_PER_TICK), nrf_timer.get_counter());
+		uint64_t x = TICKS_TO_MS(i);
+		CHECK_EQUAL( x, nrf_timer.get_counter());
 		nrfx_rtc_increment_tick();
 	}
 }
@@ -101,7 +106,8 @@ TEST(NrfTimer, Schedule5ms)
 
 	for (unsigned int i = 0; i < 10; ++i)
 	{
-		CHECK_EQUAL( std::floor(i * MS_PER_TICK), nrf_timer.get_counter());
+		uint64_t x = TICKS_TO_MS(i);
+		CHECK_EQUAL( x, nrf_timer.get_counter());
 		nrfx_rtc_increment_tick();
 	}
 
@@ -120,7 +126,8 @@ TEST(NrfTimer, ScheduleAfterOverflow)
 
 	for (unsigned int i = 0; i < std::pow(2, 25) + 100; ++i)
 	{
-		CHECK_EQUAL( std::floor(i * MS_PER_TICK), nrf_timer.get_counter());
+		uint64_t x = TICKS_TO_MS(i);
+		CHECK_EQUAL( x, nrf_timer.get_counter());
 		nrfx_rtc_increment_tick();
 	}
 

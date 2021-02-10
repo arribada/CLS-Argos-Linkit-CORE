@@ -4,14 +4,19 @@
 #include "nrfx_rtc.h"
 #include "interrupt_lock.hpp"
 #include "bsp.hpp"
+#include "debug.hpp"
 
-// Note we can't get the 1000 Hz (1ms period) we'd like so we will get as close as we can
+// Do not change this value without considering the impact to the macros below
 static constexpr uint16_t RTC_TIMER_PRESCALER = 32;
-static constexpr double RTC_TIMER_FREQ = (RTC_INPUT_FREQ / (RTC_TIMER_PRESCALER + 1.0f));
-static constexpr double MS_PER_TICK = ((RTC_TIMER_PRESCALER + 1.0f) * 1000.0f) / RTC_INPUT_FREQ;
+
+// Note we can't get the 1000 Hz (1ms period) we'd like so we will get as close as we can:
+// The RTC clock is 32768 Hz and the prescaler is 33 which yields 992.969696969697 Hz
+// The following macros will converts between milliseconds and ticks using integer arithmetic
+#define TICKS_TO_MS(ticks)  ((ticks) * 1000000ULL) / 992969ULL;
+#define MS_TO_TICKS(ms)     ((ms) * 992969ULL) / 1000000ULL;
 
 static constexpr uint32_t TICKS_PER_OVERFLOW = 16777216;
-static constexpr uint32_t MILLISECONDS_PER_OVERFLOW = TICKS_PER_OVERFLOW * MS_PER_TICK;
+static constexpr uint32_t MILLISECONDS_PER_OVERFLOW = TICKS_TO_MS(TICKS_PER_OVERFLOW);
 
 //static volatile uint32_t g_overflows_occured;
 static std::atomic<uint32_t> g_overflows_occured;
@@ -21,7 +26,7 @@ struct Schedule
 {
     std::function<void()> m_func;
     std::optional<unsigned int> m_id;
-    uint64_t m_target_ms;
+    uint64_t m_target_ticks;
 };
 
 static std::list<Schedule> g_schedules;
@@ -38,22 +43,26 @@ static void setup_compare_interrupt()
     }
 
     // Check to see if the next scheduled task will occur before the RTC overflow
-    uint64_t next_counter_overflow = (g_overflows_occured + 1) * MILLISECONDS_PER_OVERFLOW;
-    //uint64_t current_time = get_counter();
-    uint64_t next_schedule = g_schedules.front().m_target_ms;
-    
-    if (next_schedule < next_counter_overflow)
+    uint64_t next_counter_overflow_ticks = (g_overflows_occured + 1) * TICKS_PER_OVERFLOW;
+    //uint64_t current_time_ticks = nrfx_rtc_counter_get(&BSP::RTC_Inits[RTC_TIMER].rtc) + (g_overflows_occured * TICKS_PER_OVERFLOW);
+    uint64_t next_schedule_ticks = g_schedules.front().m_target_ticks;
+
+    //DEBUG_TRACE("setup_compare_interrupt: next_counter_overflow_ticks=%llu current_time_ticks=%llu next_schedule_ticks=%llu",
+    //		next_counter_overflow_ticks, current_time_ticks, next_schedule_ticks);
+
+    if (next_schedule_ticks < next_counter_overflow_ticks)
     {
         // This schedule will occcur before our RTC overflow interrupt
         // Because of this we need to schedule a new interrupt so we wake up earlier to service it
-
-        uint32_t compare_value = static_cast<uint64_t>(next_schedule / MS_PER_TICK) % TICKS_PER_OVERFLOW;
+        uint32_t compare_value = next_schedule_ticks % TICKS_PER_OVERFLOW;
         nrfx_rtc_cc_set(&BSP::RTC_Inits[RTC_TIMER].rtc, 0, compare_value, true);
     }
 }
 
 static void rtc_time_keeping_event_handler(nrfx_rtc_int_type_t int_type)
 {
+    //DEBUG_TRACE("rtc_time_keeping_event_handler: int_type=%u", int_type);
+
     if (NRFX_RTC_INT_OVERFLOW == int_type)
     {
         g_overflows_occured++;
@@ -106,36 +115,38 @@ uint64_t NrfTimer::get_counter()
     uint64_t uptime;
 
     InterruptLock lock;
-    uptime = nrfx_rtc_counter_get(&BSP::RTC_Inits[RTC_TIMER].rtc) * MS_PER_TICK + (g_overflows_occured * MILLISECONDS_PER_OVERFLOW);
+    uptime = TICKS_TO_MS(nrfx_rtc_counter_get(&BSP::RTC_Inits[RTC_TIMER].rtc) + (g_overflows_occured * TICKS_PER_OVERFLOW));
 
     return uptime;
 }
 
-Timer::TimerHandle NrfTimer::add_schedule(std::function<void()> const &task_func, uint64_t target_count)
+Timer::TimerHandle NrfTimer::add_schedule(std::function<void()> const &task_func, uint64_t target_count_ms)
 {
-    // Convert target_count to our internal counting timebase
-    target_count *= MS_PER_TICK;
-
     // Create a schedule for this task
     Schedule schedule;
+    uint64_t target_count_ticks = MS_TO_TICKS(target_count_ms);
 
     schedule.m_id = g_unique_id;
     schedule.m_func = task_func;
-    schedule.m_target_ms = target_count;
+    schedule.m_target_ticks = target_count_ticks;
 
     InterruptLock lock;
 
     // Add this schedule to our list in time order
+    unsigned int index = 0;
     auto iter = g_schedules.begin();
     bool new_schedule_first = true;
     while (iter != g_schedules.end())
     {
-        if (iter->m_target_ms > target_count)
+        if (iter->m_target_ticks > target_count_ticks)
             break;
         iter++;
+        index++;
         new_schedule_first = false;
     }
     g_schedules.insert(iter, schedule);
+
+	//DEBUG_TRACE("NrfTimer::add_schedule: #g_schedules=%u index=%u is_first=%u", g_schedules.size(), index, new_schedule_first);
 
     // If this task will occur before any others then we may need to set an alarm to service it next
     if (new_schedule_first)
