@@ -44,7 +44,7 @@ void GenTracker::react(ReedSwitchEvent const &event)
 	if (event.state) {
 		// Start reed switch hold timer tasks in case this is a hold gesture
 		m_reed_trigger_start_time = system_timer->get_counter();
-		m_task_trigger_config_state = system_scheduler->post_task_prio([this](){ transit<ConfigurationState>(); }, Scheduler::DEFAULT_PRIORITY, TRANSIT_CONFIG_HOLD_TIME_MS);
+		m_task_trigger_config_state = system_scheduler->post_task_prio([this](){ if (!is_in_state<ConfigurationState>()) transit<ConfigurationState>(); }, Scheduler::DEFAULT_PRIORITY, TRANSIT_CONFIG_HOLD_TIME_MS);
 		m_task_trigger_off_state = system_scheduler->post_task_prio([this](){ transit<OffState>(); }, Scheduler::DEFAULT_PRIORITY, TRANSIT_OFF_HOLD_TIME_MS);
 	} else {
 		// Cancel any pending hold gestures

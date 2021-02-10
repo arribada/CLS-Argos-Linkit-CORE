@@ -2,9 +2,9 @@
 #include <map>
 
 #include "nrfx_gpiote.h"
+#include "gpio.hpp"
 #include "switch.hpp"
 #include "nrf_switch.hpp"
-#include "gpio.hpp"
 #include "bsp.hpp"
 #include "scheduler.hpp"
 #include "error.hpp"
@@ -33,6 +33,10 @@ public:
 		NrfSwitch *obj = m_map[pin];
 		obj->process_event(state);
 	}
+	static int get_pin(int pin) {
+		NrfSwitch *obj = m_map[pin];
+		return obj->m_pin;
+	}
 };
 
 // Handle events from GPIOTE here and propagate them back to corresponding NrfSwitch object
@@ -45,12 +49,11 @@ static void nrfx_gpiote_in_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polar
 		NrfSwitchManager::process_event((int)pin, false);
 		break;
 	case NRF_GPIOTE_POLARITY_TOGGLE:
-		NrfSwitchManager::process_event((int)pin, (bool)GPIOPins::value((uint32_t)pin));
+		NrfSwitchManager::process_event((int)pin, (bool)GPIOPins::value(NrfSwitchManager::get_pin((int)pin)));
 		break;
 	default:
 		break;
 	}
-
 }
 
 NrfSwitch::NrfSwitch(int pin, unsigned int hysteresis_time_ms) : Switch(pin, hysteresis_time_ms) {
@@ -65,18 +68,18 @@ NrfSwitch::~NrfSwitch() {
 
 void NrfSwitch::start(std::function<void(bool)> func) {
 	Switch::start(func);
-	NrfSwitchManager::add(m_pin, this);
-	if (NRFX_SUCCESS != nrfx_gpiote_in_init(m_pin, &BSP::GPIO_Inits[m_pin].gpiote_in_config, nrfx_gpiote_in_event_handler)) {
+	NrfSwitchManager::add(BSP::GPIO_Inits[m_pin].pin_number, this);
+	if (NRFX_SUCCESS != nrfx_gpiote_in_init(BSP::GPIO_Inits[m_pin].pin_number, &BSP::GPIO_Inits[m_pin].gpiote_in_config, nrfx_gpiote_in_event_handler)) {
 		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
 	}
-	nrfx_gpiote_in_event_enable(m_pin, true);
+	nrfx_gpiote_in_event_enable(BSP::GPIO_Inits[m_pin].pin_number, true);
 }
 
 void NrfSwitch::stop() {
 	system_scheduler->cancel_task(m_task_handle);
-	nrfx_gpiote_in_event_disable(m_pin);
-	nrfx_gpiote_in_uninit(m_pin);
-	NrfSwitchManager::remove(m_pin);
+	nrfx_gpiote_in_event_disable(BSP::GPIO_Inits[m_pin].pin_number);
+	nrfx_gpiote_in_uninit(BSP::GPIO_Inits[m_pin].pin_number);
+	NrfSwitchManager::remove(BSP::GPIO_Inits[m_pin].pin_number);
 	Switch::stop();
 }
 

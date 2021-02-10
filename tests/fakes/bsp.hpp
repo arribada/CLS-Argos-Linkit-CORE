@@ -33,6 +33,7 @@ namespace BSP
 
     typedef struct
     {
+    	int pin_number;
     	void *gpiote_in_config;
     } GPIO_InitTypeDefAndInst_t;
 
