@@ -100,7 +100,7 @@ void OTAFlashFileUpdater::complete_file_transfer()
 void OTAFlashFileUpdater::apply_file_update() {
 	if (m_file_id == OTAFileIdentifier::MCU_FIRMWARE) {
 		// Update DFU settings page to take effect on the next reboot
-		DFU::write_ext_flash_dfu_settings(m_reserved_block_offset, m_file_size, m_crc32);
+		DFU::write_ext_flash_dfu_settings(m_file_size, m_crc32);
 	} else {
 		delete m_file;
 	}

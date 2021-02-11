@@ -26,6 +26,7 @@
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
 #include "fs_log.hpp"
+#include "dfu.hpp"
 
 FileSystem *main_filesystem;
 
@@ -66,6 +67,7 @@ extern "C" int _write(int file, char *ptr, int len)
 
 int main()
 {
+	DFU::initialise();
 	GPIOPins::initialise();
 
 	nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);

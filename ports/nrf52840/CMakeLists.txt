@@ -92,6 +92,9 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/libraries/log
     ${SDK_ROOT}/components/libraries/log/src
     ${SDK_ROOT}/components/libraries/experimental_section_vars
+    ${SDK_ROOT}/components/libraries/bootloader/dfu
+    ${SDK_ROOT}/components/libraries/fstorage
+    ${SDK_ROOT}/components/libraries/crc32
     ${SDK_ROOT}/components/softdevice/common
     ${SDK_ROOT}/components/softdevice/s140/headers
     ${SDK_ROOT}/components/softdevice/s140/headers/nrf52
@@ -158,6 +161,11 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh.c
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_ble.c
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_soc.c
+    ${SDK_ROOT}/components/libraries/bootloader/dfu/nrf_dfu_settings.c
+    ${SDK_ROOT}/components/libraries/bootloader/dfu/nrf_dfu_flash.c
+    ${SDK_ROOT}/components/libraries/fstorage/nrf_fstorage.c
+    ${SDK_ROOT}/components/libraries/fstorage/nrf_fstorage_nvmc.c
+    ${SDK_ROOT}/components/libraries/crc32/crc32.c
     ${SDK_ROOT}/modules/nrfx/mdk/gcc_startup_nrf52840.S
     ${SDK_ROOT}/modules/nrfx/mdk/system_nrf52840.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c
@@ -166,6 +174,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_rtc.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_gpiote.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_saadc.c
+    ${SDK_ROOT}/modules/nrfx/hal/nrf_nvmc.c
     ${CORE_DIR}/hardware/sws.cpp
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
@@ -210,6 +219,8 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     OLD_ZONE_FORMAT_WORKAROUND
     ARGOS_USE_CRC8
     PREPASS_EMBEDDED
+    NRF_DFU_SETTINGS_VERSION=2
+    NRF_DFU_SETTINGS_COMPATIBILITY_MODE=1
 )
 
 target_compile_options(${TARGET_NAME} PRIVATE
