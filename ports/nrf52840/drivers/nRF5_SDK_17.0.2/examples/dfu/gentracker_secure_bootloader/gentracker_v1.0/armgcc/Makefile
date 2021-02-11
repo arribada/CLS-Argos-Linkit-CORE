@@ -54,6 +54,7 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_systick.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_usbd.c \
+  ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_ecc.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_ecdsa.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_hash.c \
@@ -61,6 +62,8 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_shared.c \
   $(PROJ_DIR)/../dfu_public_key.c \
   $(PROJ_DIR)/main.c \
+  $(PROJ_DIR)/is25_flash.c \
+  $(PROJ_DIR)/dfu_ext_flash.c \
   $(SDK_ROOT)/components/libraries/bootloader/nrf_bootloader.c \
   $(SDK_ROOT)/components/libraries/bootloader/nrf_bootloader_app_start.c \
   $(SDK_ROOT)/components/libraries/bootloader/nrf_bootloader_app_start_final.c \
