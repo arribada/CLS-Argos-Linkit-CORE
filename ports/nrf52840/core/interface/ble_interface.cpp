@@ -395,6 +395,11 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 				// The next receive raw data packet will contain at least 8 bytes
 				// which shall include the total file size and a CRC32 checksum
 				m_is_first_ota_packet = true;
+				m_ota_file_id = p_evt->address;  // Record file ID
+
+				// Send handshake back to client to inform them that we receive their
+				// start request
+				ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_OK);
 			}
 			else if (p_evt->action == STM_OTA_ACTION_STOP_ALL ||
 					p_evt->action == STM_OTA_ACTION_CANCEL)
@@ -429,6 +434,7 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 				m_is_first_ota_packet = false;
 
 				s_evt.event_type = BLEServiceEventType::OTA_START;
+				s_evt.file_id = m_ota_file_id;
 				s_evt.file_size = ((uint8_t *)p_evt->p_data)[0] |
 						((uint8_t *)p_evt->p_data)[1] << 8 |
 						((uint8_t *)p_evt->p_data)[2] << 16 |

@@ -67,4 +67,5 @@ private:
     volatile bool m_carriage_return_received;
     volatile bool m_is_first_ota_packet;
     std::function<int(BLEServiceEvent& event)> m_on_event;
+    unsigned int m_ota_file_id;
 };
