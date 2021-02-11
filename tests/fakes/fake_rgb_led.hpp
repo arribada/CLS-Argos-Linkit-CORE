@@ -13,11 +13,14 @@ private:
 	RGBLedColor m_color;
 
 public:
+	unsigned int m_period;
+
 	FakeRGBLed(const char *name, int red=0, int green=0, int blue=0) {
 		m_name = name;
 		m_pin_red = red;
 		m_pin_green = green;
 		m_pin_blue = blue;
+		m_period = 0;
 		off();
 	}
 	void set(RGBLedColor color) override {
@@ -28,7 +31,8 @@ public:
 	void off() override {
 		set(RGBLedColor::BLACK);
 	}
-	void flash(RGBLedColor color) override {
+	void flash(RGBLedColor color, unsigned int period_ms = 500) override {
+		m_period = period_ms;
 		m_color = color;
 		m_is_flashing = true;
 		DEBUG_TRACE("LED[%s]=flashing %s", m_name, color_to_string(color).c_str());

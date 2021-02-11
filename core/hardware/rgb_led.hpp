@@ -44,6 +44,6 @@ public:
 	virtual void off() = 0;
 	virtual RGBLedColor get_state() = 0;
 	virtual void set(RGBLedColor color) = 0;
-	virtual void flash(RGBLedColor color) = 0;
+	virtual void flash(RGBLedColor color, unsigned int period_ms = 500) = 0;
 	virtual bool is_flashing() = 0;
 };

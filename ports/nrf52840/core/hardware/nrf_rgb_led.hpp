@@ -21,6 +21,7 @@ private:
 	RGBLedColor m_flash_color;
 	bool m_is_flashing;
 	bool m_flash_state;
+	unsigned int m_flash_interval;
 	const char *m_name;
 	Scheduler::TaskHandle m_led_task;
 
@@ -32,7 +33,7 @@ private:
 		m_is_flashing = true;
 		m_flash_state = !m_flash_state;
 		m_led_task = system_scheduler->post_task_prio(std::bind(&NrfRGBLed::toggle_led, this),
-				Scheduler::DEFAULT_PRIORITY, 500);
+				Scheduler::DEFAULT_PRIORITY, m_flash_interval);
 	}
 
 public:
@@ -97,8 +98,9 @@ public:
 		system_scheduler->cancel_task(m_led_task);
 		set(RGBLedColor::BLACK);
 	}
-	void flash(RGBLedColor color) {
+	void flash(RGBLedColor color, unsigned int interval_ms = 500) {
 		system_scheduler->cancel_task(m_led_task);
+		m_flash_interval = interval_ms;
 		m_flash_color = color;
 		m_is_flashing = true;
 		m_flash_state = true;

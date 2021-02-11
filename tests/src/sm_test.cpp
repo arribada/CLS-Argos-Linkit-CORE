@@ -291,6 +291,7 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
 	fake_reed_switch->set_state(false);
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
+	CHECK_EQUAL(125, fake_status_led->m_period);
 
 	// Continue to hold for 5 more seconds
 	mock().enable();

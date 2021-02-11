@@ -126,7 +126,7 @@ void BootState::exit() {
 void OffState::entry() {
 	DEBUG_TRACE("entry: OffState");
 	battery_monitor->stop();
-	status_led->flash(RGBLedColor::WHITE);
+	status_led->flash(RGBLedColor::WHITE, 125);  // Flash 4X speed during power down
 	system_scheduler->post_task_prio([](){ status_led->off(); PMU::powerdown(); }, Scheduler::DEFAULT_PRIORITY, OFF_LED_PERIOD_MS);
 }
 
