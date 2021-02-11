@@ -21,9 +21,9 @@ protected:
 		uint8_t  hours;
 		uint8_t  minutes;
 		uint8_t  seconds;
-		double latitude;
-		double longitude;
-		double hDOP; // HorizontaldDilution of precision
+		double   latitude;
+		double   longitude;
+		double   hDOP; // Horizontal Dilution of precision
 	};
 
 private:
@@ -41,6 +41,7 @@ private:
 	void acquisition_period_task();
 	void acquisition_timeout_task();
 	void gnss_data_callback(GNSSData data);
+	void populate_gnss_data_and_callback();
 
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	virtual void power_off() = 0;

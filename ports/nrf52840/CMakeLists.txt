@@ -318,7 +318,7 @@ add_custom_target(flash
                   COMMENT "Flashing the softdevice & firmware using JLink..."
                   COMMAND nrfjprog -f nrf52 --eraseall
                   COMMAND nrfjprog -f nrf52 --program ${PROJECT_SOURCE_DIR}/${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --sectoranduicrerase
-                  COMMAND nrfjprog -f nrf52 --program ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.hex --sectorerase
+                  COMMAND nrfjprog -f nrf52 --program ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex --sectorerase
                   COMMAND nrfjprog -f nrf52 --reset
 )
 

@@ -2,25 +2,26 @@
 #define _NRF_UART_M8_HPP_
 
 #include <stdint.h>
+#include <functional>
 #include <array>
 
 #include "uart.hpp"
 #include "nrfx_uarte.h"
+#include "ubx.hpp"
 
 // A special Nrf UART driver that retrieves full UBX strings
 class NrfUARTM8 final : public UART {
 public:
-	NrfUARTM8(unsigned int instance);
+	NrfUARTM8(unsigned int instance, std::function<void(uint8_t *data, size_t len)> on_receive);
 	~NrfUARTM8();
 	int send(const uint8_t * data, uint32_t size) override;
-	int receive(uint8_t * data, uint32_t size) override;
+	int receive(uint8_t * data, uint32_t size) override { return -1; }; // Reception is done through the on_receive callback
 
 private:
 	unsigned int m_instance;
+	std::function<void(uint8_t *data, size_t len)> m_on_receive;
 	uint8_t rx_byte;
-	static constexpr size_t RX_BUF_LEN = 256;
-	uint32_t bytes_in_rx_buffer;
-	std::array<uint8_t, RX_BUF_LEN> rx_buffer;
+	std::array<uint8_t, UBX::MAX_PACKET_LEN> rx_buffer;
 
 	volatile enum
 	{
@@ -30,17 +31,8 @@ private:
 		WAITING_ID,
 		WAITING_LENGTH_LOWER,
 		WAITING_LENGTH_UPPER,
-		WAITING_PAYLOAD_AND_CHECKSUM,
-		WAITING_BUFFER_FREE
+		WAITING_PAYLOAD_AND_CHECKSUM
 	} m_state;
-
-	struct __attribute__((__packed__)) Header
-    {
-        uint8_t  syncChars[2];
-        uint8_t  msgClass;
-        uint8_t  msgId;
-        uint16_t msgLength; /* Excludes header and CRC bytes */
-	};
 
 	static void static_event_handler(nrfx_uarte_event_t const * p_event, void * p_context);
 	void event_handler(nrfx_uarte_event_t const * p_event);

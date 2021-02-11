@@ -68,6 +68,7 @@ extern "C" int _write(int file, char *ptr, int len)
 int main()
 {
 	GPIOPins::initialise();
+	GPIOPins::set(BSP::GPIO_POWER_CONTROL);
 
 	nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -76,6 +77,18 @@ int main()
 	console_log = &console_console_log;
 
     nrf_log_redirect_init();
+
+	DEBUG_INFO("GenTracker Booted");
+
+	DEBUG_TRACE("Going to setup M8Q");
+	M8QReceiver m8q_gnss;
+	location_scheduler = &m8q_gnss;
+	m8q_gnss.power_on(nullptr);
+
+	while(true)
+	{
+		
+	}
 
     NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
     battery_monitor = &nrf_battery_monitor;
@@ -100,8 +113,6 @@ int main()
 
 	Scheduler scheduler(system_timer);
 	system_scheduler = &scheduler;
-
-	printf("GenTracker Booted\r\n");
 
 	GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
 
@@ -133,9 +144,6 @@ int main()
 
 	ArticTransceiver artic_transceiver;
 	comms_scheduler = &artic_transceiver;
-
-	M8QReceiver m8q_gnss;
-	location_scheduler = &m8q_gnss;
 
 	// This will initialise the FSM
 	GenTracker::start();
