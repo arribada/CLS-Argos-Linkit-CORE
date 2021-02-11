@@ -1,10 +1,7 @@
 #include "ota_flash_file_updater.hpp"
 #include "error.hpp"
 #include "crc32.hpp"
-
-
-// Flash header is 4 bytes length field followed by 4 bytes CRC
-#define FLASH_HEADER_SIZE  8
+#include "dfu.hpp"
 
 
 OTAFlashFileUpdater::OTAFlashFileUpdater(LFSFileSystem *filesystem, FlashInterface *flash_if, lfs_off_t reserved_block_offset, lfs_size_t reserved_blocks)
@@ -36,12 +33,9 @@ void OTAFlashFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_siz
 		m_file = new LFSFile(m_filesystem, "artic_firmware.dat", LFS_O_WRONLY | LFS_O_CREAT);
 		break;
 	case OTAFileIdentifier::MCU_FIRMWARE:
-		// Erase reserved region of external flash and program the file size and CRC into
-		// the header bytes
+		// Erase reserved region of external flash
 		for (unsigned int i = 0; i < m_reserved_blocks; i++)
 			m_flash_if->erase(i + m_reserved_block_offset);
-		m_flash_if->prog(m_reserved_block_offset, 0, &length, sizeof(length));
-		m_flash_if->prog(m_reserved_block_offset, sizeof(length), &crc32, sizeof(crc32));
 		break;
 	case OTAFileIdentifier::GPS_CONFIG:
 		m_filesystem->remove("gps_config.dat");
@@ -70,7 +64,7 @@ void OTAFlashFileUpdater::write_file_data(void * const data, lfs_size_t length)
 	if (m_file_id != OTAFileIdentifier::MCU_FIRMWARE)
 		m_file->write(data, length);
 	else
-		m_flash_if->prog(((m_file_bytes_received + FLASH_HEADER_SIZE) / m_flash_if->m_block_size), (m_file_bytes_received + FLASH_HEADER_SIZE) % m_flash_if->m_block_size, data, length);
+		m_flash_if->prog(m_file_bytes_received / m_flash_if->m_block_size, m_file_bytes_received % m_flash_if->m_block_size, data, length);
 
 	m_file_bytes_received += length;
 
@@ -82,9 +76,6 @@ void OTAFlashFileUpdater::abort_file_transfer()
 	if (m_file_size != 0) {
 		if (m_file_id != OTAFileIdentifier::MCU_FIRMWARE) {
 			delete m_file;
-		} else {
-			// Erase first reserved block in flash to invalidate
-			m_flash_if->erase(m_reserved_block_offset);
 		}
 	}
 	m_file_size = 0;
@@ -108,8 +99,8 @@ void OTAFlashFileUpdater::complete_file_transfer()
 
 void OTAFlashFileUpdater::apply_file_update() {
 	if (m_file_id == OTAFileIdentifier::MCU_FIRMWARE) {
-		// TODO: reset the device back to bootloader which will take care of the rest of the
-		// firmware update
+		// Update DFU settings page to take effect on the next reboot
+		DFU::write_ext_flash_dfu_settings(m_reserved_block_offset, m_file_size, m_crc32);
 	} else {
 		delete m_file;
 	}
