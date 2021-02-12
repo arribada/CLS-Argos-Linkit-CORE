@@ -265,7 +265,9 @@ void ConfigurationState::process_received_data() {
 
 	if (req.size())
 	{
-		DEBUG_TRACE("received: %s", req.c_str());
+		DEBUG_TRACE("received %u bytes:", req.size());
+		printf("%s\n", req.c_str());
+
 		std::string resp;
 		DTEAction action;
 

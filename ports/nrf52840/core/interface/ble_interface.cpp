@@ -108,18 +108,15 @@ void BleInterface::stop()
 
 std::string BleInterface::read_line()
 {
-    std::string str;
-
-    if (m_carriage_return_received)
+    if (m_carriage_return_received && m_receive_buffer_len)
     {
-        for (uint32_t i = 0; i < m_receive_buffer_len; ++i)
-            str.push_back(m_receive_buffer[i]);
-
+    	std::string str((char *)m_receive_buffer, m_receive_buffer_len);
         m_receive_buffer_len = 0;
         m_carriage_return_received = false;
+        return str;
     }
     
-    return str;
+    return std::string();
 }
 
 void BleInterface::write(std::string str)
@@ -514,9 +511,9 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
             }
             else
             {
-                //DEBUG_TRACE("BleInterface::nus_data_handler: received %u bytes.", p_evt->params.rx_data.length);
                 memcpy(&m_receive_buffer[m_receive_buffer_len], p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
                 m_receive_buffer_len += p_evt->params.rx_data.length;
+                DEBUG_TRACE("BleInterface::nus_data_handler: received %u bytes cumulative %u (%03x).", p_evt->params.rx_data.length, m_receive_buffer_len, m_receive_buffer_len);
                 if (m_receive_buffer[m_receive_buffer_len - 1] == '\r')
                     m_carriage_return_received = true;
 
