@@ -213,7 +213,7 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 		break;
 	case BLEServiceEventType::DISCONNECTED:
 		DEBUG_INFO("ConfigurationState::on_ble_event: DISCONNECTED");
-		transit<OffState>();
+		status_led->flash(RGBLedColor::BLUE);
 		break;
 	case BLEServiceEventType::DTE_DATA_RECEIVED:
 		DEBUG_TRACE("ConfigurationState::on_ble_event: DTE_DATA_RECEIVED");

@@ -11,6 +11,7 @@
 #include "nrf_log.h"
 #include "ble_stm_ota.h"
 #include "error.hpp"
+#include "debug.hpp"
 
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
@@ -509,17 +510,19 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
 
             if (p_evt->params.rx_data.length > sizeof(m_receive_buffer))
             {
-                NRF_LOG_WARNING("Received data from BLE NUS larger than buffer.");
+                DEBUG_WARN("BleInterface::nus_data_handler: received data from BLE NUS larger than buffer.");
             }
             else
             {
-                memcpy(m_receive_buffer, p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+                //DEBUG_TRACE("BleInterface::nus_data_handler: received %u bytes.", p_evt->params.rx_data.length);
+                memcpy(&m_receive_buffer[m_receive_buffer_len], p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
                 m_receive_buffer_len += p_evt->params.rx_data.length;
                 if (m_receive_buffer[m_receive_buffer_len - 1] == '\r')
                     m_carriage_return_received = true;
-                
+
                 // Notify the user that we have a string waiting to be read with readline()
-                if (m_on_event) {
+                // only if end line is received
+                if (m_on_event && m_carriage_return_received) {
                 	BLEServiceEvent e;
                 	e.event_type = BLEServiceEventType::DTE_DATA_RECEIVED;
                     (void)m_on_event(e);
@@ -528,11 +531,19 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
         }
         else
         {
-            NRF_LOG_WARNING("Received data from BLE NUS. But discarded as buffer already contains a string.");
+            DEBUG_WARN("BleInterface::nus_data_handler: Received data from BLE NUS. But discarded as buffer already contains a string.");
         }
 
-        NRF_LOG_DEBUG("Received data from BLE NUS. Writing data on UART.");
-        NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+#if 0
+        DEBUG_TRACE("BleInterface::nus_data_handler: BLE packet:");
+        for (unsigned int i = 0; i < p_evt->params.rx_data.length; i++)
+        	printf("%c", p_evt->params.rx_data.p_data[i]);
+        printf("\n");
+        for (unsigned int i = 0; i < p_evt->params.rx_data.length; i++)
+        	printf("%02x ", p_evt->params.rx_data.p_data[i]);
+        printf("\n");
+        //NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+#endif
     }
 
 }
