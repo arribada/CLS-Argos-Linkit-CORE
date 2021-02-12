@@ -41,8 +41,6 @@ void NrfUARTM8::event_handler(nrfx_uarte_event_t const * p_event)
         {
             uint8_t received_data = rx_byte;
             nrfx_uarte_rx(&BSP::UART_Inits[m_instance].uarte, &rx_byte, 1); // Keep receiving
-            //printf("%c", received_data);
-            //printf("%02X ", received_data);
             update_state(received_data);
             break;
         }
