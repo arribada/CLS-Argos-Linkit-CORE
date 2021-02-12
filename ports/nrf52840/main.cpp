@@ -67,7 +67,7 @@ extern "C" int _write(int file, char *ptr, int len)
 
 int main()
 {
-	DFU::initialise();
+	//DFU::initialise();
 	GPIOPins::initialise();
 
 	nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);

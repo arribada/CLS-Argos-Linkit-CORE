@@ -92,7 +92,7 @@ public:
 		default:
 			break;
 		}
-		DEBUG_TRACE("LED[%s]=%s", m_name, color_to_string(color).c_str());
+		//DEBUG_TRACE("LED[%s]=%s", m_name, color_to_string(color).c_str());
 	}
 	void off() {
 		system_scheduler->cancel_task(m_led_task);
@@ -105,7 +105,7 @@ public:
 		m_is_flashing = true;
 		m_flash_state = true;
 		toggle_led();
-		DEBUG_TRACE("LED[%s]=flashing %s", m_name, color_to_string(color).c_str());
+		//DEBUG_TRACE("LED[%s]=flashing %s", m_name, color_to_string(color).c_str());
 	}
 	bool is_flashing() override {
 		return m_is_flashing;
