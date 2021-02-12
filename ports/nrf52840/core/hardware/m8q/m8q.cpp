@@ -8,6 +8,9 @@ using namespace UBX;
 template<typename T>
 bool M8QReceiver::send_packet_contents(UBX::MessageClass msgClass, uint8_t id, T contents, bool expect_ack)
 {
+    constexpr uint32_t ack_timeout_ms = 1000;
+    constexpr uint32_t ack_timeout_steps = 100;
+
     // Construct packet header
     UBX::Header header = {
         .syncChars = {UBX::SYNC_CHAR1, UBX::SYNC_CHAR2},
@@ -42,8 +45,7 @@ bool M8QReceiver::send_packet_contents(UBX::MessageClass msgClass, uint8_t id, T
     // Wait for an ACK/NACK if we are expecting one
     if (expect_ack)
     {
-        // TODO!!! Add a timeout
-        while (true)
+        for (uint32_t i = 0; i < ack_timeout_steps; ++i)
         {
             if (m_rx_buffer.pending)
             {
@@ -74,7 +76,12 @@ bool M8QReceiver::send_packet_contents(UBX::MessageClass msgClass, uint8_t id, T
 
                 m_rx_buffer.pending = false;
             }
+
+            nrf_delay_ms(ack_timeout_ms / ack_timeout_steps);
         }
+
+        DEBUG_ERROR("GPS Timed out waiting for response");
+        return false;
     }
 
     return true;
@@ -111,7 +118,7 @@ void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_
     // Enable the power supply for the GPS
     GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);
 
-    nrf_delay_ms(1000); // Can this be reduced?
+    nrf_delay_ms(1000); // Necessary to allow the device to boot
     
     setup_uart_port();
     setup_gnss_channel_sharing();
@@ -143,7 +150,7 @@ void M8QReceiver::reception_callback(uint8_t *data, size_t len)
     }
     else
     {
-        // We're looking for a pair of NAV-PVT and NAV-DOP messages so we can retrieve all the data necessary
+        // We're looking for a pair of NAV-PVT and NAV-DOP messages so we can retrieve all the data necessary to genereate a callback
         // We can use iTow to ensure both messages relate to the same position/time
         UBX::Header *header_ptr = reinterpret_cast<UBX::Header *>(&data[0]);
         if (header_ptr->msgClass == UBX::MessageClass::MSG_CLASS_NAV)
@@ -170,7 +177,7 @@ void M8QReceiver::reception_callback(uint8_t *data, size_t len)
     }
 }
 
-// Assumes both m_last_received_pvt and m_last_received_dop contain matching iTows and is associated with a valid fix
+// Checks if the data we have to date is enough to generate a gnss data callback and if it is calls it
 void M8QReceiver::populate_gnss_data_and_callback()
 {
     if (m_last_received_pvt.fixType != UBX::NAV::PVT::FIXTYPE_NO && // GPS Fix must be achieved
