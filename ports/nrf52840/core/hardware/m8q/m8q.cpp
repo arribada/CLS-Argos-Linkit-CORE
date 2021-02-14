@@ -59,7 +59,7 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
                         if (msg_ack_ptr->clsID == msgClass && msg_ack_ptr->msgID == id)
                         {
                             m_rx_buffer.pending = false;
-                            DEBUG_TRACE("GPS ACK-ACK");
+                            DEBUG_TRACE("GPS ACK-ACK <-");
                             return SendReturnCode::SUCCESS;
                         }
                     }
@@ -69,7 +69,7 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
                         if (msg_nack_ptr->clsID == msgClass && msg_nack_ptr->msgID == id)
                         {
                             m_rx_buffer.pending = false;
-                            DEBUG_WARN("GPS ACK-NACK");
+                            DEBUG_WARN("GPS ACK-NACK <-");
                             return SendReturnCode::NACKD;
                         }
                     }
@@ -168,7 +168,7 @@ void M8QReceiver::reception_callback(uint8_t *data, size_t len)
     }
     else
     {
-        // We're looking for a pair of NAV-PVT and NAV-DOP messages so we can retrieve all the data necessary to genereate a callback
+        // We're looking for a pair of NAV-PVT and NAV-DOP messages so we can retrieve all the data necessary to generate a callback
         // We can use iTow to ensure both messages relate to the same position/time
         UBX::Header *header_ptr = reinterpret_cast<UBX::Header *>(&data[0]);
         if (header_ptr->msgClass == UBX::MessageClass::MSG_CLASS_NAV)
@@ -178,7 +178,7 @@ void M8QReceiver::reception_callback(uint8_t *data, size_t len)
                 UBX::NAV::PVT::MSG_PVT *msg_pvt_ptr = reinterpret_cast<UBX::NAV::PVT::MSG_PVT *>(&data[sizeof(UBX::Header)]);
                 memcpy(&m_last_received_pvt, msg_pvt_ptr, sizeof(m_last_received_pvt));
 
-                DEBUG_TRACE("GPS NAV-PVT");
+                DEBUG_TRACE("GPS NAV-PVT <-");
 
                 populate_gnss_data_and_callback();
             }
@@ -187,7 +187,7 @@ void M8QReceiver::reception_callback(uint8_t *data, size_t len)
                 UBX::NAV::DOP::MSG_DOP *msg_dop_ptr = reinterpret_cast<UBX::NAV::DOP::MSG_DOP *>(&data[sizeof(UBX::Header)]);
                 memcpy(&m_last_received_dop, msg_dop_ptr, sizeof(m_last_received_dop));
 
-                DEBUG_TRACE("GPS NAV-DOP");
+                DEBUG_TRACE("GPS NAV-DOP <-");
 
                 populate_gnss_data_and_callback();
             }
@@ -243,7 +243,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
         .reserved2 = {0}
     };
 
-    DEBUG_TRACE("GPS CFG-PRT");
+    DEBUG_TRACE("GPS CFG-PRT ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_PRT, uart_prt);
 }
@@ -310,7 +310,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
         }
     };
 
-    DEBUG_TRACE("GPS CFG-GNSS");
+    DEBUG_TRACE("GPS CFG-GNSS ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_GNSS, cfg_msg_cfg_gnss);
 }
@@ -333,7 +333,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_power_management()
         .extintInactivityMs = 0
     };
 
-    DEBUG_TRACE("GPS CFG-PM2");
+    DEBUG_TRACE("GPS CFG-PM2 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_PM2, cfg_msg_cfg_pm2);
 }
@@ -346,7 +346,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_lower_power_mode()
         .lpMode = CFG::RXM::CONTINUOUS_MODE
     };
 
-    DEBUG_TRACE("GPS CFG-RXM");
+    DEBUG_TRACE("GPS CFG-RXM ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_RXM, cfg_msg_cfg_rxm);
 }
@@ -376,7 +376,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_simple_navigation_settings()
         .reserved2 = {0}
     };
 
-    DEBUG_TRACE("GPS CFG-NAV5");
+    DEBUG_TRACE("GPS CFG-NAV5 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_NAV5, cfg_msg_cfg_nav5);
 }
@@ -410,7 +410,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_expert_navigation_settings()
         .useAdr = 0
     };
 
-    DEBUG_TRACE("GPS CFG-NAVX5");
+    DEBUG_TRACE("GPS CFG-NAVX5 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_NAVX5, cfg_msg_cfg_navx5);
 }
@@ -432,7 +432,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_odometer()
         .reserved4 = {0}
     };
 
-    DEBUG_TRACE("GPS CFG-ODO");
+    DEBUG_TRACE("GPS CFG-ODO ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_ODO, cfg_msg_cfg_odo);
 }
@@ -455,7 +455,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_timepulse_output()
         .flags = 0
     };
 
-    DEBUG_TRACE("GPS CFG-TP5");
+    DEBUG_TRACE("GPS CFG-TP5 ->");
 
     auto ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_TP5, cfg_msg_cfg_tp5);
     if (ret != SendReturnCode::SUCCESS)
@@ -465,7 +465,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_timepulse_output()
 
     cfg_msg_cfg_tp5.tpIdx = 1;
 
-    DEBUG_TRACE("GPS CFG-TP5");
+    DEBUG_TRACE("GPS CFG-TP5 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_TP5, cfg_msg_cfg_tp5);
 }
@@ -479,7 +479,7 @@ M8QReceiver::SendReturnCode M8QReceiver::enable_nav_pvt_message()
         .rate = 1
     };
 
-    DEBUG_TRACE("GPS CFG-MSG");
+    DEBUG_TRACE("GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_pvt);
 }
@@ -493,7 +493,7 @@ M8QReceiver::SendReturnCode M8QReceiver::enable_nav_dop_message()
         .rate = 1
     };
 
-    DEBUG_TRACE("GPS CFG-MSG");
+    DEBUG_TRACE("GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
 }

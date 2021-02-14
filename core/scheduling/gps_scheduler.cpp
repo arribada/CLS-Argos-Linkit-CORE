@@ -14,9 +14,10 @@ extern RTC *rtc;
 
 void GPSScheduler::start(std::function<void()> data_notification_callback)
 {
+    DEBUG_TRACE("GPSScheduler::start");
     configuration_store->get_gnss_configuration(m_gnss_config);
-    m_data_notification_callback = data_notification_callback;
 
+    m_data_notification_callback = data_notification_callback;
     m_gnss_data.pending_data_logging = false;
     m_gnss_data.pending_rtc_set = false;
 
@@ -25,6 +26,7 @@ void GPSScheduler::start(std::function<void()> data_notification_callback)
 
 void GPSScheduler::stop()
 {
+    DEBUG_TRACE("GPSScheduler::stop");
     m_data_notification_callback = nullptr;
     deschedule();
 
@@ -36,6 +38,7 @@ void GPSScheduler::stop()
 
 void GPSScheduler::notify_saltwater_switch_state(bool state)
 {
+    DEBUG_TRACE("GPSScheduler::notify_saltwater_switch_state");
     (void) state; // Unused
 }
 
@@ -52,6 +55,8 @@ void GPSScheduler::reschedule()
 
     // Find the time in milliseconds until this schedule
     int64_t time_until_next_schedule_ms = (next_schedule - now) * MS_PER_SEC;
+
+    DEBUG_TRACE("GPSScheduler::schedule_aquisition in %llu seconds", time_until_next_schedule_ms / 1000);
 
     deschedule(); // Ensure any previous schedule has been cleared
     m_task_acquisition_period = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_period, this), Scheduler::DEFAULT_PRIORITY, time_until_next_schedule_ms);
@@ -89,6 +94,7 @@ uint32_t GPSScheduler::acquisition_period_to_seconds(BaseAqPeriod period) {
 }
 
 void GPSScheduler::task_acquisition_period() {
+    DEBUG_TRACE("GPSScheduler::task_acquisition_period");
     try
     {
         power_on(std::bind(&GPSScheduler::gnss_data_callback, this, std::placeholders::_1));
@@ -108,6 +114,7 @@ void GPSScheduler::task_acquisition_period() {
 
 void GPSScheduler::log_invalid_gps_entry()
 {
+    DEBUG_TRACE("GPSScheduler::log_invalid_gps_entry");
     GPSLogEntry gps_entry;
     gps_entry.header.log_type = LOG_GPS;
 
@@ -119,6 +126,7 @@ void GPSScheduler::log_invalid_gps_entry()
 }
 
 void GPSScheduler::task_acquisition_timeout() {
+    DEBUG_TRACE("GPSScheduler::task_acquisition_timeout");
     power_off();
 
     log_invalid_gps_entry();
@@ -132,20 +140,13 @@ void GPSScheduler::task_acquisition_timeout() {
 void GPSScheduler::task_update_rtc()
 {
     rtc->settime(convert_epochtime(m_gnss_data.data.year, m_gnss_data.data.month, m_gnss_data.data.day, m_gnss_data.data.hours, m_gnss_data.data.minutes, m_gnss_data.data.seconds));
+    DEBUG_TRACE("GPSScheduler::task_update_rtc");
     m_gnss_data.pending_rtc_set = false;
 }
 
 void GPSScheduler::task_process_gnss_data()
 {
-    // Ignore this data if it does not meet our required hdop threshold
-    if (m_gnss_config.hdop_filter_enable)
-    {
-        if (m_gnss_data.data.hDOP > m_gnss_config.hdop_filter_threshold)
-        {
-            m_gnss_data.pending_data_logging = false;
-            return;
-        }
-    }
+    DEBUG_TRACE("GPSScheduler::task_process_gnss_data");
 
     GPSLogEntry gps_entry;
     gps_entry.header.log_type = LOG_GPS;
@@ -166,7 +167,6 @@ void GPSScheduler::task_process_gnss_data()
     sensor_log->write(&gps_entry);
 
     power_off();
-    system_scheduler->cancel_task(m_task_acquisition_timeout);
 
     reschedule();
 
@@ -181,9 +181,6 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
     if (m_gnss_data.pending_data_logging || m_gnss_data.pending_rtc_set)
         return;
     
-    // We have a valid fix so there's no need to timeout anymore
-    system_scheduler->cancel_task(m_task_acquisition_timeout);
-    
     m_gnss_data.data = data;
     m_gnss_data.pending_data_logging = true;
     m_gnss_data.pending_rtc_set = true;
@@ -192,9 +189,17 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
     m_gnss_data.pending_rtc_set = true;
     m_task_update_rtc = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_update_rtc, this), Scheduler::HIGHEST_PRIORITY);
 
-    // Defer processing this data till we are outside of this interrupt context
-    m_gnss_data.pending_data_logging = true;
-    m_task_process_gnss_data = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_timeout, this), Scheduler::DEFAULT_PRIORITY - 1);
+    // Don't process this data if it does not meet our required hdop threshold
+    if (m_gnss_config.hdop_filter_enable &&
+        m_gnss_data.data.hDOP > m_gnss_config.hdop_filter_threshold)
+    {
+        // We have a valid fix so there's no need to timeout anymore
+        system_scheduler->cancel_task(m_task_acquisition_timeout);
+
+        // Defer processing this data till we are outside of this interrupt context
+        m_gnss_data.pending_data_logging = true;
+        m_task_process_gnss_data = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_process_gnss_data, this), Scheduler::DEFAULT_PRIORITY);
+    }
 }
 
 void GPSScheduler::populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time)
