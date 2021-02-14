@@ -104,6 +104,7 @@ void M8QReceiver::power_off()
 
     m_has_booted = false;
     m_rx_buffer.pending = false;
+    m_data_notification_callback = nullptr;
 }
 
 void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_callback = nullptr)

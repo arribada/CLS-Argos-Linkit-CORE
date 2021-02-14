@@ -2,6 +2,7 @@
 #define __GPS_SCHEDULER_HPP_
 
 #include <functional>
+#include <atomic>
 #include "config_store.hpp"
 #include "location_scheduler.hpp"
 #include "scheduler.hpp"
@@ -28,21 +29,34 @@ protected:
 
 private:
 	GNSSConfig m_gnss_config;
-	Scheduler::TaskHandle m_acquisition_period_task;
-	Scheduler::TaskHandle m_acquisition_timeout_task;
+
+	struct {
+		GNSSData data;
+		std::atomic<bool> pending_rtc_set;
+		std::atomic<bool> pending_data_logging;
+	} m_gnss_data;
 
 	std::function<void()> m_data_notification_callback;
+
+	// Tasks
+	Scheduler::TaskHandle m_task_acquisition_period;
+	Scheduler::TaskHandle m_task_acquisition_timeout;
+	Scheduler::TaskHandle m_task_update_rtc;
+	Scheduler::TaskHandle m_task_process_gnss_data;
+	void task_acquisition_period();
+	void task_acquisition_timeout();
+	void task_update_rtc();
+	void task_process_gnss_data();
 
 	void reschedule();
 	void deschedule();
 	uint32_t acquisition_period_to_seconds(BaseAqPeriod period);
 	void populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time);
+	void log_invalid_gps_entry();
 
-	void acquisition_period_task();
-	void acquisition_timeout_task();
 	void gnss_data_callback(GNSSData data);
 	void populate_gnss_data_and_callback();
-
+	
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	virtual void power_off() = 0;
 	virtual void power_on(std::function<void(GNSSData data)> data_notification_callback = nullptr) = 0;

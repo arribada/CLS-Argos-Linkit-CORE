@@ -17,6 +17,7 @@
 class Scheduler {
 
 public:
+	static const unsigned int HIGHEST_PRIORITY = 0;
 	static const unsigned int DEFAULT_PRIORITY = 7;
 
 	Scheduler(Timer *timer) : m_timer(timer), m_unique_id(0) {}
