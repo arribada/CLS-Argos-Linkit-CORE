@@ -60,6 +60,7 @@
 #include "app_error_weak.h"
 #include "nrf_bootloader_info.h"
 #include "nrf_delay.h"
+#include "is25_flash.h"
 
 static void on_error(void)
 {
@@ -117,6 +118,10 @@ static void dfu_observer(nrf_dfu_evt_type_t evt_type)
             bsp_board_led_on(BSP_BOARD_LED_1);
             break;
         case NRF_DFU_EVT_DFU_STARTED:
+            is25_flash_init();
+            break;
+        case NRF_DFU_EVT_DFU_COMPLETED:
+            is25_flash_deinit();
             break;
         default:
             break;

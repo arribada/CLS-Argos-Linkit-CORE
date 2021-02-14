@@ -554,7 +554,8 @@ void ArgosScheduler::periodic_algorithm() {
 	m_msg_index++;
 }
 
-void ArgosScheduler::start()  {
+void ArgosScheduler::start() {
+	DEBUG_TRACE("ArgosScheduler::start");
 	m_is_running = true;
 	m_msg_index = 0;
 	m_next_prepass = INVALID_SCHEDULE;
@@ -566,6 +567,7 @@ void ArgosScheduler::start()  {
 }
 
 void ArgosScheduler::stop() {
+	DEBUG_TRACE("ArgosScheduler::stop");
 	deschedule();
 	m_is_running = false;
 }
@@ -577,6 +579,7 @@ void ArgosScheduler::deschedule() {
 }
 
 void ArgosScheduler::notify_saltwater_switch_state(bool state) {
+	DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state");
 	m_switch_state = state;
 	if (m_is_running && m_argos_config.underwater_en) {
 		if (!m_switch_state) {

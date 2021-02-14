@@ -27,11 +27,15 @@ namespace BSP
     enum GPIO
 	{
     	GPIO_SWITCH,
+		GPIO_POWER_CONTROL,
+		GPIO_SLOW_SWS_SEND,
+		GPIO_SLOW_SWS_RX,
 		GPIO_TOTAL_NUMBER
 	};
 
     typedef struct
     {
+    	int pin_number;
     	void *gpiote_in_config;
     } GPIO_InitTypeDefAndInst_t;
 

@@ -62,9 +62,10 @@ private:
     static void static_on_conn_params_evt(ble_conn_params_evt_t * p_evt) { get_instance().on_conn_params_evt(p_evt); };
     static void static_conn_params_error_handler(uint32_t nrf_error) { get_instance().conn_params_error_handler(nrf_error); }
 
-    uint8_t m_receive_buffer[1024];
+    uint8_t m_receive_buffer[4128];  // Maximum payload length is FFF=>4095 bytes, allow 32 bytes for header preamble as well
     volatile size_t m_receive_buffer_len;
     volatile bool m_carriage_return_received;
     volatile bool m_is_first_ota_packet;
     std::function<int(BLEServiceEvent& event)> m_on_event;
+    unsigned int m_ota_file_id;
 };

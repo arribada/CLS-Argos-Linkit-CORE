@@ -6,7 +6,8 @@
 
 using nrfx_saadc_config_t = void *;
 using nrf_saadc_channel_config_t = void *;
-using nrfx_saadc_event_handler_t = void *;
+using nrfx_saadc_evt_t = int;
+typedef void (*nrfx_saadc_event_handler_t)(nrfx_saadc_evt_t const *);
 using nrf_saadc_value_t = int16_t;
 
 class SAADC {

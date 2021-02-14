@@ -6375,7 +6375,7 @@
  
 
 #ifndef CRC32_ENABLED
-#define CRC32_ENABLED 0
+#define CRC32_ENABLED 1
 #endif
 
 // <q> ECC_ENABLED  - ecc - Elliptic Curve Cryptography Library
@@ -11038,7 +11038,7 @@
 
 // <o> NRF_SDH_BLE_VS_UUID_COUNT - The number of vendor-specific UUIDs. 
 #ifndef NRF_SDH_BLE_VS_UUID_COUNT
-#define NRF_SDH_BLE_VS_UUID_COUNT 1
+#define NRF_SDH_BLE_VS_UUID_COUNT 2
 #endif
 
 // <q> NRF_SDH_BLE_SERVICE_CHANGED  - Include the Service Changed characteristic in the Attribute Table.

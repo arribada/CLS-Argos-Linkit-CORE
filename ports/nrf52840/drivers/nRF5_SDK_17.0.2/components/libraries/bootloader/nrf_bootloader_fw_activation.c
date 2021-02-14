@@ -51,6 +51,13 @@
 
 static volatile bool m_flash_write_done;
 
+// Implement this function for against your flash driver to allow external flash updates
+__attribute__((weak)) void ext_flash_read(uint8_t *dst_addr, uint32_t src_addr, uint32_t length)
+{
+	(void)dst_addr;
+	(void)src_addr;
+	(void)length;
+}
 
 /**
  * @brief Function for copying image. Image is copied in chunks. Frequency of storing progress
@@ -144,6 +151,95 @@ static uint32_t image_copy(uint32_t dst_addr,
     return ret_val;
 }
 
+/**
+ * @brief Function for copying image. Image is copied in chunks. Frequency of storing progress
+ *        in flash is configured by input parameter.
+ *
+ * @param[in] dst_addr             Destination address. Must be page aligned.
+ * @param[in] src_addr             Source address. Must be higher value than dst_addr.
+ * @param[in] size                 Image size.
+ * @param[in] progress_update_step Number of copied pages that triggers saving progress to non-volatile memory.
+ *                                 Note that step can be decreased if there is a risk of corruption caused by source
+ *                                 and destination overlapping.
+ *
+ * @return NRF_SUCCESS or error code in case of failure.
+ */
+static uint32_t image_copy_ext_flash(uint32_t dst_addr,
+                           uint32_t src_addr,
+                           uint32_t size,
+                           uint32_t progress_update_step)
+{
+	uint8_t page_data[CODE_PAGE_SIZE];
+
+	if (size != 0)
+    {
+        ASSERT((dst_addr % CODE_PAGE_SIZE) == 0);
+    }
+
+    uint32_t max_safe_progress_upd_step = (src_addr - dst_addr)/CODE_PAGE_SIZE;
+    ASSERT(max_safe_progress_upd_step > 0);
+
+    uint32_t ret_val = NRF_SUCCESS;
+    uint32_t pages_left = CEIL_DIV(size, CODE_PAGE_SIZE);
+
+    //Firmware copying is time consuming operation thus watchdog handling is started
+    nrf_bootloader_wdt_init();
+
+    progress_update_step = MIN(progress_update_step, max_safe_progress_upd_step);
+
+    while (size > 0)
+    {
+        uint32_t pages;
+        uint32_t bytes;
+        if (pages_left <= progress_update_step)
+        {
+            pages = pages_left;
+            bytes = size;
+        }
+        else
+        {
+            pages = progress_update_step;
+            bytes = progress_update_step * CODE_PAGE_SIZE;
+        }
+        // Erase the target pages
+        ret_val = nrf_dfu_flash_erase(dst_addr, pages, NULL);
+        if (ret_val != NRF_SUCCESS)
+        {
+            return ret_val;
+        }
+
+        // Read one page from ext flash
+        ext_flash_read(page_data, src_addr, CODE_PAGE_SIZE);
+
+        // Flash one page
+        NRF_LOG_DEBUG("Copying ext. flash 0x%x to 0x%x, size: 0x%x", src_addr, dst_addr, bytes);
+        ret_val = nrf_dfu_flash_store(dst_addr,
+                                      (uint32_t *)page_data,
+                                      ALIGN_NUM(sizeof(uint32_t), bytes),
+                                      NULL);
+        if (ret_val != NRF_SUCCESS)
+        {
+            return ret_val;
+        }
+
+        pages_left  -= pages;
+        size        -= bytes;
+        dst_addr    += bytes;
+        src_addr    += bytes;
+        s_dfu_settings.write_offset += bytes;
+
+        //store progress in flash on every successful chunk write
+        ret_val = nrf_dfu_settings_write_and_backup(NULL);
+        if (ret_val != NRF_SUCCESS)
+        {
+            NRF_LOG_ERROR("Failed to write image copying progress to settings page.");
+            return ret_val;
+        }
+    }
+
+    return ret_val;
+}
+
 /** @brief Function to continue application update.
  *
  * @details This function will be called after reset if there is a valid application in Bank1
@@ -173,6 +269,63 @@ static uint32_t app_activate(void)
     }
 
     ret_val = image_copy(target_addr, src_addr, length_left, NRF_BL_FW_COPY_PROGRESS_STORE_STEP);
+    if (ret_val != NRF_SUCCESS)
+    {
+        NRF_LOG_ERROR("Failed to copy firmware.");
+        return ret_val;
+    }
+
+    // Check the CRC of the copied data. Enable if so.
+    crc = crc32_compute((uint8_t*)nrf_dfu_bank0_start_addr(), image_size, NULL);
+
+    if (crc == s_dfu_settings.bank_1.image_crc)
+    {
+        NRF_LOG_DEBUG("Setting app as valid");
+        s_dfu_settings.bank_0.bank_code = NRF_DFU_BANK_VALID_APP;
+        s_dfu_settings.bank_0.image_crc = crc;
+        s_dfu_settings.bank_0.image_size = image_size;
+    }
+    else
+    {
+        NRF_LOG_ERROR("CRC computation failed for copied app: "
+                      "src crc: 0x%08x, res crc: 0x%08x",
+                      s_dfu_settings.bank_1.image_crc,
+                      crc);
+    }
+
+    return ret_val;
+}
+
+
+/** @brief Function to continue application update from external flash memory
+ *
+ * @details This function will be called after reset if there is a valid application in Bank1
+ *          required to be copied down to Bank 0.
+ *
+ * @return NRF_SUCCESS if continuation was successful, NRF_ERROR_INTERNAL if new firmware does not
+ *         contain softdevice or other error coming from modules used by this function.
+ */
+static uint32_t ext_app_activate(void)
+{
+    // This function is only in use when new app is present in Bank 1
+    uint32_t const image_size  = s_dfu_settings.bank_1.image_size;
+
+    uint32_t src_addr    = s_dfu_settings.progress.update_start_address;
+    uint32_t ret_val     = NRF_SUCCESS;
+    uint32_t target_addr = nrf_dfu_bank0_start_addr() + s_dfu_settings.write_offset;
+    uint32_t length_left = (image_size - s_dfu_settings.write_offset);
+    uint32_t crc;
+
+    NRF_LOG_DEBUG("Enter nrf_dfu_app_continue");
+
+    src_addr += s_dfu_settings.write_offset;
+
+    if (src_addr == target_addr)
+    {
+        length_left = 0;
+    }
+
+    ret_val = image_copy_ext_flash(target_addr, src_addr, length_left, NRF_BL_FW_COPY_PROGRESS_STORE_STEP);
     if (ret_val != NRF_SUCCESS)
     {
         NRF_LOG_ERROR("Failed to copy firmware.");
@@ -400,6 +553,10 @@ nrf_bootloader_fw_activation_result_t nrf_bootloader_fw_activate(void)
             NRF_LOG_DEBUG("Valid SD + BL");
             ret_val = sd_bl_activate();
             sd_update = true;
+            break;
+        case NRF_DFU_BANK_VALID_EXT_APP:
+            NRF_LOG_DEBUG("Valid EXT flash application");
+            ret_val = ext_app_activate();
             break;
         case NRF_DFU_BANK_INVALID:
         default:

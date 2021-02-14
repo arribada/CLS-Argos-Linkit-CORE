@@ -11,6 +11,7 @@
 #include "nrf_log.h"
 #include "ble_stm_ota.h"
 #include "error.hpp"
+#include "debug.hpp"
 
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
@@ -58,7 +59,10 @@ static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;        
 static ble_uuid_t m_adv_uuids[]          =                                          /**< Universally unique service identifier. */
 {
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE},
+#if 0  // FIXME: adding this UUID violates the max 31 bytes advertising packet size,
+	   // so we can't advertise the OTA UUID in conjunction with the device name and NUS UUID
     {STM_OTA_UUID_SERVICE, STM_OTA_SERVICE_UUID_TYPE},
+#endif
 };
 
 void BleInterface::init()
@@ -104,18 +108,15 @@ void BleInterface::stop()
 
 std::string BleInterface::read_line()
 {
-    std::string str;
-
-    if (m_carriage_return_received)
+    if (m_carriage_return_received && m_receive_buffer_len)
     {
-        for (uint32_t i = 0; i < m_receive_buffer_len; ++i)
-            str.push_back(m_receive_buffer[i]);
-
+    	std::string str((char *)m_receive_buffer, m_receive_buffer_len);
         m_receive_buffer_len = 0;
         m_carriage_return_received = false;
+        return str;
     }
     
-    return str;
+    return std::string();
 }
 
 void BleInterface::write(std::string str)
@@ -254,6 +255,7 @@ void BleInterface::advertising_init()
     init.config.ble_adv_fast_timeout  = APP_ADV_DURATION;
     init.evt_handler = static_on_adv_evt;
 
+    printf("ble_advertising_init\n");
     err_code = ble_advertising_init(&m_advertising, &init);
     APP_ERROR_CHECK(err_code);
 
@@ -391,6 +393,11 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 				// The next receive raw data packet will contain at least 8 bytes
 				// which shall include the total file size and a CRC32 checksum
 				m_is_first_ota_packet = true;
+				m_ota_file_id = p_evt->address;  // Record file ID
+
+				// Send handshake back to client to inform them that we receive their
+				// start request
+				ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_OK);
 			}
 			else if (p_evt->action == STM_OTA_ACTION_STOP_ALL ||
 					p_evt->action == STM_OTA_ACTION_CANCEL)
@@ -425,6 +432,7 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 				m_is_first_ota_packet = false;
 
 				s_evt.event_type = BLEServiceEventType::OTA_START;
+				s_evt.file_id = m_ota_file_id;
 				s_evt.file_size = ((uint8_t *)p_evt->p_data)[0] |
 						((uint8_t *)p_evt->p_data)[1] << 8 |
 						((uint8_t *)p_evt->p_data)[2] << 16 |
@@ -499,17 +507,19 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
 
             if (p_evt->params.rx_data.length > sizeof(m_receive_buffer))
             {
-                NRF_LOG_WARNING("Received data from BLE NUS larger than buffer.");
+                DEBUG_WARN("BleInterface::nus_data_handler: received data from BLE NUS larger than buffer.");
             }
             else
             {
-                memcpy(m_receive_buffer, p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+                memcpy(&m_receive_buffer[m_receive_buffer_len], p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
                 m_receive_buffer_len += p_evt->params.rx_data.length;
+                DEBUG_TRACE("BleInterface::nus_data_handler: received %u bytes cumulative %u (%03x).", p_evt->params.rx_data.length, m_receive_buffer_len, m_receive_buffer_len);
                 if (m_receive_buffer[m_receive_buffer_len - 1] == '\r')
                     m_carriage_return_received = true;
-                
+
                 // Notify the user that we have a string waiting to be read with readline()
-                if (m_on_event) {
+                // only if end line is received
+                if (m_on_event && m_carriage_return_received) {
                 	BLEServiceEvent e;
                 	e.event_type = BLEServiceEventType::DTE_DATA_RECEIVED;
                     (void)m_on_event(e);
@@ -518,11 +528,19 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
         }
         else
         {
-            NRF_LOG_WARNING("Received data from BLE NUS. But discarded as buffer already contains a string.");
+            DEBUG_WARN("BleInterface::nus_data_handler: Received data from BLE NUS. But discarded as buffer already contains a string.");
         }
 
-        NRF_LOG_DEBUG("Received data from BLE NUS. Writing data on UART.");
-        NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+#if 0
+        DEBUG_TRACE("BleInterface::nus_data_handler: BLE packet:");
+        for (unsigned int i = 0; i < p_evt->params.rx_data.length; i++)
+        	printf("%c", p_evt->params.rx_data.p_data[i]);
+        printf("\n");
+        for (unsigned int i = 0; i < p_evt->params.rx_data.length; i++)
+        	printf("%02x ", p_evt->params.rx_data.p_data[i]);
+        printf("\n");
+        //NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+#endif
     }
 
 }

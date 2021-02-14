@@ -37,6 +37,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include <stdio.h>
 #include "sdk_common.h"
 #if NRF_MODULE_ENABLED(BLE_STM_OTA)
 #include "ble_srv_common.h"
@@ -118,8 +119,11 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
     add_char_params.uuid_type         = p_stm_ota->uuid_type;
     add_char_params.init_len          = 0;
     add_char_params.max_len           = 2;
+    add_char_params.is_var_len        = false;
     add_char_params.char_props.read   = 1;
-    add_char_params.char_props.write = 1;
+    add_char_params.char_props.write  = 1;
+    add_char_params.char_props.notify = 0;
+    add_char_params.p_init_value      = NULL;
 
     add_char_params.read_access       = SEC_OPEN;
     add_char_params.write_access = SEC_OPEN;
@@ -137,9 +141,12 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
     add_char_params.uuid             = STM_OTA_UUID_FILE_UPLOAD_END_STATUS;
     add_char_params.uuid_type        = p_stm_ota->uuid_type;
     add_char_params.init_len         = 0;
+    add_char_params.is_var_len       = false;
     add_char_params.max_len          = 1;
-    add_char_params.char_props.read  = 1;
+    add_char_params.char_props.write  = 0;
+    add_char_params.char_props.read   = 1;
     add_char_params.char_props.notify = 1;
+    add_char_params.p_init_value      = NULL;
 
     add_char_params.read_access  = SEC_OPEN;
     add_char_params.cccd_write_access = SEC_OPEN;
@@ -155,11 +162,13 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
     add_char_params.uuid              = STM_OTA_UUID_OTA_RAW_DATA;
     add_char_params.uuid_type         = p_stm_ota->uuid_type;
     add_char_params.init_len          = 0;
-    add_char_params.max_len           = 242;
+    add_char_params.is_var_len        = true;
+    add_char_params.max_len           = 20;
     add_char_params.char_props.read   = 0;
-    add_char_params.char_props.write = 1;
+    add_char_params.char_props.write  = 1;
+    add_char_params.char_props.notify = 0;
+    add_char_params.p_init_value      = NULL;
 
-    add_char_params.read_access  = SEC_OPEN;
     add_char_params.write_access = SEC_OPEN;
 
     return characteristic_add(p_stm_ota->service_handle,

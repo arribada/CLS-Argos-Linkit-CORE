@@ -9,7 +9,7 @@
 #include "logger.hpp"
 #include "ble_service.hpp"
 #include "ota_file_updater.hpp"
-#include "led.hpp"
+#include "rgb_led.hpp"
 #include "switch.hpp"
 #include "memory_access.hpp"
 #include "rtc.hpp"
@@ -34,9 +34,7 @@ BLEService *ble_service;
 OTAFileUpdater *ota_updater;
 Switch *reed_switch;
 Switch *saltwater_switch;
-Led *red_led;
-Led *green_led;
-Led *blue_led;
+RGBLed *status_led;
 MemoryAccess *memory_access;
 RTC *rtc;
 BatteryMonitor *battery_monitor;
