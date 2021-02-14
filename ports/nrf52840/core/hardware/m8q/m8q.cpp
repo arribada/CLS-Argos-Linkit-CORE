@@ -140,6 +140,9 @@ void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_
 
 POWER_ON_FAILURE:
 
+    // Our power on has failed so ensure we leave the GPS powered down
+    power_off();
+
     if (ret == SendReturnCode::NACKD)
         throw ErrorCode::GPS_BOOT_NACKED;
     else if (ret == SendReturnCode::RESPONSE_TIMEOUT)
