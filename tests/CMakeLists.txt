@@ -106,6 +106,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c"
     "${ROOT_DIR}/core/util/haversine.cpp"
     "${ROOT_DIR}/core/scheduling/argos_scheduler.cpp"
+    "${ROOT_DIR}/core/scheduling/gps_scheduler.cpp"
     "${ROOT_DIR}/core/filesystem/ota_flash_file_updater.cpp"
     "${ROOT_DIR}/core/hardware/sws.cpp"
     "${ROOT_DIR}/core/sm/gentracker.cpp"
