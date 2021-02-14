@@ -78,18 +78,6 @@ int main()
 
     nrf_log_redirect_init();
 
-	DEBUG_INFO("GenTracker Booted");
-
-	DEBUG_TRACE("Going to setup M8Q");
-	M8QReceiver m8q_gnss;
-	location_scheduler = &m8q_gnss;
-	m8q_gnss.power_on(nullptr);
-
-	while(true)
-	{
-		
-	}
-
     NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
     battery_monitor = &nrf_battery_monitor;
 	NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS);
@@ -144,6 +132,9 @@ int main()
 
 	ArticTransceiver artic_transceiver;
 	comms_scheduler = &artic_transceiver;
+
+	M8QReceiver m8q_gnss;
+	location_scheduler = &m8q_gnss;
 
 	// This will initialise the FSM
 	GenTracker::start();
