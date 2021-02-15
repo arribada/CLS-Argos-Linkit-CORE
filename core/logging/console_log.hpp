@@ -10,8 +10,8 @@ using namespace std;
 class ConsoleLog : public Logger {
 
 private:
-	void debug_formatter(const char *level, const char *msg) {
-		printf("[%s]\t%s\r\n", level, msg);
+	void debug_formatter(const char *level, LogHeader *header, const char *msg) {
+		printf("%02u/%02u/%04u %02u:%02u:%02u [%s]\t%s\r\n", header->day, header->month, header->year, header->hours, header->minutes, header->seconds, level, msg);
 	}
 	void gps_formatter(const GPSLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
@@ -66,7 +66,7 @@ public:
 		case LOG_WARN:
 		case LOG_INFO:
 		case LOG_TRACE:
-			debug_formatter(log_type_name[p->header.log_type], (const char * )p->data);
+			debug_formatter(log_type_name[p->header.log_type], &p->header, (const char * )p->data);
 			break;
 		case LOG_GPS:
 			gps_formatter((const GPSLogEntry *)entry);

@@ -40,7 +40,7 @@ void GenTracker::react(tinyfsm::Event const &) { }
 
 void GenTracker::react(ReedSwitchEvent const &event)
 {
-	DEBUG_TRACE("react: ReedSwitchEvent: %u", event.state);
+	DEBUG_INFO("react: ReedSwitchEvent: %u", event.state);
 	if (event.state) {
 		// Start reed switch hold timer tasks in case this is a hold gesture
 		m_reed_trigger_start_time = system_timer->get_counter();
@@ -71,7 +71,7 @@ void GenTracker::notify_bad_filesystem_error() {
 
 void BootState::entry() {
 
-	DEBUG_TRACE("entry: BootState");
+	DEBUG_INFO("entry: BootState");
 
 	// Ensure the system timer is started to allow scheduling to work
 	system_timer->start();
@@ -117,14 +117,14 @@ void BootState::entry() {
 
 void BootState::exit() {
 
-	DEBUG_TRACE("exit: BootState");
+	DEBUG_INFO("exit: BootState");
 
 	// Turn status LED off to indicate exit from boot state
 	status_led->off();
 }
 
 void OffState::entry() {
-	DEBUG_TRACE("entry: OffState");
+	DEBUG_INFO("entry: OffState");
 	battery_monitor->stop();
 	status_led->flash(RGBLedColor::WHITE, 125);  // Flash 4X speed during power down
 	system_scheduler->post_task_prio([](){ status_led->off(); PMU::powerdown(); }, Scheduler::DEFAULT_PRIORITY, OFF_LED_PERIOD_MS);
@@ -132,11 +132,11 @@ void OffState::entry() {
 
 void OffState::exit() {
 	// !!! This state should never be entered !!!
-	DEBUG_TRACE("exit: OffState");
+	DEBUG_ERROR("exit: OffState");
 }
 
 void IdleState::entry() {
-	DEBUG_TRACE("entry: IdleState");
+	DEBUG_INFO("entry: IdleState");
 	if (configuration_store->is_valid()) {
 		if (configuration_store->is_battery_level_low())
 			status_led->set(RGBLedColor::YELLOW);
@@ -150,21 +150,21 @@ void IdleState::entry() {
 }
 
 void IdleState::exit() {
-	DEBUG_TRACE("exit: IdleState");
+	DEBUG_INFO("exit: IdleState");
 	system_scheduler->cancel_task(m_idle_state_task);
 	status_led->off();
 }
 
 void OperationalState::react(SaltwaterSwitchEvent const &event)
 {
-	DEBUG_TRACE("react: SaltwaterSwitchEvent");
+	DEBUG_INFO("react: SaltwaterSwitchEvent");
 	configuration_store->notify_saltwater_switch_state(event.state);
 	location_scheduler->notify_saltwater_switch_state(event.state);
 	comms_scheduler->notify_saltwater_switch_state(event.state);
 };
 
 void OperationalState::entry() {
-	DEBUG_TRACE("entry: OperationalState");
+	DEBUG_INFO("entry: OperationalState");
 	if (configuration_store->is_battery_level_low())
 		status_led->flash(RGBLedColor::YELLOW);
 	else
@@ -176,7 +176,7 @@ void OperationalState::entry() {
 }
 
 void OperationalState::exit() {
-	DEBUG_TRACE("exit: OperationalState");
+	DEBUG_INFO("exit: OperationalState");
 	status_led->off();
 	location_scheduler->stop();
 	comms_scheduler->stop();
@@ -184,7 +184,7 @@ void OperationalState::exit() {
 }
 
 void ConfigurationState::entry() {
-	DEBUG_TRACE("entry: ConfigurationState");
+	DEBUG_INFO("entry: ConfigurationState");
 
 	// Flash the blue LED to indicate we have started BLE and we are
 	// waiting for a connection
@@ -195,7 +195,7 @@ void ConfigurationState::entry() {
 }
 
 void ConfigurationState::exit() {
-	DEBUG_TRACE("exit: ConfigurationState");
+	DEBUG_INFO("exit: ConfigurationState");
 	system_scheduler->cancel_task(m_ble_inactivity_timeout_task);
 	ble_service->stop();
 	status_led->off();
@@ -221,18 +221,18 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 		system_scheduler->post_task_prio(std::bind(&ConfigurationState::process_received_data, this));
 		break;
 	case BLEServiceEventType::OTA_START:
-		DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_START");
+		DEBUG_INFO("ConfigurationState::on_ble_event: OTA_START");
 		restart_inactivity_timeout();
 		ota_updater->start_file_transfer((OTAFileIdentifier)event.file_id, event.file_size, event.crc32);
 		break;
 	case BLEServiceEventType::OTA_END:
-		DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_END");
+		DEBUG_INFO("ConfigurationState::on_ble_event: OTA_END");
 		restart_inactivity_timeout();
 		ota_updater->complete_file_transfer();
 		system_scheduler->post_task_prio(std::bind(&OTAFileUpdater::apply_file_update, ota_updater));
 		break;
 	case BLEServiceEventType::OTA_ABORT:
-		DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_ABORT");
+		DEBUG_INFO("ConfigurationState::on_ble_event: OTA_ABORT");
 		restart_inactivity_timeout();
 		ota_updater->abort_file_transfer();
 		break;
@@ -266,7 +266,9 @@ void ConfigurationState::process_received_data() {
 	if (req.size())
 	{
 		DEBUG_TRACE("received %u bytes:", req.size());
+#if defined(DEBUG_ENABLE) && DEBUG_LEVEL >= 4
 		printf("%s\n", req.c_str());
+#endif
 
 		std::string resp;
 		DTEAction action;
@@ -282,7 +284,7 @@ void ConfigurationState::process_received_data() {
 
 			if (action == DTEAction::FACTR)
 			{
-				DEBUG_TRACE("Perform factory reset of configuration store");
+				DEBUG_INFO("Perform factory reset of configuration store");
 				configuration_store->factory_reset();
 
 				// After formatting the filesystem we must do a system reset so that
@@ -291,7 +293,7 @@ void ConfigurationState::process_received_data() {
 			}
 			else if (action == DTEAction::RESET)
 			{
-				DEBUG_TRACE("Perform device reset");
+				DEBUG_INFO("Perform device reset");
 
 				// Execute this after 3 seconds to allow time for the BLE response to be sent
 				system_scheduler->post_task_prio([](){ PMU::reset(); }, Scheduler::DEFAULT_PRIORITY, 3000);
@@ -299,7 +301,7 @@ void ConfigurationState::process_received_data() {
 			else if (action == DTEAction::SECUR)
 			{
 				// TODO: add secure procedure
-				DEBUG_TRACE("Perform secure procedure");
+				DEBUG_INFO("Perform secure procedure");
 			}
 
 		} while (action == DTEAction::AGAIN);
@@ -307,12 +309,12 @@ void ConfigurationState::process_received_data() {
 }
 
 void ErrorState::entry() {
-	DEBUG_TRACE("entry: ErrorState");
+	DEBUG_INFO("entry: ErrorState");
 	status_led->flash(RGBLedColor::RED);
 	system_scheduler->post_task_prio([this](){ transit<OffState>(); }, Scheduler::DEFAULT_PRIORITY, 5000);
 }
 
 void ErrorState::exit() {
-	DEBUG_TRACE("exit: ErrorState");
+	DEBUG_INFO("exit: ErrorState");
 	status_led->off();
 }

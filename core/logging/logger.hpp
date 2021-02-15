@@ -6,7 +6,10 @@
 #include <stdarg.h>
 
 #include "messages.hpp"
+#include "rtc.hpp"
+#include "timeutils.hpp"
 
+extern RTC *rtc;
 
 enum LogLevel {
 	LOG_LEVEL_OFF,
@@ -22,6 +25,20 @@ class Logger {
 private:
 	int m_log_level = LOG_LEVEL_DEBUG;
 
+	static inline void sync_datetime(LogHeader &header) {
+#ifdef DEBUG_USING_RTC
+		if (rtc) {
+			uint16_t year;
+			convert_datetime_to_epoch(rtc->gettime(), year, header.month, header.day, header.hours, header.minutes, header.seconds);
+			header.year = year;
+		}
+		else
+#endif
+		{
+			header.year = header.month = header.day = header.hours = header.minutes = header.seconds = 0;
+		}
+	}
+
 public:
 	virtual ~Logger() {}
 
@@ -36,7 +53,7 @@ public:
 			vsnprintf(reinterpret_cast<char*>(buffer.data), sizeof(buffer.data), msg, args);
 			va_end(args);
 			buffer.header.log_type = LOG_WARN;
-			// TODO: set date time in header
+			sync_datetime(buffer.header);
 			write(&buffer);
 		}
 	}
@@ -48,7 +65,7 @@ public:
 			vsnprintf(reinterpret_cast<char*>(buffer.data), sizeof(buffer.data), msg, args);
 			va_end(args);
 			buffer.header.log_type = LOG_ERROR;
-			// TODO: set date time in header
+			sync_datetime(buffer.header);
 			write(&buffer);
 		}
 	}
@@ -60,7 +77,7 @@ public:
 			vsnprintf(reinterpret_cast<char*>(buffer.data), sizeof(buffer.data), msg, args);
 			va_end(args);
 			buffer.header.log_type = LOG_INFO;
-			// TODO: set date time in header
+			sync_datetime(buffer.header);
 			write(&buffer);
 		}
 	}
@@ -72,7 +89,7 @@ public:
 			vsnprintf(reinterpret_cast<char*>(buffer.data), sizeof(buffer.data), msg, args);
 			va_end(args);
 			buffer.header.log_type = LOG_TRACE;
-			// TODO: set date time in header
+			sync_datetime(buffer.header);
 			write(&buffer);
 		}
 	}

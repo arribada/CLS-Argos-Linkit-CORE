@@ -498,10 +498,10 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	DEBUG_TRACE("ArgosScheduler::handle_packet: bytes=%u total_bits=%u freq=%lf power=%u mode=%u",
 			packet.size(), total_bits, m_argos_config.frequency, m_argos_config.power, (unsigned int)mode);
 	DEBUG_TRACE("ArgosScheduler::handle_packet: data=");
-#ifdef DEBUG_ENABLE
+#if defined(DEBUG_ENABLE) && DEBUG_LEVEL >= 4
 	for (unsigned int i = 0; i < packet.size(); i++)
 		std::cout << std::setfill('0') << std::setw(2) << std::hex << (((unsigned int)packet[i]) & 0xFF);
-	std::cout << endl;
+	std::cout << std::endl;
 #endif
 	power_on();
 	set_frequency(m_argos_config.frequency);

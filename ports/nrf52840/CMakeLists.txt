@@ -34,6 +34,11 @@ else()
     message(FATAL_ERROR "MODEL must be SURFACEBOX or UNDERWATER")
 endif()
 
+if (DEBUG_LEVEL)
+else()
+    set(DEBUG_LEVEL 0)
+endif()
+
 add_executable(${TARGET_NAME})
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 
@@ -205,6 +210,8 @@ target_sources(${TARGET_NAME} PRIVATE
 target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:DEBUG>:DEBUG>
     $<$<CONFIG:DEBUG>:DEBUG_ENABLE>
+    DEBUG_LEVEL=${DEBUG_LEVEL}
+    DEBUG_USING_RTC
     BOARD_PCA10059
     BOARD_${BOARD}
     CONFIG_GPIO_AS_PINRESET

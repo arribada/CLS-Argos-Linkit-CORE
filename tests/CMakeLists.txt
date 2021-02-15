@@ -69,6 +69,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     
     # For enabling debug output
     -DDEBUG_ENABLE
+    -DDEBUG_LEVEL=4
 
     # For setting default device model
     -DDEVICE_MODEL_NAME="SURFACEBOX"s

@@ -38,7 +38,7 @@ LocationScheduler *location_scheduler;
 MemoryAccess *memory_access;
 Logger *sensor_log;
 Logger *system_log;
-ConsoleLog *console_log;
+Logger *console_log;
 Timer *system_timer;
 Scheduler *system_scheduler;
 RGBLed *status_led;
@@ -74,6 +74,9 @@ int main()
 	nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
     setvbuf(stdout, NULL, _IONBF, 0);
 
+	rtc = &NrfRTC::get_instance();
+	NrfRTC::get_instance().init();
+
 	ConsoleLog console_console_log;
 	console_log = &console_console_log;
 
@@ -104,10 +107,6 @@ int main()
     DEBUG_INFO("Timer...");
 	system_timer = &NrfTimer::get_instance();
 	NrfTimer::get_instance().init();
-
-    DEBUG_INFO("RTC...");
-	rtc = &NrfRTC::get_instance();
-	NrfRTC::get_instance().init();
 
     DEBUG_INFO("Scheduler...");
 	Scheduler scheduler(system_timer);

@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "dte_handler.hpp"
 #include "config_store_fs.hpp"
 #include "fake_memory_access.hpp"
@@ -271,7 +273,7 @@ TEST(DTEHandler, PASPW_REQ)
 	// Transcode to binary
 	for (unsigned int i = 0; i < allcast_ref.length(); i += 2) {
 		int byte;
-		stringstream converter;
+		std::stringstream converter;
 		converter << std::hex << allcast_ref.substr(i, 2);
 		converter >> byte;
 		allcast_binary.append(1, (unsigned char)byte & 0xFF);

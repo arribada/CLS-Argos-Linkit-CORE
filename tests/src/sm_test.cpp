@@ -207,7 +207,7 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigVal
 	CHECK_FALSE(status_led->is_flashing());
 
 	// After 120 seconds, transition to operational with yellow LED flashing
-	mock().expectOneCall("start").onObject(location_scheduler);
+	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
 	mock().expectOneCall("start").onObject(comms_scheduler);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
 	linux_timer->set_counter(120999);
