@@ -374,6 +374,7 @@ TEST(Decoder, ZONEW_REQ)
 	CHECK_EQUAL(dummy_zone_file, std::get<std::string>(arg_list[0]).c_str());
 }
 
+#if 0
 TEST(Decoder, ZoneDataFromMobileApp)
 {
 	BaseZone zone;
@@ -409,6 +410,7 @@ TEST(Decoder, ZoneDataFromMobileApp)
 	std::cout << "center_latitude_y=" << zone.center_latitude_y << std::endl;
 	std::cout << "radius_m=" << zone.radius_m << std::endl;
 }
+#endif
 
 TEST(Decoder, PROFR_REQ)
 {

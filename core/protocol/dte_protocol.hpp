@@ -524,6 +524,11 @@ protected:
 		else if (value == BaseArgosDepthPile::DEPTH_PILE_24)
 			output << "12";
 	}
+	static inline void encode_frequency(std::ostringstream& output, double& value) {
+		unsigned int x = (value * ARGOS_FREQUENCY_MULT) - ARGOS_FREQUENCY_OFFSET;
+		std::cout << "freq=" << value << "op=" << x << std::endl;
+		encode(output, x);
+	}
 	static inline void encode(std::ostringstream& output, const BaseArgosMode& value) {
 		encode(output, (unsigned int&)value);
 	}
@@ -734,6 +739,13 @@ public:
 				case BaseEncoding::BASE64:
 					encode(payload, va_arg(args, BaseRawData));
 					break;
+				case BaseEncoding::ARGOSFREQ:
+					{
+						double arg = va_arg(args, double);
+						validate(command_args[arg_index], arg);
+						encode_frequency(payload, arg);
+						break;
+					}
 				case BaseEncoding::TEXT:
 					{
 						DEBUG_TRACE("Encoding TEXT....");
@@ -838,6 +850,11 @@ public:
 				validate(map, value);
 				encode(payload, value, true);
 			}
+			else if (param_map[(unsigned int)param_values[arg_index].param].encoding == BaseEncoding::ARGOSFREQ) {
+				double value = std::get<double>(param_values[arg_index].value);
+				validate(map, value);
+				encode_frequency(payload, value);
+			}
 			else
 			{
 				std::visit([&map, &payload](auto&& arg){validate(map, arg); encode(payload, arg);}, param_values[arg_index].value);
@@ -904,6 +921,12 @@ private:
 			return s;
 		DEBUG_ERROR("DTE_PROTOCOL_BAD_FORMAT in %s()", __FUNCTION__);
 		throw DTE_PROTOCOL_BAD_FORMAT;
+	}
+
+	static double decode_frequency(std::string& s) {
+		unsigned int offset_frequency = decode<unsigned int>(s);
+		double x = ((double)offset_frequency + ARGOS_FREQUENCY_OFFSET) / ARGOS_FREQUENCY_MULT;
+		return x;
 	}
 
 	static BaseArgosPower decode_power(std::string& s) {
@@ -1115,6 +1138,14 @@ private:
 						key_values.push_back(key_value);
 						break;
 					}
+					case BaseEncoding::ARGOSFREQ:
+					{
+						double x = decode_frequency(value);
+						DTEEncoder::validate(param_ref, x);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
 					case BaseEncoding::ARGOSPOWER:
 					{
 						BaseArgosPower x = decode_power(value);
@@ -1299,6 +1330,7 @@ public:
 				case BaseEncoding::ARGOSMODE:
 				case BaseEncoding::ARGOSPOWER:
 				case BaseEncoding::AQPERIOD:
+				case BaseEncoding::ARGOSFREQ:
 				default:
 					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;

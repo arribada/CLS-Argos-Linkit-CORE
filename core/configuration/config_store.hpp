@@ -56,7 +56,7 @@ protected:
 		/* PROFILE_NAME */ ""s,
 		/* AOP_STATUS */ 0U,
 		/* ARGOS_AOP_DATE */ static_cast<std::time_t>(0U),
-		/* ARGOS_FREQ */ 399.91,
+		/* ARGOS_FREQ */ 401.6599,
 		/* ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
 		/* TR_NOM */ 45U,
 		/* ARGOS_MODE */ BaseArgosMode::OFF,

@@ -14,6 +14,9 @@ extern "C" {
 #define BASE_TEXT_MAX_LENGTH  128
 #define BASE_MAX_PAYLOAD_LENGTH 0xFFF
 
+// Offset applied to Argos frequency parameter supplied over DTE interface
+#define ARGOS_FREQUENCY_OFFSET	4016200U
+#define ARGOS_FREQUENCY_MULT	10000U
 
 enum class ParamID {
 	ARGOS_DECID,
@@ -73,6 +76,7 @@ enum class BaseEncoding {
 	ARGOSMODE,
 	ARGOSPOWER,
 	AQPERIOD,
+	ARGOSFREQ,
 	KEY_LIST,
 	KEY_VALUE_LIST
 };

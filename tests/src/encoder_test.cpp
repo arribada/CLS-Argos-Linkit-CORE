@@ -394,10 +394,10 @@ TEST(Encoder, PARAM_ARGOS_AOP_DATE)
 TEST(Encoder, PARAM_ARGOS_FREQ)
 {
 	std::string s;
-	ParamValue p = { ParamID::ARGOS_FREQ, 400.1};
+	ParamValue p = { ParamID::ARGOS_FREQ, 401.6599};
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#00B;ARP03=400.1\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#009;ARP03=399\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_FREQ_OutOfRangeCheck)
@@ -501,7 +501,7 @@ TEST(Encoder, PARAM_DUTY_CYCLE)
 	ParamValue p = { ParamID::DUTY_CYCLE, 0b101010101010101010101010U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#00C;ARP18=AAAAAA\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#00E;ARP18=11184810\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_GNSS_EN)
@@ -802,7 +802,7 @@ TEST(Encoder, PARAM_LB_ARGOS_DUTY_CYCLE)
 	ParamValue p = { ParamID::LB_ARGOS_DUTY_CYCLE, 0b101010101010101010101010U };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#00C;LBP05=AAAAAA\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#00E;LBP05=11184810\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_LB_GNSS_EN)
