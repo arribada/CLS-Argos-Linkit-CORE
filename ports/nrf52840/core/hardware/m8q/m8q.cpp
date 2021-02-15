@@ -205,21 +205,44 @@ void M8QReceiver::populate_gnss_data_and_callback()
     {
         GNSSData gnss_data = 
         {
-            .day       = m_last_received_pvt.day,
-            .month     = m_last_received_pvt.month,
+            .iTOW      = m_last_received_pvt.iTow,
             .year      = m_last_received_pvt.year,
-            .hours     = m_last_received_pvt.hour,
-            .minutes   = m_last_received_pvt.min,
-            .seconds   = m_last_received_pvt.sec,
-            .latitude  = m_last_received_pvt.lat / 10000000.0,
-            .longitude = m_last_received_pvt.lon / 10000000.0,
-            .hDOP      = m_last_received_dop.hDOP / 100.0
+            .month     = m_last_received_pvt.month,
+            .day       = m_last_received_pvt.day,
+            .hour      = m_last_received_pvt.hour,
+            .min       = m_last_received_pvt.min,
+            .sec       = m_last_received_pvt.sec,
+            .valid     = m_last_received_pvt.valid,
+            .tAcc      = m_last_received_pvt.tAcc,
+            .nano      = m_last_received_pvt.nano,
+            .fixType   = m_last_received_pvt.fixType,
+            .flags     = m_last_received_pvt.flags,
+            .flags2    = m_last_received_pvt.flags2,
+            .flags3    = m_last_received_pvt.flags3,
+            .numSV     = m_last_received_pvt.numSV,
+            .lon       = m_last_received_pvt.lon / 10000000.0,
+            .lat       = m_last_received_pvt.lat / 10000000.0,
+            .height    = m_last_received_pvt.height,
+            .hMSL      = m_last_received_pvt.hMSL,
+            .hAcc      = m_last_received_pvt.hAcc,
+            .vAcc      = m_last_received_pvt.vAcc,
+            .velN      = m_last_received_pvt.velN,
+            .velE      = m_last_received_pvt.velE,
+            .velD      = m_last_received_pvt.velD,
+            .gSpeed    = m_last_received_pvt.gSpeed,
+            .headMot   = m_last_received_pvt.headMot / 100000.0f,
+            .sAcc      = m_last_received_pvt.sAcc,
+            .headAcc   = m_last_received_pvt.headAcc / 100000.0f,
+            .pDOP      = m_last_received_dop.pDOP / 100.0f,
+            .vDOP      = m_last_received_dop.vDOP / 100.0f,
+            .hDOP      = m_last_received_dop.hDOP / 100.0f,
+            .headVeh   = m_last_received_pvt.headVeh / 100000.0f
         };
 
         DEBUG_TRACE("GPS Pos - %02u/%02u/%04u %02u:%02u:%02u lat: %f lon: %f hDOP: %f",
                     gnss_data.day, gnss_data.month, gnss_data.year,
-                    gnss_data.hours, gnss_data.minutes, gnss_data.seconds,
-                    gnss_data.latitude, gnss_data.longitude, gnss_data.hDOP);
+                    gnss_data.hour, gnss_data.min, gnss_data.sec,
+                    gnss_data.lat, gnss_data.lon, static_cast<double>(gnss_data.hDOP));
 
         if (m_data_notification_callback)
             m_data_notification_callback(gnss_data);

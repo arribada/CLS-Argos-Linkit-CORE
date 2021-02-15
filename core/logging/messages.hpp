@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "base_types.hpp"
 
-#define MAX_LOG_PAYLOAD    120
+static constexpr size_t MAX_LOG_SIZE = 128;
 
 static constexpr const char *log_type_name[16] = {
 	"GPS",
@@ -48,15 +48,17 @@ struct __attribute__((packed)) LogHeader {
 	LogType  log_type;
 };
 
+static constexpr size_t MAX_LOG_PAYLOAD = MAX_LOG_SIZE - sizeof(LogHeader);
+
 struct LogEntry {
 	LogHeader header;
 	union {
 		uint8_t data[MAX_LOG_PAYLOAD];
 	};
 };
+static_assert(sizeof(LogEntry) == MAX_LOG_SIZE, "LogEntry wrong size");
 
 enum class GPSEventType : uint8_t { ON, OFF, UPDATE, FIX, NO_FIX };
-enum class GPSFixType : uint8_t { NO_FIX, DEAD_RECKONING, DIM_2D, DIM_3D };
 
 struct __attribute__((packed)) GPSLogEntry {
 	LogHeader header;
@@ -74,31 +76,33 @@ struct __attribute__((packed)) GPSLogEntry {
 			uint8_t    valid;
 			uint32_t   tAcc;
 			int32_t    nano;
-			GPSFixType fixType;
-			uint8_t    numSV;
-			double     lon;
-			double     lat;
-			int32_t    height;
-			int32_t    hMSL;
-			uint32_t   hAcc;
-			uint32_t   vAcc;
-			int32_t    velN;
-			int32_t    velE;
-			int32_t    velD;
-			double     gSpeed;    // mm/s
-			double     headMot;   // Degrees
-			uint32_t   sAcc;
-			uint32_t   headAcc;
-			uint16_t   pDOP;
+			uint8_t    fixType;
+			uint8_t    flags;
+			uint8_t    flags2;
 			uint8_t    flags3;
-			uint8_t    reserved[5];
-			int32_t    headVeh;
-			int16_t    magDec;
-			uint16_t   magAcc;
+			uint8_t    numSV;
+			double     lon;       // Degrees
+			double     lat;       // Degrees
+			int32_t    height;    // mm
+			int32_t    hMSL;      // mm
+			uint32_t   hAcc;      // mm
+			uint32_t   vAcc;      // mm
+			int32_t    velN;      // mm
+			int32_t    velE;      // mm
+			int32_t    velD;      // mm
+			int32_t    gSpeed;    // mm/s
+			float      headMot;   // Degrees
+			uint32_t   sAcc;      // mm/s
+			float      headAcc;   // Degrees
+			float      pDOP;
+			float      vDOP;
+			float      hDOP;
+			float      headVeh;   // Degrees
 		};
 		uint8_t data[MAX_LOG_PAYLOAD];
 	};
 };
+static_assert(sizeof(GPSLogEntry) == MAX_LOG_SIZE, "LogEntry wrong size");
 
 enum class StartupCause : uint8_t { BROWNOUT, WATCHDOG, HARD_RESET, FACTORY_RESET, SOFT_RESET };
 

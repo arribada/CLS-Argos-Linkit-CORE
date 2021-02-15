@@ -1,5 +1,6 @@
 #include <ctime>
 #include "gps_scheduler.hpp"
+#include "battery.hpp"
 #include "logger.hpp"
 #include "rtc.hpp"
 #include "timeutils.hpp"
@@ -7,6 +8,7 @@
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
 extern Logger *sensor_log;
+extern BatteryMonitor *battery_monitor;
 extern RTC *rtc;
 
 #define MS_PER_SEC  (1000)
@@ -115,11 +117,16 @@ void GPSScheduler::task_acquisition_period() {
 void GPSScheduler::log_invalid_gps_entry()
 {
     DEBUG_TRACE("GPSScheduler::log_invalid_gps_entry");
+
     GPSLogEntry gps_entry;
+    memset(&gps_entry, 0, sizeof(gps_entry));
+
     gps_entry.header.log_type = LOG_GPS;
 
     populate_gps_log_with_time(gps_entry, rtc->gettime());
 
+    gps_entry.batt_voltage = battery_monitor->get_voltage();
+    gps_entry.event_type = GPSEventType::NO_FIX;
     gps_entry.valid = false;
 
     sensor_log->write(&gps_entry);
@@ -139,7 +146,7 @@ void GPSScheduler::task_acquisition_timeout() {
 
 void GPSScheduler::task_update_rtc()
 {
-    rtc->settime(convert_epochtime(m_gnss_data.data.year, m_gnss_data.data.month, m_gnss_data.data.day, m_gnss_data.data.hours, m_gnss_data.data.minutes, m_gnss_data.data.seconds));
+    rtc->settime(convert_epochtime(m_gnss_data.data.year, m_gnss_data.data.month, m_gnss_data.data.day, m_gnss_data.data.hour, m_gnss_data.data.min, m_gnss_data.data.sec));
     DEBUG_TRACE("GPSScheduler::task_update_rtc");
     m_gnss_data.pending_rtc_set = false;
 }
@@ -149,19 +156,49 @@ void GPSScheduler::task_process_gnss_data()
     DEBUG_TRACE("GPSScheduler::task_process_gnss_data");
 
     GPSLogEntry gps_entry;
+    memset(&gps_entry, 0, sizeof(gps_entry));
+
     gps_entry.header.log_type = LOG_GPS;
 
     populate_gps_log_with_time(gps_entry, rtc->gettime());
 
+    gps_entry.batt_voltage = battery_monitor->get_voltage();
+
     // Store GPS data
-    gps_entry.day = m_gnss_data.data.day;
-    gps_entry.month = m_gnss_data.data.month;
-    gps_entry.year = m_gnss_data.data.year;
-    gps_entry.hour = m_gnss_data.data.hours;
-    gps_entry.min = m_gnss_data.data.minutes;
-    gps_entry.sec = m_gnss_data.data.seconds;
-    gps_entry.lat = m_gnss_data.data.latitude;
-    gps_entry.lon = m_gnss_data.data.longitude;
+    gps_entry.iTOW          = m_gnss_data.data.iTOW;
+    gps_entry.year          = m_gnss_data.data.year;
+    gps_entry.month         = m_gnss_data.data.month;
+    gps_entry.day           = m_gnss_data.data.day;
+    gps_entry.hour          = m_gnss_data.data.hour;
+    gps_entry.min           = m_gnss_data.data.min;
+    gps_entry.sec           = m_gnss_data.data.sec;
+    gps_entry.valid         = m_gnss_data.data.valid;
+    gps_entry.tAcc          = m_gnss_data.data.tAcc;
+    gps_entry.nano          = m_gnss_data.data.nano;
+    gps_entry.fixType       = m_gnss_data.data.fixType;
+    gps_entry.flags         = m_gnss_data.data.flags;
+    gps_entry.flags2        = m_gnss_data.data.flags2;
+    gps_entry.flags3        = m_gnss_data.data.flags3;
+    gps_entry.numSV         = m_gnss_data.data.numSV;
+    gps_entry.lon           = m_gnss_data.data.lon;
+    gps_entry.lat           = m_gnss_data.data.lat;
+    gps_entry.height        = m_gnss_data.data.height;
+    gps_entry.hMSL          = m_gnss_data.data.hMSL;
+    gps_entry.hAcc          = m_gnss_data.data.hAcc;
+    gps_entry.vAcc          = m_gnss_data.data.vAcc;
+    gps_entry.velN          = m_gnss_data.data.velN;
+    gps_entry.velE          = m_gnss_data.data.velE;
+    gps_entry.velD          = m_gnss_data.data.velD;
+    gps_entry.gSpeed        = m_gnss_data.data.gSpeed;
+    gps_entry.headMot       = m_gnss_data.data.headMot;
+    gps_entry.sAcc          = m_gnss_data.data.sAcc;
+    gps_entry.headAcc       = m_gnss_data.data.headAcc;
+    gps_entry.pDOP          = m_gnss_data.data.pDOP;
+    gps_entry.vDOP          = m_gnss_data.data.vDOP;
+    gps_entry.hDOP          = m_gnss_data.data.hDOP;
+    gps_entry.headVeh       = m_gnss_data.data.headVeh;
+
+    gps_entry.event_type = GPSEventType::FIX;
     gps_entry.valid = true;
 
     sensor_log->write(&gps_entry);

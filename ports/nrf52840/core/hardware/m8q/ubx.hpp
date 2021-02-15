@@ -466,8 +466,11 @@ namespace UBX
             enum FixType : uint8_t
             {
                 FIXTYPE_NO = 0,
+                FIXTYPE_DEAD_RECKONING_ONLY = 0,
                 FIXTYPE_2D = 2,
-                FIXTYPE_3D = 3
+                FIXTYPE_3D = 3,
+                FIXTYPE_GNSS_AND_DEAD_RECKONING = 4,
+                FIXTYPE_TIME_ONLY = 5,
             };
 
             enum VALID : uint8_t
@@ -508,7 +511,8 @@ namespace UBX
                 uint32_t sAcc;         // Speed accuracy estimate
                 uint32_t headAcc;      // Heading accuracy estimate (both motion and  vehicle)
                 uint16_t pDOP;         // Position DOP
-                uint8_t  reserved1[6];
+                uint8_t  flags3;       // Additional flags
+                uint8_t  reserved1[5];
                 int32_t  headVeh;      // Heading of vehicle (2D)
                 int16_t  magDec;       // Magnetic declination
                 uint16_t magAcc;       // Magnetic declination accuracy

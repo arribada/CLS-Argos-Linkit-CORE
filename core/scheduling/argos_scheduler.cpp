@@ -28,7 +28,7 @@ extern "C" {
 #define MM_PER_KM   		1000000
 #define MV_PER_UNIT			30
 #define MS_PER_SEC			1000
-#define DEGREES_PER_UNIT	((double)1/1.42)
+#define DEGREES_PER_UNIT	(1.0f/1.42f)
 #define BITS_PER_BYTE		8
 
 #define LON_LAT_RESOLUTION  10000

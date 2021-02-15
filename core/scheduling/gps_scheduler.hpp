@@ -16,15 +16,38 @@ public:
 
 protected:
 	struct GNSSData {
-		uint8_t  day;
-		uint8_t  month;
-		uint16_t year;
-		uint8_t  hours;
-		uint8_t  minutes;
-		uint8_t  seconds;
-		double   latitude;
-		double   longitude;
-		double   hDOP; // Horizontal Dilution of precision
+		uint32_t   iTOW;
+		uint16_t   year;
+		uint8_t    month;
+		uint8_t    day;
+		uint8_t    hour;
+		uint8_t    min;
+		uint8_t    sec;
+		uint8_t    valid;
+		uint32_t   tAcc;
+		int32_t    nano;
+		uint8_t    fixType;
+		uint8_t    flags;
+		uint8_t    flags2;
+		uint8_t    flags3;
+		uint8_t    numSV;
+		double     lon;       // Degrees
+		double     lat;       // Degrees
+		int32_t    height;    // mm
+		int32_t    hMSL;      // mm
+		uint32_t   hAcc;      // mm
+		uint32_t   vAcc;      // mm
+		int32_t    velN;      // mm
+		int32_t    velE;      // mm
+		int32_t    velD;      // mm
+		int32_t    gSpeed;    // mm/s
+		float      headMot;   // Degrees
+		uint32_t   sAcc;      // mm/s
+		float      headAcc;   // Degrees
+		float      pDOP;
+		float      vDOP;
+		float      hDOP;
+		float      headVeh;   // Degrees
 	};
 
 private:
