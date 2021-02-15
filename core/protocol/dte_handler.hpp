@@ -276,6 +276,8 @@ public:
 		unsigned int total_entries = logger->num_entries();
 		if (0 == m_dumpd_count) {
 			m_dumpd_count = (total_entries + (DTE_HANDLER_MAX_LOG_DUMP_ENTRIES-1)) / DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
+			// Special case where log file is empty
+			m_dumpd_count = m_dumpd_count == 0 ? 1 : m_dumpd_count;
 			m_dumpd_offset = 0;
 		}
 
@@ -294,7 +296,7 @@ public:
 		std::string msg = DTEEncoder::encode(DTECommand::DUMPD_RESP, error_code, m_dumpd_offset, m_dumpd_count, raw_data);
 
 		m_dumpd_offset++; // Increment in readiness for next iteration
-		if (m_dumpd_offset == m_dumpd_count || 0 == m_dumpd_count) {
+		if (m_dumpd_offset == m_dumpd_count) {
 			m_dumpd_count = 0; // Marks the sequence as complete
 		} else {
 			action = DTEAction::AGAIN;  // Inform caller that we need another iteration

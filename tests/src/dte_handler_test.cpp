@@ -324,7 +324,7 @@ TEST(DTEHandler, DUMPD_REQ_EmptyLogFile)
 	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(0);
 
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;DUMPD#004;0,0,\r", resp.c_str());
+	STRCMP_EQUAL("$O;DUMPD#004;0,1,\r", resp.c_str());
 
 	mock().checkExpectations();
 }
