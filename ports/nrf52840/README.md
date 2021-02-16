@@ -6,7 +6,7 @@ The instructions below describe how to build and flash this application.
 
 ### Debug Version
 ```
-cmake -DCMAKE_TOOLCHAIN_FILE=toolchain_arm_gcc_nrf52.cmake -DCMAKE_BUILD_TYPE=Debug -DBOARD=<HORIZON|GENTRACKER> -DMODEL=<SURFACEBOX|UNDERWATER> .
+cmake -DCMAKE_TOOLCHAIN_FILE=toolchain_arm_gcc_nrf52.cmake -DCMAKE_BUILD_TYPE=Debug -DDEBUG_LEVEL=4 -DBOARD=<HORIZON|GENTRACKER> -DMODEL=<SURFACEBOX|UNDERWATER> .
 make 
 ```
 
