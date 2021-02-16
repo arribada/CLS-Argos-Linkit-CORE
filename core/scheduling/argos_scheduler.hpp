@@ -3,11 +3,12 @@
 
 #include <variant>
 #include <array>
+#include <functional>
 
 #include <stdint.h>
 
 #include "rtc.hpp"
-#include "comms_scheduler.hpp"
+#include "service_scheduler.hpp"
 #include "scheduler.hpp"
 #include "config_store.hpp"
 
@@ -22,7 +23,7 @@ enum class ArgosMode {
 	ARGOS_3
 };
 
-class ArgosScheduler : public CommsScheduler {
+class ArgosScheduler : public ServiceScheduler {
 private:
 	Scheduler::TaskHandle m_argos_task;
 	ArgosConfig  m_argos_config;
@@ -36,10 +37,11 @@ private:
 	double 		 m_last_latitude;
 	std::array<unsigned int, MAX_MSG_INDEX> m_msg_burst_counter;
 	std::array<std::vector<GPSLogEntry>, MAX_MSG_INDEX> m_gps_entries;
+	bool		 m_is_rtc_set;
 
 public:
 	ArgosScheduler();
-	void start() override;
+	void start(std::function<void()> data_notification_callback = nullptr) override;
 	void stop() override;
 	void notify_saltwater_switch_state(bool state) override;
 	void notify_sensor_log_update() override;

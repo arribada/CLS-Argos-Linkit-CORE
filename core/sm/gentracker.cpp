@@ -3,8 +3,7 @@
 #include "ota_file_updater.hpp"
 #include "logger.hpp"
 #include "config_store.hpp"
-#include "location_scheduler.hpp"
-#include "comms_scheduler.hpp"
+#include "service_scheduler.hpp"
 #include "scheduler.hpp"
 #include "dte_handler.hpp"
 #include "filesystem.hpp"
@@ -22,8 +21,8 @@
 extern FileSystem *main_filesystem;
 extern Scheduler *system_scheduler;
 extern Timer *system_timer;
-extern CommsScheduler *comms_scheduler;
-extern LocationScheduler *location_scheduler;
+extern ServiceScheduler *comms_scheduler;
+extern ServiceScheduler *location_scheduler;
 extern Logger *sensor_log;
 extern Logger *system_log;
 extern ConfigurationStore *configuration_store;

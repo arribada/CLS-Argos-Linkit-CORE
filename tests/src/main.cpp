@@ -2,8 +2,7 @@
 #include "console_log.hpp"
 #include "timer.hpp"
 #include "config_store.hpp"
-#include "gps_scheduler.hpp"
-#include "comms_scheduler.hpp"
+#include "service_scheduler.hpp"
 #include "dte_handler.hpp"
 #include "scheduler.hpp"
 #include "logger.hpp"
@@ -23,8 +22,8 @@
 FileSystem *main_filesystem ;
 Timer *system_timer;
 ConfigurationStore *configuration_store;
-LocationScheduler *location_scheduler;
-CommsScheduler *comms_scheduler;
+ServiceScheduler *location_scheduler;
+ServiceScheduler *comms_scheduler;
 DTEHandler *dte_handler;
 Scheduler *system_scheduler;
 Logger *console_log;

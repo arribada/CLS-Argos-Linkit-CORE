@@ -4,15 +4,16 @@
 #include <functional>
 #include <atomic>
 #include "config_store.hpp"
-#include "location_scheduler.hpp"
+#include "service_scheduler.hpp"
 #include "scheduler.hpp"
 
-class GPSScheduler : public LocationScheduler {
+class GPSScheduler : public ServiceScheduler {
 public:
 	virtual ~GPSScheduler() {}
 	void start(std::function<void()> data_notification_callback = nullptr) override;
 	void stop() override;
 	void notify_saltwater_switch_state(bool state) override;
+	void notify_sensor_log_update() override {};
 
 protected:
 	struct GNSSData {

@@ -1,10 +1,10 @@
 #ifndef __MOCK_LOCATION_HPP_
 #define __MOCK_LOCATION_HPP_
 
-#include "gps_scheduler.hpp"
+#include "service_scheduler.hpp"
 #include "mock_std_function_comparator.hpp"
 
-class MockLocationScheduler : public LocationScheduler {
+class MockLocationScheduler : public ServiceScheduler {
 public:
 	void start(std::function<void()> data_notification_callback = nullptr) override {
 
@@ -17,8 +17,11 @@ public:
 		mock().actualCall("stop").onObject(this);
 	}
 	void notify_saltwater_switch_state(bool state) override {
-		DEBUG_TRACE("MockGPSScheduler: notify_saltwater_switch_state");
+		DEBUG_TRACE("MockLocationScheduler: notify_saltwater_switch_state");
 		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
+	}
+	void notify_sensor_log_update() override {
+		mock().actualCall("notify_sensor_log_update").onObject(this);
 	}
 
 private:

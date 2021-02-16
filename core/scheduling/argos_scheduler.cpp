@@ -62,12 +62,16 @@ ArgosScheduler::ArgosScheduler() {
 	m_earliest_tx = 0;
 	m_last_longitude = INVALID_GEODESIC;
 	m_last_latitude = INVALID_GEODESIC;
+	m_is_rtc_set = false;
 }
 
 void ArgosScheduler::reschedule() {
 	std::time_t schedule = INVALID_SCHEDULE;
 	if (m_argos_config.mode == BaseArgosMode::OFF) {
 		DEBUG_WARN("ArgosScheduler: mode is OFF -- not scheduling");
+		return;
+	} else if (!m_is_rtc_set) {
+		DEBUG_WARN("ArgosScheduler: RTC is not yet set -- not scheduling");
 		return;
 	} else if (m_argos_config.mode == BaseArgosMode::LEGACY) {
 		// In legacy mode we schedule every hour aligned to UTC
@@ -243,24 +247,25 @@ void ArgosScheduler::notify_sensor_log_update() {
 	DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update");
 
 	if (m_is_running) {
+		GPSLogEntry gps_entry;
+
+		// Read the most recent GPS entry out of the sensor log
+		unsigned int idx = sensor_log->num_entries() - 1;  // Most recent entry in log
+		sensor_log->read(&gps_entry, idx);
+		// Update last known position if the GPS entry is valid (otherwise we preserve the last one)
+		if (gps_entry.valid) {
+			DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: updated last known GPS position; m_is_rtc_set=true");
+			m_last_longitude = gps_entry.lon;
+			m_last_latitude = gps_entry.lat;
+			m_is_rtc_set = true;
+		}
+
 		if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
 			unsigned int msg_index;
 			unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
 			unsigned int span = std::min((unsigned int)MAX_GPS_ENTRIES_IN_PACKET, (unsigned int)m_argos_config.depth_pile);
 
 			DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: PASS_PREDICTION mode: max_index=%u span=%u", max_index, span);
-
-			// Read the most recent GPS entry out of the sensor log
-			GPSLogEntry gps_entry;
-			unsigned int idx = sensor_log->num_entries() - 1;  // Most recent entry in log
-			sensor_log->read(&gps_entry, idx);
-
-			// Update last known position if the GPS entry is valid (otherwise we preserve the last one)
-			if (gps_entry.valid) {
-				DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: updated last known GPS position");
-				m_last_longitude = gps_entry.lon;
-				m_last_latitude = gps_entry.lat;
-			}
 
 			// Find the first slot whose vector has less then depth pile entries in it
 			for (msg_index = 0; msg_index < max_index; msg_index++) {
@@ -554,7 +559,8 @@ void ArgosScheduler::periodic_algorithm() {
 	m_msg_index++;
 }
 
-void ArgosScheduler::start() {
+void ArgosScheduler::start(std::function<void()> data_notification_callback) {
+	(void)data_notification_callback;
 	DEBUG_TRACE("ArgosScheduler::start");
 	m_is_running = true;
 	m_msg_index = 0;

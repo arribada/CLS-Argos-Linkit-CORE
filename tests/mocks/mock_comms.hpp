@@ -1,12 +1,13 @@
 #ifndef __MOCK_COMMS_HPP_
 #define __MOCK_COMMS_HPP_
 
-#include "comms_scheduler.hpp"
+#include "service_scheduler.hpp"
 #include "debug.hpp"
 
-class MockCommsScheduler : public CommsScheduler {
+class MockCommsScheduler : public ServiceScheduler {
 public:
-	void start() {
+	void start(std::function<void()> data_notification_callback = nullptr) {
+		(void)data_notification_callback;
 		mock().actualCall("start").onObject(this);
 	}
 	void stop() {

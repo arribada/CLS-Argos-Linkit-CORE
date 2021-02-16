@@ -17,7 +17,6 @@
 #include "nrf_timer.hpp"
 #include "nrf_switch.hpp"
 #include "sws.hpp"
-#include "fake_comms_scheduler.hpp"
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
 #include "artic.hpp"
@@ -33,8 +32,8 @@ FileSystem *main_filesystem;
 ConfigurationStore *configuration_store;
 BLEService *ble_service;
 OTAFileUpdater *ota_updater;
-CommsScheduler *comms_scheduler;
-LocationScheduler *location_scheduler;
+ServiceScheduler *comms_scheduler;
+ServiceScheduler *location_scheduler;
 MemoryAccess *memory_access;
 Logger *sensor_log;
 Logger *system_log;

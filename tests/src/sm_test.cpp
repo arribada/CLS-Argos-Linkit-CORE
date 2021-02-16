@@ -29,8 +29,8 @@
 extern FileSystem *main_filesystem ;
 extern Timer *system_timer;
 extern ConfigurationStore *configuration_store;
-extern LocationScheduler *location_scheduler;
-extern CommsScheduler *comms_scheduler;
+extern ServiceScheduler *location_scheduler;
+extern ServiceScheduler *comms_scheduler;
 extern DTEHandler *dte_handler;
 extern Scheduler *system_scheduler;
 extern Logger *sensor_log;

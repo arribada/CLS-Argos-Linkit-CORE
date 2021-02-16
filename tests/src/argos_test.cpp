@@ -10,7 +10,7 @@
 
 extern Timer *system_timer;
 extern ConfigurationStore *configuration_store;
-extern CommsScheduler *comms_scheduler;
+extern ServiceScheduler *comms_scheduler;
 extern Scheduler *system_scheduler;
 extern Logger *sensor_log;
 extern RTC *rtc;
@@ -31,6 +31,7 @@ TEST_GROUP(ArgosScheduler)
 		fake_config_store = new FakeConfigurationStore;
 		configuration_store = fake_config_store;
 		fake_log = new FakeLog;
+		fake_log->create();
 		sensor_log = fake_log;
 		mock_rtc = new MockRTC;
 		rtc = mock_rtc;
@@ -249,7 +250,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.lon = 11.8768;
 	gps_entry.lat = -33.8232;
 	gps_entry.height = 0;
-	gps_entry.gSpeed = 8055.5555555555555555555555555556;  // mm/s
+	gps_entry.gSpeed = 8056;  // mm/s
 	gps_entry.headMot = 0;
 	fake_log->write(&gps_entry);
 
@@ -398,7 +399,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 {
 	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_4;
 	unsigned int dry_time_before_tx = 10;
-	unsigned int duty_cycle = 0x0U; // Every other hour
+	unsigned int duty_cycle = 0x0U; // Not used
 	double frequency = 900.22;
 	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
 	unsigned int ntry_per_message = 1;
@@ -453,7 +454,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.lon = 11.8768;
 	gps_entry.lat = -33.8232;
 	gps_entry.height = 0;
-	gps_entry.gSpeed = 8055.5555555555555555555555555556;  // mm/s
+	gps_entry.gSpeed = 8056;  // mm/s
 	gps_entry.headMot = 0;
 	fake_log->write(&gps_entry);
 

@@ -6,17 +6,20 @@
 #include "fake_config_store.hpp"
 #include "fake_logger.hpp"
 #include "fake_timer.hpp"
+#include "fake_battery_mon.hpp"
 #include "dte_protocol.hpp"
 
 extern Timer *system_timer;
 extern ConfigurationStore *configuration_store;
-extern LocationScheduler *location_scheduler;
+extern ServiceScheduler *location_scheduler;
 extern Scheduler *system_scheduler;
 extern Logger *sensor_log;
 extern RTC *rtc;
+extern BatteryMonitor *battery_monitor;
 
 TEST_GROUP(GpsScheduler)
 {
+	FakeBatteryMonitor *fake_battery_mon;
 	FakeConfigurationStore *fake_config_store;
 	GPSScheduler *gps_sched;
 	MockM8Q *mock_m8q;
@@ -30,6 +33,8 @@ TEST_GROUP(GpsScheduler)
 		location_scheduler = gps_sched;
 		fake_config_store = new FakeConfigurationStore;
 		configuration_store = fake_config_store;
+		fake_battery_mon = new FakeBatteryMonitor;
+		battery_monitor = fake_battery_mon;
 		fake_log = new FakeLog;
 		sensor_log = fake_log;
 		fake_rtc = new FakeRTC;
