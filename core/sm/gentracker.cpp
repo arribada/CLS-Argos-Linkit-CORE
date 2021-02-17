@@ -103,6 +103,9 @@ void BootState::entry() {
 		sensor_log->create();
 		system_log->create();
 		configuration_store->init();
+		DEBUG_TRACE("sensor_log: has %u entries", sensor_log->num_entries());
+		DEBUG_TRACE("system_log: has %u entries", system_log->num_entries());
+		DEBUG_TRACE("configuration_store: is_valid=%u", configuration_store->is_valid());
 		// Transition to IDLE state after initialisation
 		system_scheduler->post_task_prio([this](){
 			transit<IdleState>();

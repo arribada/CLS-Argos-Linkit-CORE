@@ -67,6 +67,7 @@ extern "C" int _write(int file, char *ptr, int len)
 int main()
 {
 	//DFU::initialise();
+	PMU::initialise();
 	GPIOPins::initialise();
 	GPIOPins::set(BSP::GPIO_POWER_CONTROL);
 
@@ -160,6 +161,7 @@ int main()
 	try {
 		while (true) {
 			system_scheduler->run();
+			PMU::run();
 		}
 	} catch (ErrorCode e) {
 		ErrorEvent event;

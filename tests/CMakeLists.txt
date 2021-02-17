@@ -131,6 +131,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/crc32_test.cpp"
     "src/previpass_test.cpp"
     "src/sws_test.cpp"
+    "src/logger_test.cpp"
     "src/nrf_switch_test.cpp"
     "src/nrf_battery_test.cpp"
     "src/main.cpp"

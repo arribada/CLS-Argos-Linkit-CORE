@@ -42,7 +42,7 @@ public:
 	}
 
 	unsigned int num_entries() {
-		LFSCircularFile f(m_filesystem, "sensor.log", LFS_O_RDONLY, m_max_size);
+		LFSCircularFile f(m_filesystem, m_filename, LFS_O_RDONLY, m_max_size);
 		return f.size() / sizeof(LogEntry);
 	}
 };
