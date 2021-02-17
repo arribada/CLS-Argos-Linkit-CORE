@@ -96,6 +96,7 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 	std::time_t now = rtc->gettime();
 	std::time_t start_of_day = now - (now % (SECONDS_PER_DAY));
 	std::time_t schedule = INVALID_SCHEDULE;
+	unsigned int tr_nom_working = 0;
 	unsigned int hour = 0;
 
 	// Iteratively find the nearest TR_NOM that is both after current time, earliest TX and within the duty cycle
@@ -111,7 +112,8 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 		}
 		// Try next TR_NOM
 		start_of_day += m_argos_config.tr_nom;
-		hour = start_of_day / SECONDS_PER_HOUR;
+		tr_nom_working += m_argos_config.tr_nom;
+		hour = tr_nom_working / SECONDS_PER_HOUR;
 	}
 
 	DEBUG_TRACE("ArgosScheduler::next_duty_cycle: computed schedule: %d", schedule);
