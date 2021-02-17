@@ -219,16 +219,13 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
         return;
     
     m_gnss_data.data = data;
-    m_gnss_data.pending_data_logging = true;
-    m_gnss_data.pending_rtc_set = true;
 
     // Update our time based off this data, schedule this as high priority
     m_gnss_data.pending_rtc_set = true;
     m_task_update_rtc = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_update_rtc, this), Scheduler::HIGHEST_PRIORITY);
 
-    // Don't process this data if it does not meet our required hdop threshold
-    if (m_gnss_config.hdop_filter_enable &&
-        m_gnss_data.data.hDOP > m_gnss_config.hdop_filter_threshold)
+    // Only process this data if it satisfies an optional hdop threshold
+    if (!m_gnss_config.hdop_filter_enable || (m_gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP <= m_gnss_config.hdop_filter_threshold)))
     {
         // We have a valid fix so there's no need to timeout anymore
         system_scheduler->cancel_task(m_task_acquisition_timeout);
