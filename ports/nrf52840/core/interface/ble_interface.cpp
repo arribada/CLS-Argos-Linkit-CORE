@@ -255,7 +255,7 @@ void BleInterface::advertising_init()
     init.config.ble_adv_fast_timeout  = APP_ADV_DURATION;
     init.evt_handler = static_on_adv_evt;
 
-    printf("ble_advertising_init\n");
+    DEBUG_TRACE("ble_advertising_init");
     err_code = ble_advertising_init(&m_advertising, &init);
     APP_ERROR_CHECK(err_code);
 
