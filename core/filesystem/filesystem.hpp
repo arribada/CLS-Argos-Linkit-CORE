@@ -174,10 +174,9 @@ class LFSFile : public File {
 protected:
 	lfs_t      *m_lfs;
 	lfs_file_t  m_file;
-
-public:
 	const char *m_path;
 
+public:
 	LFSFile(FileSystem *fs, const char *path, int flags) {
 		m_lfs = (lfs_t *)fs->get_private_data();
 		m_path = path;
@@ -209,12 +208,12 @@ public:
 // LFSCircularFile is a subclass of LFSFile and will wrap its read/write operations at m_max_size.  It uses a persistent file
 // attribute to keep track of the last write offset into the file i.e., m_offset.
 class LFSCircularFile : public LFSFile {
-
-public:
+private:
 	lfs_size_t  m_max_size;
 	lfs_off_t   m_offset;
 	int			m_flags;
 
+public:
 	LFSCircularFile(FileSystem *fs, const char *path, int flags, lfs_size_t max_size) : LFSFile(fs, path, flags) {
 		int ret;
 		m_max_size = max_size;
@@ -242,6 +241,10 @@ public:
 	~LFSCircularFile() {
 		if (m_flags & LFS_O_WRONLY)
 			lfs_setattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
+	}
+
+	lfs_off_t get_offset() {
+		return m_offset;
 	}
 
 	lfs_ssize_t read(void *buffer, lfs_size_t size) {

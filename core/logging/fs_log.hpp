@@ -37,7 +37,7 @@ public:
 	void read(void *entry, int index=0) {
 		LFSCircularFile f(m_filesystem, m_filename, LFS_O_RDONLY, m_max_size);
 		if (index != 0)
-			f.seek(f.m_offset + index * (sizeof(LogEntry)));
+			f.seek(f.get_offset() + index * (sizeof(LogEntry)));
 		f.read(entry, (lfs_size_t)sizeof(LogEntry));
 	}
 
