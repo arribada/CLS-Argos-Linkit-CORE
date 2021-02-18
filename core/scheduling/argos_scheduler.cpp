@@ -102,6 +102,7 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 
 	// Find epoch time for start of the "current" day
 	std::time_t now = rtc->gettime();
+	unsigned int start_of_day = now - (now % SECONDS_PER_DAY);
 
 	// If we have already a future schedule then don't recompute
 	if (m_tr_nom_schedule != INVALID_SCHEDULE && m_tr_nom_schedule >= m_earliest_tx && m_tr_nom_schedule >= now)
@@ -114,14 +115,14 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 	// the last schedule was over 24 hours ago, then set our starting point to current time.
 	// Otherwise increment the last schedule by TR_NOM for our starting point.
 	if (m_tr_nom_schedule == INVALID_SCHEDULE || (now - m_tr_nom_schedule) > HOURS_PER_DAY)
-		m_tr_nom_schedule = now;
+		m_tr_nom_schedule = start_of_day;
 	else
 		m_tr_nom_schedule += m_argos_config.tr_nom;
 
 	// Compute the seconds of day and hours of day for candidate m_tr_nom_schedule
 	unsigned int seconds_of_day = (m_tr_nom_schedule % SECONDS_PER_DAY);
 	unsigned int hour_of_day = (seconds_of_day / SECONDS_PER_HOUR);
-	unsigned int terminal_hours = hour_of_day + HOURS_PER_DAY;
+	unsigned int terminal_hours = hour_of_day + (2*HOURS_PER_DAY);
 
 	// Note that duty cycle is a bit-field comprising 24 bits as follows:
 	// 23 22 21 20 19 18 17 16 15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00  bit
@@ -132,7 +133,7 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 	// falls inside a permitted hour of transmission.  The maximum span we search is 24 hours.
 	while (hour_of_day < terminal_hours) {
 		//DEBUG_TRACE("ArgosScheduler::next_duty_cycle: candidate schedule: %lu hour_of_day: %u", m_tr_nom_schedule, hour_of_day);
-		if ((duty_cycle & (0x800000 >> (hour_of_day % HOURS_PER_DAY))) && m_tr_nom_schedule >= m_earliest_tx) {
+		if ((duty_cycle & (0x800000 >> (hour_of_day % HOURS_PER_DAY))) && m_tr_nom_schedule >= m_earliest_tx && m_tr_nom_schedule >= now) {
 			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: found schedule: %lu", m_tr_nom_schedule);
 			return m_tr_nom_schedule - now;
 		} else {
