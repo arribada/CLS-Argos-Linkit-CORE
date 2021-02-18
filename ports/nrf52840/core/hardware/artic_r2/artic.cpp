@@ -516,6 +516,7 @@ void ArticTransceiver::power_off() {
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
 
 	delete m_nrf_spim;
+    m_nrf_spim = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
 
 	// FIXME: should this be moved into the NrfSPIM driver?
 	nrf_gpio_cfg_output(BSP::SPI_Inits[SPI_SATELLITE].spim_config.ss_pin);
@@ -526,6 +527,7 @@ void ArticTransceiver::power_off() {
 }
 
 ArticTransceiver::ArticTransceiver() {
+    m_nrf_spim = nullptr;
 	hardware_init();
 }
 

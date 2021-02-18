@@ -97,7 +97,10 @@ M8QReceiver::M8QReceiver()
 
 void M8QReceiver::power_off()
 {
+    DEBUG_TRACE("M8QReceiver::power_off");
+
     delete m_nrf_uart_m8;
+    m_nrf_uart_m8 = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
 
     // Disable the power supply for the GPS
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
@@ -109,6 +112,8 @@ void M8QReceiver::power_off()
 
 void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_callback = nullptr)
 {
+    DEBUG_TRACE("M8QReceiver::power_on");
+
     m_data_notification_callback = data_notification_callback;
     
     m_nrf_uart_m8 = new NrfUARTM8(UART_GPS, [this](uint8_t *data, size_t len){ reception_callback(data, len); });
