@@ -35,6 +35,12 @@ public:
 		return m_counter_value;
 	}
 
+	void set_counter(uint64_t t)
+	{
+		m_counter_value = t;
+		process_schedules();
+	}
+
     void increment_counter(uint64_t t)
     {
         while (t)

@@ -69,7 +69,7 @@ public:
 		TimerHandle handle;
 		handle = m_unique_id;
 
-		//std::cout << "Created schedule with id: " << m_unique_id << std::endl;
+		//std::cout << "Created schedule with id: " << m_unique_id << " target_count: " << std::dec << target_count << std::endl;
 
 		m_unique_id++;
 

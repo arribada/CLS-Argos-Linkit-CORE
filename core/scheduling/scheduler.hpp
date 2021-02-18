@@ -72,7 +72,7 @@ public:
 		{
 			// If this task was delayed then schedule a timer to start it
 			uint64_t t_sched = m_timer->get_counter() + delay_ms;
-			//DEBUG_TRACE("Scheduler::post_task_prio: #m_tasks=%u t_sched=%llu", m_tasks.size(), t_sched);
+			//DEBUG_TRACE("Scheduler::post_task_prio: #m_tasks=%u now=%llu delay_ms=%u t_sched=%llu", m_tasks.size(), m_timer->get_counter(), delay_ms, t_sched);
 			{
 				InterruptLock lock;
 				// We do this by setting up our timer to call this function after the delay has elapsed

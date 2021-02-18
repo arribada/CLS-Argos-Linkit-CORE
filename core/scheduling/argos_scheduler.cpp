@@ -84,6 +84,7 @@ void ArgosScheduler::reschedule() {
 
 	if (INVALID_SCHEDULE != schedule) {
 		deschedule();
+		DEBUG_TRACE("ArgosScheduler: schedule in: %lu secs", schedule);
 		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this), Scheduler::DEFAULT_PRIORITY, MS_PER_SEC * schedule);
 	} else {
 		DEBUG_WARN("ArgosScheduler: not rescheduling");
@@ -105,7 +106,8 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 	unsigned int start_of_day = now - (now % SECONDS_PER_DAY);
 
 	// If we have already a future schedule then don't recompute
-	if (m_tr_nom_schedule != INVALID_SCHEDULE && m_tr_nom_schedule >= m_earliest_tx && m_tr_nom_schedule >= now)
+	if (m_tr_nom_schedule != INVALID_SCHEDULE && m_tr_nom_schedule >= m_earliest_tx && m_tr_nom_schedule >= now &&
+			m_tr_nom_schedule > m_last_transmission_schedule)
 	{
 		DEBUG_TRACE("ArgosScheduler::next_duty_cycle: existing computed schedule: %lu", m_tr_nom_schedule);
 		return INVALID_SCHEDULE;
@@ -132,7 +134,7 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 	// We iterate forwards from the candidate m_tr_nom_schedule until we find a TR_NOM that
 	// falls inside a permitted hour of transmission.  The maximum span we search is 24 hours.
 	while (hour_of_day < terminal_hours) {
-		//DEBUG_TRACE("ArgosScheduler::next_duty_cycle: candidate schedule: %lu hour_of_day: %u", m_tr_nom_schedule, hour_of_day);
+		//DEBUG_TRACE("ArgosScheduler::next_duty_cycle: now: %lu candidate schedule: %lu hour_of_day: %u", now, m_tr_nom_schedule, hour_of_day);
 		if ((duty_cycle & (0x800000 >> (hour_of_day % HOURS_PER_DAY))) && m_tr_nom_schedule >= m_earliest_tx && m_tr_nom_schedule >= now) {
 			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: found schedule: %lu", m_tr_nom_schedule);
 			return m_tr_nom_schedule - now;
@@ -228,6 +230,9 @@ void ArgosScheduler::process_schedule() {
 	} else {
 		periodic_algorithm();
 	}
+
+	// After each transmission attempt to reschedule
+	reschedule();
 }
 
 void ArgosScheduler::pass_prediction_algorithm() {
@@ -266,6 +271,7 @@ void ArgosScheduler::pass_prediction_algorithm() {
 	configuration_store->increment_tx_counter();
 	m_msg_burst_counter[index]--;
 	m_msg_index++;
+	m_last_transmission_schedule = m_next_prepass;
 	m_next_prepass = INVALID_SCHEDULE;
 
 	// Check if message burst count has reached zero and perform clean-up of this slot
@@ -557,6 +563,9 @@ void ArgosScheduler::periodic_algorithm() {
 
 	DEBUG_TRACE("ArgosScheduler::periodic_algorithm: msg_index=%u burst_counter=%u span=%u num_log_entries=%u", m_msg_index, m_msg_burst_counter[index], span, num_entries);
 
+	// Mark last schedule attempt
+	m_last_transmission_schedule = m_tr_nom_schedule;
+
 	if (m_msg_burst_counter[index] == 0) {
 		DEBUG_WARN("ArgosScheduler::periodic_algorithm: burst counter is zero; not transmitting");
 		return;
@@ -598,6 +607,7 @@ void ArgosScheduler::start(std::function<void()> data_notification_callback) {
 	m_msg_index = 0;
 	m_next_prepass = INVALID_SCHEDULE;
 	m_tr_nom_schedule = INVALID_SCHEDULE;
+	m_last_transmission_schedule = INVALID_SCHEDULE;
 	configuration_store->get_argos_configuration(m_argos_config);
 	for (unsigned int i = 0; i < MAX_MSG_INDEX; i++) {
 		m_msg_burst_counter[i] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;
