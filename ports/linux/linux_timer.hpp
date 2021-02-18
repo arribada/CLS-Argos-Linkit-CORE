@@ -129,7 +129,7 @@ private:
 			{
 				parent->m_counter_value++;
 
-				//std::cout << "m_counter_value=" << parent->m_counter_value << std::endl;
+				//std::cout << "m_counter_value=" << std::dec << parent->m_counter_value << std::endl;
 
 				// Check the current schedule for any functions that are due to be called
 				while (true)
@@ -146,7 +146,7 @@ private:
 						
 						schedule = parent->m_schedules.front();
 
-						//std::cout << "m_target_counter_value=" << schedule.m_target_counter_value << std::endl;
+						//std::cout << "m_target_counter_value=" << std::dec << schedule.m_target_counter_value << std::endl;
 
 						if (schedule.m_target_counter_value == parent->m_counter_value)
 						{

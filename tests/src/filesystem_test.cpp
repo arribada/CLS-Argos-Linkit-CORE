@@ -77,15 +77,15 @@ TEST(RamFileSystem, CircularFileClassOperations)
 
 	// Write 50% of file size (offset=50%)
 	CHECK_EQUAL(8, f->write(wr_buffer, 8));
-	CHECK_EQUAL(f->m_offset, 8);
+	CHECK_EQUAL(f->get_offset(), 8);
 
 	// Write remainining 50% of file size (offset=0%)
 	CHECK_EQUAL(8, f->write(&wr_buffer[8], 8));
-	CHECK_EQUAL(f->m_offset, 0);
+	CHECK_EQUAL(f->get_offset(), 0);
 
 	// Write another 50% (offset=50%)
 	CHECK_EQUAL(8, f->write(&wr_buffer[16], 8));
-	CHECK_EQUAL(f->m_offset, 8);
+	CHECK_EQUAL(f->get_offset(), 8);
 	delete f;
 
 	// File closed @offset=50%
@@ -104,6 +104,6 @@ TEST(RamFileSystem, CircularFileClassOperations)
 
 	// Previous open as RDONLY should not modify the stored pointer
 	f = new LFSCircularFile(fs, "test", LFS_O_WRONLY, 16);
-	CHECK_EQUAL(8, f->m_offset);
+	CHECK_EQUAL(8, f->get_offset());
 	delete f;
 }

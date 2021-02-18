@@ -7,7 +7,7 @@
 
 class FakeLog : public Logger {
 private:
-	LogEntry m_entry[64];
+	LogEntry m_entry[2048];
 	unsigned int m_index;
 
 public:
@@ -17,7 +17,7 @@ public:
 	}
 
 	void write(void *entry) {
-		std::memcpy(&m_entry[m_index++ % 64], entry, sizeof(LogEntry));
+		std::memcpy(&m_entry[m_index++ % 2048], entry, sizeof(LogEntry));
 	}
 
 	void read(void *entry, int index=0) {

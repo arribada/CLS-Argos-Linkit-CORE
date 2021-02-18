@@ -92,33 +92,61 @@ void ArgosScheduler::reschedule() {
 
 std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 {
+	// Do not proceed unless duty cycle is non-zero to save time
+	if (duty_cycle == 0)
+	{
+		DEBUG_TRACE("ArgosScheduler::next_duty_cycle: no schedule found as duty cycle is zero!");
+		m_tr_nom_schedule = INVALID_SCHEDULE;
+		return INVALID_SCHEDULE;
+	}
+
 	// Find epoch time for start of the "current" day
 	std::time_t now = rtc->gettime();
-	std::time_t start_of_day = now - (now % (SECONDS_PER_DAY));
-	std::time_t schedule = INVALID_SCHEDULE;
-	unsigned int tr_nom_working = 0;
-	unsigned int hour = 0;
 
-	// Iteratively find the nearest TR_NOM that is both after current time, earliest TX and within the duty cycle
+	// If we have already a future schedule then don't recompute
+	if (m_tr_nom_schedule != INVALID_SCHEDULE && m_tr_nom_schedule >= m_earliest_tx && m_tr_nom_schedule >= now)
+	{
+		DEBUG_TRACE("ArgosScheduler::next_duty_cycle: existing computed schedule: %lu", m_tr_nom_schedule);
+		return INVALID_SCHEDULE;
+	}
+
+	// Set schedule to be earliest possible next TR_NOM.  If there was no last schedule or
+	// the last schedule was over 24 hours ago, then set our starting point to current time.
+	// Otherwise increment the last schedule by TR_NOM for our starting point.
+	if (m_tr_nom_schedule == INVALID_SCHEDULE || (now - m_tr_nom_schedule) > HOURS_PER_DAY)
+		m_tr_nom_schedule = now;
+	else
+		m_tr_nom_schedule += m_argos_config.tr_nom;
+
+	// Compute the seconds of day and hours of day for candidate m_tr_nom_schedule
+	unsigned int seconds_of_day = (m_tr_nom_schedule % SECONDS_PER_DAY);
+	unsigned int hour_of_day = (seconds_of_day / SECONDS_PER_HOUR);
+	unsigned int terminal_hours = hour_of_day + HOURS_PER_DAY;
+
 	// Note that duty cycle is a bit-field comprising 24 bits as follows:
 	// 23 22 21 20 19 18 17 16 15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00  bit
 	// 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 21 21 22 23  hour (UTC)
-	while (hour < 2*HOURS_PER_DAY) {
-		DEBUG_TRACE("ArgosScheduler::next_duty_cycle: hour: %u duty_cycle: %06x now: %u s_o_d: %u", hour, duty_cycle, now, start_of_day);
-		// Only select if the TR_NOM entry falls within the duty cycle spec and is also later than earliest allowed TX
-		if ((duty_cycle & (0x800000 >> (hour % HOURS_PER_DAY))) && start_of_day >= now && start_of_day >= m_earliest_tx) {
-			schedule = start_of_day - now;  // TR_NOM found
-			break;
+	// The range of TR_NOM is 45 seconds to 20 hours
+	//
+	// We iterate forwards from the candidate m_tr_nom_schedule until we find a TR_NOM that
+	// falls inside a permitted hour of transmission.  The maximum span we search is 24 hours.
+	while (hour_of_day < terminal_hours) {
+		//DEBUG_TRACE("ArgosScheduler::next_duty_cycle: candidate schedule: %lu hour_of_day: %u", m_tr_nom_schedule, hour_of_day);
+		if ((duty_cycle & (0x800000 >> (hour_of_day % HOURS_PER_DAY))) && m_tr_nom_schedule >= m_earliest_tx) {
+			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: found schedule: %lu", m_tr_nom_schedule);
+			return m_tr_nom_schedule - now;
+		} else {
+			m_tr_nom_schedule += m_argos_config.tr_nom;
+			seconds_of_day += m_argos_config.tr_nom;
+			hour_of_day = (seconds_of_day / SECONDS_PER_HOUR);
 		}
-		// Try next TR_NOM
-		start_of_day += m_argos_config.tr_nom;
-		tr_nom_working += m_argos_config.tr_nom;
-		hour = tr_nom_working / SECONDS_PER_HOUR;
 	}
 
-	DEBUG_TRACE("ArgosScheduler::next_duty_cycle: computed schedule: %d", schedule);
+	DEBUG_TRACE("ArgosScheduler::next_duty_cycle: no schedule found!");
 
-	return schedule;
+	m_tr_nom_schedule = INVALID_SCHEDULE;
+
+	return INVALID_SCHEDULE;
 }
 
 std::time_t ArgosScheduler::next_prepass() {
@@ -134,7 +162,8 @@ std::time_t ArgosScheduler::next_prepass() {
 	std::time_t curr_time = rtc->gettime();
 
 	if (m_next_prepass != INVALID_SCHEDULE &&
-		curr_time < m_next_prepass) {
+		curr_time < m_next_prepass &&
+		m_earliest_tx <= m_next_prepass) {
 		DEBUG_WARN("ArgosScheduler::next_prepass: prepass already scheduled for epoch=%lu", m_next_prepass);
 		return INVALID_SCHEDULE;
 	}
@@ -175,14 +204,14 @@ std::time_t ArgosScheduler::next_prepass() {
 
 		std::time_t schedule = (std::time_t)next_pass.epoch;
 		std::time_t now = rtc->gettime();
-		if (now <= schedule) {
+		if (now <= schedule && m_earliest_tx <= schedule) {
 			// Compute delay until epoch arrives for scheduling and select Argos transmission mode
 			DEBUG_TRACE("ArgosScheduler::next_prepass: scheduled for %u seconds in future", schedule - now);
 			m_next_prepass = schedule;
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
 			return schedule - now;
 		} else {
-			DEBUG_ERROR("ArgosScheduler::next_prepass: computed prepass epoch=%lu is not in future", next_pass.epoch);
+			DEBUG_ERROR("ArgosScheduler::next_prepass: computed prepass epoch=%lu is not in future or >= earliest TX", next_pass.epoch);
 			return INVALID_SCHEDULE;
 		}
 	} else {
@@ -567,6 +596,7 @@ void ArgosScheduler::start(std::function<void()> data_notification_callback) {
 	m_is_running = true;
 	m_msg_index = 0;
 	m_next_prepass = INVALID_SCHEDULE;
+	m_tr_nom_schedule = INVALID_SCHEDULE;
 	configuration_store->get_argos_configuration(m_argos_config);
 	for (unsigned int i = 0; i < MAX_MSG_INDEX; i++) {
 		m_msg_burst_counter[i] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;

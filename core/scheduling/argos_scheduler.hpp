@@ -31,6 +31,7 @@ private:
 	bool         m_is_running;
 	std::time_t  m_earliest_tx;
 	std::time_t  m_next_prepass;
+	std::time_t  m_tr_nom_schedule;
 	ArgosMode    m_next_mode;
 	unsigned int m_msg_index;
 	double		 m_last_longitude;

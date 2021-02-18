@@ -103,7 +103,10 @@ TEST(Sm, CheckBootFileSystemMountOk)
 {
 	mock().expectOneCall("create").onObject(sensor_log);
 	mock().expectOneCall("create").onObject(system_log);
+	mock().expectOneCall("num_entries").onObject(sensor_log).andReturnValue(0);
+	mock().expectOneCall("num_entries").onObject(system_log).andReturnValue(0);
 	mock().expectOneCall("init").onObject(configuration_store);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
@@ -115,7 +118,10 @@ TEST(Sm, CheckBootFileSystemFirstMountFail)
 {
 	mock().expectOneCall("create").onObject(sensor_log);
 	mock().expectOneCall("create").onObject(system_log);
+	mock().expectOneCall("num_entries").onObject(sensor_log).andReturnValue(0);
+	mock().expectOneCall("num_entries").onObject(system_log).andReturnValue(0);
 	mock().expectOneCall("init").onObject(configuration_store);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(-1);
 	mock().expectOneCall("format").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
@@ -149,7 +155,10 @@ TEST(Sm, CheckBootStateTransitionsToIdleState)
 {
 	mock().expectOneCall("create").onObject(sensor_log);
 	mock().expectOneCall("create").onObject(system_log);
+	mock().expectOneCall("num_entries").onObject(sensor_log).andReturnValue(0);
+	mock().expectOneCall("num_entries").onObject(system_log).andReturnValue(0);
 	mock().expectOneCall("init").onObject(configuration_store);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
