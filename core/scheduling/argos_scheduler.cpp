@@ -292,7 +292,7 @@ void ArgosScheduler::notify_sensor_log_update() {
 		sensor_log->read(&gps_entry, idx);
 		// Update last known position if the GPS entry is valid (otherwise we preserve the last one)
 		if (gps_entry.valid) {
-			DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: updated last known GPS position; m_is_rtc_set=true");
+			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: updated last known GPS position; m_is_rtc_set=true");
 			m_last_longitude = gps_entry.lon;
 			m_last_latitude = gps_entry.lat;
 			m_is_rtc_set = true;
@@ -303,7 +303,7 @@ void ArgosScheduler::notify_sensor_log_update() {
 			unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
 			unsigned int span = std::min((unsigned int)MAX_GPS_ENTRIES_IN_PACKET, (unsigned int)m_argos_config.depth_pile);
 
-			DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: PASS_PREDICTION mode: max_index=%u span=%u", max_index, span);
+			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: PASS_PREDICTION mode: max_index=%u span=%u", max_index, span);
 
 			// Find the first slot whose vector has less then depth pile entries in it
 			for (msg_index = 0; msg_index < max_index; msg_index++) {
@@ -314,9 +314,9 @@ void ArgosScheduler::notify_sensor_log_update() {
 			// If a slot is found then append most recent sensor log entry to it
 			if (msg_index < max_index) {
 				m_gps_entries[msg_index].push_back(gps_entry);
-				DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: PASS_PREDICTION mode: appending entry=%u to msg_slot=%u", idx, msg_index);
+				DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: PASS_PREDICTION mode: appending entry=%u to msg_slot=%u", idx, msg_index);
 			} else {
-				DEBUG_TRACE("ArgosScheduler: notify_sensor_log_update: PASS_PREDICTION mode: no free slots");
+				DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: PASS_PREDICTION mode: no free slots");
 			}
 		} else {
 			// Reset the message burst counters

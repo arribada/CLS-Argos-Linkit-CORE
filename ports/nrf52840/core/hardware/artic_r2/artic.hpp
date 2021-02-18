@@ -80,8 +80,8 @@ private:
 	void program_firmware();
 	void send_fw_files();
 	void hardware_init();
-	void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout);
-	void wait_interrupt(uint32_t timeout, uint8_t interrupt_num);
+	void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout_ms);
+	void wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num);
 	void clear_interrupt(uint8_t interrupt_num);
 	void check_crc(firmware_header_t *firmware_header);
 	void send_artic_command(artic_cmd_t cmd, uint32_t *response);

@@ -11,19 +11,16 @@
 #define SAT_TURN_ON_TIME_S  ( 0) // Note: Unit testing makes more sense if we ignore this parameter
 #endif
 
-#define SAT_DELAY                         (1000)
-#define SAT_ARTIC_DELAY_BOOT              (1000)
-#define SAT_ARTIC_DELAY_POWER_ON          (1000)
-#define SAT_ARTIC_DELAY_INTERRUPT         (10000)
-#define SAT_ARTIC_DELAY_INTERRUPT_1_PROG  (1000)
-#define SAT_ARTIC_TIMEOUT_SEND_TX         (20000)
-#define SAT_ARTIC_DELAY_RESET             (5)
-#define SAT_ARTIC_DELAY_BURST             (5)
-#define SAT_ARTIC_DELAY_SET_BURST         (22)
-#define SAT_ARTIC_DELAY_FINISH_BURST      (13)
-#define SAT_ARTIC_DELAY_TRANSFER          (50)
-#define SAT_ARTIC_DELAY_BURST             (5)
-
+#define SAT_ARTIC_DELAY_BOOT_MS              (1000)
+#define SAT_ARTIC_DELAY_POWER_ON_MS          (1000)
+#define SAT_ARTIC_DELAY_INTERRUPT_MS         (10000)
+#define SAT_ARTIC_DELAY_INTERRUPT_1_PROG_MS  (1000)
+#define SAT_ARTIC_TIMEOUT_SEND_TX_MS         (20000)
+#define SAT_ARTIC_DELAY_RESET_MS             (5)
+#define SAT_ARTIC_DELAY_BURST_MS             (5)
+#define SAT_ARTIC_DELAY_SET_BURST_MS         (22)
+#define SAT_ARTIC_DELAY_FINISH_BURST_MS      (13)
+#define SAT_ARTIC_DELAY_TRANSFER_US          (50)
 #define NUM_FIRMWARE_FILES_ARTIC 3
 
 #define BURST_ADDRESS  (0)

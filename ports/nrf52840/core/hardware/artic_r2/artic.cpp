@@ -147,7 +147,7 @@ void ArticTransceiver::check_crc(firmware_header_t *firmware_header)
     reverse_memcpy((uint8_t *)&crc, &crc_buffer[0], SIZE_SPI_REG_XMEM_YMEM_IOMEM);
     if (firmware_header->PMEM_CRC != crc)
     {
-        DEBUG_ERROR("PMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->PMEM_CRC);
+        DEBUG_ERROR("ArticTransceiver::check_crc: PMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->PMEM_CRC);
         throw ErrorCode::ARTIC_CRC_FAILURE;
     }
 
@@ -156,7 +156,7 @@ void ArticTransceiver::check_crc(firmware_header_t *firmware_header)
     reverse_memcpy((uint8_t *)&crc, &crc_buffer[3], SIZE_SPI_REG_XMEM_YMEM_IOMEM);
     if (firmware_header->XMEM_CRC != crc)
     {
-        DEBUG_ERROR("XMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->XMEM_CRC);
+        DEBUG_ERROR("ArticTransceiver::check_crc: XMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->XMEM_CRC);
         throw ErrorCode::ARTIC_CRC_FAILURE;
     }
 
@@ -165,9 +165,11 @@ void ArticTransceiver::check_crc(firmware_header_t *firmware_header)
     reverse_memcpy((uint8_t *)&crc, &crc_buffer[6], SIZE_SPI_REG_XMEM_YMEM_IOMEM);
     if (firmware_header->YMEM_CRC != crc)
     {
-        DEBUG_ERROR("YMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->YMEM_CRC);
+        DEBUG_ERROR("ArticTransceiver::check_crc: YMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->YMEM_CRC);
         throw ErrorCode::ARTIC_CRC_FAILURE;
     }
+
+    DEBUG_TRACE("ArticTransceiver::check_crc: CRC values all match");
 }
 
 void ArticTransceiver::configure_burst(mem_id_t mode, bool read, uint32_t start_address)
@@ -198,7 +200,7 @@ void ArticTransceiver::configure_burst(mem_id_t mode, bool read, uint32_t start_
         throw ErrorCode::SPI_COMMS_ERROR;
     }
 
-    nrf_delay_ms(SAT_ARTIC_DELAY_SET_BURST);
+    nrf_delay_ms(SAT_ARTIC_DELAY_SET_BURST_MS);
 }
 
 void ArticTransceiver::burst_access(mem_id_t mode, uint32_t start_address, const uint8_t *tx_data, uint8_t *rx_data, size_t size, bool read )
@@ -218,7 +220,7 @@ void ArticTransceiver::burst_access(mem_id_t mode, uint32_t start_address, const
     // Deactivate SSN pin
     m_nrf_spim->finish_transfer();
 
-    nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST);
+    nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST_MS);
 }
 
 void ArticTransceiver::send_burst(const uint8_t *tx_data, uint8_t *rx_data, size_t size, uint8_t length_transfer, bool read)
@@ -243,11 +245,11 @@ void ArticTransceiver::send_burst(const uint8_t *tx_data, uint8_t *rx_data, size
             }
 
             delay_count += length_transfer;
-            nrf_delay_us(SAT_ARTIC_DELAY_TRANSFER);
+            nrf_delay_us(SAT_ARTIC_DELAY_TRANSFER_US);
             if (delay_count > NUM_BYTES_BEFORE_WAIT)
             {
                 delay_count = 0;
-                nrf_delay_ms(SAT_ARTIC_DELAY_BURST);
+                nrf_delay_ms(SAT_ARTIC_DELAY_BURST_MS);
             }
 
         }
@@ -261,11 +263,11 @@ void ArticTransceiver::send_burst(const uint8_t *tx_data, uint8_t *rx_data, size
                 throw ErrorCode::SPI_COMMS_ERROR;
             }
             delay_count += length_transfer;
-            nrf_delay_us(SAT_ARTIC_DELAY_TRANSFER);
+            nrf_delay_us(SAT_ARTIC_DELAY_TRANSFER_US);
             if (delay_count > NUM_BYTES_BEFORE_WAIT)
             {
                 delay_count = 0;
-                nrf_delay_ms(SAT_ARTIC_DELAY_BURST);
+                nrf_delay_ms(SAT_ARTIC_DELAY_BURST_MS);
             }
         }
     }
@@ -285,7 +287,7 @@ void ArticTransceiver::print_status(void)
     for (uint32_t i = 0; i < TOTAL_NUMBER_STATUS_FLAG; ++i)
     {
         if (status & (1 << i)) {
-            DEBUG_TRACE("%s", (char *)status_string[i]);
+            DEBUG_TRACE("ArticTransceiver::print_status: %s", (char *)status_string[i]);
         }
     }
 }
@@ -317,10 +319,12 @@ void ArticTransceiver::send_command(uint8_t command)
     }
 }
 
-void ArticTransceiver::wait_interrupt(uint32_t timeout, uint8_t interrupt_num)
+void ArticTransceiver::wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num)
 {
     BSP::GPIO gpio_port;
     bool int_status;
+
+    uint32_t iterations = timeout_ms / SAT_ARTIC_DELAY_TICK_INTERRUPT_MS;
 
     if (interrupt_num == INTERRUPT_1)
         gpio_port = BSP::GPIO::GPIO_INT1_SAT;
@@ -332,7 +336,7 @@ void ArticTransceiver::wait_interrupt(uint32_t timeout, uint8_t interrupt_num)
         nrf_delay_ms(SAT_ARTIC_DELAY_TICK_INTERRUPT_MS);
         int_status = GPIOPins::value(gpio_port);
     }
-    while (timeout-- && !int_status);
+    while (iterations-- && !int_status);
 
     if (int_status == false)
     {
@@ -341,13 +345,13 @@ void ArticTransceiver::wait_interrupt(uint32_t timeout, uint8_t interrupt_num)
     }
 }
 
-void ArticTransceiver::send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout)
+void ArticTransceiver::send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout_ms)
 {
     uint32_t status = 0;
 
     clear_interrupt(interrupt_number);
     send_command(command);
-    wait_interrupt(interrupt_timeout, interrupt_number);
+    wait_interrupt(interrupt_timeout_ms, interrupt_number);
     get_status_register(&status);
 
     if ((status & (1 << status_flag_number)) == !value) {
@@ -443,25 +447,25 @@ void ArticTransceiver::send_fw_files(void)
         if (bytes_written > 0)
         {
             // Wait few ms to continue the operations 13 ms, just in case we send very small amount of bytes
-            nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST);
+            nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST_MS);
             burst_access(mode, start_address, write_buffer, rx_buffer, bytes_written, false);
         }
     }
 
 	// Bring DSP out of reset
-    DEBUG_TRACE("Bringing Artic out of reset");
+    DEBUG_TRACE("ArticTransceiver::send_fw_files: Bringing Artic out of reset");
     send_artic_command(DSP_CONFIG, NULL);
 
-    DEBUG_TRACE("Waiting for interrupt 1");
+    DEBUG_TRACE("ArticTransceiver::send_fw_files: Waiting for interrupt 1");
 
     // Interrupt 1 will be high when start-up is complete
-    wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT_1_PROG, INTERRUPT_1);
+    wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT_1_PROG_MS, INTERRUPT_1);
 
-    DEBUG_TRACE("Artic booted");
+    DEBUG_TRACE("ArticTransceiver::send_fw_files: Artic booted");
 
     clear_interrupt(INTERRUPT_1);
 
-    DEBUG_TRACE("Checking CRC values");
+    DEBUG_TRACE("ArticTransceiver::send_fw_files: Checking CRC values");
     check_crc(&firmware_header);
 }
 
@@ -475,7 +479,7 @@ void ArticTransceiver::program_firmware(void)
     do
     {
         uint32_t artic_response = 0;
-        nrf_delay_ms(SAT_ARTIC_DELAY_BOOT);
+        nrf_delay_ms(SAT_ARTIC_DELAY_BOOT_MS);
 
         try {
         	send_artic_command(DSP_STATUS, &artic_response);
@@ -513,7 +517,9 @@ void ArticTransceiver::get_status_register(uint32_t *status)
     reverse_memcpy((uint8_t *) status, buffer, SIZE_SPI_REG_XMEM_YMEM_IOMEM);
 }
 
-void ArticTransceiver::power_off() {
+void ArticTransceiver::power_off()
+{
+    DEBUG_TRACE("ArticTransceiver::power_off");
 
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
@@ -536,24 +542,26 @@ ArticTransceiver::ArticTransceiver() {
 
 void ArticTransceiver::power_on()
 {
+    DEBUG_TRACE("ArticTransceiver::power_on");
+
 	m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
 
     GPIOPins::set(BSP::GPIO::GPIO_SAT_EN);
     GPIOPins::set(BSP::GPIO::GPIO_SAT_RESET);
 
     // Wait for the Artic device to power on
-    nrf_delay_ms(SAT_ARTIC_DELAY_POWER_ON);
+    nrf_delay_ms(SAT_ARTIC_DELAY_POWER_ON_MS);
 
     // Reset the Artic device
     GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
 
     // Wait few ms to allow the device to detect the reset
-    nrf_delay_ms(SAT_ARTIC_DELAY_RESET);
+    nrf_delay_ms(SAT_ARTIC_DELAY_RESET_MS);
 
     // Exit reset on the device to enter boot mode
     GPIOPins::set(BSP::GPIO::GPIO_SAT_RESET);
 
-    nrf_delay_ms(SAT_ARTIC_DELAY_RESET);
+    nrf_delay_ms(SAT_ARTIC_DELAY_RESET_MS);
 
     // Program firmware
     program_firmware();
@@ -570,10 +578,10 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 	switch (mode) {
 	default:
 	case ArgosMode::ARGOS_2:
-		send_command_check_clean(ARTIC_CMD_SET_PTT_A2_TX_MODE, 1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT);
+		send_command_check_clean(ARTIC_CMD_SET_PTT_A2_TX_MODE, 1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT_MS);
 		break;
 	case ArgosMode::ARGOS_3:
-		send_command_check_clean(ARTIC_CMD_SET_PTT_A3_TX_MODE, 1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT);
+		send_command_check_clean(ARTIC_CMD_SET_PTT_A3_TX_MODE, 1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT_MS);
 		num_tail_bits = (total_bits >= ARTIC_PTT_A3_248_MAX_USER_BITS) ? ARTIC_PTT_A3_248_MSG_NUM_TAIL_BITS : ARTIC_PTT_A3_120_MSG_NUM_TAIL_BITS;
 		break;
 	}
@@ -592,11 +600,13 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 
     print_status();
 
+    DEBUG_TRACE("ArticTransceiver::send_packet: sending message");
+
     // Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
-    send_command_check_clean(ARTIC_CMD_START_TX_1M_SLEEP, 1, TX_FINISHED, true, SAT_ARTIC_TIMEOUT_SEND_TX);
+    send_command_check_clean(ARTIC_CMD_START_TX_1M_SLEEP, 1, TX_FINISHED, true, SAT_ARTIC_TIMEOUT_SEND_TX_MS);
 
     // If there is a problem wait until interrupt 2 is launched and get the status response
-    wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT, INTERRUPT_2);
+    wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT_MS, INTERRUPT_2);
     clear_interrupt(INTERRUPT_2);
 }
 

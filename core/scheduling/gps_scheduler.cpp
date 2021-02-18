@@ -29,11 +29,13 @@ void GPSScheduler::start(std::function<void()> data_notification_callback)
 void GPSScheduler::stop()
 {
     DEBUG_TRACE("GPSScheduler::stop");
-    m_data_notification_callback = nullptr;
-    deschedule();
-
+    
+    system_scheduler->cancel_task(m_task_acquisition_period);
+    system_scheduler->cancel_task(m_task_acquisition_timeout);
     system_scheduler->cancel_task(m_task_update_rtc);
     system_scheduler->cancel_task(m_task_process_gnss_data);
+
+    m_data_notification_callback = nullptr;
 
     power_off();
 }
