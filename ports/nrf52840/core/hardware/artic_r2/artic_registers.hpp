@@ -63,7 +63,7 @@
 #define INTERRUPT_1  (1)
 #define INTERRUPT_2  (2)
 
-#define TOTAL_NUMBER_STATUS_FLAG  (25)
+#define TOTAL_NUMBER_STATUS_FLAG  (24)
 
 
 #define ID_SIZE_BYTE (4)

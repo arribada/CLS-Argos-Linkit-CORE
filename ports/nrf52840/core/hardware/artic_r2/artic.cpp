@@ -20,24 +20,26 @@
 #define DEFAULT_TCXO_WARMUP_TIME_SECONDS 3
 #endif
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
 #define TX_FREQUENCY_ARGOS_2_3_BAND_START		401.62
 
 static constexpr const char *const status_string[] =
 {
-    "IDLE",                                   //The firmware is idle and ready to accept commands.
+    "IDLE",                                   // The firmware is idle and ready to accept commands.
     "RX_IN_PROGRESS",                         // The firmware is receiving.
     "TX_IN_PROGRESS",                         // The firmware is transmitting.
     "BUSY",                                   // The firmware is changing state.
     //      Interrupt 1 flags
     "RX_VALID_MESSAGE",                       // A message has been received.
     "RX_SATELLITE_DETECTED",                  // A satellite has been detected.
-    "TX_FINISHED"                            // The transmission was completed.
+    "TX_FINISHED",                            // The transmission was completed.
     "MCU_COMMAND_ACCEPTED",                   // The configuration command has been accepted.
     "CRC_CALCULATED",                         // CRC calculation has finished.
     "IDLE_STATE",                             // Firmware returned to the idle state.
     "RX_CALIBRATION_FINISHED",                // RX offset calibration has completed.
-    "RESERVED_11",                            //
-    "RESERVED_12",                            //
+    "RESERVED_11",
+    "RESERVED_12",
     //      Interrupt 2 flags
     "RX_TIMEOUT",                             // The specified reception time has been exceeded.
     "SATELLITE_TIMEOUT",                      // No satellite was detected within the specified time.
@@ -45,13 +47,14 @@ static constexpr const char *const status_string[] =
     "TX_INVALID_MESSAGE",                     // Incorrect TX payload length specified.
     "MCU_COMMAND_REJECTED",                   // Incorrect command send or Firmware is not in idle.
     "MCU_COMMAND_OVERFLOW",                   // Previous command was not yet processed.
-    "RESERVED_19",                            //
-    "RESERVER_20",                            //
+    "RESERVED_19",
+    "RESERVER_20",
     // Others
     "INTERNAL_ERROR",                         // An internal error has occurred.
     "dsp2mcu_int1",                           // Interrupt 1 pin status
-    "dsp2mcu_int2",
+    "dsp2mcu_int2"                            // Interrupt 2 pin status
 };
+static_assert(ARRAY_SIZE(status_string) == TOTAL_NUMBER_STATUS_FLAG);
 
 inline uint8_t ArticTransceiver::convert_mem_sel(mem_id_t mode)
 {
@@ -279,7 +282,7 @@ void ArticTransceiver::print_status(void)
     uint32_t status;
     get_status_register(&status);
 
-    for (int i = 0; i < TOTAL_NUMBER_STATUS_FLAG; ++i)
+    for (uint32_t i = 0; i < TOTAL_NUMBER_STATUS_FLAG; ++i)
     {
         if (status & (1 << i)) {
             DEBUG_TRACE("%s", (char *)status_string[i]);
