@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <cstring>
+#include <cmath>
 
 #include "bsp.hpp"
 #include "artic_firmware.hpp"
