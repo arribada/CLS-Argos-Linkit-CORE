@@ -29,12 +29,14 @@ private:
 	ArgosConfig  m_argos_config;
 	bool         m_switch_state;
 	bool         m_is_running;
+	bool         m_is_deferred;
 	std::time_t  m_earliest_tx;
 	std::time_t  m_next_prepass;
 	std::time_t  m_tr_nom_schedule;
 	std::time_t  m_last_transmission_schedule;
 	ArgosMode    m_next_mode;
 	unsigned int m_msg_index;
+	unsigned int m_prepass_duration;
 	double		 m_last_longitude;
 	double 		 m_last_latitude;
 	std::array<unsigned int, MAX_MSG_INDEX> m_msg_burst_counter;
