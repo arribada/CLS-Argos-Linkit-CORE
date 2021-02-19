@@ -503,9 +503,14 @@ void ArticTransceiver::program_firmware(void)
     send_fw_files();
 }
 
-void ArticTransceiver::set_tcxo_warmup_time(uint8_t time_s)
+void ArticTransceiver::set_tcxo_warmup_time(uint32_t time_s)
 {
-    burst_access(XMEM, TCXO_WARMUP_TIME_ADDRESS, &time_s, NULL, sizeof(time_s), false);
+    uint8_t write_buffer[3];
+    write_buffer[0] = (time_s) >> 16;
+    write_buffer[1] = (time_s) >> 8;
+    write_buffer[2] = (time_s);
+
+    burst_access(XMEM, TCXO_WARMUP_TIME_ADDRESS, write_buffer, NULL, sizeof(write_buffer), false);
 }
 
 void ArticTransceiver::get_status_register(uint32_t *status)
@@ -612,9 +617,15 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 
 void ArticTransceiver::set_frequency(const double freq) {
 	unsigned int fractional_part;
-	fractional_part = (unsigned int)((((4 * freq * 1E6) / 26E6) - 61) * 4194304);
+	fractional_part = (unsigned int)std::round((((4.0 * freq * 1E6) / 26E6) - 61.0) * 4194304.0);
+
+    uint8_t write_buffer[3];
+    write_buffer[0] = (fractional_part) >> 16;
+    write_buffer[1] = (fractional_part) >> 8;
+    write_buffer[2] = (fractional_part);
+
 	// Only supports Argos 2 and 3 band
-	burst_access(XMEM, TX_FREQUENCY_ARGOS_2_3, (const uint8_t *)&fractional_part, NULL, sizeof(fractional_part), false);
+	burst_access(XMEM, TX_FREQUENCY_ARGOS_2_3, write_buffer, NULL, sizeof(write_buffer), false);
 }
 
 void ArticTransceiver::set_tx_power(const BaseArgosPower power) {

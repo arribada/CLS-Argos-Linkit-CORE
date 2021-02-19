@@ -76,7 +76,7 @@ private:
 	void send_command(uint8_t command);
 	void get_status_register(uint32_t *status);
 	void print_status(void);
-	void set_tcxo_warmup_time(uint8_t time_s);
+	void set_tcxo_warmup_time(uint32_t time_s);
 	void program_firmware();
 	void send_fw_files();
 	void hardware_init();
