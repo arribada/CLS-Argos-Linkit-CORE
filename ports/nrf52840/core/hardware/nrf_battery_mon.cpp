@@ -102,7 +102,10 @@ uint8_t NrfBatteryMonitor::get_level()
 
 uint16_t NrfBatteryMonitor::get_voltage()
 {
-	//float adc = sample_adc();
-	//return (adc * (VOLTAGE_DIV_R1 + VOLTAGE_DIV_R2)) / VOLTAGE_DIV_R2;
-	return 4200;
+#ifdef BATTERY_NOT_FITTED
+	return BATT_LUT_MAX_V;
+#else
+	float adc = sample_adc();
+	return (adc * (VOLTAGE_DIV_R1 + VOLTAGE_DIV_R2)) / VOLTAGE_DIV_R2;
+#endif
 }
