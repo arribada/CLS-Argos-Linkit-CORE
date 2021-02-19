@@ -610,10 +610,6 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 
     // Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
     send_command_check_clean(ARTIC_CMD_START_TX_1M_SLEEP, 1, TX_FINISHED, true, SAT_ARTIC_TIMEOUT_SEND_TX_MS);
-
-    // If there is a problem wait until interrupt 2 is launched and get the status response
-    wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT_MS, INTERRUPT_2);
-    clear_interrupt(INTERRUPT_2);
 }
 
 void ArticTransceiver::set_frequency(const double freq) {
