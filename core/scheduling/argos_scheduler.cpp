@@ -675,6 +675,8 @@ void ArgosScheduler::stop() {
 	DEBUG_TRACE("ArgosScheduler::stop");
 	deschedule();
 	m_is_running = false;
+
+	power_off();
 }
 
 void ArgosScheduler::deschedule() {
