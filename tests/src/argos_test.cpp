@@ -96,6 +96,8 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 
 	GPSLogEntry gps_entry;
 	gps_entry.batt_voltage = 3960;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 7;
 	gps_entry.hour = 15;
 	gps_entry.min = 6;
@@ -177,6 +179,8 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 
 	GPSLogEntry gps_entry;
 	gps_entry.batt_voltage = 3960;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 7;
 	gps_entry.hour = 15;
 	gps_entry.min = 6;
@@ -251,9 +255,10 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 
 	argos_sched->start();
 
-	// Should not run as requires at least 2 GPS entries
 	GPSLogEntry gps_entry;
 	gps_entry.batt_voltage = 7350;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 28;
 	gps_entry.hour = 14;
 	gps_entry.min = 1;
@@ -266,6 +271,8 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_log->write(&gps_entry);
 
 	gps_entry.batt_voltage = 7350;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 28;
 	gps_entry.hour = 15;
 	gps_entry.min = 1;
@@ -278,6 +285,8 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_log->write(&gps_entry);
 
 	gps_entry.batt_voltage = 7350;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 28;
 	gps_entry.hour = 16;
 	gps_entry.min = 1;
@@ -290,6 +299,8 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_log->write(&gps_entry);
 
 	gps_entry.batt_voltage = 7350;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 7;
 	gps_entry.hour = 15;
 	gps_entry.min = 6;
@@ -375,6 +386,8 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	// Write initial GPS entry
 	GPSLogEntry gps_entry;
 	gps_entry.batt_voltage = 3960;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 7;
 	gps_entry.hour = 15;
 	gps_entry.min = 6;
@@ -473,6 +486,8 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	// Populate 4 GPS entries
 	GPSLogEntry gps_entry;
 	gps_entry.batt_voltage = 7350;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 28;
 	gps_entry.hour = 14;
 	gps_entry.min = 1;
@@ -490,6 +505,8 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	argos_sched->notify_sensor_log_update();
 
 	gps_entry.batt_voltage = 7350;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 28;
 	gps_entry.hour = 15;
 	gps_entry.min = 1;
@@ -503,6 +520,8 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	argos_sched->notify_sensor_log_update();
 
 	gps_entry.batt_voltage = 7350;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 28;
 	gps_entry.hour = 16;
 	gps_entry.min = 1;
@@ -516,6 +535,8 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	argos_sched->notify_sensor_log_update();
 
 	gps_entry.batt_voltage = 7350;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 7;
 	gps_entry.hour = 15;
 	gps_entry.min = 6;
@@ -596,6 +617,8 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 
 	GPSLogEntry gps_entry;
 	gps_entry.batt_voltage = 3960;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 7;
 	gps_entry.hour = 15;
 	gps_entry.min = 6;
@@ -679,6 +702,8 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 
 	GPSLogEntry gps_entry;
 	gps_entry.batt_voltage = 3960;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 7;
 	gps_entry.hour = 15;
 	gps_entry.min = 6;
@@ -840,6 +865,8 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 
 	GPSLogEntry gps_entry;
 	gps_entry.batt_voltage = 3960;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 7;
 	gps_entry.hour = 15;
 	gps_entry.min = 6;
@@ -943,6 +970,8 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	// Write initial GPS entry
 	GPSLogEntry gps_entry;
 	gps_entry.batt_voltage = 3960;
+	gps_entry.year = 2020;
+	gps_entry.month = 4;
 	gps_entry.day = 7;
 	gps_entry.hour = 15;
 	gps_entry.min = 6;
