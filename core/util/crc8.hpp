@@ -6,20 +6,28 @@
 #include "bitpack.hpp"
 
 class CRC8 {
+	// Zero pad the start of the data buffer so the number of total bits becomes a multiple of 8
 	static std::string zeropad(std::string const & data, unsigned int total_bits) {
 		unsigned int remainder = total_bits % 8;
-		if (remainder == 0)
-			return data;
-
 		std::string buffer;
-		buffer.assign((total_bits + remainder) / 8, 0);
-		unsigned int base_pos = remainder, i = 0;
-		while (total_bits) {
-			unsigned int bits = std::min(8U, total_bits);
-			PACK_BITS(data[i], buffer, base_pos, bits);
-			total_bits -= bits;
-			i++;
+
+		if (remainder == 0)
+		{
+			buffer = data.substr(0, total_bits / 8);
+			return buffer;
 		}
+		else
+		{	
+			buffer.assign((total_bits + remainder) / 8, 0);
+			unsigned int base_pos = remainder, i = 0;
+			while (total_bits) {
+				unsigned int bits = std::min(8U, total_bits);
+				PACK_BITS(data[i], buffer, base_pos, bits);
+				total_bits -= bits;
+				i++;
+			}
+		}
+
 		return buffer;
 	}
 public:
