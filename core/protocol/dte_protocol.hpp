@@ -22,7 +22,7 @@ using namespace std::literals::string_literals;
 
 class ZoneCodec {
 private:
-	static unsigned int decode_arg_loc(unsigned int x) {
+	static unsigned int decode_arg_loc_argos(unsigned int x) {
 		switch (x) {
 		case 1:
 			return 7 * 60;
@@ -145,7 +145,7 @@ private:
 		}
 	}
 
-	static unsigned int encode_arg_loc(unsigned int x) {
+	static unsigned int encode_arg_loc_argos(unsigned int x) {
 		switch (x) {
 		case 7 * 60:
 			return 1;
@@ -243,7 +243,7 @@ public:
 		EXTRACT_BITS(comms_vector, data, base_pos, 2);
 		zone.comms_vector = decode_comms_vector(comms_vector);
 		EXTRACT_BITS(zone.delta_arg_loc_argos_seconds, data, base_pos, 4);
-		zone.delta_arg_loc_argos_seconds = decode_arg_loc(zone.delta_arg_loc_argos_seconds);
+		zone.delta_arg_loc_argos_seconds = decode_arg_loc_argos(zone.delta_arg_loc_argos_seconds);
 		EXTRACT_BITS(zone.delta_arg_loc_cellular_seconds, data, base_pos, 7);  // Not used
 		EXTRACT_BITS(zone.argos_extra_flags_enable, data, base_pos, 1);
 		unsigned int argos_depth_pile;
@@ -286,9 +286,9 @@ public:
 		PACK_BITS(zone.hour, data, base_pos, 5);
 		PACK_BITS(zone.minute, data, base_pos, 6);
 		PACK_BITS_CAST(uint32_t, zone.comms_vector, data, base_pos, 2);
-		PACK_BITS(zone.delta_arg_loc_argos_seconds, data, base_pos, 4);
-		unsigned int delta_arg_loc_argos_seconds = encode_arg_loc(zone.delta_arg_loc_argos_seconds);
-		PACK_BITS(delta_arg_loc_argos_seconds, data, base_pos, 7);  // Not used
+		unsigned int delta_arg_loc_argos_seconds = encode_arg_loc_argos(zone.delta_arg_loc_argos_seconds);
+		PACK_BITS(delta_arg_loc_argos_seconds, data, base_pos, 4);
+		PACK_BITS(0U, data, base_pos, 7); // zone.delta_arg_loc_cellular_seconds not used!
 		PACK_BITS(zone.argos_extra_flags_enable, data, base_pos, 1);
 		unsigned int argos_depth_pile;
 		argos_depth_pile = encode_depth_pile(zone.argos_depth_pile);
