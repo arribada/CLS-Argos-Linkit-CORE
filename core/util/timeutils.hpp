@@ -6,6 +6,7 @@
 
 static std::time_t convert_epochtime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t min, uint8_t sec) {
 	struct tm t;
+	memset(&t, 0, sizeof(t));
 	t.tm_sec = sec;
 	t.tm_min = min;
 	t.tm_hour = hour;
