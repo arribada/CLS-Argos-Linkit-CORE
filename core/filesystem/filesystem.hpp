@@ -95,19 +95,19 @@ public:
 		delete[] (uint8_t*)m_cfg.lookahead_buffer;
 	}
 
-	int mount() {
+	int mount() override {
 		return lfs_mount(&m_lfs, &m_cfg);
 	}
 
-	int umount() {
+	int umount() override {
 		return lfs_unmount(&m_lfs);
 	}
 
-	int format() {
+	int format() override {
 		return lfs_format(&m_lfs, &m_cfg);
 	}
 
-	int remove(const char *path) {
+	int remove(const char *path) override {
 		return lfs_remove(&m_lfs, path);
 	}
 
@@ -187,19 +187,19 @@ public:
 	virtual ~LFSFile() {
 		lfs_file_close(m_lfs, &m_file);
 	}
-	lfs_ssize_t read(void *buffer, lfs_size_t size) {
+	lfs_ssize_t read(void *buffer, lfs_size_t size) override {
 		return lfs_file_read(m_lfs, &m_file, buffer, size);
 	}
-	lfs_ssize_t write(void *buffer, lfs_size_t size) {
+	lfs_ssize_t write(void *buffer, lfs_size_t size) override {
 		return lfs_file_write(m_lfs, &m_file, buffer, size);
 	}
-	lfs_soff_t seek(lfs_soff_t off, int whence=LFS_SEEK_SET) {
+	lfs_soff_t seek(lfs_soff_t off, int whence=LFS_SEEK_SET) override {
 		return lfs_file_seek(m_lfs, &m_file, off, whence);
 	}
-	int flush() {
+	int flush() override {
 		return lfs_file_sync(m_lfs, &m_file);
 	}
-	lfs_soff_t size() {
+	lfs_soff_t size() override {
 		return lfs_file_size(m_lfs, &m_file);
 	}
 };

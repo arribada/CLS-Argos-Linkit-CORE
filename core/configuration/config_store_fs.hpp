@@ -78,7 +78,7 @@ protected:
 			m_is_zone_valid = true;
 	}
 
-	void serialize_zone() {
+	void serialize_zone() override {
 		DEBUG_TRACE("serialize_zone");
 		LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_WRONLY);
 		m_is_zone_valid = false;
@@ -112,7 +112,7 @@ protected:
 		write_zone((BaseZone&)default_zone);
 	}
 
-	void update_battery_level() {
+	void update_battery_level() override {
 		m_battery_level = battery_monitor->get_level();
 		m_battery_voltage = battery_monitor->get_voltage();
 	}
@@ -123,7 +123,7 @@ private:
 public:
 	LFSConfigurationStore(FileSystem &filesystem) : m_is_pass_predict_valid(false), m_is_zone_valid(false), m_is_config_valid(false), m_filesystem(filesystem) {}
 
-	void init() {
+	void init() override {
 		m_is_zone_valid = false;
 		m_is_pass_predict_valid = false;
 		m_is_config_valid = false;
@@ -189,7 +189,7 @@ public:
 		serialize_pass_predict();
 	}
 
-	bool is_battery_level_low() {
+	bool is_battery_level_low() override {
 		auto lb_en = read_param<bool>(ParamID::LB_EN);
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();

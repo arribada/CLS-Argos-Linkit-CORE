@@ -1253,7 +1253,7 @@ public:
 			for (unsigned int arg_index = 0; arg_index < cmd_ref->prototype.size(); arg_index++) {
 				if (arg_index > 0) {
 					// Skip over parameter separator and check it is a "," character
-					unsigned char x;
+					char x;
 					ss >> x;
 					if (x == std::char_traits<char>::eof()) {
 						DEBUG_ERROR("DTE_PROTOCOL_MISSING_ARG (EOF");

@@ -42,8 +42,8 @@ MockSupportPlugin mockPlugin;
 
 int main(int argc, char** argv)
 {
-	ConsoleLog clog;
-	console_log = &clog;
+	ConsoleLog con_log;
+	console_log = &con_log;
     TestRegistry::getCurrentRegistry()->installPlugin(&mockPlugin);
     int exit_code = CommandLineTestRunner::RunAllTests(argc, argv);
     return exit_code;
