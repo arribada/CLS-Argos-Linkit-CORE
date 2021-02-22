@@ -578,9 +578,10 @@ void ArticTransceiver::power_on()
 
 void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode)
 {
-    // Number of tails bits is zero for A2 and non-zero for A3
+	ArgosPacket packet_buffer = packet;
 	unsigned int num_tail_bits = 0;
 
+    // Number of tails bits is zero for A2 and non-zero for A3
 	switch (mode) {
 	default:
 	case ArgosMode::ARGOS_2:
@@ -592,17 +593,24 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 		break;
 	}
 
+	// Append tail bits to the packet
+	(ArgosPacket)packet_buffer.append((num_tail_bits + 7)/8, 0);
+
+	// Round-up to the nearest multiple of 3 bytes (which is the XMEM burst size)
+	(ArgosPacket)packet_buffer.append((3 - (packet_buffer.length() % 3)) % 3, 0);
+
 	// Overwrite first 24-bit SYNC with the 24-bit total length field (required at the head of the packet data)
 	// this length must exclude the 24-bit header itself
-	uint8_t *buffer = (uint8_t *)packet.c_str();
+	uint8_t *buffer = (uint8_t *)packet_buffer.c_str();
 	buffer[0] = ((total_bits + num_tail_bits - 24) >> 16);
 	buffer[1] = ((total_bits + num_tail_bits - 24) >> 8);
 	buffer[2] = (total_bits + num_tail_bits - 24);
-    burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)buffer, NULL, (total_bits / 8), false);
+    burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)buffer, NULL, packet_buffer.length(), false);
 
     print_status();
 
-    DEBUG_TRACE("ArticTransceiver::send_packet: sending message");
+    DEBUG_INFO("ArticTransceiver::send_packet: sending message total_bits=%u tail_bits=%u burst_size=%u",
+    		   total_bits, num_tail_bits, packet_buffer.size());
 
     // Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
     send_command_check_clean(ARTIC_CMD_START_TX_1M_SLEEP, 1, TX_FINISHED, true, SAT_ARTIC_TIMEOUT_SEND_TX_MS);
