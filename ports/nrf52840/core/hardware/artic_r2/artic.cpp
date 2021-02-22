@@ -523,6 +523,16 @@ void ArticTransceiver::get_status_register(uint32_t *status)
     reverse_memcpy((uint8_t *) status, buffer, SIZE_SPI_REG_XMEM_YMEM_IOMEM);
 }
 
+void ArticTransceiver::print_firmware_version()
+{
+    char version[9];
+    memset(version, 0x00, sizeof(version));
+
+    spi_read(PMEM, FIRMWARE_VERSION_ADDRESS, (uint8_t *) version, 8);
+    version[8] = '\0';
+    DEBUG_TRACE("ArticTransceiver::print_firmware_version: %s", version);
+}
+
 void ArticTransceiver::power_off()
 {
     DEBUG_TRACE("ArticTransceiver::power_off");
@@ -534,11 +544,11 @@ void ArticTransceiver::power_off()
     m_nrf_spim = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
 
 	// FIXME: should this be moved into the NrfSPIM driver?
-	nrf_gpio_cfg_output(BSP::SPI_Inits[SPI_SATELLITE].spim_config.ss_pin);
-	nrf_gpio_pin_clear(BSP::SPI_Inits[SPI_SATELLITE].spim_config.ss_pin);
-    nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].spim_config.mosi_pin, NRF_GPIO_PIN_PULLDOWN);
-    nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].spim_config.miso_pin, NRF_GPIO_PIN_PULLDOWN);
-    nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].spim_config.sck_pin, NRF_GPIO_PIN_PULLDOWN);
+	nrf_gpio_cfg_output(BSP::SPI_Inits[SPI_SATELLITE].config.ss_pin);
+	nrf_gpio_pin_clear(BSP::SPI_Inits[SPI_SATELLITE].config.ss_pin);
+    nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].config.mosi_pin, NRF_GPIO_PIN_PULLDOWN);
+    nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].config.miso_pin, NRF_GPIO_PIN_PULLDOWN);
+    nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].config.sck_pin, NRF_GPIO_PIN_PULLDOWN);
 }
 
 ArticTransceiver::ArticTransceiver() {
@@ -571,6 +581,8 @@ void ArticTransceiver::power_on()
 
     // Program firmware
     program_firmware();
+
+    print_firmware_version();
 
     // Set TCXO warm-up time
     set_tcxo_warmup_time(DEFAULT_TCXO_WARMUP_TIME_SECONDS);

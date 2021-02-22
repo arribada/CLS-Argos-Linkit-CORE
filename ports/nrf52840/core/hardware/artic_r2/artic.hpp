@@ -88,6 +88,7 @@ private:
 	void spi_read(mem_id_t mode, uint32_t start_address, uint8_t *buffer_read, size_t size);
 	inline uint8_t convert_mem_sel(mem_id_t mode);
 	inline mem_id_t convert_mode(uint8_t mem_sel);
+	void print_firmware_version();
 
 public:
 	ArticTransceiver();
