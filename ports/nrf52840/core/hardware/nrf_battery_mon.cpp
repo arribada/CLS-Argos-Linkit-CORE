@@ -70,9 +70,9 @@ void NrfBatteryMonitor::stop()
 
 float NrfBatteryMonitor::sample_adc()
 {
-    int16_t raw;
+    nrf_saadc_value_t raw = 0;
 
-    nrfx_saadc_sample_convert(m_adc_channel, (nrf_saadc_value_t *) &raw);
+    nrfx_saadc_sample_convert(m_adc_channel, &raw);
 
     return ((float) raw) / ((ADC_GAIN / ADC_REFERENCE) * ADC_MAX_VALUE) * 1000.0f;
 }
