@@ -323,7 +323,6 @@ void ArgosScheduler::pass_prediction_algorithm() {
 		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
 	}
 
-	configuration_store->increment_tx_counter();
 	m_msg_burst_counter[index]--;
 	m_msg_index++;
 	m_last_transmission_schedule = m_next_prepass;
@@ -375,8 +374,9 @@ void ArgosScheduler::notify_sensor_log_update() {
 			}
 		} else {
 			// Reset the message burst counters
-			for (unsigned int i = 0; i < MAX_MSG_INDEX; i++)
+			for (unsigned int i = 0; i < MAX_MSG_INDEX; i++) {
 				m_msg_burst_counter[i] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;
+			}
 		}
 		reschedule();
 	}
@@ -606,6 +606,13 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	set_tx_power(m_argos_config.power);
 	send_packet(packet, total_bits, mode);
 	power_off();
+
+	// Update the LAST_TX in the configuration store
+	std::time_t last_tx = rtc->gettime();
+	configuration_store->write_param(ParamID::LAST_TX, last_tx);
+
+	// Increment TX counter
+	configuration_store->increment_tx_counter();
 }
 
 void ArgosScheduler::periodic_algorithm() {
@@ -650,7 +657,6 @@ void ArgosScheduler::periodic_algorithm() {
 		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
 	}
 
-	configuration_store->increment_tx_counter();
 	m_msg_burst_counter[index]--;
 	m_msg_index++;
 }
