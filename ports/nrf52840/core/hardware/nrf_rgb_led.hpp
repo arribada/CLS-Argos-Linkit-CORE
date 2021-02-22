@@ -44,7 +44,7 @@ public:
 		m_pin_blue = blue;
 		set(color);
 	}
-	void set(RGBLedColor color) {
+	void set(RGBLedColor color) override {
 		system_scheduler->cancel_task(m_led_task);
 		m_color = color;
 		m_is_flashing = false;
@@ -94,11 +94,11 @@ public:
 		}
 		//DEBUG_TRACE("LED[%s]=%s", m_name, color_to_string(color).c_str());
 	}
-	void off() {
+	void off() override {
 		system_scheduler->cancel_task(m_led_task);
 		set(RGBLedColor::BLACK);
 	}
-	void flash(RGBLedColor color, unsigned int interval_ms = 500) {
+	void flash(RGBLedColor color, unsigned int interval_ms = 500) override {
 		system_scheduler->cancel_task(m_led_task);
 		m_flash_interval = interval_ms;
 		m_flash_color = color;

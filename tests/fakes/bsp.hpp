@@ -49,8 +49,8 @@ namespace BSP
 
     typedef struct
     {
-    	nrfx_saadc_config_t saadc_config;
-        nrf_saadc_channel_config_t saadc_config_channel_config[ADC_TOTAL_CHANNELS];
+    	nrfx_saadc_config_t config;
+        nrf_saadc_channel_config_t channel_config[ADC_TOTAL_CHANNELS];
     } ADC_InitTypeDefAndInst_t;
 
     extern const ADC_InitTypeDefAndInst_t ADC_Inits;

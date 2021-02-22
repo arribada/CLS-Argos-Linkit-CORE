@@ -34,7 +34,7 @@ static void nrfx_saadc_event_handler(nrfx_saadc_evt_t const *p_event)
 NrfBatteryMonitor::NrfBatteryMonitor(uint8_t adc_channel, BatteryChemistry chem)
 {
 	// One-time initialise the driver (assumes we are the only instance)
-    nrfx_saadc_init(&BSP::ADC_Inits.saadc_config, nrfx_saadc_event_handler);
+    nrfx_saadc_init(&BSP::ADC_Inits.config, nrfx_saadc_event_handler);
     nrfx_saadc_calibrate_offset();
 
     DEBUG_TRACE("Enter ADC calibration...");
@@ -56,7 +56,7 @@ NrfBatteryMonitor::~NrfBatteryMonitor()
 
 void NrfBatteryMonitor::start()
 {
-	if (nrfx_saadc_channel_init(m_adc_channel, &BSP::ADC_Inits.saadc_config_channel_config[m_adc_channel]) != NRFX_SUCCESS)
+	if (nrfx_saadc_channel_init(m_adc_channel, &BSP::ADC_Inits.channel_config[m_adc_channel]) != NRFX_SUCCESS)
 		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
 	m_is_init = true;
 }

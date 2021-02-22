@@ -28,7 +28,7 @@ public:
 		m_state_change_handler = func;
 	}
 	virtual void stop() {
-		m_state_change_handler = 0;
+		m_state_change_handler = nullptr;
 	}
 };
 

@@ -8,7 +8,9 @@
 class NrfSPIM final : public SPIM {
 private:
 	unsigned int m_instance;
+#ifdef SPI_USE_IRQ
 	volatile bool m_xfer_done;
+#endif
 
 public:
 	NrfSPIM(unsigned int instance);

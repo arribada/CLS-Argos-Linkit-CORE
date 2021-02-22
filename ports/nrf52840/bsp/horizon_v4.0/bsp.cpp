@@ -60,7 +60,7 @@ namespace BSP
     #if NRFX_UARTE0_ENABLED
         {
             .uarte = NRFX_UARTE_INSTANCE(0),
-            {
+            .config = {
                 .pseltxd = NRF_GPIO_PIN_MAP(1, 9),
                 .pselrxd = NRF_GPIO_PIN_MAP(1, 8),
                 .pselcts = NRF_UARTE_PSEL_DISCONNECTED,
@@ -76,7 +76,7 @@ namespace BSP
     #if NRFX_UARTE1_ENABLED
         {
             .uarte = NRFX_UARTE_INSTANCE(1),
-            {
+            .config = {
                 .pseltxd = NRF_GPIO_PIN_MAP(0, 11),
                 .pselrxd = NRF_GPIO_PIN_MAP(0, 14),
                 .pselcts = NRF_UARTE_PSEL_DISCONNECTED,
@@ -115,9 +115,10 @@ namespace BSP
     {
     #ifdef NRFX_QSPI_ENABLED
         {
+            .config = 
             {
                 .xip_offset = 0, // Address offset in the external memory for Execute in Place operation
-                {
+                .pins = {
                     .sck_pin = NRF_GPIO_PIN_MAP(0, 19),
                     .csn_pin = NRF_GPIO_PIN_MAP(0, 24),
                     .io0_pin = NRF_GPIO_PIN_MAP(0, 21),
@@ -125,13 +126,13 @@ namespace BSP
                     .io2_pin = NRF_GPIO_PIN_MAP(0, 22),
                     .io3_pin = NRF_GPIO_PIN_MAP(1,  0),
                 },
-                {
+                .prot_if = {
                     .readoc = NRF_QSPI_READOC_READ4IO, // Number of data lines and opcode used for reading
                     .writeoc = NRF_QSPI_WRITEOC_PP4O,  // Number of data lines and opcode used for writing
                     .addrmode = NRF_QSPI_ADDRMODE_24BIT,
                     .dpmconfig = false, // Deep power-down mode enable
                 },
-                {
+                .phy_if = {
                     .sck_delay = 0, // SCK delay in units of 62.5 ns  <0-255>
                     .dpmen = false, // Deep power-down mode enable
                     .spi_mode = NRF_QSPI_MODE_0,
@@ -172,7 +173,7 @@ namespace BSP
     #if NRFX_SPIM0_ENABLED
         {
             .spim = NRFX_SPIM_INSTANCE(0),
-            {
+            .config = {
                 .sck_pin  = NRFX_SPIM_PIN_NOT_USED,
                 .mosi_pin = NRFX_SPIM_PIN_NOT_USED,
                 .miso_pin = NRFX_SPIM_PIN_NOT_USED,
@@ -189,7 +190,7 @@ namespace BSP
     #if NRFX_SPIM1_ENABLED
         {
             .spim = NRFX_SPIM_INSTANCE(1),
-            {
+            .config = {
                 .sck_pin  = NRFX_SPIM_PIN_NOT_USED,
                 .mosi_pin = NRFX_SPIM_PIN_NOT_USED,
                 .miso_pin = NRFX_SPIM_PIN_NOT_USED,
@@ -206,7 +207,7 @@ namespace BSP
     #if NRFX_SPIM2_ENABLED
         {
             .spim = NRFX_SPIM_INSTANCE(2),
-            {
+            .config = {
                 .sck_pin  = NRF_GPIO_PIN_MAP(0, 8),
                 .mosi_pin = NRF_GPIO_PIN_MAP(0, 6),
                 .miso_pin = NRF_GPIO_PIN_MAP(0, 7),
@@ -223,7 +224,7 @@ namespace BSP
     #if NRFX_SPIM3_ENABLED
         {
             .spim = NRFX_SPIM_INSTANCE(3),
-            {
+            .config = {
                 .sck_pin  = NRF_GPIO_PIN_MAP(0, 19),
                 .mosi_pin = NRF_GPIO_PIN_MAP(0, 21),
                 .miso_pin = NRF_GPIO_PIN_MAP(0, 23),
@@ -242,13 +243,13 @@ namespace BSP
     ////////////////////////////////// ADC definitions /////////////////////////////////
     const ADC_InitTypeDefAndInst_t ADC_Inits =
     {
-        {
+        .config = {
             NRF_SAADC_RESOLUTION_14BIT,
             NRF_SAADC_OVERSAMPLE_DISABLED,
             INTERRUPT_PRIORITY_ADC,
             false
         },
-        {
+        .channel_config = {
             {
                 // ADC_CHANNEL_0
                 NRF_SAADC_RESISTOR_DISABLED,

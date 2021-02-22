@@ -23,7 +23,7 @@ __RAMFUNC void activate_ss(uint32_t instance)
 {
     if (sspin_internal[instance] != NRFX_SPIM_PIN_NOT_USED)
     {
-        if (BSP::SPI_Inits[instance].spim_config.ss_active_high)
+        if (BSP::SPI_Inits[instance].config.ss_active_high)
             nrf_gpio_pin_set(sspin_internal[instance]);
         else
             nrf_gpio_pin_clear(sspin_internal[instance]);
@@ -34,7 +34,7 @@ __RAMFUNC void deactivate_ss(uint32_t instance)
 {
     if (sspin_internal[instance] != NRFX_SPIM_PIN_NOT_USED)
     {
-        if (BSP::SPI_Inits[instance].spim_config.ss_active_high)
+        if (BSP::SPI_Inits[instance].config.ss_active_high)
             nrf_gpio_pin_clear(sspin_internal[instance]);
         else
             nrf_gpio_pin_set(sspin_internal[instance]);
@@ -46,9 +46,9 @@ NrfSPIM::NrfSPIM(unsigned int instance)
 {
 	m_instance = instance;
 
-	sspin_internal[instance] = BSP::SPI_Inits[instance].spim_config.ss_pin;
+	sspin_internal[instance] = BSP::SPI_Inits[instance].config.ss_pin;
 
-	if (BSP::SPI_Inits[instance].spim_config.ss_pin != NRFX_SPIM_PIN_NOT_USED)
+	if (BSP::SPI_Inits[instance].config.ss_pin != NRFX_SPIM_PIN_NOT_USED)
 	{
 		deactivate_ss(instance);
 	    nrf_gpio_cfg_output(sspin_internal[instance]);
@@ -56,12 +56,12 @@ NrfSPIM::NrfSPIM(unsigned int instance)
 
 	BSP::SPI_InitTypeDefAndInst_t spi_init = BSP::SPI_Inits[instance];
 
-	spi_init.spim_config.ss_pin = NRFX_SPIM_PIN_NOT_USED;
+	spi_init.config.ss_pin = NRFX_SPIM_PIN_NOT_USED;
 
 #ifdef SPI_USE_IRQ
-	nrfx_spim_init(&spi_init.spim, &spi_init.spim_config, spim_event_handler, (void *)this);
+	nrfx_spim_init(&spi_init.spim, &spi_init.config, spim_event_handler, (void *)this);
 #else
-	nrfx_spim_init(&spi_init.spim, &spi_init.spim_config, NULL, NULL);
+	nrfx_spim_init(&spi_init.spim, &spi_init.config, NULL, NULL);
 #endif
 }
 
