@@ -9,8 +9,8 @@ struct ParamValue {
 };
 
 static const BaseMap param_map[] = {
-	{ "ARGOS_DECID", "IDT06", BaseEncoding::UINT, 0U, 0xFFFFFFU, {}, true },
-	{ "ARGOS_HEXID", "IDT07", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFU, {}, true },
+	{ "ARGOS_DECID", "IDT06", BaseEncoding::UINT, 0U, 0xFFFFFFFU, {}, true },
+	{ "ARGOS_HEXID", "IDT07", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFFU, {}, true },
 	{ "DEVICE_MODEL", "IDT02", BaseEncoding::TEXT, "", "", {}, true },
 	{ "FW_APP_VERSION", "IDT03", BaseEncoding::TEXT, "", "", {}, true },
 	{ "LAST_TX", "ART01", BaseEncoding::DATESTRING, 0, 0, {}, true },
