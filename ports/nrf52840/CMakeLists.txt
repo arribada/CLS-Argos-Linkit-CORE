@@ -319,7 +319,7 @@ function(create_wrapped_bin executable)
         TARGET ${executable}
         POST_BUILD
         COMMENT "Generating ${executable}.dat"
-        COMMAND stat -c %08s ${executable}.bin | xxd -r -p > ${executable}.dat && crc32 ${executable}.bin | xxd -r -p >> ${executable}.dat && cat ${executable}.bin >> ${executable}.dat
+        COMMAND printf "%08x" `stat -c %s ${executable}.bin` | xxd -r -p > ${executable}.dat && crc32 ${executable}.bin | xxd -r -p >> ${executable}.dat && cat ${executable}.bin >> ${executable}.dat
     )
 endfunction(create_wrapped_bin)
 

@@ -411,6 +411,7 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 				s_evt.event_type = BLEServiceEventType::OTA_END;
 				try {
 					m_on_event(s_evt);
+					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_OK);
 				} catch (ErrorCode e) {
 					// Exception raised, indicate the procedure failed
 					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
@@ -433,20 +434,21 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 
 				s_evt.event_type = BLEServiceEventType::OTA_START;
 				s_evt.file_id = m_ota_file_id;
-				s_evt.file_size = ((uint8_t *)p_evt->p_data)[0] |
-						((uint8_t *)p_evt->p_data)[1] << 8 |
-						((uint8_t *)p_evt->p_data)[2] << 16 |
-						((uint8_t *)p_evt->p_data)[3] << 24;
-				s_evt.crc32 = ((uint8_t *)p_evt->p_data)[4] |
-						((uint8_t *)p_evt->p_data)[5] << 8 |
-						((uint8_t *)p_evt->p_data)[6] << 16 |
-						((uint8_t *)p_evt->p_data)[7] << 24;
+				s_evt.file_size = ((uint8_t *)p_evt->p_data)[3] |
+						((uint8_t *)p_evt->p_data)[2] << 8 |
+						((uint8_t *)p_evt->p_data)[1] << 16 |
+						((uint8_t *)p_evt->p_data)[0] << 24;
+				s_evt.crc32 = ((uint8_t *)p_evt->p_data)[7] |
+						((uint8_t *)p_evt->p_data)[6] << 8 |
+						((uint8_t *)p_evt->p_data)[5] << 16 |
+						((uint8_t *)p_evt->p_data)[4] << 24;
 
 				// Notify start event
 				try {
 					m_on_event(s_evt);
 				} catch (ErrorCode e) {
 					// Exception raised, indicate the procedure failed
+					DEBUG_TRACE("OTA_FILE_DATA: Got error: %u", e);
 					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
 				}
 
@@ -462,6 +464,7 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 						m_on_event(s_evt);
 					} catch (ErrorCode e) {
 						// Exception raised, indicate the procedure failed
+						DEBUG_TRACE("OTA_FILE_DATA: Got error: %u", e);
 						ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
 					}
 				}
@@ -476,6 +479,7 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 					m_on_event(s_evt);
 				} catch (ErrorCode e) {
 					// Exception raised, indicate the procedure failed
+					DEBUG_TRACE("OTA_FILE_DATA: Got error: %u", e);
 					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
 				}
 			}

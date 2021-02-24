@@ -1,17 +1,18 @@
+#include "is25_flash.h"
+
 #include <stdbool.h>
 
-#include "is25_flash.h"
+#include "sdk_config.h"
 #include "IS25LP128F.h"
 #include "nrfx_qspi.h"
 #include "nrf_gpio.h"
-#include "sdk_config.h"
 
 void is25_flash_deinit(void)
 {
 	nrfx_qspi_uninit();
 }
 
-void is25_flash_init(void)
+int is25_flash_init(void)
 {
 	// Initialise the IS25LP128F flash chip and set it up for QSPI
 
@@ -45,7 +46,8 @@ void is25_flash_init(void)
 	uint8_t rx_buffer[3];
 	uint8_t tx_buffer[1];
 
-	nrfx_qspi_init(&qspi_config, NULL, NULL);
+	if (nrfx_qspi_init(&qspi_config, NULL, NULL) != NRFX_SUCCESS)
+		return -1;
 
     config.io2_level = false;
 	// Keep IO3 high during transfers as this is the reset line in SPI mode
@@ -65,7 +67,7 @@ void is25_flash_init(void)
         rx_buffer[2] != CAPACITY_ID)
     {
 		//DEBUG_ERROR("IS25LP128F not correctly identified");
-        return;
+        return -1;
     }
 
 	// Set FLASH output drive to 12.5%
@@ -92,6 +94,8 @@ void is25_flash_init(void)
 		status = rx_buffer[0];
     }
 	while (status & STATUS_WIP);
+
+    return 0;
 }
 
 // The maximum read size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned

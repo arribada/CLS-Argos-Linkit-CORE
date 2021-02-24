@@ -2,8 +2,8 @@ PROJECT_NAME     := secure_bootloader_usb_mbr_gentracker_v1
 TARGETS          := gentracker_v1_xxaa
 OUTPUT_DIRECTORY := _build
 
-SDK_ROOT := ../../../../..
 PROJ_DIR := ../..
+SDK_ROOT := ../../../../drivers/nRF5_SDK_17.0.2
 
 $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa.out: \
   LINKER_SCRIPT  := secure_bootloader_gcc_nrf52.ld
@@ -60,7 +60,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_hash.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_init.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_shared.c \
-  $(PROJ_DIR)/../dfu_public_key.c \
+  $(PROJ_DIR)/dfu_public_key.c \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/is25_flash.c \
   $(PROJ_DIR)/dfu_ext_flash.c \
@@ -92,7 +92,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_ecdsa.c \
   $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_eddsa.c \
   $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_hash.c \
-  $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_hmac.c \
+  $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_hmac.c
 
 # Include folders common to all targets
 INC_FOLDERS += \

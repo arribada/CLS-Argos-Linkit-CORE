@@ -55,7 +55,7 @@ static void on_write(ble_stm_ota_t * p_stm_ota, ble_evt_t const * p_ble_evt)
     ble_gatts_evt_write_t const * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
 
     if ((p_evt_write->handle == p_stm_ota->base_address_char_handles.value_handle)
-        && (p_evt_write->len == 2)
+        && (p_evt_write->len == 4)
         && (p_stm_ota->event_handler != NULL))
     {
     	event.event_type = STM_OTA_EVENT_ACTION;
@@ -118,7 +118,7 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
     add_char_params.uuid              = STM_OTA_UUID_BASE_ADDRESS;
     add_char_params.uuid_type         = p_stm_ota->uuid_type;
     add_char_params.init_len          = 0;
-    add_char_params.max_len           = 2;
+    add_char_params.max_len           = 4;
     add_char_params.is_var_len        = false;
     add_char_params.char_props.read   = 1;
     add_char_params.char_props.write  = 1;

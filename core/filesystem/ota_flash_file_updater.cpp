@@ -2,6 +2,7 @@
 #include "error.hpp"
 #include "crc32.hpp"
 #include "dfu.hpp"
+#include "debug.hpp"
 
 
 OTAFlashFileUpdater::OTAFlashFileUpdater(LFSFileSystem *filesystem, FlashInterface *flash_if, lfs_off_t reserved_block_offset, lfs_size_t reserved_blocks)
@@ -21,23 +22,38 @@ OTAFlashFileUpdater::~OTAFlashFileUpdater()
 
 void OTAFlashFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_size_t length, uint32_t crc32) {
 
-	if (m_file_size)
+	if (m_file_size) {
+		DEBUG_ERROR("OTAFlashFileUpdater::start_file_transfer: transfer already in progress");
 		throw ErrorCode::OTA_TRANSFER_ALREADY_IN_PROGRESS;
+	}
 
-	if (length == 0 || length > (m_reserved_blocks * m_flash_if->m_block_size))
+	if (length == 0 || length > (m_reserved_blocks * m_flash_if->m_block_size)) {
+		DEBUG_ERROR("OTAFlashFileUpdater::start_file_transfer: bad transfer size %u bytes", length);
 		throw ErrorCode::OTA_TRANSFER_BAD_FILE_SIZE;
+	}
 
 	switch (file_id) {
 	case OTAFileIdentifier::ARTIC_FIRMWARE:
+		DEBUG_INFO("OTAFlashFileUpdater::start_file_transfer: ARTIC_FIRMWARE");
 		m_filesystem->remove("artic_firmware.dat");
 		m_file = new LFSFile(m_filesystem, "artic_firmware.dat", LFS_O_WRONLY | LFS_O_CREAT);
 		break;
 	case OTAFileIdentifier::MCU_FIRMWARE:
+		DEBUG_INFO("OTAFlashFileUpdater::start_file_transfer: MCU_FIRMWARE");
 		// Erase reserved region of external flash
-		for (unsigned int i = 0; i < m_reserved_blocks; i++)
-			m_flash_if->erase(i + m_reserved_block_offset);
+		for (unsigned int i = 0; i < m_reserved_blocks; i++) {
+			uint8_t buffer[256];
+			m_flash_if->read(m_reserved_block_offset + i, 0, buffer, 256);
+			for (unsigned int j = 0; j < 256; j++) {
+				if (buffer[j] != 0xFF) {
+					m_flash_if->erase(i + m_reserved_block_offset);
+					break;
+				}
+			}
+		}
 		break;
 	case OTAFileIdentifier::GPS_CONFIG:
+		DEBUG_INFO("OTAFlashFileUpdater::start_file_transfer: GPS_CONFIG");
 		m_filesystem->remove("gps_config.dat");
 		m_file = new LFSFile(m_filesystem, "gps_config.dat", LFS_O_WRONLY | LFS_O_CREAT);
 		break;
@@ -45,10 +61,13 @@ void OTAFlashFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_siz
 		throw ErrorCode::OTA_TRANSFER_INVALID_FILE_ID;
 		break;
 	}
+	DEBUG_INFO("OTAFlashFileUpdater::start_file_transfer: m_file_id=%u, m_file_size=%u crc32=%08x",
+			   (unsigned int)file_id, length, crc32);
 	m_file_id = file_id;
 	m_file_size = length;
 	m_crc32 = crc32;
 	m_crc32_calc = 0xFFFFFFFF;
+	m_file_bytes_received = 0;
 }
 
 void OTAFlashFileUpdater::write_file_data(void * const data, lfs_size_t length)
@@ -64,11 +83,18 @@ void OTAFlashFileUpdater::write_file_data(void * const data, lfs_size_t length)
 	if (m_file_id != OTAFileIdentifier::MCU_FIRMWARE)
 		m_file->write(data, length);
 	else
-		m_flash_if->prog(m_file_bytes_received / m_flash_if->m_block_size, m_file_bytes_received % m_flash_if->m_block_size, data, length);
+	{
+		std::vector<uint8_t> aligned_buffer;
+		aligned_buffer.resize(length);
+		std::memcpy(&aligned_buffer[0], data, length);
+
+		m_flash_if->prog(m_reserved_block_offset + (m_file_bytes_received / m_flash_if->m_block_size), m_file_bytes_received % m_flash_if->m_block_size, &aligned_buffer[0], length);
+		m_flash_if->sync();
+	}
 
 	m_file_bytes_received += length;
 
-	CRC32::checksum((uint8_t *)data, length, m_crc32_calc);
+	CRC32::checksum((unsigned char *)data, length, m_crc32_calc);
 }
 
 void OTAFlashFileUpdater::abort_file_transfer()

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <vector>
+#include <iomanip>
 #include "IS25LP128F.hpp"
 #include "bsp.hpp"
 #include "debug.hpp"
@@ -98,6 +99,12 @@ int Is25Flash::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_si
 	if (memcmp( reinterpret_cast<const uint8_t *>(buffer), &read_buffer[0], size ))
 	{
 		DEBUG_ERROR("QSPI Flash prog reported a bad write");
+		for (unsigned int i = 0; i < size; i++)
+			std::cout << std::setfill('0') << std::setw(2) << std::hex << (((unsigned int)((uint8_t *)buffer)[i]) & 0xFF);
+		std::cout << std::endl;
+		for (unsigned int i = 0; i < size; i++)
+			std::cout << std::setfill('0') << std::setw(2) << std::hex << (((unsigned int)read_buffer[i]) & 0xFF);
+		std::cout << std::endl;
 		return LFS_ERR_CORRUPT;
 	}
 	

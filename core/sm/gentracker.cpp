@@ -215,6 +215,7 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 		break;
 	case BLEServiceEventType::DISCONNECTED:
 		DEBUG_INFO("ConfigurationState::on_ble_event: DISCONNECTED");
+		ota_updater->abort_file_transfer();
 		status_led->flash(RGBLedColor::BLUE);
 		break;
 	case BLEServiceEventType::DTE_DATA_RECEIVED:

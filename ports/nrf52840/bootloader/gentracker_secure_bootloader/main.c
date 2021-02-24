@@ -47,6 +47,7 @@
  */
 
 #include <stdint.h>
+#include "is25_flash.h"
 #include "boards.h"
 #include "nrf_mbr.h"
 #include "nrf_bootloader.h"
@@ -60,7 +61,6 @@
 #include "app_error_weak.h"
 #include "nrf_bootloader_info.h"
 #include "nrf_delay.h"
-#include "is25_flash.h"
 
 static void on_error(void)
 {
