@@ -526,7 +526,6 @@ protected:
 	}
 	static inline void encode_frequency(std::ostringstream& output, double& value) {
 		unsigned int x = (value * ARGOS_FREQUENCY_MULT) - ARGOS_FREQUENCY_OFFSET;
-		std::cout << "freq=" << value << "op=" << x << std::endl;
 		encode(output, x);
 	}
 	static inline void encode(std::ostringstream& output, const BaseArgosMode& value) {
