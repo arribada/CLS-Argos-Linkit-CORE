@@ -6,6 +6,8 @@
 #include "IS25LP128F.h"
 #include "nrfx_qspi.h"
 #include "nrf_gpio.h"
+#include "nrf_log.h"
+
 
 void is25_flash_deinit(void)
 {
@@ -99,12 +101,24 @@ int is25_flash_init(void)
 }
 
 // The maximum read size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
-int is25_flash_read(uint32_t block, uint32_t off, uint8_t * buffer, uint32_t size)
+int is25_flash_read(uint32_t addr, uint8_t * buffer, uint32_t size)
 {
-	nrfx_err_t ret = nrfx_qspi_read(buffer, size, block * IS25_BLOCK_SIZE + off);
+	nrfx_err_t ret = nrfx_qspi_read(buffer, size, addr);
 	if (ret != NRFX_SUCCESS)
 	{
-		//DEBUG_ERROR("QSPI IO Error %d", ret);
+		NRF_LOG_ERROR("QSPI IO Error %d", ret);
+		return -1;
+	}
+
+	return 0;
+}
+
+int is25_flash_erase(uint32_t block)
+{
+	nrfx_err_t qspi_ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * IS25_BLOCK_SIZE);
+	if (qspi_ret != NRFX_SUCCESS)
+	{
+		NRF_LOG_ERROR("QSPI IO Error %d", qspi_ret);
 		return -1;
 	}
 

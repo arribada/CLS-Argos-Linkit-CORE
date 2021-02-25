@@ -1,8 +1,10 @@
 #include "ota_flash_file_updater.hpp"
 #include "error.hpp"
 #include "crc32.hpp"
-#include "dfu.hpp"
 #include "debug.hpp"
+
+// Flash header for firmware image in external flash
+static constexpr const uint32_t FLASH_HEADER_SIZE = sizeof(lfs_size_t) + sizeof(uint32_t);
 
 
 OTAFlashFileUpdater::OTAFlashFileUpdater(LFSFileSystem *filesystem, FlashInterface *flash_if, lfs_off_t reserved_block_offset, lfs_size_t reserved_blocks)
@@ -27,7 +29,7 @@ void OTAFlashFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_siz
 		throw ErrorCode::OTA_TRANSFER_ALREADY_IN_PROGRESS;
 	}
 
-	if (length == 0 || length > (m_reserved_blocks * m_flash_if->m_block_size)) {
+	if (length == 0 || length > (m_reserved_blocks * m_flash_if->m_block_size) - FLASH_HEADER_SIZE) {
 		DEBUG_ERROR("OTAFlashFileUpdater::start_file_transfer: bad transfer size %u bytes", length);
 		throw ErrorCode::OTA_TRANSFER_BAD_FILE_SIZE;
 	}
@@ -51,6 +53,12 @@ void OTAFlashFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_siz
 				}
 			}
 		}
+
+		// Write the header information into the start of flash
+		m_flash_if->prog(m_reserved_block_offset, 0, &length, sizeof(length));
+		m_flash_if->sync();
+		m_flash_if->prog(m_reserved_block_offset, sizeof(length), &crc32, sizeof(crc32));
+		m_flash_if->sync();
 		break;
 	case OTAFileIdentifier::GPS_CONFIG:
 		DEBUG_INFO("OTAFlashFileUpdater::start_file_transfer: GPS_CONFIG");
@@ -66,7 +74,7 @@ void OTAFlashFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_siz
 	m_file_id = file_id;
 	m_file_size = length;
 	m_crc32 = crc32;
-	m_crc32_calc = 0xFFFFFFFF;
+	m_crc32_calc = 0;
 	m_file_bytes_received = 0;
 }
 
@@ -87,13 +95,13 @@ void OTAFlashFileUpdater::write_file_data(void * const data, lfs_size_t length)
 		std::vector<uint8_t> aligned_buffer;
 		aligned_buffer.resize(length);
 		std::memcpy(&aligned_buffer[0], data, length);
-
-		m_flash_if->prog(m_reserved_block_offset + (m_file_bytes_received / m_flash_if->m_block_size), m_file_bytes_received % m_flash_if->m_block_size, &aligned_buffer[0], length);
+		m_flash_if->prog(0, (m_reserved_block_offset * m_flash_if->m_block_size) + m_file_bytes_received + FLASH_HEADER_SIZE, &aligned_buffer[0], length);
 		m_flash_if->sync();
 	}
 
 	m_file_bytes_received += length;
 
+	m_crc32_calc ^= 0xFFFFFFFF;
 	CRC32::checksum((unsigned char *)data, length, m_crc32_calc);
 }
 
@@ -102,6 +110,11 @@ void OTAFlashFileUpdater::abort_file_transfer()
 	if (m_file_size != 0) {
 		if (m_file_id != OTAFileIdentifier::MCU_FIRMWARE) {
 			delete m_file;
+		}
+		else
+		{
+			// Erase the first block to ensure firmware update header is erased
+			m_flash_if->erase(m_reserved_block_offset);
 		}
 	}
 	m_file_size = 0;
@@ -113,20 +126,22 @@ void OTAFlashFileUpdater::complete_file_transfer()
 		throw ErrorCode::OTA_TRANSFER_NOT_STARTED;
 
 	if (m_file_bytes_received < m_file_size) {
+		DEBUG_ERROR("OTAFlashFileUpdater:: not all bytes received");
 		abort_file_transfer();
 		throw ErrorCode::OTA_TRANSFER_INCOMPLETE;
 	}
 
 	if (m_crc32_calc != m_crc32) {
+		DEBUG_ERROR("OTAFlashFileUpdater:: CRC failure");
 		abort_file_transfer();
 		throw ErrorCode::OTA_TRANSFER_CRC_ERROR;
 	}
 }
 
 void OTAFlashFileUpdater::apply_file_update() {
+	DEBUG_TRACE("OTAFlashFileUpdater::apply_file_update");
 	if (m_file_id == OTAFileIdentifier::MCU_FIRMWARE) {
-		// Update DFU settings page to take effect on the next reboot
-		DFU::write_ext_flash_dfu_settings(m_reserved_block_offset * m_flash_if->m_block_size, m_file_size, m_crc32);
+		DEBUG_INFO("OTAFlashFileUpdater::apply_file_update: device reset required for update to take effect");
 	} else {
 		delete m_file;
 	}

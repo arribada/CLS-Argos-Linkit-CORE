@@ -534,6 +534,10 @@ nrf_bootloader_fw_activation_result_t nrf_bootloader_fw_activate(void)
 
     NRF_LOG_DEBUG("Enter nrf_bootloader_fw_activate");
 
+    NRF_LOG_INFO("DFU bank1: code=%u crc=%08x size=%u\n progress=%u write_offset=%u",
+    		p_bank->bank_code, p_bank->image_crc, p_bank->image_size, s_dfu_settings.progress.update_start_address,
+			s_dfu_settings.write_offset);
+
     switch (p_bank->bank_code)
     {
        case NRF_DFU_BANK_VALID_APP:

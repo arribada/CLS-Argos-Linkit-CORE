@@ -25,7 +25,6 @@
 #include "nrf_battery_mon.hpp"
 #include "m8q.hpp"
 #include "fs_log.hpp"
-#include "dfu.hpp"
 
 FileSystem *main_filesystem;
 
@@ -66,8 +65,6 @@ extern "C" int _write(int file, char *ptr, int len)
 
 int main()
 {
-	//DFU::initialise();
-	PMU::initialise();
 	GPIOPins::initialise();
 	GPIOPins::set(BSP::GPIO_POWER_CONTROL);
 
@@ -84,7 +81,9 @@ int main()
 
     DEBUG_INFO("Running main setup code...");
 
-    DEBUG_INFO("Battery monitor...");
+	PMU::initialise();
+
+	DEBUG_INFO("Battery monitor...");
 
     NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
     battery_monitor = &nrf_battery_monitor;

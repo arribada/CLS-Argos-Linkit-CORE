@@ -47,7 +47,6 @@
  */
 
 #include <stdint.h>
-#include "is25_flash.h"
 #include "boards.h"
 #include "nrf_mbr.h"
 #include "nrf_bootloader.h"
@@ -61,6 +60,8 @@
 #include "app_error_weak.h"
 #include "nrf_bootloader_info.h"
 #include "nrf_delay.h"
+#include "nrfx_uarte.h"
+#include "nrf_log_redirect.h"
 
 static void on_error(void)
 {
@@ -76,6 +77,26 @@ static void on_error(void)
     NVIC_SystemReset();
 }
 
+static void led_yellow(void)
+{
+    bsp_board_led_off(BSP_BOARD_LED_0);
+    bsp_board_led_off(BSP_BOARD_LED_1);
+    bsp_board_led_on(BSP_BOARD_LED_2);
+}
+
+static void led_green(void)
+{
+    bsp_board_led_on(BSP_BOARD_LED_0);
+    bsp_board_led_off(BSP_BOARD_LED_1);
+    bsp_board_led_on(BSP_BOARD_LED_2);
+}
+
+static void led_red(void)
+{
+    bsp_board_led_off(BSP_BOARD_LED_0);
+    bsp_board_led_on(BSP_BOARD_LED_1);
+    bsp_board_led_on(BSP_BOARD_LED_2);
+}
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
@@ -106,28 +127,56 @@ static void dfu_observer(nrf_dfu_evt_type_t evt_type)
     {
         case NRF_DFU_EVT_DFU_FAILED:
         case NRF_DFU_EVT_DFU_ABORTED:
+        	led_red();
+        	break;
         case NRF_DFU_EVT_DFU_INITIALIZED:
-            //bsp_board_init(BSP_INIT_LEDS);
-            bsp_board_led_off(BSP_BOARD_LED_0);
-            bsp_board_led_off(BSP_BOARD_LED_1);
-            bsp_board_led_off(BSP_BOARD_LED_2);
-            bsp_board_led_on(BSP_BOARD_LED_0);
+        	led_yellow();
             break;
         case NRF_DFU_EVT_TRANSPORT_ACTIVATED:
-            bsp_board_led_off(BSP_BOARD_LED_0);
-            bsp_board_led_on(BSP_BOARD_LED_1);
+        	led_green();
             break;
         case NRF_DFU_EVT_DFU_STARTED:
-            is25_flash_init();
             break;
         case NRF_DFU_EVT_DFU_COMPLETED:
-            is25_flash_deinit();
             break;
         default:
             break;
     }
 }
 
+typedef struct
+{
+    nrfx_uarte_t uarte;
+    nrfx_uarte_config_t config;
+} UART_InitTypeDefAndInst;
+
+static const UART_InitTypeDefAndInst UART_Inits[] =
+{
+	{
+		.uarte = NRFX_UARTE_INSTANCE(1),
+		.config = {
+			.pseltxd = NRF_GPIO_PIN_MAP(0, 11),
+			.pselrxd = NRF_GPIO_PIN_MAP(0, 14),
+			.pselcts = NRF_UARTE_PSEL_DISCONNECTED,
+			.pselrts = NRF_UARTE_PSEL_DISCONNECTED,
+			.p_context = NULL, // Context passed to interrupt handler
+			.hwfc = NRF_UARTE_HWFC_DISABLED,
+			.parity = NRF_UARTE_PARITY_EXCLUDED,
+			.baudrate = NRF_UARTE_BAUDRATE_460800, // See table above
+			.interrupt_priority = 4,
+		}
+	}
+};
+
+// Redirect printf output to debug UART
+// We have to define this as extern "C" as we are overriding a weak C function
+int _write(int file, char *ptr, int len)
+{
+	nrfx_uarte_tx(&UART_Inits[0].uarte, (const uint8_t *)ptr, len);
+	return len;
+}
+
+void ext_flash_update(void);
 
 /**@brief Function for application main entry. */
 int main(void)
@@ -149,10 +198,18 @@ int main(void)
     ret_val = nrf_bootloader_flash_protect(BOOTLOADER_START_ADDR, BOOTLOADER_SIZE);
     APP_ERROR_CHECK(ret_val);
 
-    (void) NRF_LOG_INIT(nrf_bootloader_dfu_timer_counter_get);
-    NRF_LOG_DEFAULT_BACKENDS_INIT();
+    //(void) NRF_LOG_INIT(nrf_bootloader_dfu_timer_counter_get);
+    //NRF_LOG_DEFAULT_BACKENDS_INIT();
+
+    // Initialise UART and logging
+	nrfx_uarte_init(&UART_Inits[0].uarte, &UART_Inits[0].config, NULL);
+    setvbuf(stdout, NULL, _IONBF, 0);
+	nrf_log_redirect_init();
 
     NRF_LOG_INFO("Inside main");
+
+    // Check for and apply any external flash updates before entering main bootloader
+    ext_flash_update();
 
     ret_val = nrf_bootloader_init(dfu_observer);
     APP_ERROR_CHECK(ret_val);

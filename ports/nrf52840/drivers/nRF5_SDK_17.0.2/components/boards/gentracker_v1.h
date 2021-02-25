@@ -55,9 +55,9 @@ extern "C" {
 #define LED2_B         NRF_GPIO_PIN_MAP(1,4)
 #define LED2_POWER_CONTROL  NRF_GPIO_PIN_MAP(0,4)
 
-#define LED_1          LED2_B
+#define LED_1          LED2_R
 #define LED_2          LED2_G
-#define LED_3          LED2_R
+#define LED_3          LED2_B
 #define POWER_CONTROL  LED2_POWER_CONTROL
 
 #define LEDS_ACTIVE_STATE 1

@@ -8,7 +8,9 @@ void PMU::initialise() {
 	nrf_pwr_mgmt_init();
 }
 
-void PMU::reset() {
+void PMU::reset(bool dfu_mode) {
+	if (dfu_mode)
+		sd_power_gpregret_set(0, 0x1);
 	sd_nvic_SystemReset();
 }
 

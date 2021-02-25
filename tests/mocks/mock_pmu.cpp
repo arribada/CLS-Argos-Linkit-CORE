@@ -3,8 +3,8 @@
 #include "CppUTestExt/MockSupport.h"
 
 
-void PMU::reset() {
-	mock().actualCall("reset");
+void PMU::reset(bool dfu_mode) {
+	mock().actualCall("reset").withParameter("dfu_mode", dfu_mode);
 }
 
 void PMU::powerdown() {

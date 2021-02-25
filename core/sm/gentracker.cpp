@@ -292,14 +292,14 @@ void ConfigurationState::process_received_data() {
 
 				// After formatting the filesystem we must do a system reset so that
 				// the boot up procedure can repopulate files
-				PMU::reset();
+				PMU::reset(false);
 			}
 			else if (action == DTEAction::RESET)
 			{
 				DEBUG_INFO("Perform device reset");
 
 				// Execute this after 3 seconds to allow time for the BLE response to be sent
-				system_scheduler->post_task_prio([](){ PMU::reset(); }, Scheduler::DEFAULT_PRIORITY, 3000);
+				system_scheduler->post_task_prio([](){ PMU::reset(false); }, Scheduler::DEFAULT_PRIORITY, 3000);
 			}
 			else if (action == DTEAction::SECUR)
 			{

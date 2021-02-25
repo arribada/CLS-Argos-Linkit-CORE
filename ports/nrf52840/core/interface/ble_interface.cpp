@@ -26,7 +26,7 @@
 #define APP_ADV_DURATION                18000                                       /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
-#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(75, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
+#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(500, UNIT_1_25_MS)            /**< Maximum acceptable connection interval (500 ms), Connection interval uses 1.25 ms units. */
 #define SLAVE_LATENCY                   0                                           /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
 #define FIRST_CONN_PARAMS_UPDATE_DELAY  APP_TIMER_TICKS(5000)                       /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
@@ -354,7 +354,7 @@ void BleInterface::gatt_evt_handler(nrf_ble_gatt_t * p_gatt, nrf_ble_gatt_evt_t 
     if ((m_conn_handle == p_evt->conn_handle) && (p_evt->evt_id == NRF_BLE_GATT_EVT_ATT_MTU_UPDATED))
     {
         m_ble_nus_max_data_len = p_evt->params.att_mtu_effective - OPCODE_LENGTH - HANDLE_LENGTH;
-        NRF_LOG_INFO("Data len is set to 0x%X(%d)", m_ble_nus_max_data_len, m_ble_nus_max_data_len);
+        NRF_LOG_INFO("Data len is set to 0x%X(%d)", m_ble_nus_max_data_len);
     }
     NRF_LOG_DEBUG("ATT MTU exchange completed. central 0x%x peripheral 0x%x",
                   p_gatt->att_mtu_desired_central,
@@ -413,6 +413,7 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 					m_on_event(s_evt);
 					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_OK);
 				} catch (ErrorCode e) {
+					DEBUG_TRACE("OTA_END: Got error: %u", e);
 					// Exception raised, indicate the procedure failed
 					ble_stm_ota_on_file_upload_end_status(conn_handle, p_stm_ota, STM_OTA_FILE_UPLOAD_STATUS_NOT_OK);
 				}

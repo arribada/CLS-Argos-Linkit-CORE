@@ -163,7 +163,7 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
     add_char_params.uuid_type         = p_stm_ota->uuid_type;
     add_char_params.init_len          = 0;
     add_char_params.is_var_len        = true;
-    add_char_params.max_len           = 20;
+    add_char_params.max_len           = 240;
     add_char_params.char_props.read   = 0;
     add_char_params.char_props.write  = 1;
     add_char_params.char_props.notify = 0;
