@@ -48,7 +48,7 @@ protected:
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
 		/* DEVICE_MODEL */ DEVICE_MODEL_NAME,
-		/* FW_APP_VERSION */ "V0.1"s,
+		/* FW_APP_VERSION */ FW_APP_VERSION_STR,
 		/* LAST_TX */ static_cast<std::time_t>(0U),
 		/* TX_COUNTER */ 0U,
 		/* BATT_SOC */ 0U,
@@ -147,6 +147,10 @@ public:
 			if (param_id == ParamID::BATT_SOC) {
 				update_battery_level();
 				m_params.at((unsigned)param_id) = (unsigned int)m_battery_level;
+			}
+
+			if (param_id == ParamID::FW_APP_VERSION) {
+				m_params.at((unsigned)param_id) = FW_APP_VERSION_STR;
 			}
 
 			if constexpr (std::is_same<T, BaseType>::value) {

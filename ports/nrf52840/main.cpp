@@ -79,80 +79,80 @@ int main()
 
     nrf_log_redirect_init();
 
-    DEBUG_INFO("Running main setup code...");
+    DEBUG_INFO("GenTracker Version: %s", FW_APP_VERSION_STR_C);
 
 	PMU::initialise();
 
-	DEBUG_INFO("Battery monitor...");
+	DEBUG_TRACE("Battery monitor...");
 
     NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
     battery_monitor = &nrf_battery_monitor;
 
-    DEBUG_INFO("Reed switch...");
+    DEBUG_TRACE("Reed switch...");
     NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS);
 	reed_switch = &nrf_reed_switch;
 
-	DEBUG_INFO("SWS...");
+	DEBUG_TRACE("SWS...");
 	SWS nrf_saltwater_switch;
 	saltwater_switch = &nrf_saltwater_switch;
 
-	DEBUG_INFO("LED...");
+	DEBUG_TRACE("LED...");
 	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
 	status_led = &nrf_status_led;
 
-    DEBUG_INFO("BLE...");
+	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
 
-    DEBUG_INFO("Timer...");
+    DEBUG_TRACE("Timer...");
 	system_timer = &NrfTimer::get_instance();
 	NrfTimer::get_instance().init();
 
-    DEBUG_INFO("Scheduler...");
+	DEBUG_TRACE("Scheduler...");
 	Scheduler scheduler(system_timer);
 	system_scheduler = &scheduler;
 
-    DEBUG_INFO("IS25 flash...");
+	DEBUG_TRACE("IS25 flash...");
 	Is25Flash is25_flash;
 	is25_flash.init();
 
-    DEBUG_INFO("LFS filesystem...");
+	DEBUG_TRACE("LFS filesystem...");
 	LFSFileSystem lfs_file_system(&is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);
 	main_filesystem = &lfs_file_system;
 
-    DEBUG_INFO("LFS System Log...");
+	DEBUG_TRACE("LFS System Log...");
 	FsLog fs_system_log(&lfs_file_system, "system.log", 1024*1024);
 	system_log = &fs_system_log;
 
-    DEBUG_INFO("LFS Sensor Log...");
+	DEBUG_TRACE("LFS Sensor Log...");
 	FsLog fs_sensor_log(&lfs_file_system, "sensor.log", 1024*1024);
 	sensor_log = &fs_sensor_log;
 
-    DEBUG_INFO("Configuration store...");
+	DEBUG_TRACE("Configuration store...");
 	LFSConfigurationStore store(lfs_file_system);
 	configuration_store = &store;
 
-    DEBUG_INFO("RAM access...");
+	DEBUG_TRACE("RAM access...");
 	NrfMemoryAccess nrf_memory_access;
 	memory_access = &nrf_memory_access;
 
-    DEBUG_INFO("DTE handler...");
+	DEBUG_TRACE("DTE handler...");
 	DTEHandler dte_handler_local;
 	dte_handler = &dte_handler_local;
 
-    DEBUG_INFO("OTA updater...");
+	DEBUG_TRACE("OTA updater...");
 	ble_service = &BleInterface::get_instance();
 	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS, OTA_UPDATE_RESERVED_BLOCKS);
 	ota_updater = &ota_flash_file_updater;
 
-    DEBUG_INFO("Artic R2...");
+	DEBUG_TRACE("Artic R2...");
 	ArticTransceiver artic_transceiver;
 	comms_scheduler = &artic_transceiver;
 
-	DEBUG_INFO("GPS M8Q ...");
+	DEBUG_TRACE("GPS M8Q ...");
 	M8QReceiver m8q_gnss;
 	location_scheduler = &m8q_gnss;
 
-    DEBUG_INFO("Entering main SM...");
+	DEBUG_TRACE("Entering main SM...");
 	// This will initialise the FSM
 	GenTracker::start();
 

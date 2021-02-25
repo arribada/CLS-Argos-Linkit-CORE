@@ -39,6 +39,14 @@ else()
     set(DEBUG_LEVEL 0)
 endif()
 
+
+execute_process(
+        COMMAND git describe --dirty
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+        OUTPUT_VARIABLE FW_APP_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
 add_executable(${TARGET_NAME})
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 
@@ -222,6 +230,8 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     OLD_ZONE_FORMAT_WORKAROUND
     ARGOS_USE_CRC8
     PREPASS_EMBEDDED
+    FW_APP_VERSION_STR="${FW_APP_VERSION}"s
+    FW_APP_VERSION_STR_C="${FW_APP_VERSION}"
 )
 
 target_compile_options(${TARGET_NAME} PRIVATE

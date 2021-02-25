@@ -210,7 +210,7 @@ TEST(ConfigStore, PARAM_FW_APP_VERSION)
 
 	std::string s = "New Firmware App Version";
 	store->write_param(ParamID::FW_APP_VERSION, s);
-	CHECK_EQUAL(s, store->read_param<std::string>(ParamID::FW_APP_VERSION));
+	CHECK_EQUAL("V0.1"s, store->read_param<std::string>(ParamID::FW_APP_VERSION));  // Should not change
 	delete store;
 }
 
