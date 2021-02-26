@@ -736,12 +736,12 @@ TEST(ConfigStore, RetrieveGPSConfigDefaultMode)
 	unsigned int hdop_filter_threshold = 10;
 	bool hdop_filter_enable = true;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440_MINS;
+	unsigned int dloc_arg_nom = 1440*60U;
 	unsigned int acquisition_timeout = 10;
 	bool lb_en = false;
 	unsigned int lb_hdop_filter_threshold = 5;
 	bool lb_gnss_en = false;
-	BaseAqPeriod lb_dloc_arg_nom = BaseAqPeriod::AQPERIOD_720_MINS;
+	unsigned int lb_dloc_arg_nom = 720*60U;
 	unsigned int lb_acquisition_timeout = 30;
 
 	store->write_param(ParamID::GNSS_HDOPFILT_THR, hdop_filter_threshold);
@@ -775,12 +775,12 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	unsigned int hdop_filter_threshold = 10;
 	bool hdop_filter_enable = true;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440_MINS;
+	unsigned int dloc_arg_nom = 1440*60U;
 	unsigned int acquisition_timeout = 10;
 	bool lb_en = true;
 	unsigned int lb_hdop_filter_threshold = 5;
 	bool lb_gnss_en = false;
-	BaseAqPeriod lb_dloc_arg_nom = BaseAqPeriod::AQPERIOD_720_MINS;
+	unsigned int lb_dloc_arg_nom = 720*60U;
 	unsigned int lb_acquisition_timeout = 30;
 	unsigned int lb_thresh = 10;
 
@@ -1167,6 +1167,7 @@ TEST(ConfigStore, RetrieveGPSConfigZoneExclusionMode)
 	zone.zone_type = BaseZoneType::CIRCLE;
 	zone.center_longitude_x = -2.118413;
 	zone.center_latitude_y = 51.3765242;
+	zone.delta_arg_loc_argos_seconds = 100;
 	zone.radius_m = 100000;  // 100 km
 	zone.enable_activation_date = false;
 	zone.enable_monitoring = true;
@@ -1180,7 +1181,7 @@ TEST(ConfigStore, RetrieveGPSConfigZoneExclusionMode)
 	unsigned int hdop_filter_threshold = 10;
 	bool hdop_filter_enable = true;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440_MINS;
+	unsigned int dloc_arg_nom = 1440*60U;
 	unsigned int acquisition_timeout = 10;
 	bool lb_en = false;
 
@@ -1202,9 +1203,21 @@ TEST(ConfigStore, RetrieveGPSConfigZoneExclusionMode)
 	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
 	CHECK_EQUAL(hdop_filter_threshold, gnss_config.hdop_filter_threshold);
 
-	// Set outside zone
+	// Set outside zone (DLOC specified)
 	zone.center_longitude_x = -1.0;
 	zone.center_latitude_y = 53;
+	store->write_zone(zone);
+
+	store->get_gnss_configuration(gnss_config);
+
+	CHECK_EQUAL(zone.gnss_acquisition_timeout_seconds, gnss_config.acquisition_timeout);
+	CHECK_EQUAL((unsigned int)zone.delta_arg_loc_argos_seconds, (unsigned int)gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(gnss_en, gnss_config.enable);
+	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
+	CHECK_EQUAL(zone.hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+
+	// Set outside zone (DLOC "use default")
+	zone.delta_arg_loc_argos_seconds = 0;
 	store->write_zone(zone);
 
 	store->get_gnss_configuration(gnss_config);

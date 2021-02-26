@@ -153,19 +153,21 @@ int main()
 	location_scheduler = &m8q_gnss;
 
 	DEBUG_TRACE("Entering main SM...");
+
 	// This will initialise the FSM
 	GenTracker::start();
 
 	// The scheduler should run forever.  Any run-time exceptions should be handled and passed to FSM.
-	try {
-		while (true) {
+	while (true)
+	{
+		try {
 			system_scheduler->run();
 			PMU::run();
+		} catch (ErrorCode e) {
+			ErrorEvent event;
+			event.error_code = e;
+			GenTracker::dispatch(event);
 		}
-	} catch (ErrorCode e) {
-		ErrorEvent event;
-		event.error_code = e;
-		GenTracker::dispatch(event);
 	}
 
 	return 0;

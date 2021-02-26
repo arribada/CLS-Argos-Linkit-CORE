@@ -74,7 +74,6 @@ private:
 
 	void reschedule();
 	void deschedule();
-	uint32_t acquisition_period_to_seconds(BaseAqPeriod period);
 	void populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time);
 	void log_invalid_gps_entry();
 

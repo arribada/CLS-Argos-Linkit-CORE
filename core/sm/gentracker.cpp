@@ -55,7 +55,7 @@ void GenTracker::react(ReedSwitchEvent const &event)
 void GenTracker::react(SaltwaterSwitchEvent const &) { }
 
 void GenTracker::react(ErrorEvent const &event) {
-	(void)event;
+	DEBUG_ERROR("GenTracker::react: ErrorEvent: error_code=%u", event.error_code);
 	transit<ErrorState>();
 }
 
@@ -314,10 +314,11 @@ void ConfigurationState::process_received_data() {
 void ErrorState::entry() {
 	DEBUG_INFO("entry: ErrorState");
 	status_led->flash(RGBLedColor::RED);
-	system_scheduler->post_task_prio([this](){ transit<OffState>(); }, Scheduler::DEFAULT_PRIORITY, 5000);
+	m_shutdown_task = system_scheduler->post_task_prio([this](){ transit<OffState>(); }, Scheduler::DEFAULT_PRIORITY, 5000);
 }
 
 void ErrorState::exit() {
 	DEBUG_INFO("exit: ErrorState");
+	system_scheduler->cancel_task(m_shutdown_task);
 	status_led->off();
 }

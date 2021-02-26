@@ -89,6 +89,8 @@ public:
 
 class ErrorState : public GenTracker
 {
+private:
+	Scheduler::TaskHandle m_shutdown_task;
 public:
 	void entry();
 	void exit();

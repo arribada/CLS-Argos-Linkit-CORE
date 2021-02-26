@@ -52,7 +52,7 @@ void GPSScheduler::reschedule()
         return;
 
     std::time_t now = rtc->gettime();
-    uint32_t aq_period = acquisition_period_to_seconds(m_gnss_config.dloc_arg_nom);
+    uint32_t aq_period = m_gnss_config.dloc_arg_nom;
 
     // Find the next schedule time aligned to UTC 00:00
     std::time_t next_schedule = now - (now % aq_period) + aq_period;
@@ -69,32 +69,6 @@ void GPSScheduler::reschedule()
 void GPSScheduler::deschedule() {
 	system_scheduler->cancel_task(m_task_acquisition_period);
     system_scheduler->cancel_task(m_task_acquisition_timeout);
-}
-
-uint32_t GPSScheduler::acquisition_period_to_seconds(BaseAqPeriod period) {
-
-    switch (period)
-    {
-        case BaseAqPeriod::AQPERIOD_10_MINS:
-            return 10 * SEC_PER_MIN;
-        case BaseAqPeriod::AQPERIOD_15_MINS:
-            return 15 * SEC_PER_MIN;
-        case BaseAqPeriod::AQPERIOD_30_MINS:
-            return 30 * SEC_PER_MIN;
-        case BaseAqPeriod::AQPERIOD_60_MINS:
-            return 60 * SEC_PER_MIN;
-        case BaseAqPeriod::AQPERIOD_120_MINS:
-            return 120 * SEC_PER_MIN;
-        case BaseAqPeriod::AQPERIOD_360_MINS:
-            return 360 * SEC_PER_MIN;
-        case BaseAqPeriod::AQPERIOD_720_MINS:
-            return 720 * SEC_PER_MIN;
-        case BaseAqPeriod::AQPERIOD_1440_MINS:
-            return 1440 * SEC_PER_MIN;
-        default:
-            DEBUG_ERROR("BaseAqPeriod value not recognised, defaulting to AQPERIOD_1440_MINS");
-            return 1440 * SEC_PER_MIN;
-    }
 }
 
 void GPSScheduler::task_acquisition_period() {

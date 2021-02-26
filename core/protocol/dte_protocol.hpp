@@ -54,7 +54,8 @@ private:
 		case 10:
 			return 24 * 60 * 60;
 			break;
-		
+		case 15:
+			return 0;  // Signals to use DLOC_ARG_NOM
 		default:
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%lu)", __FUNCTION__, x);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -138,7 +139,6 @@ private:
 		case BaseArgosDepthPile::DEPTH_PILE_24:
 			return 12;
 			break;
-
 		default:
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%d)", __FUNCTION__, x);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -147,6 +147,8 @@ private:
 
 	static unsigned int encode_arg_loc_argos(unsigned int x) {
 		switch (x) {
+		case 0:
+			return 15;
 		case 7 * 60:
 			return 1;
 			break;
@@ -583,6 +585,39 @@ protected:
 		else if (value == BaseArgosDepthPile::DEPTH_PILE_24)
 			output << "12";
 	}
+	static inline void encode_acquisition_period(std::ostringstream& output, unsigned int& value) {
+		unsigned int x;
+		switch (value) {
+			case 10 * 60:
+				x = 1;
+				break;
+			case 15 * 60:
+				x = 2;
+				break;
+			case 30 * 60:
+				x = 3;
+				break;
+			case 60 * 60:
+				x = 4;
+				break;
+			case 120 * 60:
+				x = 5;
+				break;
+			case 360 * 60:
+				x = 6;
+				break;
+			case 720 * 60:
+				x = 7;
+				break;
+			case 1440 * 60:
+				x = 8;
+				break;
+			default:
+				throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+				break;
+		}
+		encode(output, x);
+	}
 	static inline void encode_frequency(std::ostringstream& output, double& value) {
 		unsigned int x = (value * ARGOS_FREQUENCY_MULT) - ARGOS_FREQUENCY_OFFSET;
 		encode(output, x);
@@ -591,9 +626,6 @@ protected:
 		encode(output, (unsigned int&)value);
 	}
 	static inline void encode(std::ostringstream& output, const BaseArgosPower& value) {
-		encode(output, (unsigned int&)value);
-	}
-	static inline void encode(std::ostringstream& output, const BaseAqPeriod& value) {
 		encode(output, (unsigned int&)value);
 	}
 	static inline void encode(std::ostringstream& output, const std::time_t& value) {
@@ -721,11 +753,6 @@ protected:
 	}
 
 	static void validate(const BaseMap &arg_map, const BaseArgosPower& value) {
-		(void)arg_map;
-		(void)value;
-	}
-
-	static void validate(const BaseMap &arg_map, const BaseAqPeriod& value) {
 		(void)arg_map;
 		(void)value;
 	}
@@ -913,6 +940,10 @@ public:
 				validate(map, value);
 				encode_frequency(payload, value);
 			}
+			else if (param_map[(unsigned int)param_values[arg_index].param].encoding == BaseEncoding::AQPERIOD) {
+				unsigned int value = std::get<unsigned int>(param_values[arg_index].value);
+				encode_acquisition_period(payload, value);
+			}
 			else
 			{
 				std::visit([&map, &payload](auto&& arg){validate(map, arg); encode(payload, arg);}, param_values[arg_index].value);
@@ -1002,23 +1033,23 @@ private:
 		}
 	}
 
-	static BaseAqPeriod decode_acquisition_period(std::string& s) {
+	static unsigned int decode_acquisition_period(std::string& s) {
 		if (s == "1") {
-			return BaseAqPeriod::AQPERIOD_10_MINS;
+			return 10 * 60;
 		} else if (s == "2") {
-			return BaseAqPeriod::AQPERIOD_15_MINS;
+			return 15 * 60;
 		} else if (s == "3") {
-			return BaseAqPeriod::AQPERIOD_30_MINS;
+			return 30 * 60;
 		} else if (s == "4") {
-			return BaseAqPeriod::AQPERIOD_60_MINS;
+			return 60 * 60;
 		} else if (s == "5") {
-			return BaseAqPeriod::AQPERIOD_120_MINS;
+			return 120 * 60;
 		} else if (s == "6") {
-			return BaseAqPeriod::AQPERIOD_360_MINS;
+			return 360 * 60;
 		} else if (s == "7") {
-			return BaseAqPeriod::AQPERIOD_720_MINS;
+			return 720 * 60;
 		} else if (s == "8") {
-			return BaseAqPeriod::AQPERIOD_1440_MINS;
+			return 1440 * 60;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -1213,7 +1244,7 @@ private:
 					}
 					case BaseEncoding::AQPERIOD:
 					{
-						BaseAqPeriod x = decode_acquisition_period(value);
+						unsigned int x = decode_acquisition_period(value);
 						key_value.value = x;
 						key_values.push_back(key_value);
 						break;

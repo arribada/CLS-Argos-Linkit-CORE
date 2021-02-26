@@ -175,6 +175,9 @@ public:
 
 	void factory_reset() override {
 		m_filesystem.format();
+		m_is_config_valid = false;
+		m_is_pass_predict_valid = false;
+		m_is_zone_valid = false;
 	}
 
 	BasePassPredict& read_pass_predict() override {

@@ -21,7 +21,7 @@ struct GNSSConfig {
 	bool hdop_filter_enable;
 	unsigned int hdop_filter_threshold;
 	unsigned int acquisition_timeout;
-	BaseAqPeriod dloc_arg_nom;
+	unsigned int dloc_arg_nom;
 	bool underwater_en;
 	uint16_t battery_voltage;
 };
@@ -63,7 +63,7 @@ protected:
 		/* NTRY_PER_MESSAGE */ 1U,
 		/* DUTY_CYCLE */ 0U,
 		/* GNSS_EN */ (bool)false,
-		/* DLOC_ARG_NOM */ BaseAqPeriod::AQPERIOD_10_MINS,
+		/* DLOC_ARG_NOM */ 10*60U,
 		/* ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* GPS_CONST_SELECT */ 0U, // Not implemented
 		/* GLONASS_CONST_SELECT */ 0U, // Not implemented
@@ -81,7 +81,7 @@ protected:
 		/* LB_ARGOS_MODE */ BaseArgosMode::OFF,
 		/* LB_ARGOS_DUTY_CYCLE */ 0U,
 		/* LB_GNSS_EN */ (bool)false,
-		/* DLOC_ARG_LB */ BaseAqPeriod::AQPERIOD_60_MINS,
+		/* DLOC_ARG_LB */ 10*60U,
 		/* LB_GNSS_HDOPFILT_THR */ 2U,
 		/* LB_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* LB_GNSS_ACQ_TIMEOUT */ 60U,
@@ -100,8 +100,8 @@ protected:
 		/* hour */ 0,
 		/* minute */ 0,
 		/* comms_vector */ BaseCommsVector::UNCHANGED,
-		/* delta_arg_loc_argos_seconds */ 7 * 60,
-		/* delta_arg_loc_cellular_seconds */ 10,
+		/* delta_arg_loc_argos_seconds */ 0,
+		/* delta_arg_loc_cellular_seconds */ 0,
 		/* argos_extra_flags_enable */ false,
 		/* argos_depth_pile */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* argos_power */ BaseArgosPower::POWER_500_MW,
@@ -142,36 +142,43 @@ public:
 
 	template <typename T>
 	T& read_param(ParamID param_id) {
-		if (is_valid()) {
+		try {
+			if (is_valid()) {
 
-			if (param_id == ParamID::BATT_SOC) {
-				update_battery_level();
-				m_params.at((unsigned)param_id) = (unsigned int)m_battery_level;
-			}
+				if (param_id == ParamID::BATT_SOC) {
+					update_battery_level();
+					m_params.at((unsigned)param_id) = (unsigned int)m_battery_level;
+				}
 
-			if (param_id == ParamID::FW_APP_VERSION) {
-				m_params.at((unsigned)param_id) = FW_APP_VERSION_STR;
-			}
+				if (param_id == ParamID::FW_APP_VERSION) {
+					m_params.at((unsigned)param_id) = FW_APP_VERSION_STR;
+				}
 
-			if constexpr (std::is_same<T, BaseType>::value) {
-				return m_params.at((unsigned)param_id);
+				if constexpr (std::is_same<T, BaseType>::value) {
+					return m_params.at((unsigned)param_id);
+				}
+				else {
+					return std::get<T>(m_params.at((unsigned)param_id));
+				};
 			}
-			else {
-				return std::get<T>(m_params.at((unsigned)param_id));
-			};
-		}
-		else
+			else
+				throw CONFIG_STORE_CORRUPTED;
+		} catch (...) {
 			throw CONFIG_STORE_CORRUPTED;
-
+		}
 	}
 
 	template<typename T>
 	void write_param(ParamID param_id, T& value) {
-		if (is_valid()) {
-			m_params.at((unsigned)param_id) = value;
-			serialize_config(param_id);
-		} else
+		try {
+			if (is_valid()) {
+				m_params.at((unsigned)param_id) = value;
+				serialize_config(param_id);
+			} else
+				throw CONFIG_STORE_CORRUPTED;
+		} catch (...) {
 			throw CONFIG_STORE_CORRUPTED;
+		}
 	}
 
 	BaseZone& read_zone(uint8_t zone_id=1) {
@@ -239,14 +246,14 @@ public:
 		if (lb_en && m_battery_level <= lb_threshold) {
 			// Use LB mode which takes priority
 			gnss_config.enable = read_param<bool>(ParamID::LB_GNSS_EN);
-			gnss_config.dloc_arg_nom = read_param<BaseAqPeriod>(ParamID::DLOC_ARG_LB);
+			gnss_config.dloc_arg_nom = read_param<unsigned int>(ParamID::DLOC_ARG_LB);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::LB_GNSS_ACQ_TIMEOUT);
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);  // FIXME: should there be a LB_xxx variant?
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::LB_GNSS_HDOPFILT_THR);
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 		} else if (is_zone_exclusion()) {
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
-			gnss_config.dloc_arg_nom = read_param<BaseAqPeriod>(ParamID::DLOC_ARG_NOM);
+			gnss_config.dloc_arg_nom = m_zone.delta_arg_loc_argos_seconds == 0 ? read_param<unsigned int>(ParamID::DLOC_ARG_NOM) : m_zone.delta_arg_loc_argos_seconds;
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT);
@@ -259,7 +266,7 @@ public:
 		} else {
 			// Use default params
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
-			gnss_config.dloc_arg_nom = read_param<BaseAqPeriod>(ParamID::DLOC_ARG_NOM);
+			gnss_config.dloc_arg_nom = read_param<unsigned int>(ParamID::DLOC_ARG_NOM);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT);
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR);

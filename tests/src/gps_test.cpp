@@ -89,7 +89,7 @@ TEST(GpsScheduler, GNSSDisabled)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = false;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_10_MINS;
+	unsigned int dloc_arg_nom = 10*60;
 	unsigned int gnss_acq_timeout = 0;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
@@ -117,7 +117,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesNoFixB)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_10_MINS;
+	unsigned int dloc_arg_nom = 10*60;
 	unsigned int gnss_acq_timeout = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
@@ -164,7 +164,7 @@ TEST(GpsScheduler, GNSSEnabled15MinutesNoFix)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_15_MINS;
+	unsigned int dloc_arg_nom = 15*60;
 	unsigned int gnss_acq_timeout = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
@@ -211,7 +211,7 @@ TEST(GpsScheduler, GNSSEnabled30MinutesNoFix)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_30_MINS;
+	unsigned int dloc_arg_nom = 30*60;
 	unsigned int gnss_acq_timeout = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
@@ -258,7 +258,7 @@ TEST(GpsScheduler, GNSSEnabled60MinutesNoFix)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_60_MINS;
+	unsigned int dloc_arg_nom = 60*60;
 	unsigned int gnss_acq_timeout = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
@@ -305,7 +305,7 @@ TEST(GpsScheduler, GNSSEnabled120MinutesNoFix)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_120_MINS;
+	unsigned int dloc_arg_nom = 120*60;
 	unsigned int gnss_acq_timeout = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
@@ -352,7 +352,7 @@ TEST(GpsScheduler, GNSSEnabled360MinutesNoFix)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_360_MINS;
+	unsigned int dloc_arg_nom = 360*60;
 	unsigned int gnss_acq_timeout = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
@@ -399,7 +399,7 @@ TEST(GpsScheduler, GNSSEnabled720MinutesNoFix)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_720_MINS;
+	unsigned int dloc_arg_nom = 720*60;
 	unsigned int gnss_acq_timeout = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
@@ -446,7 +446,7 @@ TEST(GpsScheduler, GNSSEnabled1440MinutesNoFix)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_1440_MINS;
+	unsigned int dloc_arg_nom = 1440*60;
 	unsigned int gnss_acq_timeout = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
@@ -493,7 +493,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesNoFixOffSchedule)
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
-	BaseAqPeriod dloc_arg_nom = BaseAqPeriod::AQPERIOD_10_MINS;
+	unsigned int dloc_arg_nom = 10*60;
 	unsigned int gnss_acq_timeout = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
