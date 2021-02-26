@@ -227,7 +227,6 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     DEVICE_MODEL_NAME="${MODEL}"s
     #LFS_YES_TRACE
     BATTERY_NOT_FITTED
-    OLD_ZONE_FORMAT_WORKAROUND
     ARGOS_USE_CRC8
     PREPASS_EMBEDDED
     FW_APP_VERSION_STR="${FW_APP_VERSION}"s
@@ -318,8 +317,8 @@ function(create_wrapped_bin executable)
     add_custom_command(
         TARGET ${executable}
         POST_BUILD
-        COMMENT "Generating ${executable}.dat"
-        COMMAND printf "%08x" `stat -c %s ${executable}.bin` | xxd -r -p > ${executable}.dat && crc32 ${executable}.bin | xxd -r -p >> ${executable}.dat && cat ${executable}.bin >> ${executable}.dat
+        COMMENT "Generating ${executable}.img"
+        COMMAND printf "%08x" `stat -c %s ${executable}.bin` | xxd -r -p > ${executable}.img && crc32 ${executable}.bin | xxd -r -p >> ${executable}.img && cat ${executable}.bin >> ${executable}.img
     )
 endfunction(create_wrapped_bin)
 
@@ -345,7 +344,7 @@ add_custom_target(flash
 
 add_custom_target(dfu_app
                   COMMENT "Sending application image over DFU (reset device with DEBUG pin jumpered!)..."
-                  COMMAND nrfutil dfu usb-serial -p /dev/ttyACM0 -pkg ${executable}_dfu.zip
+                  COMMAND nrfutil dfu usb-serial -p /dev/ttyACM0 -pkg ${TARGET_NAME}_dfu.zip
 )
 
 add_dependencies(flash ${TARGET_NAME})

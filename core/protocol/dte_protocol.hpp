@@ -249,7 +249,9 @@ public:
 		unsigned int argos_depth_pile;
 		EXTRACT_BITS(argos_depth_pile, data, base_pos, 4);
 		zone.argos_depth_pile = decode_depth_pile(argos_depth_pile);
-		EXTRACT_BITS_CAST(BaseArgosPower, zone.argos_power, data, base_pos, 2);
+		unsigned int argos_power;
+		EXTRACT_BITS(argos_power, data, base_pos, 2);
+		zone.argos_power = (BaseArgosPower)(argos_power + 1);
 		EXTRACT_BITS(zone.argos_time_repetition_seconds, data, base_pos, 7);
 		zone.argos_time_repetition_seconds *= 10;
 		EXTRACT_BITS_CAST(BaseArgosMode, zone.argos_mode, data, base_pos, 2);
@@ -264,10 +266,67 @@ public:
 		EXTRACT_BITS(center_latitude_y, data, base_pos, 22);
 		zone.center_latitude_y = convert_latitude_to_decimal(center_latitude_y);
 		EXTRACT_BITS(zone.radius_m, data, base_pos, 12);
+		zone.radius_m *= 50;
+
+		DEBUG_TRACE("Decoded Zone Information");
+        DEBUG_TRACE("zone_id = %u", zone.zone_id);
+        DEBUG_TRACE("zone_type = %u", (unsigned int)zone.zone_type);
+        DEBUG_TRACE("enable_monitoring = %u", zone.enable_monitoring);
+        DEBUG_TRACE("enable_entering_leaving_events = %u", zone.enable_entering_leaving_events);
+        DEBUG_TRACE("enable_out_of_zone_detection_mode = %u", zone.enable_out_of_zone_detection_mode);
+        DEBUG_TRACE("enable_activation_date = %u", zone.enable_activation_date);
+        DEBUG_TRACE("year = %u", zone.year);
+        DEBUG_TRACE("month = %u", zone.month);
+        DEBUG_TRACE("day = %u", zone.day);
+        DEBUG_TRACE("hour = %u", zone.hour);
+        DEBUG_TRACE("minute = %u", zone.minute);
+        DEBUG_TRACE("comms_vector = %u", zone.comms_vector);
+        DEBUG_TRACE("delta_arg_loc_argos_seconds = %u", zone.delta_arg_loc_argos_seconds);
+        DEBUG_TRACE("delta_arg_loc_cellular_seconds = %u", zone.delta_arg_loc_cellular_seconds);
+        DEBUG_TRACE("argos_extra_flags_enable = %u", zone.argos_extra_flags_enable);
+        DEBUG_TRACE("argos_depth_pile = %u", zone.argos_depth_pile);
+        DEBUG_TRACE("argos_power = %u", zone.argos_power);
+        DEBUG_TRACE("argos_time_repetition_seconds = %u", zone.argos_time_repetition_seconds);
+        DEBUG_TRACE("argos_mode = %u", zone.argos_mode);
+        DEBUG_TRACE("argos_duty_cycle = %06X", zone.argos_duty_cycle);
+        DEBUG_TRACE("gnss_extra_flags_enable = %u", zone.gnss_extra_flags_enable);
+        DEBUG_TRACE("hdop_filter_threshold = %u", zone.hdop_filter_threshold);
+        DEBUG_TRACE("gnss_acquisition_timeout_seconds = %u", zone.gnss_acquisition_timeout_seconds);
+        DEBUG_TRACE("center_latitude_y = %lf", zone.center_latitude_y);
+        DEBUG_TRACE("center_longitude_x = %lf", zone.center_longitude_x);
+        DEBUG_TRACE("radius_m = %u", zone.radius_m);
 	}
 
 	static void encode(const BaseZone& zone, std::string &data) {
 		unsigned int base_pos = 0;
+
+		DEBUG_TRACE("Encoded Zone Information");
+        DEBUG_TRACE("zone_id = %u", zone.zone_id);
+        DEBUG_TRACE("zone_type = %u", (unsigned int)zone.zone_type);
+        DEBUG_TRACE("enable_monitoring = %u", zone.enable_monitoring);
+        DEBUG_TRACE("enable_entering_leaving_events = %u", zone.enable_entering_leaving_events);
+        DEBUG_TRACE("enable_out_of_zone_detection_mode = %u", zone.enable_out_of_zone_detection_mode);
+        DEBUG_TRACE("enable_activation_date = %u", zone.enable_activation_date);
+        DEBUG_TRACE("year = %u", zone.year);
+        DEBUG_TRACE("month = %u", zone.month);
+        DEBUG_TRACE("day = %u", zone.day);
+        DEBUG_TRACE("hour = %u", zone.hour);
+        DEBUG_TRACE("minute = %u", zone.minute);
+        DEBUG_TRACE("comms_vector = %u", zone.comms_vector);
+        DEBUG_TRACE("delta_arg_loc_argos_seconds = %u", zone.delta_arg_loc_argos_seconds);
+        DEBUG_TRACE("delta_arg_loc_cellular_seconds = %u", zone.delta_arg_loc_cellular_seconds);
+        DEBUG_TRACE("argos_extra_flags_enable = %u", zone.argos_extra_flags_enable);
+        DEBUG_TRACE("argos_depth_pile = %u", zone.argos_depth_pile);
+        DEBUG_TRACE("argos_power = %u", zone.argos_power);
+        DEBUG_TRACE("argos_time_repetition_seconds = %u", zone.argos_time_repetition_seconds);
+        DEBUG_TRACE("argos_mode = %u", zone.argos_mode);
+        DEBUG_TRACE("argos_duty_cycle = %06X", zone.argos_duty_cycle);
+        DEBUG_TRACE("gnss_extra_flags_enable = %u", zone.gnss_extra_flags_enable);
+        DEBUG_TRACE("hdop_filter_threshold = %u", zone.hdop_filter_threshold);
+        DEBUG_TRACE("gnss_acquisition_timeout_seconds = %u", zone.gnss_acquisition_timeout_seconds);
+        DEBUG_TRACE("center_latitude_y = %lf", zone.center_latitude_y);
+        DEBUG_TRACE("center_longitude_x = %lf", zone.center_longitude_x);
+        DEBUG_TRACE("radius_m = %u", zone.radius_m);
 
 		// Zero out the data buffer to the required number of bytes -- this will round up to
 		// the nearest number of bytes and zero all bytes before encoding
@@ -293,7 +352,7 @@ public:
 		unsigned int argos_depth_pile;
 		argos_depth_pile = encode_depth_pile(zone.argos_depth_pile);
 		PACK_BITS(argos_depth_pile, data, base_pos, 4);
-		PACK_BITS_CAST(uint32_t, zone.argos_power, data, base_pos, 2);
+		PACK_BITS(((unsigned int)zone.argos_power - 1), data, base_pos, 2);
 		PACK_BITS((zone.argos_time_repetition_seconds / 10), data, base_pos, 7);
 		PACK_BITS_CAST(uint32_t, zone.argos_mode, data, base_pos, 2);
 		PACK_BITS(zone.argos_duty_cycle, data, base_pos, 24);
@@ -304,7 +363,7 @@ public:
 		PACK_BITS(center_longitude_x, data, base_pos, 23);
 		uint32_t center_latitude_y = convert_decimal_to_latitude(zone.center_latitude_y);
 		PACK_BITS(center_latitude_y, data, base_pos, 22);
-		PACK_BITS(zone.radius_m, data, base_pos, 12);
+		PACK_BITS((zone.radius_m / 50), data, base_pos, 12);
 	}
 };
 

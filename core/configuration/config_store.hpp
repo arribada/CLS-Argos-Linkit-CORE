@@ -94,7 +94,7 @@ protected:
 		/* enable_entering_leaving_events */ false,
 		/* enable_out_of_zone_detection_mode */ false,
 		/* enable_activation_date */ false,
-		/* year */ 0,
+		/* year */ 2020,
 		/* month */ 1,
 		/* day */ 1,
 		/* hour */ 0,
