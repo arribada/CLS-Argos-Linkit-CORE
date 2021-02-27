@@ -6,6 +6,7 @@
 #include <sstream>
 #include <algorithm>
 #include <regex>
+#include <map>
 
 #include "debug.hpp"
 
@@ -369,8 +370,6 @@ public:
 	}
 };
 
-// IMPORTANT NOTE: This codec relies upon the fact that AllCast message types C7 and 5F come _after_
-// message type BE.
 
 class PassPredictCodec {
 private:
@@ -399,25 +398,19 @@ private:
 		}
 	}
 
-	static int find_prepass_record_by_hex_id(uint8_t hex_id, BasePassPredict& pass_predict) {
-		for (unsigned int i = 0; i < pass_predict.num_records; i++) {
-			if (pass_predict.records[i].satHexId == hex_id)
-				return i;
-		}
-		return -1;
-	}
-
-	static void allcast_constellation_status_decode(const std::string& data, unsigned int &pos, bool type_a, BasePassPredict& pass_predict) {
+	static void allcast_constellation_status_decode(const std::string& data, unsigned int &pos, bool type_a, std::map<uint8_t, AopSatelliteEntry_t> &constellation_params, uint8_t a_dcs) {
 		uint8_t num_operational_satellites;
+		AopSatelliteEntry_t aop_entry;
 		EXTRACT_BITS(num_operational_satellites, data, pos, 4);
 		DEBUG_TRACE("allcast_constellation_status_decode: num_operational_satellites: %u", num_operational_satellites);
 		for (uint8_t i = 0; i < num_operational_satellites; i++) {
 			uint8_t hex_id;
-			uint8_t a_dcs;
+			uint8_t a_dcs_1;
 			uint8_t dl_status;
 			uint8_t ul_status;
 			EXTRACT_BITS(hex_id, data, pos, 4);
-			EXTRACT_BITS(a_dcs, data, pos, 4);
+			EXTRACT_BITS(a_dcs_1, data, pos, 4);
+			(void)a_dcs_1;
 			if (type_a) {
 				EXTRACT_BITS(dl_status, data, pos, 2);
 				EXTRACT_BITS(ul_status, data, pos, 2);
@@ -426,16 +419,15 @@ private:
 				EXTRACT_BITS(ul_status, data, pos, 3);
 			}
 			(void)a_dcs;
-			DEBUG_TRACE("allcast_constellation_status_decode: sat=%u hex_id=%01x a_dcs=%01x dl_status=%01x ul_status=%01x", i,
-						hex_id, a_dcs, dl_status, ul_status);
-			int record_index = find_prepass_record_by_hex_id(hex_id, pass_predict);
-			if (record_index >= 0) {
-				DEBUG_TRACE("allcast_constellation_status_decode: updating status for prepass record %u", record_index);
-				pass_predict.records[record_index].downlinkStatus = convert_dl_operating_status(dl_status);
-				pass_predict.records[record_index].uplinkStatus = convert_ul_operating_status(ul_status);
-			} else {
-				DEBUG_WARN("allcast_constellation_status_decode: existing prepass entry not found");
-			}
+			DEBUG_TRACE("allcast_constellation_status_decode: sat=%u hex_id=%01x dl_status=%01x ul_status=%01x", i,
+						hex_id, dl_status, ul_status);
+			aop_entry.satHexId = hex_id;
+			aop_entry.satDcsId = a_dcs;
+			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status);
+			aop_entry.uplinkStatus = convert_ul_operating_status(ul_status);
+
+			uint8_t key = aop_entry.satHexId | (a_dcs << 4);
+			constellation_params[key] = aop_entry;
 		}
 
 #if 0 // FIXME: the example messages supplied by CLS are incorrectly encoded and are not a multiple of 8 bits
@@ -448,13 +440,17 @@ private:
 #endif
 	}
 
-	static void allcast_sat_orbit_params_decode(const std::string& data, unsigned int &pos, AopSatelliteEntry_t &aop_entry) {
+	static void allcast_sat_orbit_params_decode(const std::string& data, unsigned int &pos, std::map<uint8_t, AopSatelliteEntry_t> &orbit_params, uint8_t a_dcs) {
 		uint32_t working, day_of_year;
+		AopSatelliteEntry_t aop_entry;
+
+		// Set DCS ID
+		aop_entry.satDcsId = a_dcs;
 
 		// 4 bits sat hex ID
 		EXTRACT_BITS(aop_entry.satHexId, data, pos, 4);
 
-		DEBUG_TRACE("allcast_sat_orbit_params_decode: satHexId=%01x", aop_entry.satHexId);
+		DEBUG_TRACE("allcast_sat_orbit_params_decode: a_dcs=%01x hex_id=%01x", a_dcs, aop_entry.satHexId);
 
 		// 2 bites bulletin type (not used)
 		EXTRACT_BITS(working, data, pos, 2); // Type of bulletin
@@ -501,12 +497,15 @@ private:
 		EXTRACT_BITS(working, data, pos, 16); // inclination
 		aop_entry.inclinationDeg = (working / 10000.f) + 97;
 
-		// Mark as out of service until constellation status is parsed
-		aop_entry.downlinkStatus = SAT_DNLK_OFF;
-		aop_entry.uplinkStatus = SAT_UPLK_OFF;
+		uint8_t key = aop_entry.satHexId | (a_dcs << 4);
+		if (orbit_params.count(key))
+			DEBUG_WARN("PassPredictCodec::allcast_sat_orbit_params_decode: overwriting orbit_params key=%02x", key);
+		orbit_params[key] = aop_entry;
 	}
 
-	static void allcast_packet_decode(const std::string& data, unsigned int &pos, BasePassPredict& pass_predict) {
+	static void allcast_packet_decode(
+			const std::string& data, unsigned int &pos,
+			std::map<uint8_t, AopSatelliteEntry_t> &orbit_params, std::map<uint8_t, AopSatelliteEntry_t> &constellation_status) {
 		uint32_t addressee_identification;
 		uint8_t  a_dcs;
 		uint8_t  service;
@@ -528,15 +527,13 @@ private:
 
 		switch (addressee_identification) {
 		case 0xC7: // Constellation Satellite Status - version A
-			allcast_constellation_status_decode(data, pos, true, pass_predict);
+			allcast_constellation_status_decode(data, pos, true, constellation_status, a_dcs);
 			break;
 		case 0x5F: // Constellation Satellite Status - version B
-			allcast_constellation_status_decode(data, pos, false, pass_predict);
+			allcast_constellation_status_decode(data, pos, false, constellation_status, a_dcs);
 			break;
 		case 0xBE: // Satellite Orbit Parameters
-			DEBUG_TRACE("allcast_packet_decode: Satellite Orbit Parameters: sat=%u", pass_predict.num_records);
-			pass_predict.records[pass_predict.num_records].satDcsId = a_dcs;
-			allcast_sat_orbit_params_decode(data, pos, pass_predict.records[pass_predict.num_records++]);
+			allcast_sat_orbit_params_decode(data, pos, orbit_params, a_dcs);
 			break;
 		default:
 			DEBUG_ERROR("allcast_packet_decode: unrecognised allcast packet ID (%08x)", addressee_identification);
@@ -553,9 +550,30 @@ public:
 	static void decode(const std::string& data, BasePassPredict& pass_predict) {
 		unsigned int base_pos = 0;
 		pass_predict.num_records = 0;
+		std::map<uint8_t, AopSatelliteEntry_t> orbit_params;
+		std::map<uint8_t, AopSatelliteEntry_t> constellation_status;
 
+		// Build two maps of AopSatelliteEntry_t entries; one containing orbit params
+		// and the other constellation status.  We then merge the two together into BasePassPredict
+		// for entries whose satellite hex ID matches.
 		while (base_pos < (8 * data.length())) {
-			allcast_packet_decode(data, base_pos, pass_predict);
+			allcast_packet_decode(data, base_pos, orbit_params, constellation_status);
+		}
+
+		// Go through orbit_params params and if we find a matching entry (by hex/dcs ID) in the
+		// constellation_status then add it into pass_predict
+		for ( const auto &it : orbit_params ) {
+			if (constellation_status.count(it.first)) {
+				if (pass_predict.num_records < MAX_AOP_SATELLITE_ENTRIES) {
+					DEBUG_INFO("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", pass_predict.num_records, it.second.satDcsId, it.second.satHexId);
+					pass_predict.records[pass_predict.num_records] = it.second;
+					pass_predict.records[pass_predict.num_records].downlinkStatus = constellation_status[it.first].downlinkStatus;
+					pass_predict.records[pass_predict.num_records].uplinkStatus = constellation_status[it.first].uplinkStatus;
+					pass_predict.num_records++;
+				} else {
+					DEBUG_WARN("PassPredictCodec::decode: Discard paspw entry a_dcs = %01x hex_id=%01x as full", it.second.satDcsId, it.second.satHexId);
+				}
+			}
 		}
 	}
 };

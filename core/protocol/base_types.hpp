@@ -169,9 +169,11 @@ static bool operator==(const BaseZone& lhs, const BaseZone& rhs)
     return std::memcmp( &lhs, &rhs, sizeof(BaseZone) );
 }
 
+#define MAX_AOP_SATELLITE_ENTRIES		40
+
 struct BasePassPredict {
 	uint8_t num_records;
-	AopSatelliteEntry_t records[40];
+	AopSatelliteEntry_t records[MAX_AOP_SATELLITE_ENTRIES];
 };
 
 static bool operator==(const BasePassPredict& lhs, const BasePassPredict& rhs)
