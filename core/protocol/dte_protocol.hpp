@@ -430,7 +430,11 @@ private:
 			constellation_params[key] = aop_entry;
 		}
 
-#if 0 // FIXME: the example messages supplied by CLS are incorrectly encoded and are not a multiple of 8 bits
+		// The messages supplied by CLS are incorrectly encoded and are not a multiple of 8 bits; the only reason
+		// their messages work is because they always send both type A and type B constellation status messages, meaning
+		// that the two messages together add up to an integer number of bytes.  If the encoding ever gets fixed
+		// then the following define should be taken out of the software build.
+#ifndef WORKAROUND_ALLCAST_CONSTELLATION_STATUS_ENCODING_BUG
 		// Skip reserved field if number of status words is even
 		if ((num_operational_satellites & 1) == 0) {
 			uint8_t reserved;

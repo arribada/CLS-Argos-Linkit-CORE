@@ -79,6 +79,9 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 
 	# Packet protocol option for including CRC8
     -DARGOS_USE_CRC8
+    
+    # Workaround allcast encoding bug in CLS messages
+    -DWORKAROUND_ALLCAST_CONSTELLATION_STATUS_ENCODING_BUG
  
     # Always output coloured text from GCC
     -fdiagnostics-color=always
