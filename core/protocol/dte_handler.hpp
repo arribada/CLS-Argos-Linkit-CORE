@@ -206,15 +206,17 @@ public:
 	}
 
 	static std::string ZONEW_REQ(int error_code, std::vector<BaseType>& arg_list) {
-		if (!error_code) {
+		while (!error_code) {
 			BaseZone zone;
 			std::string zone_bits = std::get<std::string>(arg_list[0]);
 			try {
 				ZoneCodec::decode(zone_bits, zone);
-				configuration_store->write_zone(zone);
 			} catch (ErrorCode e) {
 				error_code = (int)DTEError::INCORRECT_DATA;
+				break;  // Do not write configuration store
 			}
+			configuration_store->write_zone(zone);
+			break;
 		}
 
 		return DTEEncoder::encode(DTECommand::ZONEW_RESP, error_code);
@@ -238,11 +240,17 @@ public:
 
 	static std::string PASPW_REQ(int error_code, std::vector<BaseType>& arg_list) {
 
-		if (!error_code) {
+		while (!error_code) {
 			BasePassPredict pass_predict;
 			std::string paspw_bits = std::get<std::string>(arg_list[0]);
-			PassPredictCodec::decode(paspw_bits, pass_predict);
+			try {
+				PassPredictCodec::decode(paspw_bits, pass_predict);
+			} catch (ErrorCode e) {
+				error_code = (int)DTEError::INCORRECT_DATA;
+				break;  // Do not write configuration store
+			}
 			configuration_store->write_pass_predict(pass_predict);
+			break;
 		}
 
 		return DTEEncoder::encode(DTECommand::PASPW_RESP, error_code);
