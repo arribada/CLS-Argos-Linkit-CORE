@@ -286,9 +286,12 @@ TEST(DTEHandler, PASPW_REQ)
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
 	STRCMP_EQUAL("$O;PASPW#000;\r", resp.c_str());
 
-	BasePassPredict& stored_pass_predict = configuration_store->read_pass_predict();
-	(void)stored_pass_predict;
-	//CHECK_TRUE(stored_pass_predict == pass_predict);
+	BasePassPredict& pass_predict = configuration_store->read_pass_predict();
+
+	std::time_t actual_aop_date = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
+	std::time_t expected_aop_date = convert_epochtime(pass_predict.records[0].bulletin.year, pass_predict.records[0].bulletin.month, pass_predict.records[0].bulletin.day, pass_predict.records[0].bulletin.hour, pass_predict.records[0].bulletin.minute, pass_predict.records[0].bulletin.second);
+
+	CHECK_EQUAL(expected_aop_date, actual_aop_date);
 }
 
 TEST(DTEHandler, PASPW_REQ2)
