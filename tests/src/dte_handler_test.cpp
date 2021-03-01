@@ -340,8 +340,8 @@ TEST(DTEHandler, PASPW_REQ2)
 
         43.5497f,                     //< Geodetic latitude of the beacon (deg.) [-90, 90]
         1.485f,                       //< Geodetic longitude of the beacon (deg.E)[0, 360]
-        { 2021, 03, 2, 00, 00, 00 },  //< Beginning of prediction (Y/M/D, hh:mm:ss)
-        { 2021, 03, 3, 00, 00, 00 },  //< End of prediction (Y/M/D, hh:mm:ss)
+        { 2021, 03, 1, 00, 00, 00 },  //< Beginning of prediction (Y/M/D, hh:mm:ss)
+        { 2021, 03, 2, 00, 00, 00 },   //< End of prediction (Y/M/D, hh:mm:ss)
         5.0f,                         //< Minimum elevation of passes [0, 90](default 5 deg)
         90.0f,                        //< Maximum elevation of passes  [maxElevation >=
                         //< minElevation] (default 90 deg)

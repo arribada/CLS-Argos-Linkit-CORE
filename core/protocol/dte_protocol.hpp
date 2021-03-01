@@ -454,8 +454,6 @@ private:
 		// 4 bits sat hex ID
 		EXTRACT_BITS(aop_entry.satHexId, data, pos, 4);
 
-		DEBUG_TRACE("allcast_sat_orbit_params_decode: a_dcs=%01x hex_id=%01x", a_dcs, aop_entry.satHexId);
-
 		// 2 bites bulletin type (not used)
 		EXTRACT_BITS(working, data, pos, 2); // Type of bulletin
 
@@ -486,6 +484,10 @@ private:
 
 		// Compute the actual day of month and month from the day of year
 		convert_day_of_year(aop_entry.bulletin.year, day_of_year, aop_entry.bulletin.month, aop_entry.bulletin.day);
+
+		DEBUG_TRACE("allcast_sat_orbit_params_decode: a_dcs=%01x hex_id=%01x doy=%u dd/mm/yy=%u/%u/%u hh:mm:ss=%u:%u:%u",
+				a_dcs, aop_entry.satHexId, day_of_year, aop_entry.bulletin.day, aop_entry.bulletin.month, aop_entry.bulletin.year,
+				aop_entry.bulletin.hour, aop_entry.bulletin.minute, aop_entry.bulletin.second);
 
 		// 86 bits of bulletin
 		EXTRACT_BITS(working, data, pos, 19); // Longitude of the ascending node
