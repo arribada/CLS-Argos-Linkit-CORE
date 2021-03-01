@@ -39,7 +39,7 @@ void GenTracker::react(tinyfsm::Event const &) { }
 
 void GenTracker::react(ReedSwitchEvent const &event)
 {
-	DEBUG_INFO("react: ReedSwitchEvent: %u", event.state);
+	DEBUG_TRACE("react: ReedSwitchEvent: %u", event.state);
 	if (event.state) {
 		// Start reed switch hold timer tasks in case this is a hold gesture
 		m_reed_trigger_start_time = system_timer->get_counter();
