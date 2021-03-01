@@ -85,7 +85,7 @@ void ArgosScheduler::reschedule() {
 	}
 
 	if (INVALID_SCHEDULE != schedule) {
-		DEBUG_TRACE("ArgosScheduler: schedule in: %lu secs", schedule);
+		DEBUG_TRACE("ArgosScheduler: schedule in: %llu secs", schedule);
 		deschedule();
 		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this), Scheduler::DEFAULT_PRIORITY, MS_PER_SEC * schedule);
 	} else {
@@ -119,19 +119,19 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 		m_tr_nom_schedule > m_last_transmission_schedule)
 	{
 		if (m_is_deferred) {
-			DEBUG_INFO("ArgosScheduler::next_duty_cycle: existing schedule deferred: %lu", m_tr_nom_schedule);
+			DEBUG_INFO("ArgosScheduler::next_duty_cycle: existing schedule deferred: %llu", m_tr_nom_schedule);
 			m_is_deferred = false;
 			return m_tr_nom_schedule - now;
 		}
 
-		DEBUG_INFO("ArgosScheduler::next_duty_cycle: use existing schedule: %lu", m_tr_nom_schedule);
+		DEBUG_INFO("ArgosScheduler::next_duty_cycle: use existing schedule: %llu", m_tr_nom_schedule);
 		return INVALID_SCHEDULE;
 	}
 
 	// If earliest TX is inside the duty cycle window, then use that since we were deferred by saltwater switch
 	if (m_is_deferred && m_earliest_tx != INVALID_SCHEDULE && m_earliest_tx > now && is_in_duty_cycle(m_earliest_tx, duty_cycle))
 	{
-		DEBUG_INFO("ArgosScheduler::next_duty_cycle: using earliest TX: %lu", m_earliest_tx);
+		DEBUG_INFO("ArgosScheduler::next_duty_cycle: using earliest TX: %llu", m_earliest_tx);
 		m_is_deferred = false;
 		return m_earliest_tx - now;
 	}
@@ -221,7 +221,7 @@ std::time_t ArgosScheduler::next_prepass() {
 	p_tm = std::gmtime(&stop_time);
 	struct tm tm_stop = *p_tm;
 
-	DEBUG_INFO("ArgosScheduler::next_prepass: now=%lu start=%lu stop=%lu", curr_time, start_time, stop_time);
+	DEBUG_INFO("ArgosScheduler::next_prepass: now=%llu start=%llu stop=%llu", curr_time, start_time, stop_time);
 
 	BasePassPredict& pass_predict = configuration_store->read_pass_predict();
 	PredictionPassConfiguration_t config = {
@@ -244,20 +244,20 @@ std::time_t ArgosScheduler::next_prepass() {
 			pass_predict.num_records,
 			&next_pass)) {
 
-		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x now=%lu epoch=%lu duration=%u elevation_max=%u ul_status=%01x",
+		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x now=%llu epoch=%llu duration=%u elevation_max=%u ul_status=%01x",
 					next_pass.satHexId, curr_time, next_pass.epoch, next_pass.duration, next_pass.elevationMax, (unsigned char)next_pass.uplinkStatus);
 
-		std::time_t schedule = (std::time_t)next_pass.epoch;
 		std::time_t now = rtc->gettime();
-		if (now <= schedule) {
+		if (now <= ((std::time_t)next_pass.epoch + next_pass.duration - ARGOS_TX_MARGIN_SECS)) {
 			// Compute delay until epoch arrives for scheduling and select Argos transmission mode
+			std::time_t schedule = (std::time_t)next_pass.epoch < now ? now : (std::time_t)next_pass.epoch;
 			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %u seconds in future", schedule - now);
 			m_next_prepass = schedule;
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
 			m_prepass_duration = next_pass.duration;
 			return schedule - now;
 		} else {
-			DEBUG_ERROR("ArgosScheduler::next_prepass: computed prepass epoch=%lu is not in future", next_pass.epoch);
+			DEBUG_ERROR("ArgosScheduler::next_prepass: computed prepass window=%llu,%u is too late", next_pass.epoch, next_pass.duration);
 			return INVALID_SCHEDULE;
 		}
 	} else {
@@ -277,7 +277,7 @@ void ArgosScheduler::process_schedule() {
 			periodic_algorithm();
 		}
 	} else {
-		DEBUG_INFO("ArgosScheduler::process_schedule: sws=%u t=%lu earliest_tx=%lu deferring transmission", m_switch_state, now, m_earliest_tx);
+		DEBUG_INFO("ArgosScheduler::process_schedule: sws=%u t=%llu earliest_tx=%llu deferring transmission", m_switch_state, now, m_earliest_tx);
 		m_is_deferred = true;
 	}
 
