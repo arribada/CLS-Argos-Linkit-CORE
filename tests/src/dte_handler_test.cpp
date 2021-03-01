@@ -9,7 +9,7 @@
 #include "CppUTestExt/MockSupport.h"
 
 #include "mock_logger.hpp"
-
+#include "previpass.h"
 
 #define BLOCK_COUNT   (256)
 #define BLOCK_SIZE    (64*1024)
@@ -294,7 +294,7 @@ TEST(DTEHandler, PASPW_REQ)
 TEST(DTEHandler, PASPW_REQ2)
 {
 	// Supplied by CLS
-	std::string allcast_ref = "00000BE50084841588C001A98933ECDAAB723D094E84CBE700000BE500C4841588CD0162D403EADAF3741404558EBDFA00000BE500A4841588C1C1A6CB0524C6C2FC39003A1F647800000BE50094841588900DE9CCA528C6BAFC0C004240069C00000BE500B4841588CD1068336528C6BAFC0000428055C500000BE500548415889009E5E015CABCBAC0BC014227309B00000BE500D484158891098D20AE9EAF6A71B4023C27EC1A00000C75008603A5C900B7C500800C00D4CE845000005F5006607A58900B78C00D48474100000BE70084841588C001A98933ECDAAB723D094E8467F800000BE700C4841588CD0162D403EADAF3741404558E11E500000BE700A4841588C1C1A6CB0524C6C2FC39003A1FC86700000BE70094841588900DE9CCA528C6BAFC0C004240AA8300000BE700B4841588CD1068336528C6BAFC00004280F9DA00000BE700548415889009E5E015CABCBAC0BC0142279C8400000BE700D484158891098D20AE9EAF6A71B4023C27400500000C77008603A5C900B7C500800C00D4C758A000005F7006607A58900B78C00D48ED3B00000BE40084841588C001A98933ECDAAB723D094E8415F800000BE400C4841588CD0162D403EADAF3741404558E63E500000BE400A4841588C1C1A6CB0524C6C2FC39003A1FBA6700000BE40094841588900DE9CCA528C6BAFC0C004240D88300000BE400B4841588CD1068336528C6BAFC000042808BDA00000BE400548415889009E5E015CABCBAC0BC014227EE8400000BE400D484158891098D20AE9EAF6A71B4023C27320500000C74008603A5C900B7C500800C00D4C2EB2000005F4006607A58900B78C00D48127C";
+	std::string allcast_ref = "00000BE5008484164889002AA533ECDAA3721B094E7A7FF800000BE500C4841648960863EED3EADAF3740004558A710C00000BE500A4841648810468B45D26C6B2FBCF003A199F1D00000BE50094841648C640E8A05528C6BAFC1F00422BAFC100000BE500B48416488C51AA1EED28C6BAFC0A00427847AC00000BE50054841648C14165203DCABCAAC08201421DF23900000BE500D484164894120CEEE69EAF6A71B9023C2C1AA500000C75008603A5C900B7C500800C00D4CE845000005F5006607A58900B78C00D48474100000BE7008484164889002AA533ECDAA3721B094E7AD3E700000BE700C4841648960863EED3EADAF3740004558ADD1300000BE700A4841648810468B45D26C6B2FBCF003A19330200000BE70094841648C640E8A05528C6BAFC1F00422B03DE00000BE700B48416488C51AA1EED28C6BAFC0A004278EBB300000BE70054841648C14165203DCABCAAC08201421D5E2600000BE700D484164894120CEEE69EAF6A71B9023C2CB6BA00000C77008603A5C900B7C500800C00D4C758A000005F7006607A58900B78C00D48ED3B00000BE4008484164889002AA533ECDAA3721B094E7AA1E700000BE400C4841648960863EED3EADAF3740004558AAF1300000BE400A4841648810468B45D26C6B2FBCF003A19410200000BE40094841648C640E8A05528C6BAFC1F00422B71DE00000BE400B48416488C51AA1EED28C6BAFC0A00427899B300000BE40054841648C14165203DCABCAAC08201421D2C2600000BE400D484164894120CEEE69EAF6A71B9023C2CC4BA00000C74008603A5C900B7C500800C00D4C2EB2000005F4006607A58900B78C00D48127C";
 	std::string allcast_binary;
 
 	// Transcode to binary
@@ -314,7 +314,56 @@ TEST(DTEHandler, PASPW_REQ2)
 	STRCMP_EQUAL("$O;PASPW#000;\r", resp.c_str());
 
 	BasePassPredict& stored_pass_predict = configuration_store->read_pass_predict();
-	(void)stored_pass_predict;
+
+	for (unsigned int i = 0; i < stored_pass_predict.num_records; i++) {
+		DEBUG_TRACE("paspw[%u].satDcsId=%01x", i, stored_pass_predict.records[i].satDcsId);
+		DEBUG_TRACE("paspw[%u].satHexId=%01x", i, stored_pass_predict.records[i].satHexId);
+		DEBUG_TRACE("paspw[%u].uplinkStatus=%u", i, stored_pass_predict.records[i].uplinkStatus);
+		DEBUG_TRACE("paspw[%u].year=%u", i, stored_pass_predict.records[i].bulletin.year);
+		DEBUG_TRACE("paspw[%u].month=%u", i, stored_pass_predict.records[i].bulletin.month);
+		DEBUG_TRACE("paspw[%u].day=%u", i, stored_pass_predict.records[i].bulletin.day);
+		DEBUG_TRACE("paspw[%u].hour=%u", i, stored_pass_predict.records[i].bulletin.hour);
+		DEBUG_TRACE("paspw[%u].minute=%u", i, stored_pass_predict.records[i].bulletin.minute);
+		DEBUG_TRACE("paspw[%u].second=%u", i, stored_pass_predict.records[i].bulletin.second);
+		DEBUG_TRACE("paspw[%u].semiMajorAxisKm=%f", i, (double)stored_pass_predict.records[i].semiMajorAxisKm);
+		DEBUG_TRACE("paspw[%u].inclinationDeg=%f", i, (double)stored_pass_predict.records[i].inclinationDeg);
+		DEBUG_TRACE("paspw[%u].ascNodeLongitudeDeg=%f", i, (double)stored_pass_predict.records[i].ascNodeLongitudeDeg);
+		DEBUG_TRACE("paspw[%u].ascNodeDriftDeg=%f", i, (double)stored_pass_predict.records[i].ascNodeDriftDeg);
+		DEBUG_TRACE("paspw[%u].orbitPeriodMin=%f", i, (double)stored_pass_predict.records[i].orbitPeriodMin);
+		DEBUG_TRACE("paspw[%u].semiMajorAxisDriftMeterPerDay=%f", i, (double)stored_pass_predict.records[i].semiMajorAxisDriftMeterPerDay);
+	}
+
+    struct PredictionPassConfiguration_t prepasConfiguration = {
+
+        43.5497f,                     //< Geodetic latitude of the beacon (deg.) [-90, 90]
+        1.485f,                       //< Geodetic longitude of the beacon (deg.E)[0, 360]
+        { 2021, 03, 2, 00, 00, 00 },  //< Beginning of prediction (Y/M/D, hh:mm:ss)
+        { 2021, 03, 3, 00, 00, 00 },  //< End of prediction (Y/M/D, hh:mm:ss)
+        5.0f,                         //< Minimum elevation of passes [0, 90](default 5 deg)
+        90.0f,                        //< Maximum elevation of passes  [maxElevation >=
+                        //< minElevation] (default 90 deg)
+        5.0f,                         //< Minimum duration (default 5 minutes)
+        1000,                         //< Maximum number of passes per satellite (default
+                        //< 1000)
+        5,                            //< Linear time margin (in minutes/6months) (default
+                        //< 5 minutes/6months)
+        30                            //< Computation step (default 30s)
+    };
+
+    uint8_t nbSatsInAopTable = stored_pass_predict.num_records;
+    SatelliteNextPassPrediction_t nextPass;
+    CHECK_TRUE(PREVIPASS_compute_next_pass(
+    		&prepasConfiguration,
+			stored_pass_predict.records,
+			nbSatsInAopTable,
+			&nextPass));
+    std::cout << "epoch:\t" << nextPass.epoch << std::endl;
+    std::cout << "duration:\t" << nextPass.duration << std::endl;
+    std::cout << "elevationMax:\t" << nextPass.elevationMax << std::endl;
+    std::cout << "satHexId:\t" << std::hex << nextPass.satHexId << std::endl;
+    std::cout << "downlinkStatus:\t" << nextPass.downlinkStatus << std::endl;
+    std::cout << "uplinkStatus:\t" << nextPass.uplinkStatus << std::endl;
+
 	//CHECK_TRUE(stored_pass_predict == pass_predict);
 }
 

@@ -662,7 +662,7 @@ void ArgosScheduler::periodic_algorithm() {
 
 void ArgosScheduler::start(std::function<void()> data_notification_callback) {
 	(void)data_notification_callback;
-	DEBUG_TRACE("ArgosScheduler::start");
+	DEBUG_INFO("ArgosScheduler::start");
 	m_is_running = true;
 	m_is_deferred = false;
 	m_msg_index = 0;
@@ -677,7 +677,7 @@ void ArgosScheduler::start(std::function<void()> data_notification_callback) {
 }
 
 void ArgosScheduler::stop() {
-	DEBUG_TRACE("ArgosScheduler::stop");
+	DEBUG_INFO("ArgosScheduler::stop");
 	deschedule();
 	m_is_running = false;
 
