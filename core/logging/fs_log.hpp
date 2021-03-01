@@ -19,6 +19,8 @@ public:
 		m_max_size = max_size;
 	}
 
+	bool is_ready() override { return m_filesystem->is_mounted(); }
+
 	void create() {
 		try {
 			// See if an existing file exists

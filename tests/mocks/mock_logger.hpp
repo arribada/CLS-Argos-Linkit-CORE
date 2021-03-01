@@ -12,6 +12,10 @@ public:
 		mock().actualCall("create").onObject(this);
 	}
 
+	bool is_ready() {
+		return mock().actualCall("is_ready").onObject(this).returnBoolValue();
+	}
+
 	void write(void *entry) {
 		mock().actualCall("create").onObject(this).withParameter("entry", entry);
 	}

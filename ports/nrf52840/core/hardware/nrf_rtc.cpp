@@ -20,6 +20,7 @@ static void rtc_time_keeping_event_handler(nrfx_rtc_int_type_t int_type)
 
 void NrfRTC::init()
 {
+    m_is_set = false;
     g_overflows_occured = 0;
     g_timestamp_offset = 0;
 
@@ -60,4 +61,9 @@ void NrfRTC::settime(std::time_t time)
     InterruptLock lock;
 
     g_timestamp_offset = static_cast<int64_t>(time) - getuptime();
+    m_is_set = true;
+}
+
+bool NrfRTC::is_set() {
+	return m_is_set;
 }

@@ -51,7 +51,7 @@ extern "C" {
 
 #define PREPASS_MIN_DURATION_MINS   5.0f
 
-#define ARGOS_TX_MARGIN_SECS        3
+#define ARGOS_TX_MARGIN_SECS        12
 
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
@@ -65,7 +65,6 @@ ArgosScheduler::ArgosScheduler() {
 	m_earliest_tx = INVALID_SCHEDULE;
 	m_last_longitude = INVALID_GEODESIC;
 	m_last_latitude = INVALID_GEODESIC;
-	m_is_rtc_set = false;
 }
 
 void ArgosScheduler::reschedule() {
@@ -73,7 +72,7 @@ void ArgosScheduler::reschedule() {
 	if (m_argos_config.mode == BaseArgosMode::OFF) {
 		DEBUG_WARN("ArgosScheduler: mode is OFF -- not scheduling");
 		return;
-	} else if (!m_is_rtc_set) {
+	} else if (!rtc->is_set()) {
 		DEBUG_WARN("ArgosScheduler: RTC is not yet set -- not scheduling");
 		return;
 	} else if (m_argos_config.mode == BaseArgosMode::LEGACY) {
@@ -346,10 +345,10 @@ void ArgosScheduler::notify_sensor_log_update() {
 		sensor_log->read(&gps_entry, idx);
 		// Update last known position if the GPS entry is valid (otherwise we preserve the last one)
 		if (gps_entry.valid) {
-			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: updated last known GPS position; m_is_rtc_set=true");
+			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: updated last known GPS position; is_rtc_set=%u",
+					rtc->is_set());
 			m_last_longitude = gps_entry.lon;
 			m_last_latitude = gps_entry.lat;
-			m_is_rtc_set = true;
 		}
 
 		if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
@@ -694,11 +693,11 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 	if (m_is_running && m_argos_config.underwater_en) {
 		m_switch_state = state;
 		if (!m_switch_state) {
-			DEBUG_INFO("ArgosScheduler::notify_saltwater_switch_state: state=0: rescheduling");
+			DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state: state=0: rescheduling");
 			m_earliest_tx = rtc->gettime() + m_argos_config.dry_time_before_tx;
 			reschedule();
 		} else {
-			DEBUG_INFO("ArgosScheduler::notify_saltwater_switch_state: state=1: deferring schedule");
+			DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state: state=1: deferring schedule");
 			deschedule();
 			m_is_deferred = true;
 		}

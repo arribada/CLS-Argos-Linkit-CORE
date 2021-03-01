@@ -79,8 +79,6 @@ int main()
 
     nrf_log_redirect_init();
 
-    DEBUG_INFO("GenTracker Version: %s", FW_APP_VERSION_STR_C);
-
 	PMU::initialise();
 
 	DEBUG_TRACE("Battery monitor...");
