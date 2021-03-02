@@ -15,9 +15,11 @@ public:
 
 	std::time_t gettime() override;
 	void settime(std::time_t time) override;
+	bool is_set() override;
 
 private:
 	// Prevent copies to enforce this as a singleton
+	bool m_is_set;
     NrfRTC() {}
     NrfRTC(NrfRTC const&)          = delete;
     void operator=(NrfRTC const&)  = delete;

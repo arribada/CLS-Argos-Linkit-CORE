@@ -76,6 +76,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     
     # For setting firmware app version
     -DFW_APP_VERSION_STR="V0.1"s
+    -DFW_APP_VERSION_STR_C="V0.1"
 
 	# Packet protocol option for including CRC8
     -DARGOS_USE_CRC8

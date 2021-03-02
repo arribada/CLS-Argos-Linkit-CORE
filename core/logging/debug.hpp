@@ -13,7 +13,7 @@ extern Logger *system_log;
 #define DEBUG_ERROR(fmt, ...) \
 	do { \
 		if (console_log) console_log->error(fmt, ##__VA_ARGS__); \
-		if (system_log) system_log->error(fmt, ##__VA_ARGS__); \
+		if (system_log && system_log->is_ready()) system_log->error(fmt, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define DEBUG_ERROR(fmt, ...) \
@@ -30,7 +30,7 @@ do { \
 #define DEBUG_WARN(fmt, ...) \
 	do { \
 		if (console_log) console_log->warn(fmt, ##__VA_ARGS__); \
-		if (system_log) system_log->warn(fmt, ##__VA_ARGS__); \
+		if (system_log && system_log->is_ready()) system_log->warn(fmt, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define DEBUG_WARN(fmt, ...) \
@@ -47,7 +47,7 @@ do { \
 #define DEBUG_INFO(fmt, ...) \
 	do { \
 		if (console_log) console_log->info(fmt, ##__VA_ARGS__); \
-		if (system_log) system_log->info(fmt, ##__VA_ARGS__); \
+		if (system_log && system_log->is_ready()) system_log->info(fmt, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define DEBUG_INFO(fmt, ...) \
@@ -64,7 +64,7 @@ do { \
 #define DEBUG_TRACE(fmt, ...) \
 	do { \
 		if (console_log) console_log->trace(fmt, ##__VA_ARGS__); \
-		if (system_log) system_log->trace(fmt, ##__VA_ARGS__); \
+		if (system_log && system_log->is_ready()) system_log->trace(fmt, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define DEBUG_TRACE(fmt, ...) \

@@ -13,6 +13,9 @@ public:
 	void settime(std::time_t t) {
 		mock().actualCall("settime").onObject(this).withParameter("t", (uint64_t)t);
 	}
+	bool is_set() {
+		return mock().actualCall("is_set").onObject(this).returnBoolValue();
+	}
 };
 
 #endif // __MOCK_RTC_HPP_

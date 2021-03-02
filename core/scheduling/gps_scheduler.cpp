@@ -16,7 +16,7 @@ extern RTC *rtc;
 
 void GPSScheduler::start(std::function<void()> data_notification_callback)
 {
-    DEBUG_TRACE("GPSScheduler::start");
+    DEBUG_INFO("GPSScheduler::start");
     configuration_store->get_gnss_configuration(m_gnss_config);
 
     m_data_notification_callback = data_notification_callback;
@@ -28,7 +28,7 @@ void GPSScheduler::start(std::function<void()> data_notification_callback)
 
 void GPSScheduler::stop()
 {
-    DEBUG_TRACE("GPSScheduler::stop");
+    DEBUG_INFO("GPSScheduler::stop");
     
     system_scheduler->cancel_task(m_task_acquisition_period);
     system_scheduler->cancel_task(m_task_acquisition_timeout);
@@ -60,7 +60,7 @@ void GPSScheduler::reschedule()
     // Find the time in milliseconds until this schedule
     int64_t time_until_next_schedule_ms = (next_schedule - now) * MS_PER_SEC;
 
-    DEBUG_TRACE("GPSScheduler::schedule_aquisition in %llu seconds", time_until_next_schedule_ms / 1000);
+    DEBUG_INFO("GPSScheduler::schedule_aquisition in %llu seconds", time_until_next_schedule_ms / 1000);
 
     deschedule(); // Ensure any previous schedule has been cleared
     m_task_acquisition_period = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_period, this), Scheduler::DEFAULT_PRIORITY, time_until_next_schedule_ms);
@@ -92,7 +92,7 @@ void GPSScheduler::task_acquisition_period() {
 
 void GPSScheduler::log_invalid_gps_entry()
 {
-    DEBUG_TRACE("GPSScheduler::log_invalid_gps_entry");
+    DEBUG_INFO("GPSScheduler::log_invalid_gps_entry");
 
     GPSLogEntry gps_entry;
     memset(&gps_entry, 0, sizeof(gps_entry));
@@ -177,6 +177,7 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.event_type = GPSEventType::FIX;
     gps_entry.valid = true;
 
+    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lon=%lf lat=%lf height=%d", gps_entry.lon, gps_entry.lat, gps_entry.height);
     sensor_log->write(&gps_entry);
 
     power_off();

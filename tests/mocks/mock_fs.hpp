@@ -11,6 +11,9 @@ public:
 	int umount() {
 		return mock().actualCall("umount").onObject(this).returnIntValue();
 	}
+	bool is_mounted() {
+		return mock().actualCall("is_mounted").onObject(this).returnBoolValue();
+	}
 	int format() {
 		return mock().actualCall("format").onObject(this).returnIntValue();
 	}

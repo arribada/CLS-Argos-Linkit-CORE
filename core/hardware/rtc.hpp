@@ -8,6 +8,7 @@ public:
 	virtual ~RTC() {}
 	virtual std::time_t  gettime() = 0;
 	virtual void settime(std::time_t ) = 0;
+	virtual bool is_set() = 0;
 };
 
 #endif // __RTC_HPP_

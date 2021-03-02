@@ -39,7 +39,7 @@ void GenTracker::react(tinyfsm::Event const &) { }
 
 void GenTracker::react(ReedSwitchEvent const &event)
 {
-	DEBUG_INFO("react: ReedSwitchEvent: %u", event.state);
+	DEBUG_TRACE("react: ReedSwitchEvent: %u", event.state);
 	if (event.state) {
 		// Start reed switch hold timer tasks in case this is a hold gesture
 		m_reed_trigger_start_time = system_timer->get_counter();
@@ -103,9 +103,10 @@ void BootState::entry() {
 		sensor_log->create();
 		system_log->create();
 		configuration_store->init();
-		DEBUG_TRACE("sensor_log: has %u entries", sensor_log->num_entries());
-		DEBUG_TRACE("system_log: has %u entries", system_log->num_entries());
-		DEBUG_TRACE("configuration_store: is_valid=%u", configuration_store->is_valid());
+	    DEBUG_INFO("GenTracker Version: %s", FW_APP_VERSION_STR_C);
+		DEBUG_INFO("sensor_log: has %u entries", sensor_log->num_entries());
+		DEBUG_INFO("system_log: has %u entries", system_log->num_entries());
+		DEBUG_INFO("configuration_store: is_valid=%u", configuration_store->is_valid());
 		// Transition to IDLE state after initialisation
 		system_scheduler->post_task_prio([this](){
 			transit<IdleState>();
@@ -159,7 +160,7 @@ void IdleState::exit() {
 
 void OperationalState::react(SaltwaterSwitchEvent const &event)
 {
-	DEBUG_INFO("react: SaltwaterSwitchEvent");
+	DEBUG_INFO("react: SaltwaterSwitchEvent: state=%u", event.state);
 	configuration_store->notify_saltwater_switch_state(event.state);
 	location_scheduler->notify_saltwater_switch_state(event.state);
 	comms_scheduler->notify_saltwater_switch_state(event.state);
@@ -208,13 +209,13 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 
 	switch (event.event_type) {
 	case BLEServiceEventType::CONNECTED:
-		DEBUG_INFO("ConfigurationState::on_ble_event: CONNECTED");
+		DEBUG_TRACE("ConfigurationState::on_ble_event: CONNECTED");
 		// Indicate DTE connection is made
 		status_led->set(RGBLedColor::BLUE);
 		restart_inactivity_timeout();
 		break;
 	case BLEServiceEventType::DISCONNECTED:
-		DEBUG_INFO("ConfigurationState::on_ble_event: DISCONNECTED");
+		DEBUG_TRACE("ConfigurationState::on_ble_event: DISCONNECTED");
 		ota_updater->abort_file_transfer();
 		status_led->flash(RGBLedColor::BLUE);
 		break;

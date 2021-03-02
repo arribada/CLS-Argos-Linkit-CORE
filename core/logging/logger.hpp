@@ -97,6 +97,7 @@ public:
 	virtual void write(void *) = 0;
 	virtual void read(void *, int index = 0) = 0;
 	virtual unsigned int num_entries() = 0;
+	virtual bool is_ready() = 0;
 };
 
 #endif // __LOGGER_HPP_

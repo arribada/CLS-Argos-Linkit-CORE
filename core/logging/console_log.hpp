@@ -57,6 +57,7 @@ private:
 
 public:
 	void create() override {}
+	bool is_ready() override { return true; }
 	unsigned int num_entries() override {return 0;}
 	void read(void *, int) override { }
 	void write(void *entry) override {

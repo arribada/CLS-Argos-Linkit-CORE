@@ -41,7 +41,6 @@ private:
 	double 		 m_last_latitude;
 	std::array<unsigned int, MAX_MSG_INDEX> m_msg_burst_counter;
 	std::array<std::vector<GPSLogEntry>, MAX_MSG_INDEX> m_gps_entries;
-	bool		 m_is_rtc_set;
 
 public:
 	ArgosScheduler();

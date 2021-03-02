@@ -13,6 +13,7 @@ class FileSystem {
 public:
 	virtual ~FileSystem() {}
 	virtual int mount() = 0;
+	virtual bool is_mounted() = 0;
 	virtual int umount() = 0;
 	virtual int format() = 0;
 	virtual int remove(const char *) = 0;
@@ -46,6 +47,7 @@ private:
 	struct lfs_config m_cfg;
 	lfs_t  m_lfs;
 	FlashInterface *m_flash_if;
+	bool m_is_mounted;
 
 	static int lfs_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) { return reinterpret_cast<LFSFileSystem*>(c->context)->m_flash_if->read(block, off, buffer, size); }
 	static int lfs_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) { return reinterpret_cast<LFSFileSystem*>(c->context)->m_flash_if->prog(block, off, buffer, size); }
@@ -87,6 +89,9 @@ public:
 
 		// Flash interface
 		m_flash_if = flash_if;
+
+		// Mark as unmounted
+		m_is_mounted = false;
 	}
 
 	virtual ~LFSFileSystem() {
@@ -96,14 +101,23 @@ public:
 	}
 
 	int mount() override {
-		return lfs_mount(&m_lfs, &m_cfg);
+		int ret = lfs_mount(&m_lfs, &m_cfg);
+		if (!ret)
+			m_is_mounted = true;
+		return ret;
 	}
 
 	int umount() override {
+		m_is_mounted = false;
 		return lfs_unmount(&m_lfs);
 	}
 
+	bool is_mounted() override {
+		return m_is_mounted;
+	}
+
 	int format() override {
+		m_is_mounted = false;
 		return lfs_format(&m_lfs, &m_cfg);
 	}
 
