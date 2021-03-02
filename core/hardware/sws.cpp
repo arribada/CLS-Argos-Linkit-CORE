@@ -4,6 +4,7 @@
 #include "scheduler.hpp"
 #include "gpio.hpp"
 #include "debug.hpp"
+#include "nrf_delay.h"
 
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
@@ -19,6 +20,7 @@ void SWS::sample_sws() {
 
 	// Sample the SWS pin
 	GPIOPins::set(BSP::GPIO::GPIO_SLOW_SWS_SEND);
+	nrf_delay_ms(1); // Wait a while to allow for any water capacitance (this value is a total guess)
 	new_state = GPIOPins::value(BSP::GPIO::GPIO_SLOW_SWS_RX);
 	GPIOPins::clear(BSP::GPIO::GPIO_SLOW_SWS_SEND);
 
