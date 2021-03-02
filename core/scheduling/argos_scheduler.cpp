@@ -396,9 +396,11 @@ unsigned int ArgosScheduler::convert_longitude(double x) {
 }
 
 void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet) {
-	unsigned int base_pos = 0;
 
 	DEBUG_TRACE("ArgosScheduler::build_short_packet");
+
+#ifndef ARGOS_TEST_PACKET
+	unsigned int base_pos = 0;
 
 	// Reserve required number of bytes
 	packet.assign(SHORT_PACKET_BYTES, 0);
@@ -463,6 +465,12 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 
 	// Append BCH code
 	PACK_BITS(code_word, packet, base_pos, BCHEncoder::B127_106_3_CODE_LEN);
+#else
+
+	// Send a nail-up test packet
+	packet = std::string("\xFF\xFF\xFF\x64\xE7\xB5\x6A\xC1\x47\xCA\x6B\x48\x17\xC7\x65\xDC\x8A\x2A\x9D\xA1\xE2\x18"s);
+
+#endif
 }
 
 BaseDeltaTimeLoc ArgosScheduler::delta_time_loc(GPSLogEntry const& a, GPSLogEntry const& b)

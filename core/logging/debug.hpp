@@ -59,19 +59,13 @@ do { \
 #define DEBUG_INFO(fmt, ...)
 #endif
 
+// NOTE: Do not log TRACE level to system log as it can impact timing of some
+// time critical areas of code
 #if (DEBUG_LEVEL >= 4)
-#ifdef DEBUG_TO_SYSTEMLOG
-#define DEBUG_TRACE(fmt, ...) \
-	do { \
-		if (console_log) console_log->trace(fmt, ##__VA_ARGS__); \
-		if (system_log && system_log->is_ready()) system_log->trace(fmt, ##__VA_ARGS__); \
-	} while (0)
-#else
 #define DEBUG_TRACE(fmt, ...) \
 	do { \
 		if (console_log) console_log->trace(fmt, ##__VA_ARGS__); \
 	} while (0)
-#endif
 #else
 #define DEBUG_TRACE(fmt, ...)
 #endif
