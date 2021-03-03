@@ -110,7 +110,7 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
     ble_uuid.type = p_stm_ota->uuid_type;
     ble_uuid.uuid = STM_OTA_UUID_SERVICE;
 
-    err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_SECONDARY, &ble_uuid, &p_stm_ota->service_handle);
+    err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY, &ble_uuid, &p_stm_ota->service_handle);
     VERIFY_SUCCESS(err_code);
 
     // Add Base Address characteristic.
