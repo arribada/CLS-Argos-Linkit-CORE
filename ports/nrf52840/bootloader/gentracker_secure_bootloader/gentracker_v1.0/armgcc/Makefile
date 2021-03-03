@@ -235,22 +235,18 @@ include $(TEMPLATE_PATH)/Makefile.common
 
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
-.PHONY: flash flash_mbr erase
+.PHONY: flash mergehex
 
 # Flash the program
-flash: default
-	@echo Flashing: $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa.hex
-	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa.hex --sectorerase
-	nrfjprog -f nrf52 --reset
+mergehex: default
+	mergehex -m ${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa.hex -o $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa_merged.hex
 
-# Flash softdevice
-flash_mbr:
-	@echo Flashing: mbr_nrf52_2.4.1_mbr.hex
-	nrfjprog -f nrf52 --program $(SDK_ROOT)/components/softdevice/mbr/hex/mbr_nrf52_2.4.1_mbr.hex --sectorerase
-	nrfjprog -f nrf52 --reset
-
-erase:
+flash: mergehex
+	@echo Flashing: $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa_merged.hex
 	nrfjprog -f nrf52 --eraseall
+	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa_merged.hex --sectoranduicrerase
+	nrfjprog -f nrf52 --reset
+
 
 SDK_CONFIG_FILE := ../config/sdk_config.h
 CMSIS_CONFIG_TOOL := $(SDK_ROOT)/external_tools/cmsisconfig/CMSIS_Configuration_Wizard.jar
