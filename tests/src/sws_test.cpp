@@ -49,6 +49,7 @@ TEST(SWS, UnderwaterEvent)
 
 	for (unsigned int i = 0; i < 5; i++) {
 		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("delay_ms").withUnsignedIntParameter("ms", 1);
 		mock().expectOneCall("clear").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
 		mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_RX).andReturnValue(1);
 		DEBUG_TRACE("t=%lu", linux_timer->get_counter());
@@ -78,6 +79,7 @@ TEST(SWS, SurfacedEvent)
 
 	for (unsigned int i = 0; i < 1; i++) {
 		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("delay_ms").withUnsignedIntParameter("ms", 1);
 		mock().expectOneCall("clear").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
 		mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_RX).andReturnValue(0);
 		DEBUG_TRACE("t=%lu", linux_timer->get_counter());
@@ -108,6 +110,7 @@ TEST(SWS, SchedulingPeriodSurfaced)
 	// Sampling should happen every 2 seconds when surfaced
 	for (unsigned int i = 0; i < 5; i++) {
 		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("delay_ms").withUnsignedIntParameter("ms", 1);
 		mock().expectOneCall("clear").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
 		mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_RX).andReturnValue(0);
 		DEBUG_TRACE("t=%lu", linux_timer->get_counter());
@@ -137,6 +140,7 @@ TEST(SWS, SchedulingPeriodUnderwater)
 
 	for (unsigned int i = 0; i < 10; i++) {
 		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
+		mock().expectOneCall("delay_ms").withUnsignedIntParameter("ms", 1);
 		mock().expectOneCall("clear").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
 		mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_RX).andReturnValue(1);
 		DEBUG_TRACE("t=%lu", linux_timer->get_counter());

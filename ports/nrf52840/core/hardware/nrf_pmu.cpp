@@ -3,6 +3,7 @@
 #include "gpio.hpp"
 #include "nrf_nvic.h"
 #include "nrf_pwr_mgmt.h"
+#include "nrf_delay.h"
 
 void PMU::initialise() {
 	nrf_pwr_mgmt_init();
@@ -20,4 +21,14 @@ void PMU::powerdown() {
 
 void PMU::run() {
 	nrf_pwr_mgmt_run();
+}
+
+void PMU::delay_ms(unsigned ms)
+{
+	nrf_delay_ms(ms);
+}
+
+void PMU::delay_us(unsigned us)
+{
+	nrf_delay_us(us);
 }

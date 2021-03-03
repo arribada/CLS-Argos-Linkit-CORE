@@ -10,3 +10,11 @@ void PMU::reset(bool dfu_mode) {
 void PMU::powerdown() {
 	mock().actualCall("powerdown");
 }
+
+void PMU::delay_ms(unsigned ms) {
+	mock().actualCall("delay_ms").withParameter("ms", ms);
+}
+
+void PMU::delay_us(unsigned us) {
+	mock().actualCall("delay_us").withParameter("us", us);
+}
