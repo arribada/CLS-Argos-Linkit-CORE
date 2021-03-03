@@ -1,3 +1,4 @@
+#include <iostream>
 #include "ota_flash_file_updater.hpp"
 #include "error.hpp"
 #include "crc32.hpp"
@@ -100,6 +101,8 @@ void OTAFlashFileUpdater::write_file_data(void * const data, lfs_size_t length)
 	}
 
 	m_file_bytes_received += length;
+
+	DEBUG_TRACE("OTAFlashFileUpdater::write_file_data: %u/%u", m_file_bytes_received, m_file_size);
 
 	m_crc32_calc ^= 0xFFFFFFFF;
 	CRC32::checksum((unsigned char *)data, length, m_crc32_calc);

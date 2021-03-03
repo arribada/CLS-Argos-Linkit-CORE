@@ -241,7 +241,7 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 		ota_updater->abort_file_transfer();
 		break;
 	case BLEServiceEventType::OTA_FILE_DATA:
-		DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_FILE_DATA");
+		//DEBUG_TRACE("ConfigurationState::on_ble_event: OTA_FILE_DATA");
 		restart_inactivity_timeout();
 		ota_updater->write_file_data(event.data, event.length);
 		break;
@@ -259,7 +259,7 @@ void ConfigurationState::on_ble_inactivity_timeout() {
 }
 
 void ConfigurationState::restart_inactivity_timeout() {
-	DEBUG_TRACE("Restart BLE inactivity timeout: %lu", system_timer->get_counter());
+	//DEBUG_TRACE("Restart BLE inactivity timeout: %lu", system_timer->get_counter());
 	system_scheduler->cancel_task(m_ble_inactivity_timeout_task);
 	m_ble_inactivity_timeout_task = system_scheduler->post_task_prio(std::bind(&ConfigurationState::on_ble_inactivity_timeout, this), Scheduler::DEFAULT_PRIORITY, BLE_INACTIVITY_TIMEOUT_MS);
 }
