@@ -6,6 +6,8 @@
 #include "debug.hpp"
 #include "is25_flash.hpp"
 
+static constexpr uint8_t dummy_verify_value = 0xAA;
+
 void Is25Flash::init()
 {
 	// Initialise the IS25LP128F flash chip and set it up for QSPI
@@ -83,16 +85,21 @@ int Is25Flash::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_si
 {
 	//DEBUG_TRACE("QSPI Flash prog(%lu %lu %lu)", block, off, size);
 
-	nrfx_err_t ret = nrfx_qspi_write(buffer, size, block * m_block_size + off);
-	if (ret != NRFX_SUCCESS)
+	nrfx_err_t ret_write = nrfx_qspi_write(buffer, size, block * m_block_size + off);
+	if (ret_write != NRFX_SUCCESS)
 	{
-		DEBUG_ERROR("QSPI IO Error %d", ret);
+		DEBUG_ERROR("QSPI IO Error %d", ret_write);
 		return LFS_ERR_IO;
 	}
 
+	// Wait for the write to be completed before verifying it
+	int ret_sync = sync();
+	if (ret_sync)
+		return ret_sync;
+
 	// Check that all bytes were written correctly
 	std::vector<uint8_t> read_buffer;
-	read_buffer.resize(size);
+	read_buffer.resize(size, dummy_verify_value);
 
 	read(block, off, &read_buffer[0], read_buffer.size());
 
@@ -115,16 +122,21 @@ int Is25Flash::erase(lfs_block_t block)
 {
 	//DEBUG_TRACE("QSPI Flash erase(%lu)", block);
 
-	nrfx_err_t qspi_ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * m_block_size);
-	if (qspi_ret != NRFX_SUCCESS)
+	nrfx_err_t ret_erase = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * m_block_size);
+	if (ret_erase != NRFX_SUCCESS)
 	{
-		DEBUG_ERROR("QSPI IO Error %d", qspi_ret);
+		DEBUG_ERROR("QSPI IO Error %d", ret_erase);
 		return LFS_ERR_IO;
 	}
+
+	// Wait for the erase to be completed before verifying it
+	int ret_sync = sync();
+	if (ret_sync)
+		return ret_sync;
 	
 	// Check the block erased correctly by reading it back
 	std::vector<uint8_t> read_buffer;
-	read_buffer.resize(m_block_size);
+	read_buffer.resize(m_block_size, dummy_verify_value);
 
 	int read_ret = read(block, 0, &read_buffer[0], read_buffer.size());
 	if (read_ret)
