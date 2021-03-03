@@ -40,12 +40,14 @@ void Is25Flash::init()
         return;
     }
 
+/*
 	// Set FLASH output drive to 12.5%
     config.opcode = IS25LP128F::SERPV;
     tx_buffer[0] = 1 << 5;
 	config.length = NRF_QSPI_CINSTR_LEN_2B;
 	config.wren = true;
     nrfx_qspi_cinstr_xfer(&config, tx_buffer, nullptr);
+*/
 
 	// Switch to QSPI mode
 	config.opcode = IS25LP128F::WRSR;
@@ -94,14 +96,16 @@ int Is25Flash::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_si
 
 	// Wait for the write to be completed before verifying it
 	int ret_sync = sync();
-	if (ret_sync)
+	if (ret_sync != LFS_ERR_OK)
 		return ret_sync;
 
 	// Check that all bytes were written correctly
 	std::vector<uint8_t> read_buffer;
 	read_buffer.resize(size, dummy_verify_value);
 
-	read(block, off, &read_buffer[0], read_buffer.size());
+	int ret_read = read(block, off, &read_buffer[0], read_buffer.size());
+	if (ret_read != LFS_ERR_OK)
+		return ret_read;
 
 	if (memcmp( reinterpret_cast<const uint8_t *>(buffer), &read_buffer[0], size ))
 	{
@@ -131,16 +135,16 @@ int Is25Flash::erase(lfs_block_t block)
 
 	// Wait for the erase to be completed before verifying it
 	int ret_sync = sync();
-	if (ret_sync)
+	if (ret_sync != LFS_ERR_OK)
 		return ret_sync;
 	
 	// Check the block erased correctly by reading it back
 	std::vector<uint8_t> read_buffer;
 	read_buffer.resize(m_block_size, dummy_verify_value);
 
-	int read_ret = read(block, 0, &read_buffer[0], read_buffer.size());
-	if (read_ret)
-		return read_ret;
+	int ret_read = read(block, 0, &read_buffer[0], read_buffer.size());
+	if (ret_read != LFS_ERR_OK)
+		return ret_read;
 
 	// Check all bytes were erased correctly
 	if (std::any_of(read_buffer.cbegin(), read_buffer.cend(), [](uint8_t i){ return i != 0xFF; }))
