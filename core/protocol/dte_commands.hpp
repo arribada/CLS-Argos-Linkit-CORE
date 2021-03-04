@@ -67,7 +67,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -83,7 +84,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -99,7 +101,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 1U,
 				.max_value = 1U,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -115,7 +118,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -138,7 +142,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 1,
 				.max_value = 128,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -154,7 +159,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -170,7 +176,8 @@ static const DTECommandMap command_map[] = {
 					.min_value = 0U,
 					.max_value = 0U,
 					.permitted_values = {},
-					.is_implemented = false
+					.is_implemented = false,
+					.is_writable = false
 				},
 		}
 	},
@@ -186,7 +193,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0U,
 				.max_value = 0U,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			},
 			{
 				.name = "length",
@@ -195,7 +203,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0U,
 				.max_value = 0x500U,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -211,7 +220,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0U,
 				.max_value = 1U,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			},
 		}
 	},
@@ -227,7 +237,8 @@ static const DTECommandMap command_map[] = {
 					.min_value = 0U,
 					.max_value = 0U,
 					.permitted_values = { 1U },
-					.is_implemented = false
+					.is_implemented = false,
+					.is_writable = false
 				},
 		}
 	},
@@ -257,7 +268,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -273,7 +285,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -289,7 +302,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -312,7 +326,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -335,7 +350,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = "",
 				.max_value = "",
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -372,7 +388,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -388,7 +405,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0U,
 				.max_value = 0xFFFU,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			},
 			{
 				.name = "MMM",
@@ -397,7 +415,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0U,
 				.max_value = 0xFFFU,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			},
 			{
 				.name = "data",
@@ -406,7 +425,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},
@@ -443,7 +463,8 @@ static const DTECommandMap command_map[] = {
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
-				.is_implemented = false
+				.is_implemented = false,
+				.is_writable = false
 			}
 		}
 	},

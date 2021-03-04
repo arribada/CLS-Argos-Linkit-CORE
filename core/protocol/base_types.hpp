@@ -205,6 +205,7 @@ struct BaseMap {
 	BaseConstraint max_value;
 	std::vector<BaseConstraint> permitted_values;
 	bool           is_implemented;
+	bool           is_writable;
 };
 
 #endif // __BASE_TYPES_HPP_

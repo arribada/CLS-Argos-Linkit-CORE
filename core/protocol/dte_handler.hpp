@@ -70,8 +70,12 @@ public:
 			return DTEEncoder::encode(DTECommand::PARML_RESP, error_code);
 		}
 
-		for(unsigned int i = 0; i < param_values.size(); i++)
-			configuration_store->write_param(param_values[i].param, param_values[i].value);
+		for (unsigned int i = 0; i < param_values.size(); i++) {
+			if (param_map[(int)param_values[i].param].is_writable)
+				configuration_store->write_param(param_values[i].param, param_values[i].value);
+			else
+				DEBUG_WARN("DTEHandler::PARMW_REQ: not writing read-only attribute %s", param_map[(int)param_values[i].param].name.c_str());
+		}
 
 		return DTEEncoder::encode(DTECommand::PARMW_RESP, DTEError::OK);
 	}
