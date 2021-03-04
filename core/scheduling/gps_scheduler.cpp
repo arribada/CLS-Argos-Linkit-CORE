@@ -17,7 +17,6 @@ extern RTC *rtc;
 void GPSScheduler::start(std::function<void()> data_notification_callback)
 {
     DEBUG_INFO("GPSScheduler::start");
-    configuration_store->get_gnss_configuration(m_gnss_config);
 
     m_data_notification_callback = data_notification_callback;
     m_gnss_data.pending_data_logging = false;
@@ -48,6 +47,9 @@ void GPSScheduler::notify_saltwater_switch_state(bool state)
 
 void GPSScheduler::reschedule()
 {
+	// Obtain fresh copy of configuration as it may have changed
+	configuration_store->get_gnss_configuration(m_gnss_config);
+
     if (!m_gnss_config.enable)
         return;
 
@@ -81,9 +83,9 @@ void GPSScheduler::task_acquisition_period() {
     {
         // If our power on failed then log this as a failed GPS fix and notify the user
         log_invalid_gps_entry();
-        reschedule();
         if (m_data_notification_callback)
             m_data_notification_callback();
+        reschedule();
         return;
     }
 
@@ -114,10 +116,10 @@ void GPSScheduler::task_acquisition_timeout() {
 
     log_invalid_gps_entry();
 
-    reschedule();
-
     if (m_data_notification_callback)
         m_data_notification_callback();
+
+    reschedule();
 }
 
 void GPSScheduler::task_update_rtc()
@@ -182,11 +184,14 @@ void GPSScheduler::task_process_gnss_data()
 
     power_off();
 
-    reschedule();
+    // Notify configuration store that we have a new valid GPS fix
+    configuration_store->notify_gps_location(gps_entry);
 
     if (m_data_notification_callback)
         m_data_notification_callback();
-    
+
+    reschedule();
+
     m_gnss_data.pending_data_logging = false;
 }
 

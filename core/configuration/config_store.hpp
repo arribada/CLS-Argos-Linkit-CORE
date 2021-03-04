@@ -206,15 +206,18 @@ public:
 		serialize_zone();
 	}
 
-	void notify_gps_location(GPSLogEntry gps_location) {
+	void notify_gps_location(GPSLogEntry& gps_location) {
 		m_last_gps_log_entry = gps_location;
 	}
 
 	bool is_zone_exclusion(void) {
+
 		if (m_zone.enable_monitoring &&
 			m_zone.enable_out_of_zone_detection_mode &&
 			m_zone.zone_type == BaseZoneType::CIRCLE &&
 			m_last_gps_log_entry.valid) {
+
+			DEBUG_TRACE("ConfigurationStore::is_zone_exclusion: enabled with valid GPS fix");
 
 			if (!m_zone.enable_activation_date || (
 				convert_epochtime(m_zone.year, m_zone.month, m_zone.day, m_zone.hour, m_zone.minute, 0) <=
@@ -229,10 +232,15 @@ public:
 
 				// Check if outside zone radius for exclusion parameter triggering
 				if (d_km > ((double)m_zone.radius_m/1000)) {
+					DEBUG_TRACE("ConfigurationStore::is_zone_exclusion: activation criteria met, d_km = %f", d_km);
 					return true;
 				}
+				DEBUG_TRACE("ConfigurationStore::is_zone_exclusion: activation criteria not met, d_km = %f", d_km);
+				return false;
 			}
 		}
+
+		DEBUG_TRACE("ConfigurationStore::is_zone_exclusion: activation criteria not met");
 		return false;
 	}
 

@@ -69,6 +69,10 @@ ArgosScheduler::ArgosScheduler() {
 
 void ArgosScheduler::reschedule() {
 	std::time_t schedule = INVALID_SCHEDULE;
+
+	// Obtain fresh copy of configuration as it may have changed
+	configuration_store->get_argos_configuration(m_argos_config);
+
 	if (m_argos_config.mode == BaseArgosMode::OFF) {
 		DEBUG_WARN("ArgosScheduler: mode is OFF -- not scheduling");
 		return;
@@ -85,11 +89,11 @@ void ArgosScheduler::reschedule() {
 	}
 
 	if (INVALID_SCHEDULE != schedule) {
-		DEBUG_TRACE("ArgosScheduler: schedule in: %llu secs", schedule);
+		DEBUG_INFO("ArgosScheduler: schedule in: %llu secs", schedule);
 		deschedule();
 		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this), Scheduler::DEFAULT_PRIORITY, MS_PER_SEC * schedule);
 	} else {
-		DEBUG_WARN("ArgosScheduler: not rescheduling");
+		DEBUG_INFO("ArgosScheduler: not rescheduling");
 	}
 }
 
@@ -119,12 +123,12 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 		m_tr_nom_schedule > m_last_transmission_schedule)
 	{
 		if (m_is_deferred) {
-			DEBUG_INFO("ArgosScheduler::next_duty_cycle: existing schedule deferred: %llu", m_tr_nom_schedule);
+			DEBUG_INFO("ArgosScheduler::next_duty_cycle: existing schedule deferred: in %llu seconds", m_tr_nom_schedule - now);
 			m_is_deferred = false;
 			return m_tr_nom_schedule - now;
 		}
 
-		DEBUG_INFO("ArgosScheduler::next_duty_cycle: use existing schedule: %llu", m_tr_nom_schedule);
+		DEBUG_INFO("ArgosScheduler::next_duty_cycle: use existing schedule: in %llu seconds", m_tr_nom_schedule - now);
 		return INVALID_SCHEDULE;
 	}
 
@@ -203,7 +207,7 @@ std::time_t ArgosScheduler::next_prepass() {
 
 	if (m_next_prepass != INVALID_SCHEDULE &&
 		curr_time < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS)) {
-		DEBUG_WARN("ArgosScheduler::next_prepass: existing prepass schedule for epoch=%lu is still valid", m_next_prepass);
+		DEBUG_WARN("ArgosScheduler::next_prepass: existing prepass schedule for epoch=%llu secs from now is still valid", m_next_prepass - curr_time);
 		return INVALID_SCHEDULE;
 	}
 
@@ -251,13 +255,13 @@ std::time_t ArgosScheduler::next_prepass() {
 		if (now <= ((std::time_t)next_pass.epoch + next_pass.duration - ARGOS_TX_MARGIN_SECS)) {
 			// Compute delay until epoch arrives for scheduling and select Argos transmission mode
 			std::time_t schedule = (std::time_t)next_pass.epoch < now ? now : (std::time_t)next_pass.epoch;
-			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %u seconds in future", schedule - now);
+			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %llu seconds from now", schedule - now);
 			m_next_prepass = schedule;
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
 			m_prepass_duration = next_pass.duration;
 			return schedule - now;
 		} else {
-			DEBUG_ERROR("ArgosScheduler::next_prepass: computed prepass window=%llu,%u is too late", next_pass.epoch, next_pass.duration);
+			DEBUG_WARN("ArgosScheduler::next_prepass: computed prepass window=[%llu,%u] is too late", next_pass.epoch, next_pass.duration);
 			return INVALID_SCHEDULE;
 		}
 	} else {
