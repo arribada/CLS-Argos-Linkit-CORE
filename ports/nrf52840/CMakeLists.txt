@@ -297,7 +297,7 @@ target_link_options(${TARGET_NAME} PRIVATE
     #--specs=nano.specs # We use exceptions so we can not use this due to nano-specs being built with exceptions disabled
     "-u _printf_float"
     "-u _scanf_float"
-    -Xlinker -Map=${PROJECT_NAME}.map
+    -Xlinker -Map=${TARGET_NAME}.map
 )
 
 target_link_libraries(${TARGET_NAME}
