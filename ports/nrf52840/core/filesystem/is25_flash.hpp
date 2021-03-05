@@ -16,4 +16,12 @@ private:
 	int prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) override;
 	int erase(lfs_block_t block) override;
 	int sync() override;
+
+	int _read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size);
+	int _prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size);
+	int _erase(lfs_block_t block);
+	int _sync();
+
+	void power_up();
+	void power_down();
 };

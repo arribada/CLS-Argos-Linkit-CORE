@@ -25,8 +25,8 @@ namespace IS25LP128F
     constexpr uint8_t SERPNV        = 0x85; // Set Extended Read Parameters (Non-Volatile)
     constexpr uint8_t SERPV         = 0x83; // Set Extended Read Parameters (Volatile)
     constexpr uint8_t BER64K        = 0xD8; // Block erase 64Kbyte
-    constexpr uint8_t POWER_DOWN    = 0xB9; // Power down the device
-    constexpr uint8_t POWER_UP      = 0xAB; // Wake the device from a powered down state
+    constexpr uint8_t DP            = 0xB9; // Power down the device
+    constexpr uint8_t RDPD          = 0xAB; // Wake the device from a powered down state
 
     /* SPI flash status bits */
     constexpr uint8_t STATUS_WIP   = 1 << 0; // Write in progress

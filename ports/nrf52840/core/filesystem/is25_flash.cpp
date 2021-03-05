@@ -5,6 +5,7 @@
 #include "bsp.hpp"
 #include "debug.hpp"
 #include "is25_flash.hpp"
+#include "nrf_delay.h"
 
 static constexpr uint8_t dummy_verify_value = 0xAA;
 
@@ -25,6 +26,15 @@ void Is25Flash::init()
     config.io3_level = true;
     config.wipwait   = false;
 
+	// Issue a wake up command in case the device is in a deep sleep
+	config.opcode = IS25LP128F::RDPD;
+	config.length = NRF_QSPI_CINSTR_LEN_1B;
+	config.wren = false;
+
+	nrfx_qspi_cinstr_xfer(&config, nullptr, nullptr);
+
+	nrf_delay_ms(1);
+
 	// Read and check the SPI device ID matches the expected value
 	config.opcode = IS25LP128F::RDJDID;
 	config.length = NRF_QSPI_CINSTR_LEN_4B;
@@ -36,6 +46,7 @@ void Is25Flash::init()
         rx_buffer[1] != IS25LP128F::MEMORY_TYPE_ID ||
         rx_buffer[2] != IS25LP128F::CAPACITY_ID)
     {
+		nrfx_qspi_uninit();
 		DEBUG_ERROR("IS25LP128F not correctly identified");
         return;
     }
@@ -66,10 +77,12 @@ void Is25Flash::init()
 		status = rx_buffer[0];		
     }
 	while (status & IS25LP128F::STATUS_WIP);
+
+	power_down();
 }
 
 // The maximum read size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
-int Is25Flash::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
+int Is25Flash::_read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
 {
 	//DEBUG_TRACE("QSPI Flash read(%lu %lu %lu)", block, off, size);
 	nrfx_err_t ret = nrfx_qspi_read(buffer, size, block * m_block_size + off);
@@ -83,7 +96,7 @@ int Is25Flash::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t 
 }
 
 // The maximum program size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
-int Is25Flash::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
+int Is25Flash::_prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
 {
 	//DEBUG_TRACE("QSPI Flash prog(%lu %lu %lu)", block, off, size);
 
@@ -122,7 +135,7 @@ int Is25Flash::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_si
 	return LFS_ERR_OK;
 }
 
-int Is25Flash::erase(lfs_block_t block)
+int Is25Flash::_erase(lfs_block_t block)
 {
 	//DEBUG_TRACE("QSPI Flash erase(%lu)", block);
 
@@ -156,7 +169,7 @@ int Is25Flash::erase(lfs_block_t block)
 	return LFS_ERR_OK;
 }
 
-int Is25Flash::sync()
+int Is25Flash::_sync()
 {
 	//DEBUG_TRACE("QSPI Sync()");
 	nrfx_err_t ret;
@@ -173,4 +186,83 @@ int Is25Flash::sync()
 	}
 
 	return LFS_ERR_OK;
+}
+
+// Wrappers to ensure easier power up and power down of the QSPI peripheral
+int Is25Flash::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
+{
+	power_up();
+	int ret = _read(block, off, buffer, size);
+	power_down();
+	return ret;
+}
+
+int Is25Flash::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
+{
+	power_up();
+	int ret = _prog(block, off, buffer, size);
+	power_down();
+	return ret;
+}
+
+int Is25Flash::erase(lfs_block_t block)
+{
+	power_up();
+	int ret = _erase(block);
+	power_down();
+	return ret;
+}
+
+int Is25Flash::sync()
+{
+	power_up();
+	int ret = _sync();
+	power_down();
+	return ret;
+}
+
+void Is25Flash::power_up()
+{
+	nrfx_qspi_init(&BSP::QSPI_Inits[BSP::QSPI_0].config, nullptr, nullptr);
+
+	const nrf_qspi_cinstr_conf_t config =
+	{
+		.opcode = IS25LP128F::RDPD, // Wake from deep power mode
+		.length = NRF_QSPI_CINSTR_LEN_1B,
+		.io2_level = false,
+		.io3_level = true,
+		.wipwait = false,
+		.wren = false
+	};
+
+	nrfx_qspi_cinstr_xfer(&config, nullptr, nullptr);
+
+	nrf_delay_us(5);
+}
+
+void Is25Flash::power_down()
+{
+	const nrf_qspi_cinstr_conf_t config =
+	{
+		.opcode = IS25LP128F::DP, // Enter deep power mode
+		.length = NRF_QSPI_CINSTR_LEN_1B,
+		.io2_level = false,
+		.io3_level = true,
+		.wipwait = false,
+		.wren = false
+	};
+
+	nrfx_qspi_cinstr_xfer(&config, nullptr, nullptr);
+
+	nrf_delay_us(3);
+
+	nrfx_qspi_uninit();
+
+	nrf_gpio_cfg_output(BSP::QSPI_Inits[BSP::QSPI_0].config.pins.csn_pin); // Keep CS high to ensure flash is not enabled
+	nrf_gpio_pin_set(BSP::QSPI_Inits[BSP::QSPI_0].config.pins.csn_pin);
+	nrf_gpio_cfg_input(BSP::QSPI_Inits[BSP::QSPI_0].config.pins.sck_pin, NRF_GPIO_PIN_PULLDOWN);
+	nrf_gpio_cfg_input(BSP::QSPI_Inits[BSP::QSPI_0].config.pins.io0_pin, NRF_GPIO_PIN_PULLDOWN);
+	nrf_gpio_cfg_input(BSP::QSPI_Inits[BSP::QSPI_0].config.pins.io1_pin, NRF_GPIO_PIN_PULLDOWN);
+	nrf_gpio_cfg_input(BSP::QSPI_Inits[BSP::QSPI_0].config.pins.io2_pin, NRF_GPIO_PIN_PULLDOWN);
+	nrf_gpio_cfg_input(BSP::QSPI_Inits[BSP::QSPI_0].config.pins.io3_pin, NRF_GPIO_PIN_PULLDOWN);
 }
