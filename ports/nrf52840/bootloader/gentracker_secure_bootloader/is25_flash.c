@@ -7,6 +7,7 @@
 #include "nrfx_qspi.h"
 #include "nrf_gpio.h"
 #include "nrf_log.h"
+#include "nrf_delay.h"
 
 
 void is25_flash_deinit(void)
@@ -56,6 +57,15 @@ int is25_flash_init(void)
 	// We'll make use of this line once the FLASH chip is in QSPI mode
     config.io3_level = true;
     config.wipwait   = false;
+
+	// Issue a wake up command in case the device is in a deep sleep
+	config.opcode = POWER_UP;
+	config.length = NRF_QSPI_CINSTR_LEN_1B;
+	config.wren = false;
+
+	nrfx_qspi_cinstr_xfer(&config, NULL, NULL);
+
+	nrf_delay_ms(1);
 
 	// Read and check the SPI device ID matches the expected value
 	config.opcode = RDJDID;
