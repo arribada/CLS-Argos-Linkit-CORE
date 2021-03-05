@@ -68,6 +68,10 @@ int main()
 	GPIOPins::initialise();
 	GPIOPins::set(BSP::GPIO_POWER_CONTROL);
 
+	// Current backfeeds from 3V3 -> i2c pullups -> BMX160 -> GPIO_AG_PWR
+	// Because of this we need to float our GPIO_AG_PWR pin to avoid sinking that current and thus increasing our sleep current
+	nrf_gpio_cfg_default(BSP::GPIO_Inits[BSP::GPIO_AG_PWR].pin_number);
+
 	nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
     setvbuf(stdout, NULL, _IONBF, 0);
 
