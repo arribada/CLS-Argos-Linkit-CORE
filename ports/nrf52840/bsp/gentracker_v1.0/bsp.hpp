@@ -47,8 +47,6 @@ namespace BSP
 	    GPIO_REED_SW,
 	    GPIO_INT1_AG,
 	    GPIO_INT2_AG,
-	    GPIO_FLASH_IO2,
-	    GPIO_FLASH_IO3,
 		GPIO_TOTAL_NUMBER
 	};
 
