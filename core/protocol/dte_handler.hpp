@@ -67,7 +67,7 @@ public:
 	static std::string PARMW_REQ(int error_code, std::vector<ParamValue>& param_values) {
 
 		if (error_code) {
-			return DTEEncoder::encode(DTECommand::PARML_RESP, error_code);
+			return DTEEncoder::encode(DTECommand::PARMW_RESP, error_code);
 		}
 
 		for (unsigned int i = 0; i < param_values.size(); i++) {

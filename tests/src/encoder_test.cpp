@@ -933,3 +933,93 @@ TEST(Encoder, PARAM_LB_GNSS_ACQ_TIMEOUT_OutOfRangeCheck)
 	v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
 }
+
+TEST(Encoder, PARAM_PP_MIN_ELEVATION)
+{
+	ParamValue p = { ParamID::PP_MIN_ELEVATION, -1.0 };
+	std::vector<ParamValue> v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_MIN_ELEVATION, 91.0};
+	v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_MIN_ELEVATION, 45.5};
+	v = { p };
+	std::string s;
+	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
+	STRCMP_EQUAL("$O;PARMR#00A;PPP01=45.5\r", s.c_str());
+}
+
+TEST(Encoder, PARAM_PP_MAX_ELEVATION)
+{
+	ParamValue p = { ParamID::PP_MIN_ELEVATION, -1.0 };
+	std::vector<ParamValue> v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_MAX_ELEVATION, 91.0};
+	v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_MAX_ELEVATION, 45.5};
+	v = { p };
+	std::string s;
+	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
+	STRCMP_EQUAL("$O;PARMR#00A;PPP02=45.5\r", s.c_str());
+}
+
+TEST(Encoder, PARAM_PP_MIN_DURATION)
+{
+	ParamValue p = { ParamID::PP_MIN_DURATION, 19U };
+	std::vector<ParamValue> v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_MIN_DURATION, 3601U};
+	v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_MIN_DURATION, 300U};
+	v = { p };
+	std::string s;
+	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
+	STRCMP_EQUAL("$O;PARMR#009;PPP03=300\r", s.c_str());
+}
+
+TEST(Encoder, PARAM_PP_MAX_PASSES)
+{
+	ParamValue p = { ParamID::PP_MAX_PASSES, 0U };
+	std::vector<ParamValue> v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_MAX_PASSES, 10001U};
+	v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_MAX_PASSES, 1000U};
+	v = { p };
+	std::string s;
+	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
+	STRCMP_EQUAL("$O;PARMR#00A;PPP04=1000\r", s.c_str());
+}
+
+TEST(Encoder, PARAM_PP_LINEAR_MARGIN)
+{
+	ParamValue p = { ParamID::PP_LINEAR_MARGIN, 0U };
+	std::vector<ParamValue> v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_LINEAR_MARGIN, 3601U};
+	v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_LINEAR_MARGIN, 300U};
+	v = { p };
+	std::string s;
+	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
+	STRCMP_EQUAL("$O;PARMR#009;PPP05=300\r", s.c_str());
+}
+
+TEST(Encoder, PARAM_PP_COMP_STEP)
+{
+	ParamValue p = { ParamID::PP_COMP_STEP, 0U };
+	std::vector<ParamValue> v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_COMP_STEP, 1001U};
+	v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::PP_COMP_STEP, 30U};
+	v = { p };
+	std::string s;
+	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
+	STRCMP_EQUAL("$O;PARMR#008;PPP06=30\r", s.c_str());
+}

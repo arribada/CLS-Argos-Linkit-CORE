@@ -38,6 +38,12 @@ struct ArgosConfig {
 	unsigned int dry_time_before_tx;
 	unsigned int argos_id;
 	bool underwater_en;
+	double prepass_min_elevation;
+	double prepass_max_elevation;
+	unsigned int prepass_min_duration;
+	unsigned int prepass_max_passes;
+	unsigned int prepass_linear_margin;
+	unsigned int prepass_comp_step;
 };
 
 
@@ -85,7 +91,13 @@ protected:
 		/* LB_GNSS_HDOPFILT_THR */ 2U,
 		/* LB_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* LB_GNSS_ACQ_TIMEOUT */ 60U,
-		/* SAMPLING_SURF_FREQ */ 1U
+		/* SAMPLING_SURF_FREQ */ 1U,
+		/* PP_MIN_ELEVATION */ 5.0,
+		/* PP_MAX_ELEVATION */ 90.0,
+		/* PP_MIN_DURATION */ 300U,
+		/* PP_MAX_PASSES */ 1000U,
+		/* PP_LINEAR_MARGIN */ 300U,
+		/* PP_COMP_STEP */ 30U,
 	}};
 	static inline const BaseZone default_zone = {
 		/* zone_id */ 1,
@@ -141,7 +153,7 @@ public:
 
 	template <typename T>
 	T& read_param(ParamID param_id) {
-		try {
+		{ // try {
 			if (is_valid()) {
 
 				if (param_id == ParamID::BATT_SOC) {
@@ -162,9 +174,9 @@ public:
 			}
 			else
 				throw CONFIG_STORE_CORRUPTED;
-		} catch (...) {
-			throw CONFIG_STORE_CORRUPTED;
-		}
+		} //catch (...) {
+		//	throw CONFIG_STORE_CORRUPTED;
+		//}
 	}
 
 	template<typename T>
@@ -286,6 +298,8 @@ public:
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();
 
+		std::cout << "index: " << m_params[41].index() << std::endl;
+
 		if (lb_en && m_battery_level <= lb_threshold) {
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::LB_ARGOS_MODE);
@@ -298,6 +312,12 @@ public:
 			argos_config.dry_time_before_tx = read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
 			argos_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			argos_config.argos_id = read_param<unsigned int>(ParamID::ARGOS_HEXID);
+			argos_config.prepass_min_elevation = read_param<double>(ParamID::PP_MIN_ELEVATION);
+			argos_config.prepass_max_elevation = read_param<double>(ParamID::PP_MAX_ELEVATION);
+			argos_config.prepass_min_duration = read_param<unsigned int>(ParamID::PP_MIN_DURATION);
+			argos_config.prepass_max_passes = read_param<unsigned int>(ParamID::PP_MAX_PASSES);
+			argos_config.prepass_linear_margin = read_param<unsigned int>(ParamID::PP_LINEAR_MARGIN);
+			argos_config.prepass_comp_step = read_param<unsigned int>(ParamID::PP_COMP_STEP);
 		} else if (is_zone_exclusion()) {
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
@@ -310,6 +330,12 @@ public:
 			argos_config.dry_time_before_tx = read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
 			argos_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			argos_config.argos_id = read_param<unsigned int>(ParamID::ARGOS_HEXID);
+			argos_config.prepass_min_elevation = read_param<double>(ParamID::PP_MIN_ELEVATION);
+			argos_config.prepass_max_elevation = read_param<double>(ParamID::PP_MAX_ELEVATION);
+			argos_config.prepass_min_duration = read_param<unsigned int>(ParamID::PP_MIN_DURATION);
+			argos_config.prepass_max_passes = read_param<unsigned int>(ParamID::PP_MAX_PASSES);
+			argos_config.prepass_linear_margin = read_param<unsigned int>(ParamID::PP_LINEAR_MARGIN);
+			argos_config.prepass_comp_step = read_param<unsigned int>(ParamID::PP_COMP_STEP);
 			// Apply zone exclusion where applicable
 			if (m_zone.argos_extra_flags_enable) {
 				argos_config.mode = m_zone.argos_mode;
@@ -331,6 +357,12 @@ public:
 			argos_config.dry_time_before_tx = read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
 			argos_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			argos_config.argos_id = read_param<unsigned int>(ParamID::ARGOS_HEXID);
+			argos_config.prepass_min_elevation = read_param<double>(ParamID::PP_MIN_ELEVATION);
+			argos_config.prepass_max_elevation = read_param<double>(ParamID::PP_MAX_ELEVATION);
+			argos_config.prepass_min_duration = read_param<unsigned int>(ParamID::PP_MIN_DURATION);
+			argos_config.prepass_max_passes = read_param<unsigned int>(ParamID::PP_MAX_PASSES);
+			argos_config.prepass_linear_margin = read_param<unsigned int>(ParamID::PP_LINEAR_MARGIN);
+			argos_config.prepass_comp_step = read_param<unsigned int>(ParamID::PP_COMP_STEP);
 		}
 	}
 

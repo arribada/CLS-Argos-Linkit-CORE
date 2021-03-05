@@ -832,6 +832,13 @@ public:
 						encode(payload, arg);
 						break;
 					}
+				case BaseEncoding::FLOAT:
+					{
+						int arg = va_arg(args, double);
+						validate(command_args[arg_index], arg);
+						encode(payload, arg);
+						break;
+					}
 				case BaseEncoding::HEXADECIMAL:
 					{
 						unsigned int arg = va_arg(args, unsigned int);

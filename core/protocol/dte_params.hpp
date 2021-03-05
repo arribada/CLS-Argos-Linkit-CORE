@@ -49,7 +49,13 @@ static const BaseMap param_map[] = {
 	{ "LB_GNSS_HDOPFILT_THR", "LBP07", BaseEncoding::UINT, 2U, 15U, {}, true, true },
 	{ "LB_ARGOS_DEPTH_PILE", "LBP08", BaseEncoding::DEPTHPILE, 0U, 0U, {1U, 2U, 3U, 4U, 8U, 9U, 10U, 11U, 12U}, true, true },
 	{ "LB_GNSS_ACQ_TIMEOUT", "LBP09", BaseEncoding::UINT, 10U, 60U, {}, true, true },
-	{ "SAMPLING_SURF_FREQ", "UNP04", BaseEncoding::UINT, 1U, 1440U, {}, true, true }
+	{ "SAMPLING_SURF_FREQ", "UNP04", BaseEncoding::UINT, 1U, 1440U, {}, true, true },
+    { "PP_MIN_ELEVATION", "PPP01", BaseEncoding::FLOAT, 0.0, 90.0, {}, true, true },
+	{ "PP_MAX_ELEVATION", "PPP02", BaseEncoding::FLOAT, 0.0, 90.0, {}, true, true },
+    { "PP_MIN_DURATION", "PPP03", BaseEncoding::UINT, 20U, 3600U, {}, true, true },
+	{ "PP_MAX_PASSES", "PPP04", BaseEncoding::UINT, 1U, 10000U, {}, true, true },
+	{ "PP_LINEAR_MARGIN", "PPP05", BaseEncoding::UINT, 1U, 3600U, {}, true, true },
+	{ "PP_COMP_STEP", "PPP06", BaseEncoding::UINT, 1U, 1000U, {}, true, true },
 };
 
 #endif // __DTE_PARAMS_HPP_

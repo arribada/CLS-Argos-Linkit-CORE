@@ -32,6 +32,7 @@ TEST_GROUP(ArgosScheduler)
 		comms_scheduler = argos_sched;
 		fake_config_store = new FakeConfigurationStore;
 		configuration_store = fake_config_store;
+		configuration_store->init();
 		fake_log = new FakeLog;
 		fake_log->create();
 		sensor_log = fake_log;

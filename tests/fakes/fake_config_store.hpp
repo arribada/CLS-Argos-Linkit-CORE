@@ -11,7 +11,7 @@ protected:
 
 public:
 	BasePassPredict m_pass_predict;
-	void init() {}
+	void init() { m_params = default_params; }
 	bool is_valid() { return true; }
 	bool is_zone_valid() { return true; }
 	void factory_reset() {}

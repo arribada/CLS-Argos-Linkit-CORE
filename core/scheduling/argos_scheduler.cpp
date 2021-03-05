@@ -49,8 +49,6 @@ extern "C" {
 
 #define PACKET_SYNC					0xFFFC2F
 
-#define PREPASS_MIN_DURATION_MINS   5.0f
-
 #define ARGOS_TX_MARGIN_SECS        12
 
 extern ConfigurationStore *configuration_store;
@@ -233,12 +231,12 @@ std::time_t ArgosScheduler::next_prepass() {
 		(float)m_last_longitude,
 		{ (uint16_t)(1900 + tm_start.tm_year), (uint8_t)(tm_start.tm_mon + 1), (uint8_t)tm_start.tm_mday, (uint8_t)tm_start.tm_hour, (uint8_t)tm_start.tm_min, (uint8_t)tm_start.tm_sec },
 		{ (uint16_t)(1900 + tm_stop.tm_year), (uint8_t)(tm_stop.tm_mon + 1), (uint8_t)tm_stop.tm_mday, (uint8_t)tm_stop.tm_hour, (uint8_t)tm_stop.tm_min, (uint8_t)tm_stop.tm_sec },
-        5.0f,                         //< Minimum elevation of passes [0, 90] (default 5 deg)
-        90.0f,                        //< Maximum elevation of passes  [maxElevation >= < minElevation] (default 90 deg)
-		PREPASS_MIN_DURATION_MINS,    //< Minimum duration (default 5 minutes)
-        1000,                         //< Maximum number of passes per satellite (default < 1000)
-        5,                            //< Linear time margin (in minutes/6months) (default < 5 minutes/6months)
-        30                            //< Computation step (default 30s)
+        (float)m_argos_config.prepass_min_elevation,        //< Minimum elevation of passes [0, 90]
+		(float)m_argos_config.prepass_max_elevation,        //< Maximum elevation of passes  [maxElevation >= < minElevation]
+		(float)m_argos_config.prepass_min_duration / 60.0f,  //< Minimum duration (minutes)
+		m_argos_config.prepass_max_passes,                  //< Maximum number of passes per satellite (#)
+		(float)m_argos_config.prepass_linear_margin / 60.0f, //< Linear time margin (in minutes/6months)
+		m_argos_config.prepass_comp_step                    //< Computation step (seconds)
 	};
 	SatelliteNextPassPrediction_t next_pass;
 
