@@ -21,10 +21,6 @@ public:
 	bool is_zone_valid() {
 		return mock().actualCall("is_zone_valid").onObject(this).returnBoolValue();
 	}
-	void notify_saltwater_switch_state(bool state) {
-		DEBUG_TRACE("MockConfigurationStore: notify_saltwater_switch_state");
-		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
-	}
 	void factory_reset() {
 		mock().actualCall("factory_reset").onObject(this);
 	}

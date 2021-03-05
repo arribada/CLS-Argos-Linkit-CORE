@@ -161,7 +161,6 @@ void IdleState::exit() {
 void OperationalState::react(SaltwaterSwitchEvent const &event)
 {
 	DEBUG_INFO("react: SaltwaterSwitchEvent: state=%u", event.state);
-	configuration_store->notify_saltwater_switch_state(event.state);
 	location_scheduler->notify_saltwater_switch_state(event.state);
 	comms_scheduler->notify_saltwater_switch_state(event.state);
 };

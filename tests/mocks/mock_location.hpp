@@ -17,7 +17,6 @@ public:
 		mock().actualCall("stop").onObject(this);
 	}
 	void notify_saltwater_switch_state(bool state) override {
-		DEBUG_TRACE("MockLocationScheduler: notify_saltwater_switch_state");
 		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
 	}
 	void notify_sensor_log_update() override {

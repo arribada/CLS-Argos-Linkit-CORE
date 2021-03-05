@@ -169,10 +169,6 @@ public:
 		return m_is_zone_valid;
 	}
 
-	void notify_saltwater_switch_state(bool state) override {
-		(void)state;
-	}
-
 	void factory_reset() override {
 		m_filesystem.format();
 		m_is_config_valid = false;

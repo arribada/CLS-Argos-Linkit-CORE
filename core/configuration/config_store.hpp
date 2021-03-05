@@ -134,7 +134,6 @@ public:
 	virtual void init() = 0;
 	virtual bool is_valid() = 0;
 	virtual bool is_zone_valid() = 0;
-	virtual void notify_saltwater_switch_state(bool state) = 0;
 	virtual void factory_reset() = 0;
 	virtual BasePassPredict& read_pass_predict() = 0;
 	virtual void write_pass_predict(BasePassPredict& value) = 0;

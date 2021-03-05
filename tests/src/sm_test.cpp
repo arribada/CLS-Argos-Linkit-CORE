@@ -379,3 +379,39 @@ TEST(Sm, CheckTransitionToConfigurationStateAndVerifyOTAUpdateEvents)
 	mock().expectOneCall("apply_file_update").onObject(mock_ota_file_updater);
 	while(!system_scheduler->run());
 }
+
+
+TEST(Sm, CheckSWSEventsDispatchedInOperationalState)
+{
+	mock().disable();
+	fsm_handle::start();
+
+	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
+
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
+	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+
+	// After 120 seconds, transition to operational with green LED flashing
+	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
+	mock().expectOneCall("start").onObject(comms_scheduler);
+	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
+	linux_timer->set_counter(120999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+
+	// Green LED should go off after 5 seconds
+	linux_timer->set_counter(125999);
+	while(!system_scheduler->run());
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+
+	// Notify an SWS event and make sure it is dispatched into the schedulers
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(location_scheduler).withParameter("state", true);
+	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", true);
+	fake_saltwater_switch->set_state(true);
+}

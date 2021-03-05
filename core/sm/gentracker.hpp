@@ -24,7 +24,7 @@ private:
 public:
 	void react(tinyfsm::Event const &);
 	void react(ReedSwitchEvent const &event);
-	void react(SaltwaterSwitchEvent const &);
+	virtual void react(SaltwaterSwitchEvent const &event);
 	void react(ErrorEvent const &event);
 	virtual void entry(void);
 	virtual void exit(void);
@@ -67,7 +67,7 @@ private:
 	static inline const unsigned int LED_INDICATION_PERIOD_MS = 5000;
 
 public:
-	void react(SaltwaterSwitchEvent const &event);
+	void react(SaltwaterSwitchEvent const &event) override;
 	void entry() override;
 	void exit() override;
 };
