@@ -19,7 +19,7 @@ static void event_handler(nrfx_spim_evt_t const * p_event, void * p_context)
 #endif
 
 
-__RAMFUNC void activate_ss(uint32_t instance)
+void activate_ss(uint32_t instance)
 {
     if (sspin_internal[instance] != NRFX_SPIM_PIN_NOT_USED)
     {
@@ -30,7 +30,7 @@ __RAMFUNC void activate_ss(uint32_t instance)
     }
 }
 
-__RAMFUNC void deactivate_ss(uint32_t instance)
+void deactivate_ss(uint32_t instance)
 {
     if (sspin_internal[instance] != NRFX_SPIM_PIN_NOT_USED)
     {

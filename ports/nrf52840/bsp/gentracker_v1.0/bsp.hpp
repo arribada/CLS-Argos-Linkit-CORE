@@ -10,9 +10,6 @@
 #include "nrfx_saadc.h"
 #include "nrf_gpio.h"
 
-// Locate code in RAM
-#define __RAMFUNC __attribute__ ((long_call, optimize("Os"), section (".ramfunc")))
-
 // Logical device mappings to physical devices
 #define RTC_DATE_TIME  BSP::RTC::RTC_1
 #define RTC_TIMER      BSP::RTC::RTC_2
