@@ -42,38 +42,27 @@ NrfBatteryMonitor::NrfBatteryMonitor(uint8_t adc_channel, BatteryChemistry chem)
     // Wait for calibrate offset done event
     while (nrfx_saadc_is_busy()) // Wait for calibration to complete
     {}
-    DEBUG_TRACE("ADC calibration complete...");
+    DEBUG_TRACE("ADC calibration complete..."); // NOTE: Calibration is retained until power reset. Init/uninit does not clear it
+
+	nrfx_saadc_uninit();
 
     m_adc_channel = adc_channel;
     m_is_init = false;
     m_chem = chem;
 }
 
-NrfBatteryMonitor::~NrfBatteryMonitor()
-{
-	stop();
-	nrfx_saadc_uninit();
-}
-
-void NrfBatteryMonitor::start()
-{
-	if (nrfx_saadc_channel_init(m_adc_channel, &BSP::ADC_Inits.channel_config[m_adc_channel]) != NRFX_SUCCESS)
-		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
-	m_is_init = true;
-}
-
-void NrfBatteryMonitor::stop()
-{
-	if (m_is_init) {
-		nrfx_saadc_channel_uninit(m_adc_channel);
-	}
-}
-
 float NrfBatteryMonitor::sample_adc()
 {
     nrf_saadc_value_t raw = 0;
 
+	// We need to init and uninit the SAADC peripheral here to reduce our sleep current
+	
+	nrfx_saadc_init(&BSP::ADC_Inits.config, nrfx_saadc_event_handler);
+	nrfx_saadc_channel_init(m_adc_channel, &BSP::ADC_Inits.channel_config[m_adc_channel]);
+
     nrfx_saadc_sample_convert(m_adc_channel, &raw);
+	
+	nrfx_saadc_uninit();
 
     return ((float) raw) / ((ADC_GAIN / ADC_REFERENCE) * ADC_MAX_VALUE) * 1000.0f;
 }

@@ -21,9 +21,8 @@ private:
 public:
 
 	NrfBatteryMonitor(uint8_t adc_channel, BatteryChemistry chem = BATT_CHEM_NCR18650_3100_3400);
-	~NrfBatteryMonitor();
-	void start() override;
-	void stop() override;
+	void start() override {};
+	void stop() override {};
 	uint16_t get_voltage() override;
 	uint8_t get_level() override;
 };
