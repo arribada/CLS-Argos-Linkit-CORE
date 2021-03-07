@@ -246,8 +246,8 @@ std::time_t ArgosScheduler::next_prepass() {
 			pass_predict.num_records,
 			&next_pass)) {
 
-		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x now=%llu epoch=%llu duration=%u elevation_max=%u ul_status=%01x",
-					next_pass.satHexId, curr_time, next_pass.epoch, next_pass.duration, next_pass.elevationMax, (unsigned char)next_pass.uplinkStatus);
+		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x now=%llu epoch=%u duration=%u elevation_max=%u ul_status=%01x",
+					next_pass.satHexId, curr_time, (unsigned int)next_pass.epoch, (unsigned int)next_pass.duration, (unsigned int)next_pass.elevationMax, (unsigned char)next_pass.uplinkStatus);
 
 		std::time_t now = rtc->gettime();
 		if (now <= ((std::time_t)next_pass.epoch + next_pass.duration - ARGOS_TX_MARGIN_SECS)) {
