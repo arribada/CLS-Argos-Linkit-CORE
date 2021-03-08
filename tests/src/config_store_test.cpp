@@ -89,6 +89,7 @@ TEST(ConfigStore, CheckConfigStorePersistence)
 	unsigned int dec_id = 1234U;
 	store->write_param(ParamID::ARGOS_DECID, dec_id);
 	store->write_param(ParamID::DEVICE_MODEL, model);
+	store->save_params();
 
 	// Delete the object and recreate a new one
 	delete store;
@@ -283,6 +284,7 @@ TEST(ConfigStore, PARAM_ARGOS_FREQ)
 
 	double t = 401.68;
 	store->write_param(ParamID::ARGOS_FREQ, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<double>(ParamID::ARGOS_FREQ));
 
 	delete store;
@@ -301,6 +303,7 @@ TEST(ConfigStore, PARAM_ARGOS_POWER)
 
 	BaseArgosPower t = BaseArgosPower::POWER_200_MW;
 	store->write_param(ParamID::ARGOS_POWER, t);
+	store->save_params();
 	CHECK_TRUE(t == store->read_param<BaseArgosPower>(ParamID::ARGOS_POWER));
 
 	delete store;
@@ -319,6 +322,7 @@ TEST(ConfigStore, PARAM_TR_NOM)
 
 	unsigned int t = 45;
 	store->write_param(ParamID::TR_NOM, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::TR_NOM));
 
 	delete store;
@@ -337,6 +341,7 @@ TEST(ConfigStore, PARAM_ARGOS_MODE)
 
 	BaseArgosMode t = BaseArgosMode::DUTY_CYCLE;
 	store->write_param(ParamID::ARGOS_MODE, t);
+	store->save_params();
 	CHECK_TRUE(t == store->read_param<BaseArgosMode>(ParamID::ARGOS_MODE));
 
 	delete store;
@@ -355,6 +360,7 @@ TEST(ConfigStore, PARAM_NTRY_PER_MESSAGE)
 
 	unsigned int t = 3;
 	store->write_param(ParamID::NTRY_PER_MESSAGE, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::NTRY_PER_MESSAGE));
 
 	delete store;
@@ -373,6 +379,7 @@ TEST(ConfigStore, PARAM_DUTY_CYCLE)
 
 	unsigned int t = 0b101010101010101010101010;
 	store->write_param(ParamID::DUTY_CYCLE, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::DUTY_CYCLE));
 
 	delete store;
@@ -391,6 +398,7 @@ TEST(ConfigStore, PARAM_GNSS_EN)
 
 	bool t = true;
 	store->write_param(ParamID::GNSS_EN, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::GNSS_EN));
 
 	delete store;
@@ -409,6 +417,7 @@ TEST(ConfigStore, PARAM_DLOC_ARG_NOM)
 
 	unsigned int t = 10U;
 	store->write_param(ParamID::DLOC_ARG_NOM, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int >(ParamID::DLOC_ARG_NOM));
 
 	delete store;
@@ -427,6 +436,7 @@ TEST(ConfigStore, PARAM_ARGOS_DEPTH_PILE)
 
 	BaseArgosDepthPile t = BaseArgosDepthPile::DEPTH_PILE_12;
 	store->write_param(ParamID::ARGOS_DEPTH_PILE, t);
+	store->save_params();
 	CHECK_TRUE(t == store->read_param<BaseArgosDepthPile>(ParamID::ARGOS_DEPTH_PILE));
 
 	delete store;
@@ -445,6 +455,7 @@ TEST(ConfigStore, PARAM_GNSS_HDOPFILT_EN)
 
 	bool t = true;
 	store->write_param(ParamID::GNSS_HDOPFILT_EN, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::GNSS_HDOPFILT_EN));
 
 	delete store;
@@ -463,6 +474,7 @@ TEST(ConfigStore, PARAM_GNSS_HDOPFILT_THR)
 
 	unsigned int t = 10U;
 	store->write_param(ParamID::GNSS_HDOPFILT_THR, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR));
 
 	delete store;
@@ -481,6 +493,7 @@ TEST(ConfigStore, PARAM_GNSS_ACQ_TIMEOUT)
 
 	unsigned int t = 30U;
 	store->write_param(ParamID::GNSS_ACQ_TIMEOUT, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT));
 
 	delete store;
@@ -499,6 +512,7 @@ TEST(ConfigStore, PARAM_UNDERWATER_EN)
 
 	bool t = true;
 	store->write_param(ParamID::UNDERWATER_EN, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::UNDERWATER_EN));
 
 	delete store;
@@ -517,6 +531,7 @@ TEST(ConfigStore, PARAM_DRY_TIME_BEFORE_TX)
 
 	unsigned int t = 10U;
 	store->write_param(ParamID::DRY_TIME_BEFORE_TX, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX));
 
 	delete store;
@@ -536,6 +551,7 @@ TEST(ConfigStore, PARAM_SAMPLING_UNDER_FREQ)
 
 	unsigned int t = 1440U;
 	store->write_param(ParamID::SAMPLING_UNDER_FREQ, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ));
 
 	delete store;
@@ -554,6 +570,7 @@ TEST(ConfigStore, PARAM_LB_EN)
 
 	bool t = true;
 	store->write_param(ParamID::LB_EN, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::LB_EN));
 
 	delete store;
@@ -572,6 +589,7 @@ TEST(ConfigStore, PARAM_LB_TRESHOLD)
 
 	unsigned int t = 5;
 	store->write_param(ParamID::LB_TRESHOLD, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_TRESHOLD));
 
 	delete store;
@@ -590,6 +608,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_POWER)
 
 	BaseArgosPower t = BaseArgosPower::POWER_200_MW;
 	store->write_param(ParamID::LB_ARGOS_POWER, t);
+	store->save_params();
 	CHECK_TRUE(t == store->read_param<BaseArgosPower>(ParamID::LB_ARGOS_POWER));
 
 	delete store;
@@ -608,6 +627,7 @@ TEST(ConfigStore, PARAM_TR_LB)
 
 	unsigned int t = 1200U;
 	store->write_param(ParamID::TR_LB, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::TR_LB));
 
 	delete store;
@@ -626,6 +646,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_MODE)
 
 	BaseArgosMode t = BaseArgosMode::LEGACY;
 	store->write_param(ParamID::LB_ARGOS_MODE, t);
+	store->save_params();
 	CHECK_TRUE(t == store->read_param<BaseArgosMode>(ParamID::LB_ARGOS_MODE));
 
 	delete store;
@@ -644,6 +665,7 @@ TEST(ConfigStore, PARAM_LB_ARGOS_DUTY_CYCLE)
 
 	unsigned int t = 0b101010101010101010101010;
 	store->write_param(ParamID::LB_ARGOS_DUTY_CYCLE, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_ARGOS_DUTY_CYCLE));
 
 	delete store;
@@ -662,6 +684,7 @@ TEST(ConfigStore, PARAM_LB_GNSS_EN)
 
 	bool t = true;
 	store->write_param(ParamID::LB_GNSS_EN, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<bool>(ParamID::LB_GNSS_EN));
 
 	delete store;
@@ -680,6 +703,7 @@ TEST(ConfigStore, PARAM_DLOC_ARG_LB)
 
 	unsigned int t = 720U;
 	store->write_param(ParamID::DLOC_ARG_LB, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int >(ParamID::DLOC_ARG_LB));
 
 	delete store;
@@ -698,6 +722,7 @@ TEST(ConfigStore, PARAM_LB_GNSS_HDOPFILT_THR)
 
 	unsigned int t = 10U;
 	store->write_param(ParamID::LB_GNSS_HDOPFILT_THR, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_GNSS_HDOPFILT_THR));
 
 	delete store;
@@ -716,6 +741,7 @@ TEST(ConfigStore, PARAM_LB_GNSS_ACQ_TIMEOUT)
 
 	unsigned int t = 30U;
 	store->write_param(ParamID::LB_GNSS_ACQ_TIMEOUT, t);
+	store->save_params();
 	CHECK_EQUAL(t, store->read_param<unsigned int>(ParamID::LB_GNSS_ACQ_TIMEOUT));
 
 	delete store;

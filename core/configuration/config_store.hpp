@@ -132,7 +132,7 @@ protected:
 	uint8_t m_battery_level;
 	uint16_t m_battery_voltage;
 	GPSLogEntry m_last_gps_log_entry;
-	virtual void serialize_config(ParamID) = 0;
+	virtual void serialize_config() = 0;
 	virtual void serialize_zone() = 0;
 	virtual void update_battery_level() = 0;
 
@@ -181,12 +181,20 @@ public:
 
 	template<typename T>
 	void write_param(ParamID param_id, T& value) {
-		try {
+		//try {
 			if (is_valid()) {
 				m_params.at((unsigned)param_id) = value;
-				serialize_config(param_id);
+				//serialize_config(param_id);
 			} else
 				throw CONFIG_STORE_CORRUPTED;
+		//} catch (...) {
+		//	throw CONFIG_STORE_CORRUPTED;
+		//}
+	}
+
+	void save_params() {
+		try {
+			serialize_config();
 		} catch (...) {
 			throw CONFIG_STORE_CORRUPTED;
 		}

@@ -77,6 +77,9 @@ public:
 				DEBUG_WARN("DTEHandler::PARMW_REQ: not writing read-only attribute %s", param_map[(int)param_values[i].param].name.c_str());
 		}
 
+		// Save all the parameters
+		configuration_store->save_params();
+
 		return DTEEncoder::encode(DTECommand::PARMW_RESP, DTEError::OK);
 	}
 

@@ -5,7 +5,7 @@
 
 class FakeConfigurationStore : public ConfigurationStore {
 protected:
-	void serialize_config(ParamID) {}
+	void serialize_config() {}
 	void serialize_zone() {}
 	void update_battery_level() {}
 

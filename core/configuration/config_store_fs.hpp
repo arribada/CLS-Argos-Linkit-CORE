@@ -50,7 +50,7 @@ protected:
 	}
 
 	void deserialize_config() {
-		DEBUG_TRACE("deserialize_config");
+		DEBUG_TRACE("ConfigurationStoreLFS::deserialize_config");
 		LFSFile f(&m_filesystem, "config.dat", LFS_O_RDONLY);
 		unsigned int i;
 
@@ -62,24 +62,28 @@ protected:
 		m_is_config_valid = (i == MAX_CONFIG_ITEMS);
 	}
 
-	void serialize_config(ParamID param_id) override {
-		DEBUG_TRACE("serialize_config(%u)", (unsigned)param_id);
-		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY);
-		if (f.seek((signed)param_id * BASE_TEXT_MAX_LENGTH) != (signed)param_id * BASE_TEXT_MAX_LENGTH ||
-			!serialize_config_entry(f, m_params.at((unsigned)param_id))) {
-			m_is_config_valid = false;
-			throw CONFIG_STORE_CORRUPTED;
+	void serialize_config() override {
+		DEBUG_TRACE("ConfigurationStoreLFS::serialize_config");
+		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT);
+		unsigned int i;
+		for (i = 0; i < MAX_CONFIG_ITEMS; i++) {
+			if (!serialize_config_entry(f, m_params.at(i)))
+				break;
 		}
+		m_is_config_valid = i == MAX_CONFIG_ITEMS;
+
+		DEBUG_TRACE("ConfigurationStoreLFS::serialize_config: saved new config.data (is_valid=%u)", m_is_config_valid);
 	}
 
 	void deserialize_zone() {
+		DEBUG_TRACE("ConfigurationStoreLFS::deserialize_zone");
 		LFSFile f(&m_filesystem, "zone.dat", LFS_O_RDWR);
 		if (f.read(&m_zone, sizeof(m_zone)) == sizeof(m_zone))
 			m_is_zone_valid = true;
 	}
 
 	void serialize_zone() override {
-		DEBUG_TRACE("serialize_zone");
+		DEBUG_TRACE("ConfigurationStoreLFS::serialize_zone");
 		LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_WRONLY);
 		m_is_zone_valid = false;
 		m_is_zone_valid = f.write(&m_zone, sizeof(m_zone)) == sizeof(m_zone);
@@ -90,25 +94,14 @@ protected:
 	}
 
 	void serialize_pass_predict() {
-		DEBUG_TRACE("serialize_pass_predict");
+		DEBUG_TRACE("ConfigurationStoreLFS::serialize_pass_predict");
 		LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_WRONLY);
 		m_is_pass_predict_valid = false;
 		m_is_pass_predict_valid = f.write(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict);
 	}
 
-	void create_default_config() {
-		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT);
-		unsigned int i;
-		for (i = 0; i < MAX_CONFIG_ITEMS; i++) {
-			if (!serialize_config_entry(f, m_params.at(i)))
-				break;
-		}
-		m_is_config_valid = i == MAX_CONFIG_ITEMS;
-
-		DEBUG_TRACE("Created new config.data is_valid=%u", m_is_config_valid);
-	}
-
 	void create_default_zone() {
+		DEBUG_TRACE("ConfigurationStoreLFS::create_default_zone");
 		write_zone((BaseZone&)default_zone);
 	}
 
@@ -136,7 +129,7 @@ public:
 			deserialize_config();
 		} catch (int e) {
 			DEBUG_WARN("No configuration file so creating a default file");
-			create_default_config();
+			serialize_config();
 		}
 
 		if (!m_is_config_valid)
