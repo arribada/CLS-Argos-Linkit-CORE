@@ -385,16 +385,27 @@ private:
 		}
 	}
 
-	static SatUplinkStatus_t convert_ul_operating_status(uint8_t status) {
-		switch (status) {
-		case 0:
-			return SAT_UPLK_ON_WITH_A3;
-		case 1:
-			return SAT_UPLK_ON_WITH_NEO;
-		case 2:
-			return SAT_UPLK_ON_WITH_A4;
-		default:
-			return SAT_UPLK_OFF;
+	static SatUplinkStatus_t convert_ul_operating_status(uint8_t status, uint8_t hex_id) {
+		if (hex_id == 0x5 || hex_id == 0x8) {
+			switch (status) {
+			case 0:
+			case 1:
+			case 2:
+				return SAT_UPLK_ON_WITH_A2;
+			default:
+				return SAT_UPLK_OFF;
+			}
+		} else {
+			switch (status) {
+			case 0:
+				return SAT_UPLK_ON_WITH_A3;
+			case 1:
+				return SAT_UPLK_ON_WITH_NEO;
+			case 2:
+				return SAT_UPLK_ON_WITH_A4;
+			default:
+				return SAT_UPLK_OFF;
+			}
 		}
 	}
 
@@ -424,7 +435,7 @@ private:
 			aop_entry.satHexId = hex_id;
 			aop_entry.satDcsId = a_dcs;
 			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status);
-			aop_entry.uplinkStatus = convert_ul_operating_status(ul_status);
+			aop_entry.uplinkStatus = convert_ul_operating_status(ul_status, hex_id);
 
 			uint8_t key = aop_entry.satHexId | (a_dcs << 4);
 			constellation_params[key] = aop_entry;
