@@ -607,8 +607,8 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	DEBUG_TRACE("ArgosScheduler::handle_packet: data=");
 #if defined(DEBUG_ENABLE) && DEBUG_LEVEL >= 4
 	for (unsigned int i = 0; i < packet.size(); i++)
-		std::cout << std::setfill('0') << std::setw(2) << std::hex << (((unsigned int)packet[i]) & 0xFF);
-	std::cout << std::endl;
+		printf("%02X", (unsigned int)packet[i]);
+	printf("\r\n");
 #endif
 	power_on();
 	set_frequency(m_argos_config.frequency);

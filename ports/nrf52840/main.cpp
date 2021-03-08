@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_log_redirect.h"

@@ -7,7 +7,6 @@
 #include <memory>
 #include <map>
 #include <list>
-#include <iostream>
 
 #include "interrupt_lock.hpp"
 #include "timer.hpp"

@@ -3,7 +3,6 @@
 
 #include <array>
 #include <type_traits>
-#include <iostream>
 #include <ctime>
 #include "base_types.hpp"
 #include "error.hpp"
@@ -306,7 +305,7 @@ public:
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();
 
-		std::cout << "index: " << m_params[41].index() << std::endl;
+		DEBUG_TRACE("index: %u", m_params[41].index());
 
 		if (lb_en && m_battery_level <= lb_threshold) {
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);

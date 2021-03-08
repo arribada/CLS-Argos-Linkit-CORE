@@ -1,9 +1,8 @@
 #ifndef __FILESYSTEM_HPP_
 #define __FILESYSTEM_HPP_
 
-#include <iostream>
 #include <cstring>
-
+#include <stdio.h>
 #include <stdint.h>
 #include "lfs.h"
 
@@ -150,21 +149,21 @@ public:
 
 	int read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) override {
 		if (m_debug_trace)
-			std::cout << "read(" << block << " " << off << " " << size << ")\n";
+			printf("read(%lu %lu %lu)\n", block, off, size);
 		uint32_t offset = (block * m_block_size) + off;
 		std::memcpy(buffer, &m_block_ram[offset], size);
 		return LFS_ERR_OK;
 	}
 	int prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) override {
 		if (m_debug_trace)
-			std::cout << "prog(" << block << " " << off << " " << size << ")\n";
+			printf("prog(%lu %lu %lu)\n", block, off, size);
 		uint32_t offset = (block * m_block_size) + off;
 		std::memcpy(&m_block_ram[offset], buffer, size);
 		return LFS_ERR_OK;
 	}
 	int erase(lfs_block_t block) override {
 		if (m_debug_trace)
-			std::cout << "erase" << block << ")\n";
+			printf("erase(%lu)\n", block);
 		uint32_t offset = (block * m_block_size);
 		std::memset(&m_block_ram[offset], 0xFF, m_block_size);
 		return LFS_ERR_OK;

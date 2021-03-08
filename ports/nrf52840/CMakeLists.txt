@@ -295,8 +295,8 @@ target_link_options(${TARGET_NAME} PRIVATE
     -mfpu=fpv4-sp-d16
     -Wl,--gc-sections
     #--specs=nano.specs # We use exceptions so we can not use this due to nano-specs being built with exceptions disabled
-    "-u _printf_float"
-    "-u _scanf_float"
+    -u_printf_float
+    -u_scanf_float
     -Xlinker -Map=${TARGET_NAME}.map
 )
 

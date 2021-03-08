@@ -1,4 +1,3 @@
-#include <iostream>
 #include "ota_flash_file_updater.hpp"
 #include "error.hpp"
 #include "crc32.hpp"
