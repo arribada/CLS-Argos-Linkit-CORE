@@ -185,7 +185,7 @@ M8QReceiver::M8QReceiver()
 
 void M8QReceiver::power_off()
 {
-    DEBUG_TRACE("M8QReceiver::power_off");
+    DEBUG_INFO("M8QReceiver::power_off");
 
     m_capture_messages = true;
 
@@ -342,7 +342,7 @@ M8QReceiver::SendReturnCode M8QReceiver::send_navigation_database()
 
 void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_callback = nullptr)
 {
-    DEBUG_TRACE("M8QReceiver::power_on");
+    DEBUG_INFO("M8QReceiver::power_on");
 
     m_data_notification_callback = data_notification_callback;
     m_capture_messages = true;
