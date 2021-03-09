@@ -305,8 +305,6 @@ public:
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();
 
-		DEBUG_TRACE("index: %u", m_params[41].index());
-
 		if (lb_en && m_battery_level <= lb_threshold) {
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::LB_ARGOS_MODE);
