@@ -560,7 +560,8 @@ void ArticTransceiver::power_on()
 {
     DEBUG_TRACE("ArticTransceiver::power_on");
 
-	m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
+    if (!m_nrf_spim)
+	    m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
 
     GPIOPins::set(BSP::GPIO::GPIO_SAT_EN);
     GPIOPins::set(BSP::GPIO::GPIO_SAT_RESET);

@@ -20,7 +20,7 @@ public:
 private:
 	// Prevent copies to enforce this as a singleton
 	bool m_is_set;
-    NrfRTC() {}
+    NrfRTC() : m_is_set(false) {}
     NrfRTC(NrfRTC const&)          = delete;
     void operator=(NrfRTC const&)  = delete;
 
