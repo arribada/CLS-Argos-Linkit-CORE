@@ -64,9 +64,9 @@ namespace BSP
 
 	// Interrupt priorities (0, 1, 4  are reserved for the softdevice)
     static constexpr uint8_t INTERRUPT_PRIORITY_RTC_1     = 2;
-    static constexpr uint8_t INTERRUPT_PRIORITY_RTC_2     = 3;
-    static constexpr uint8_t INTERRUPT_PRIORITY_UART_0    = 4;
-    static constexpr uint8_t INTERRUPT_PRIORITY_UART_1    = 4;
+    static constexpr uint8_t INTERRUPT_PRIORITY_RTC_2     = 2;
+    static constexpr uint8_t INTERRUPT_PRIORITY_UART_0    = 3;
+    static constexpr uint8_t INTERRUPT_PRIORITY_UART_1    = 3;
     static constexpr uint8_t INTERRUPT_PRIORITY_I2C_0     = 6;
     static constexpr uint8_t INTERRUPT_PRIORITY_I2C_1     = 6;
     static constexpr uint8_t INTERRUPT_PRIORITY_SPI_0     = 6;
