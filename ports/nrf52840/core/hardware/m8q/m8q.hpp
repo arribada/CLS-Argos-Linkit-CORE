@@ -8,6 +8,7 @@
 class M8QReceiver : public GPSScheduler {
 public:
 	M8QReceiver();
+	~M8QReceiver();
 
 private:
 	// These methods are specific to the chipset and should be implemented by a device-specific subclass
@@ -22,6 +23,12 @@ private:
 		DATA_OVERSIZE,
 		NACKD
 	};
+
+	enum class State
+	{
+		POWERED_OFF,
+		POWERED_ON
+	} m_state;
 
 	uint8_t m_navigation_database[16384];
 	uint32_t m_navigation_database_len;

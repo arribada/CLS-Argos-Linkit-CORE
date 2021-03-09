@@ -181,10 +181,22 @@ M8QReceiver::M8QReceiver()
     m_navigation_database_len = 0;
     m_rx_buffer.pending = false;
     m_capture_messages = false;
+    m_state = State::POWERED_OFF;
+}
+
+M8QReceiver::~M8QReceiver()
+{
+    delete m_nrf_uart_m8;
+    GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN); // Ensure the GPS is hard shutdown
 }
 
 void M8QReceiver::power_off()
 {
+    if (m_state == State::POWERED_OFF)
+        return;
+    
+    m_state = State::POWERED_OFF;
+
     DEBUG_INFO("M8QReceiver::power_off");
 
     m_capture_messages = true;
@@ -342,6 +354,11 @@ M8QReceiver::SendReturnCode M8QReceiver::send_navigation_database()
 
 void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_callback = nullptr)
 {
+    if (m_state == State::POWERED_ON)
+        return;
+    
+    m_state = State::POWERED_ON;
+
     DEBUG_INFO("M8QReceiver::power_on");
 
     m_data_notification_callback = data_notification_callback;
