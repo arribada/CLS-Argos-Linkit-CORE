@@ -96,7 +96,7 @@ protected:
 		/* PP_MIN_DURATION */ 300U,
 		/* PP_MAX_PASSES */ 1000U,
 		/* PP_LINEAR_MARGIN */ 300U,
-		/* PP_COMP_STEP */ 30U,
+		/* PP_COMP_STEP */ 10U,
 	}};
 	static inline const BaseZone default_zone = {
 		/* zone_id */ 1,

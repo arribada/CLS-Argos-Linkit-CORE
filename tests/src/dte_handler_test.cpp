@@ -116,7 +116,7 @@ TEST(DTEHandler, PARMR_REQ_CheckEmptyRequest)
 	std::string resp;
 	std::string req = "$PARMR#000;\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARMR#11D;IDP11=,ARP03=399,ARP04=4,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=1,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=4,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=1,LBP07=2,LBP08=1,LBP09=60,UNP04=1,PPP01=5,PPP02=90,PPP03=300,PPP04=1000,PPP05=300,PPP06=30\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARMR#11D;IDP11=,ARP03=399,ARP04=4,ARP05=45,ARP01=0,ARP19=1,ARP18=0,GNP01=0,ARP11=1,ARP16=1,GNP02=0,GNP03=2,GNP05=60,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=0,LBP03=4,ARP06=45,LBP04=0,LBP05=0,LBP06=0,ARP12=1,LBP07=2,LBP08=1,LBP09=60,UNP04=1,PPP01=5,PPP02=90,PPP03=300,PPP04=1000,PPP05=300,PPP06=10\r", resp.c_str());
 }
 
 TEST(DTEHandler, PROFW_PROFR_REQ)
@@ -297,7 +297,7 @@ TEST(DTEHandler, PASPW_REQ)
 TEST(DTEHandler, PASPW_REQ2)
 {
 	// Supplied by CLS
-	std::string allcast_ref = "00000BE5008484164889002AA533ECDAA3721B094E7A7FF800000BE500C4841648960863EED3EADAF3740004558A710C00000BE500A4841648810468B45D26C6B2FBCF003A199F1D00000BE50094841648C640E8A05528C6BAFC1F00422BAFC100000BE500B48416488C51AA1EED28C6BAFC0A00427847AC00000BE50054841648C14165203DCABCAAC08201421DF23900000BE500D484164894120CEEE69EAF6A71B9023C2C1AA500000C75008603A5C900B7C500800C00D4CE845000005F5006607A58900B78C00D48474100000BE7008484164889002AA533ECDAA3721B094E7AD3E700000BE700C4841648960863EED3EADAF3740004558ADD1300000BE700A4841648810468B45D26C6B2FBCF003A19330200000BE70094841648C640E8A05528C6BAFC1F00422B03DE00000BE700B48416488C51AA1EED28C6BAFC0A004278EBB300000BE70054841648C14165203DCABCAAC08201421D5E2600000BE700D484164894120CEEE69EAF6A71B9023C2CB6BA00000C77008603A5C900B7C500800C00D4C758A000005F7006607A58900B78C00D48ED3B00000BE4008484164889002AA533ECDAA3721B094E7AA1E700000BE400C4841648960863EED3EADAF3740004558AAF1300000BE400A4841648810468B45D26C6B2FBCF003A19410200000BE40094841648C640E8A05528C6BAFC1F00422B71DE00000BE400B48416488C51AA1EED28C6BAFC0A00427899B300000BE40054841648C14165203DCABCAAC08201421D2C2600000BE400D484164894120CEEE69EAF6A71B9023C2CC4BA00000C74008603A5C900B7C500800C00D4C2EB2000005F4006607A58900B78C00D48127C";
+	std::string allcast_ref = "00000BE500848418088455EB03DBECDAAB7238094E71CF2F00000BE500C48418089189A44D1BEADAFB744404558E604A00000BE500A4841808C90D263F8D26C6BAFBFF003A1337B000000BE5009484180896012944352AC6B2FBD1004228CCA900000BE500B484180884122AC2C528C6BAFC11004271384600000BE500548418088E4DE5E76DCABCBAC0BB02421E062600000BE500D48418088648CDE4469EAF5A7160033C34E25C00000C75008603A5C900B7C500800C00D4CE845000005F5006607A58900B78C00D48474100000BE700848418088455EB03DBECDAAB7238094E71633000000BE700C48418089189A44D1BEADAFB744404558ECC5500000BE700A4841808C90D263F8D26C6BAFBFF003A139BAF00000BE7009484180896012944352AC6B2FBD100422860B600000BE700B484180884122AC2C528C6BAFC11004271945900000BE700548418088E4DE5E76DCABCBAC0BB02421EAA3900000BE700D48418088648CDE4469EAF5A7160033C344E4300000C77008603A5C900B7C500800C00D4C758A000005F7006607A58900B78C00D48ED3B00000BE400848418088455EB03DBECDAAB7238094E71113000000BE400C48418089189A44D1BEADAFB744404558EBE5500000BE400A4841808C90D263F8D26C6BAFBFF003A13E9AF00000BE4009484180896012944352AC6B2FBD100422812B600000BE400B484180884122AC2C528C6BAFC11004271E65900000BE400548418088E4DE5E76DCABCBAC0BB02421ED83900000BE400D48418088648CDE4469EAF5A7160033C343C4300000C74008603A5C900B7C500800C00D4C2EB2000005F4006607A58900B78C00D48127C";
 	std::string allcast_binary;
 
 	// Transcode to binary
@@ -318,6 +318,7 @@ TEST(DTEHandler, PASPW_REQ2)
 
 	BasePassPredict& stored_pass_predict = configuration_store->read_pass_predict();
 
+#if 0
 	for (unsigned int i = 0; i < stored_pass_predict.num_records; i++) {
 		DEBUG_TRACE("paspw[%u].satDcsId=%01x", i, stored_pass_predict.records[i].satDcsId);
 		DEBUG_TRACE("paspw[%u].satHexId=%01x", i, stored_pass_predict.records[i].satHexId);
@@ -335,39 +336,45 @@ TEST(DTEHandler, PASPW_REQ2)
 		DEBUG_TRACE("paspw[%u].orbitPeriodMin=%f", i, (double)stored_pass_predict.records[i].orbitPeriodMin);
 		DEBUG_TRACE("paspw[%u].semiMajorAxisDriftMeterPerDay=%f", i, (double)stored_pass_predict.records[i].semiMajorAxisDriftMeterPerDay);
 	}
+#endif
 
-    struct PredictionPassConfiguration_t prepasConfiguration = {
+	// Get PREVIPASS results using every minute of day as start of search
+	std::time_t last_epoch = 0;
 
-        43.5497f,                     //< Geodetic latitude of the beacon (deg.) [-90, 90]
-        1.485f,                       //< Geodetic longitude of the beacon (deg.E)[0, 360]
-        { 2021, 03, 1, 00, 00, 00 },  //< Beginning of prediction (Y/M/D, hh:mm:ss)
-        { 2021, 03, 2, 00, 00, 00 },   //< End of prediction (Y/M/D, hh:mm:ss)
-        5.0f,                         //< Minimum elevation of passes [0, 90](default 5 deg)
-        90.0f,                        //< Maximum elevation of passes  [maxElevation >=
-                        //< minElevation] (default 90 deg)
-        5.0f,                         //< Minimum duration (default 5 minutes)
-        1000,                         //< Maximum number of passes per satellite (default
-                        //< 1000)
-        5,                            //< Linear time margin (in minutes/6months) (default
-                        //< 5 minutes/6months)
-        30                            //< Computation step (default 30s)
-    };
+	for (unsigned int minute_of_day = 0; minute_of_day < 1440; minute_of_day += 1) {
+		struct PredictionPassConfiguration_t prepasConfiguration = {
 
-    uint8_t nbSatsInAopTable = stored_pass_predict.num_records;
-    SatelliteNextPassPrediction_t nextPass;
-    CHECK_TRUE(PREVIPASS_compute_next_pass(
-    		&prepasConfiguration,
-			stored_pass_predict.records,
-			nbSatsInAopTable,
-			&nextPass));
-    std::cout << "epoch:\t" << nextPass.epoch << std::endl;
-    std::cout << "duration:\t" << nextPass.duration << std::endl;
-    std::cout << "elevationMax:\t" << nextPass.elevationMax << std::endl;
-    std::cout << "satHexId:\t" << std::hex << nextPass.satHexId << std::endl;
-    std::cout << "downlinkStatus:\t" << nextPass.downlinkStatus << std::endl;
-    std::cout << "uplinkStatus:\t" << nextPass.uplinkStatus << std::endl;
+			51.3764385f,                       //< Geodetic latitude of the beacon (deg.) [-90, 90]
+			-2.1182383f,                       //< Geodetic longitude of the beacon (deg.E)[0, 360]
+			{ 2021, 3, 8, (uint8_t)(minute_of_day/60), (uint8_t)(minute_of_day%60), 0 },  //< Beginning of prediction (Y/M/D, hh:mm:ss)
+			{ 2021, 3, 10, 0, 0, 0 },  //< End of prediction (Y/M/D, hh:mm:ss)
+			60.0f,                         //< Minimum elevation of passes [0, 90](default 5 deg)
+			90.0f,                        //< Maximum elevation of passes  [maxElevation >=
+										  //< minElevation] (default 90 deg)
+			1.0f,                         //< Minimum duration (default 5 minutes)
+			1000,                         //< Maximum number of passes per satellite (default
+										  //< 1000)
+			5,                            //< Linear time margin (in minutes/6months) (default
+										  //< 5 minutes/6months)
+			10                            //< Computation step (default 30s)
+		};
 
-	//CHECK_TRUE(stored_pass_predict == pass_predict);
+		uint8_t nbSatsInAopTable = stored_pass_predict.num_records;
+		SatelliteNextPassPrediction_t nextPass;
+		if (PREVIPASS_compute_next_pass(
+				&prepasConfiguration,
+				stored_pass_predict.records,
+				nbSatsInAopTable,
+				&nextPass)) {
+			std::time_t t = nextPass.epoch;
+			//std::cout << std::setw(2) << std::setfill('0') << (minute_of_day/60) << ":" << std::setw(2) << std::setfill('0') << (minute_of_day%60) << ", " << std::put_time(std::gmtime(&t), "%c") << std::endl;
+			CHECK_TRUE(last_epoch <= (std::time_t)t);
+			last_epoch = t;
+		} else {
+			std::cout << std::setw(2) << std::setfill('0') << (minute_of_day/60) << ":" << std::setw(2) << std::setfill('0') << (minute_of_day%60) << ", " << "no result" << std::endl;
+			CHECK_TRUE(false);
+		}
+	}
 }
 
 TEST(DTEHandler, DUMPD_REQ)

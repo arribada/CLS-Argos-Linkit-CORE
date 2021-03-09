@@ -409,7 +409,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 
-	t += 11910;
+	t += 11890;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	fake_rtc->settime(t);
@@ -422,7 +422,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 
-	t += 5791;
+	t += 5811;
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 	while (!system_scheduler->run());
@@ -556,7 +556,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 304).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 
-	t += 8910;
+	t += 8900;
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 	while (!system_scheduler->run());
@@ -996,7 +996,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
-	t += 11910;
+	t += 11890;
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 	system_scheduler->run();
@@ -1147,7 +1147,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketWithAllCastAOP)
 	mock().expectOneCall("power_on").onObject(argos_sched);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
-	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 
 	t += 0;
@@ -1163,7 +1163,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketWithAllCastAOP)
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 
-	t += 902;
+	t += 882;
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 	while (!system_scheduler->run());
