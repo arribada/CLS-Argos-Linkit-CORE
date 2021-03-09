@@ -16,6 +16,7 @@ public:
 	~NrfUARTM8();
 	int send(const uint8_t * data, uint32_t size) override;
 	int receive(uint8_t * data, uint32_t size) override { return -1; }; // Reception is done through the on_receive callback
+	void change_baudrate(uint32_t baudrate);
 
 private:
 	unsigned int m_instance;

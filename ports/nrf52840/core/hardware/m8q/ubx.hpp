@@ -389,7 +389,8 @@ namespace UBX
 
             enum AopCfg : uint8_t
             {
-                AOPCFG_USE_AOP       = 1 << 0
+                AOPCFG_AOP_DISABLED  = 0,
+                AOPCFG_AOP_ENABLED   = 1 << 0
             };
 
             // Version 0x0002 of NAVX5
@@ -437,6 +438,7 @@ namespace UBX
             ID_POSLLH    = 0x02,
             ID_PVT       = 0x07,
             ID_SBAS      = 0x32,
+            ID_ORB       = 0x34,
             ID_SOL       = 0x06,
             ID_STATUS    = 0x03,
             ID_SVINFO    = 0x30,
@@ -445,6 +447,23 @@ namespace UBX
             ID_VELECEF   = 0x11,
             ID_VELNED    = 0x12
         };
+
+        namespace AOPSTATUS
+        {
+            enum AopCfg : uint8_t
+            {
+                AOPCFG_AOP_DISABLED  = 0,
+                AOPCFG_AOP_ENABLED   = 1 << 0
+            };
+
+            struct __attribute__((__packed__)) MSG_AOPSTATUS
+            {
+                uint32_t iTow;
+                AopCfg aopCfg;
+                uint8_t status;
+                uint8_t reserved1[10];
+            };
+        } // namespace AOPSTATUS
 
         namespace DOP
         {
@@ -520,5 +539,45 @@ namespace UBX
         } // namespace PVT
 
     } // namespace NAV
+
+    /****************************** MGA *************************************/
+
+    namespace MGA
+    {
+        enum Id : uint8_t
+        {
+            ID_INI_TIME_UTC = 0x40,
+            ID_ACK = 0x60,
+            ID_DBD = 0x80
+        };
+
+        struct __attribute__((__packed__)) MSG_ACK
+        {
+            uint8_t  type;
+            uint8_t  version;
+            uint8_t  infoCode;
+            uint8_t  msgId;
+            uint32_t msgPayloadStart;
+        };
+
+        struct __attribute__((__packed__)) MSG_INI_TIME_UTC
+        {
+            uint8_t  type;
+            uint8_t  version;
+            uint8_t  ref;
+            int8_t   leapSecs;
+            uint16_t year;
+            uint8_t  month;
+            uint8_t  day;
+            uint8_t  hour;
+            uint8_t  minute;
+            uint8_t  second;
+            uint8_t  reserved1;
+            uint32_t ns;
+            uint16_t tAccS;
+            uint8_t  reserved2[2];
+            uint32_t tAccNs;
+        };
+    } // namespace ACK
 
 } // namespace UBX

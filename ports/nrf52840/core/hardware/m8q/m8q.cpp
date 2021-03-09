@@ -2,15 +2,17 @@
 #include "bsp.hpp"
 #include "gpio.hpp"
 #include "nrf_delay.h"
+#include "rtc.hpp"
 #include "error.hpp"
+
+extern RTC *rtc;
 
 using namespace UBX;
 
-template<typename T>
+template <typename T>
 M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass msgClass, uint8_t id, T contents, bool expect_ack)
 {
-    constexpr uint32_t ack_timeout_ms = 1000;
-    constexpr uint32_t ack_timeout_steps = 100;
+    const std::time_t timeout = 3;
 
     // Construct packet header
     UBX::Header header = {
@@ -39,6 +41,7 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
         ck[1] = ck[1] + ck[0];
     }
 
+    m_rx_buffer.pending = false;
     m_nrf_uart_m8->send(reinterpret_cast<uint8_t *>(&header), sizeof(header));
     m_nrf_uart_m8->send(reinterpret_cast<uint8_t *>(&contents), sizeof(contents));
     m_nrf_uart_m8->send(&ck[0], sizeof(ck));
@@ -46,7 +49,8 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
     // Wait for an ACK/NACK if we are expecting one
     if (expect_ack)
     {
-        for (uint32_t i = 0; i < ack_timeout_steps; ++i)
+        auto start_time = rtc->gettime();
+        for (;;)
         {
             if (m_rx_buffer.pending)
             {
@@ -58,8 +62,7 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
                         UBX::ACK::MSG_ACK *msg_ack_ptr = reinterpret_cast<UBX::ACK::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
                         if (msg_ack_ptr->clsID == msgClass && msg_ack_ptr->msgID == id)
                         {
-                            m_rx_buffer.pending = false;
-                            DEBUG_TRACE("GPS ACK-ACK <-");
+                            //DEBUG_TRACE("GPS ACK-ACK <-");
                             return SendReturnCode::SUCCESS;
                         }
                     }
@@ -68,7 +71,6 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
                         UBX::ACK::MSG_ACK *msg_nack_ptr = reinterpret_cast<UBX::ACK::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
                         if (msg_nack_ptr->clsID == msgClass && msg_nack_ptr->msgID == id)
                         {
-                            m_rx_buffer.pending = false;
                             DEBUG_WARN("GPS ACK-NACK <-");
                             return SendReturnCode::NACKD;
                         }
@@ -78,12 +80,97 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
                 m_rx_buffer.pending = false;
             }
 
-            nrf_delay_ms(ack_timeout_ms / ack_timeout_steps);
+            if (rtc->gettime() - start_time >= timeout)
+            {
+                DEBUG_ERROR("GPS Timed out waiting for response");
+                return SendReturnCode::RESPONSE_TIMEOUT;
+            }
+        }
+    }
+
+    return SendReturnCode::SUCCESS;
+}
+
+template <typename T>
+M8QReceiver::SendReturnCode M8QReceiver::poll_contents_and_collect(UBX::MessageClass msgClass, uint8_t id, T &contents)
+{
+    const std::time_t timeout = 3;
+
+    // Construct packet header
+    UBX::Header header = {
+        .syncChars = {UBX::SYNC_CHAR1, UBX::SYNC_CHAR2},
+        .msgClass = msgClass,
+        .msgId = id,
+        .msgLength = 0
+    };
+
+    // Calculate the checksum
+    uint8_t ck[2] = {0};
+    uint8_t *checksum_ptr = reinterpret_cast<uint8_t *>(&header.msgClass);
+
+    // Calculate the checksum across the msgClass, msgId and msgLength
+    for (unsigned int i = 0; i < 4; i++)
+    {
+        ck[0] = ck[0] + checksum_ptr[i];
+        ck[1] = ck[1] + ck[0];
+    }
+
+    m_rx_buffer.pending = false;
+    m_nrf_uart_m8->send(reinterpret_cast<uint8_t *>(&header), sizeof(header));
+    m_nrf_uart_m8->send(&ck[0], sizeof(ck));
+
+    // Wait for the poll response
+    auto start_time = rtc->gettime();
+    for (;;)
+    {
+        if (m_rx_buffer.pending)
+        {
+            UBX::Header *header_ptr = reinterpret_cast<UBX::Header *>(&m_rx_buffer.data[0]);
+            if (header_ptr->msgClass == msgClass && header_ptr->msgId == id)
+            {
+                if (m_rx_buffer.len == sizeof(T) + sizeof(UBX::Header) + sizeof(ck))
+                {
+                    memcpy(&contents, &m_rx_buffer.data[sizeof(UBX::Header)], sizeof(T));
+                    return SendReturnCode::SUCCESS;
+                }
+            }
+
+            m_rx_buffer.pending = false;
         }
 
-        DEBUG_ERROR("GPS Timed out waiting for response");
-        return SendReturnCode::RESPONSE_TIMEOUT;
+        if (rtc->gettime() - start_time >= timeout)
+        {
+            DEBUG_ERROR("GPS Timed out waiting for response");
+            return SendReturnCode::RESPONSE_TIMEOUT;
+        }
     }
+
+    return SendReturnCode::SUCCESS;
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::poll_contents(UBX::MessageClass msgClass, uint8_t id)
+{
+    // Construct packet header
+    UBX::Header header = {
+        .syncChars = {UBX::SYNC_CHAR1, UBX::SYNC_CHAR2},
+        .msgClass = msgClass,
+        .msgId = id,
+        .msgLength = 0
+    };
+
+    // Calculate the checksum
+    uint8_t ck[2] = {0};
+    uint8_t *checksum_ptr = reinterpret_cast<uint8_t *>(&header.msgClass);
+
+    // Calculate the checksum across the msgClass, msgId and msgLength
+    for (unsigned int i = 0; i < 4; i++)
+    {
+        ck[0] = ck[0] + checksum_ptr[i];
+        ck[1] = ck[1] + ck[0];
+    }
+
+    m_nrf_uart_m8->send(reinterpret_cast<uint8_t *>(&header), sizeof(header));
+    m_nrf_uart_m8->send(&ck[0], sizeof(ck));
 
     return SendReturnCode::SUCCESS;
 }
@@ -91,13 +178,22 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
 M8QReceiver::M8QReceiver()
 {
     m_nrf_uart_m8 = nullptr;
+    m_navigation_database_len = 0;
     m_rx_buffer.pending = false;
-    m_has_booted = false;
+    m_capture_messages = false;
 }
 
 void M8QReceiver::power_off()
 {
     DEBUG_TRACE("M8QReceiver::power_off");
+
+    m_capture_messages = true;
+
+    // Disable any messages so they don't interrupt our navigation database dump
+    disable_nav_pvt_message();
+    disable_nav_dop_message();
+
+    fetch_navigation_database();
 
     delete m_nrf_uart_m8;
     m_nrf_uart_m8 = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
@@ -105,9 +201,143 @@ void M8QReceiver::power_off()
     // Disable the power supply for the GPS
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
 
-    m_has_booted = false;
     m_rx_buffer.pending = false;
     m_data_notification_callback = nullptr;
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::fetch_navigation_database()
+{
+    const std::time_t timeout = 3;
+    uint8_t *write_dst = &m_navigation_database[0];
+    m_navigation_database_len = 0;
+    uint32_t number_of_mga_dbd_msgs = 0;
+
+    m_capture_messages = true;
+
+    DEBUG_TRACE("M8QReceiver::fetch_navigation_database: requesting navigation database");
+
+    // Request a dump of the navigation database
+    m_rx_buffer.pending = false;
+    poll_contents(UBX::MessageClass::MSG_CLASS_MGA, UBX::MGA::ID_DBD);
+
+    auto last_update = rtc->gettime();
+    
+    for (;;)
+    {
+        if (m_rx_buffer.pending)
+        {
+            UBX::Header *header_ptr = reinterpret_cast<UBX::Header *>(&m_rx_buffer.data[0]);
+            if (header_ptr->msgClass == UBX::MessageClass::MSG_CLASS_MGA)
+            {
+                if (header_ptr->msgId == UBX::MGA::ID_DBD)
+                {
+                    //DEBUG_TRACE("GPS MGA-DBD <-");
+
+                    // Check we have enough space in our buffer to receive this
+                    if (m_rx_buffer.len + 1 > sizeof(m_navigation_database) - m_navigation_database_len)
+                    {
+                        m_navigation_database_len = 0; // Invalidate the data we did receive
+                        DEBUG_ERROR("M8QReceiver::fetch_navigation_database: received database is larger than storage buffer");
+                        return SendReturnCode::DATA_OVERSIZE;
+                    }
+
+                    *write_dst++ = m_rx_buffer.len; // Preface each message with its length for easier resending
+                    m_navigation_database_len++;
+                    memcpy(write_dst, &m_rx_buffer.data[0], m_rx_buffer.len);
+                    write_dst += m_rx_buffer.len;
+                    m_navigation_database_len += m_rx_buffer.len;
+                    number_of_mga_dbd_msgs++;
+                    last_update = rtc->gettime();
+                }
+                else if (header_ptr->msgId == UBX::MGA::ID_ACK)
+                {
+                    UBX::MGA::MSG_ACK *msg_ack_ptr = reinterpret_cast<UBX::MGA::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
+                    //DEBUG_TRACE("GPS MGA-ACK <-");
+
+                    if (msg_ack_ptr->msgPayloadStart == number_of_mga_dbd_msgs)
+                    {
+                        DEBUG_TRACE("M8QReceiver::fetch_navigation_database: received database of size %lu", m_navigation_database_len);
+                        return SendReturnCode::SUCCESS;
+                    }
+                    else
+                    {
+                        DEBUG_ERROR("M8QReceiver::fetch_navigation_database: received less MGA-DBD packets then was expected, %lu vs %lu", number_of_mga_dbd_msgs, msg_ack_ptr->msgPayloadStart);
+                        m_navigation_database_len = 0; // Invalidate the data we did receive
+                        return SendReturnCode::MISSING_DATA;
+                    }
+                }
+            }
+
+            m_rx_buffer.pending = false;
+        }
+
+        if (rtc->gettime() - last_update >= timeout)
+        {
+            DEBUG_ERROR("M8QReceiver::fetch_navigation_database: timed out waiting for response");
+            m_navigation_database_len = 0; // Invalidate the data we did receive
+            return SendReturnCode::RESPONSE_TIMEOUT;
+        }
+    }
+
+    return SendReturnCode::SUCCESS;
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::send_navigation_database()
+{
+    if (!m_navigation_database_len)
+    {
+        DEBUG_TRACE("M8QReceiver::send_navigation_database: no database to send");
+        return SendReturnCode::SUCCESS;
+    }
+
+    DEBUG_TRACE("M8QReceiver::send_navigation_database: sending database of size %lu", m_navigation_database_len);
+    m_capture_messages = true;
+    uint8_t *send_ptr = &m_navigation_database[0];
+    int32_t bytes_to_process = m_navigation_database_len;
+
+    while (bytes_to_process > 0)
+    {
+        // Fetch the first byte which is the length of the message we are going to send
+        uint32_t send_len = *send_ptr++;
+        bytes_to_process--;
+
+        // Send the pre-recorded message
+        m_rx_buffer.pending = false;
+        m_nrf_uart_m8->send(send_ptr, send_len);
+
+        //DEBUG_TRACE("GPS MGA-DBD ->");
+
+        send_ptr += send_len;
+        bytes_to_process -= send_len;
+
+        // Wait for the ack, this will only be sent if ackAiding is set in NAVX5
+        auto start_time = rtc->gettime();
+        const std::time_t timeout = 3;
+        for (;;)
+        {
+            if (m_rx_buffer.pending)
+            {
+                UBX::Header *header_ptr = reinterpret_cast<UBX::Header *>(&m_rx_buffer.data[0]);
+                if (header_ptr->msgClass == UBX::MessageClass::MSG_CLASS_MGA && header_ptr->msgId == UBX::MGA::ID_ACK)
+                {
+                    //UBX::MGA::MSG_ACK *msg_ack_ptr = reinterpret_cast<UBX::MGA::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
+                    //DEBUG_TRACE("GPS MGA-ACK <- infoCode: %u", msg_ack_ptr->infoCode);
+                    break;
+                }
+
+                m_rx_buffer.pending = false;
+            }
+
+            if (rtc->gettime() - start_time >= timeout)
+            {
+                DEBUG_ERROR("M8QReceiver::send_navigation_database: timed out waiting for response");
+                m_navigation_database_len = 0; // Invalidate the data we did receive
+                return SendReturnCode::RESPONSE_TIMEOUT;
+            }
+        }
+    }
+
+    return SendReturnCode::SUCCESS;
 }
 
 void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_callback = nullptr)
@@ -115,8 +345,10 @@ void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_
     DEBUG_TRACE("M8QReceiver::power_on");
 
     m_data_notification_callback = data_notification_callback;
+    m_capture_messages = true;
     
-    m_nrf_uart_m8 = new NrfUARTM8(UART_GPS, [this](uint8_t *data, size_t len){ reception_callback(data, len); });
+    if (!m_nrf_uart_m8)
+        m_nrf_uart_m8 = new NrfUARTM8(UART_GPS, [this](uint8_t *data, size_t len) { reception_callback(data, len); });
 
     // Clear our dop and pvt message containers
     memset(&m_last_received_pvt, 0, sizeof(m_last_received_pvt));
@@ -137,10 +369,12 @@ void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_
     ret = setup_lower_power_mode();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_simple_navigation_settings(); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_expert_navigation_settings(); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
+    ret = supply_time_assistance();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
+    ret = send_navigation_database();         if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = enable_nav_pvt_message();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = enable_nav_dop_message();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
 
-    m_has_booted = true;
+    m_capture_messages = false;
 
     return;
 
@@ -160,7 +394,7 @@ POWER_ON_FAILURE:
 void M8QReceiver::reception_callback(uint8_t *data, size_t len)
 {
     // If we haven't booted then we need to stash the incoming messages so that we can check for ACK/NACKs whilst configuring the device
-    if (!m_has_booted)
+    if (m_capture_messages)
     {
         if (!m_rx_buffer.pending)
         {
@@ -183,7 +417,7 @@ void M8QReceiver::reception_callback(uint8_t *data, size_t len)
                 UBX::NAV::PVT::MSG_PVT *msg_pvt_ptr = reinterpret_cast<UBX::NAV::PVT::MSG_PVT *>(&data[sizeof(UBX::Header)]);
                 memcpy(&m_last_received_pvt, msg_pvt_ptr, sizeof(m_last_received_pvt));
 
-                DEBUG_TRACE("GPS NAV-PVT <-");
+                //DEBUG_TRACE("GPS NAV-PVT <-");
 
                 populate_gnss_data_and_callback();
             }
@@ -192,7 +426,7 @@ void M8QReceiver::reception_callback(uint8_t *data, size_t len)
                 UBX::NAV::DOP::MSG_DOP *msg_dop_ptr = reinterpret_cast<UBX::NAV::DOP::MSG_DOP *>(&data[sizeof(UBX::Header)]);
                 memcpy(&m_last_received_dop, msg_dop_ptr, sizeof(m_last_received_dop));
 
-                DEBUG_TRACE("GPS NAV-DOP <-");
+                //DEBUG_TRACE("GPS NAV-DOP <-");
 
                 populate_gnss_data_and_callback();
             }
@@ -203,10 +437,10 @@ void M8QReceiver::reception_callback(uint8_t *data, size_t len)
 // Checks if the data we have to date is enough to generate a gnss data callback and if it is calls it
 void M8QReceiver::populate_gnss_data_and_callback()
 {
-    if (m_last_received_pvt.fixType != UBX::NAV::PVT::FIXTYPE_NO && // GPS Fix must be achieved
+    if (m_last_received_pvt.fixType != UBX::NAV::PVT::FIXTYPE_NO &&    // GPS Fix must be achieved
         m_last_received_pvt.valid & UBX::NAV::PVT::VALID_VALID_DATE && // Date must be valid
         m_last_received_pvt.valid & UBX::NAV::PVT::VALID_VALID_TIME && // Time must be valid
-        m_last_received_pvt.iTow == m_last_received_dop.iTow) // Both received DOP and NAV must refer to the same position
+        m_last_received_pvt.iTow == m_last_received_dop.iTow)          // Both received DOP and NAV must refer to the same position
     {
         GNSSData gnss_data = 
         {
@@ -264,16 +498,21 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
         .reserved1 = 0,
         .txReady = 0,
         .mode = CFG::PRT::MODE_CHARLEN_8BIT | CFG::PRT::MODE_PARITY_NO | CFG::PRT::MODE_STOP_BITS_1,
-        .baudRate = 9600,
+        .baudRate = 115200,
         .inProtoMask = CFG::PRT::PROTOMASK_UBX,
         .outProtoMask = CFG::PRT::PROTOMASK_UBX,
         .flags = 0,
         .reserved2 = {0}
     };
 
-    DEBUG_TRACE("GPS CFG-PRT ->");
+    //DEBUG_TRACE("GPS CFG-PRT ->");
 
-    return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_PRT, uart_prt);
+    auto ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_PRT, uart_prt, false);
+    m_nrf_uart_m8->change_baudrate(uart_prt.baudRate);
+
+    nrf_delay_ms(100); // Wait for the port to have changed baudrate
+
+    return ret;
 }
 
 M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
@@ -338,7 +577,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
         }
     };
 
-    DEBUG_TRACE("GPS CFG-GNSS ->");
+    //DEBUG_TRACE("GPS CFG-GNSS ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_GNSS, cfg_msg_cfg_gnss);
 }
@@ -361,7 +600,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_power_management()
         .extintInactivityMs = 0
     };
 
-    DEBUG_TRACE("GPS CFG-PM2 ->");
+    //DEBUG_TRACE("GPS CFG-PM2 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_PM2, cfg_msg_cfg_pm2);
 }
@@ -374,7 +613,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_lower_power_mode()
         .lpMode = CFG::RXM::CONTINUOUS_MODE
     };
 
-    DEBUG_TRACE("GPS CFG-RXM ->");
+    //DEBUG_TRACE("GPS CFG-RXM ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_RXM, cfg_msg_cfg_rxm);
 }
@@ -404,7 +643,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_simple_navigation_settings()
         .reserved2 = {0}
     };
 
-    DEBUG_TRACE("GPS CFG-NAV5 ->");
+    //DEBUG_TRACE("GPS CFG-NAV5 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_NAV5, cfg_msg_cfg_nav5);
 }
@@ -430,7 +669,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_expert_navigation_settings()
         .reserved5 = {0},
         .reserved6 = {0},
         .usePPP = 0,
-        .aopCfg = 0, // AssistNow Autonomous disabled //CFG::NAVX5::AOPCFG_USE_AOP,
+        .aopCfg = CFG::NAVX5::AOPCFG_AOP_ENABLED,
         .reserved7 = {0},
         .aopOrbMaxErr = 100,
         .reserved8 = {0},
@@ -438,9 +677,80 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_expert_navigation_settings()
         .useAdr = 0
     };
 
-    DEBUG_TRACE("GPS CFG-NAVX5 ->");
+    //DEBUG_TRACE("GPS CFG-NAVX5 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_NAVX5, cfg_msg_cfg_navx5);
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::supply_time_assistance()
+{
+    if (!rtc->is_set())
+    {
+        DEBUG_TRACE("M8QReceiver::supply_time_assistance: no time to send");
+        return SendReturnCode::SUCCESS;
+    }
+
+    uint16_t year;
+    uint8_t month, day, hour, min, sec;
+
+    convert_datetime_to_epoch(rtc->gettime(), year, month, day, hour, min, sec);
+
+    MGA::MSG_INI_TIME_UTC cfg_msg_ini_time_utc =
+    {
+        .type = 0x10,
+        .version = 0x00,
+        .ref = 0x00,
+        .leapSecs = -128, // Number of leap seconds unknown
+        .year = year,
+        .month = month,
+        .day = day,
+        .hour = hour,
+        .minute = min,
+        .second = sec,
+        .reserved1 = 0,
+        .ns = 0,
+        .tAccS = 2, // Accurate to within 2 seconds, perhaps this can be improved?
+        .reserved2 = {0},
+        .tAccNs = 0
+    };
+
+    //DEBUG_TRACE("GPS MGA-INI-TIME-UTC ->");
+
+    // This message expects a MGA-ACK as opposed to a ACK-ACK so we can't use this function for testing the response
+    SendReturnCode ret = send_packet_contents(MessageClass::MSG_CLASS_MGA, MGA::ID_INI_TIME_UTC, cfg_msg_ini_time_utc, false);
+    if (ret != SendReturnCode::SUCCESS)
+        return ret;
+
+    // Instead we shall do so manually (Note: this will only work if ackAiding has been set in NAVX5)
+    auto start_time = rtc->gettime();
+    const std::time_t timeout = 3;
+    for (;;)
+    {
+        if (m_rx_buffer.pending)
+        {
+            UBX::Header *header_ptr = reinterpret_cast<UBX::Header *>(&m_rx_buffer.data[0]);
+            if (header_ptr->msgClass == UBX::MessageClass::MSG_CLASS_MGA && header_ptr->msgId == UBX::MGA::ID_ACK)
+            {
+                UBX::MGA::MSG_ACK *msg_ack_ptr = reinterpret_cast<UBX::MGA::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
+                if (msg_ack_ptr->msgId == MGA::ID_INI_TIME_UTC)
+                {
+                    //DEBUG_TRACE("GPS MGA-ACK <- infoCode: %u", msg_ack_ptr->infoCode);
+                    return SendReturnCode::SUCCESS;
+                }
+            }
+
+            m_rx_buffer.pending = false;
+        }
+
+        if (rtc->gettime() - start_time >= timeout)
+        {
+            DEBUG_ERROR("M8QReceiver::send_navigation_database: timed out waiting for response");
+            m_navigation_database_len = 0; // Invalidate the data we did receive
+            return SendReturnCode::RESPONSE_TIMEOUT;
+        }
+    }
+
+    return SendReturnCode::SUCCESS;
 }
 
 M8QReceiver::SendReturnCode M8QReceiver::disable_odometer()
@@ -460,7 +770,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_odometer()
         .reserved4 = {0}
     };
 
-    DEBUG_TRACE("GPS CFG-ODO ->");
+    //DEBUG_TRACE("GPS CFG-ODO ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_ODO, cfg_msg_cfg_odo);
 }
@@ -483,7 +793,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_timepulse_output()
         .flags = 0
     };
 
-    DEBUG_TRACE("GPS CFG-TP5 ->");
+    //DEBUG_TRACE("GPS CFG-TP5 ->");
 
     auto ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_TP5, cfg_msg_cfg_tp5);
     if (ret != SendReturnCode::SUCCESS)
@@ -493,7 +803,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_timepulse_output()
 
     cfg_msg_cfg_tp5.tpIdx = 1;
 
-    DEBUG_TRACE("GPS CFG-TP5 ->");
+    //DEBUG_TRACE("GPS CFG-TP5 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_TP5, cfg_msg_cfg_tp5);
 }
@@ -507,7 +817,7 @@ M8QReceiver::SendReturnCode M8QReceiver::enable_nav_pvt_message()
         .rate = 1
     };
 
-    DEBUG_TRACE("GPS CFG-MSG ->");
+    //DEBUG_TRACE("GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_pvt);
 }
@@ -521,7 +831,35 @@ M8QReceiver::SendReturnCode M8QReceiver::enable_nav_dop_message()
         .rate = 1
     };
 
-    DEBUG_TRACE("GPS CFG-MSG ->");
+    //DEBUG_TRACE("GPS CFG-MSG ->");
+
+    return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::disable_nav_pvt_message()
+{
+    CFG::MSG::MSG_MSG cfg_msg_nav_pvt =
+    {
+        .msgClass = MessageClass::MSG_CLASS_NAV,
+        .msgID = NAV::ID_PVT,
+        .rate = 0
+    };
+
+    //DEBUG_TRACE("GPS CFG-MSG ->");
+
+    return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_pvt);
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::disable_nav_dop_message()
+{
+    CFG::MSG::MSG_MSG cfg_msg_nav_dop =
+    {
+        .msgClass = MessageClass::MSG_CLASS_NAV,
+        .msgID = NAV::ID_DOP,
+        .rate = 0
+    };
+
+    //DEBUG_TRACE("GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
 }

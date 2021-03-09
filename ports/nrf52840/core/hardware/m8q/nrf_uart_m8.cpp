@@ -137,7 +137,7 @@ void NrfUARTM8::update_state(uint8_t new_byte)
                 else
                 {
                     DEBUG_WARN("GPS Checksum invalid");
-                }              
+                }
                 
                 m_state = WAITING_SYNC_CHAR_1;
             }
@@ -150,13 +150,95 @@ void NrfUARTM8::update_state(uint8_t new_byte)
 
 int NrfUARTM8::send(const uint8_t * data, uint32_t size)
 {
-    nrfx_err_t ret = nrfx_uarte_tx(&BSP::UART_Inits[m_instance].uarte, data, size);
-    if (ret != NRFX_SUCCESS)
-        return ret;
+    if (!size)
+        return size;
+    
+    const uint8_t *write_ptr = data;
 
-    // nrfx_uarte_tx is non-blocking so we need to make it blocking so our data buffer remains valid for the duration of the transfer
-    while (nrfx_uarte_tx_in_progress(&BSP::UART_Inits[m_instance].uarte))
-    {}
+    // The max transmit size of the underlying peripheral is 0xFFFF so we must break up larger transfers
+    while (size)
+    {
+        uint32_t transfer_size = std::min(size, 0xFFFFLU);
+        nrfx_err_t ret = nrfx_uarte_tx(&BSP::UART_Inits[m_instance].uarte, write_ptr, size);
+        if (ret != NRFX_SUCCESS)
+            return ret;
+
+        // nrfx_uarte_tx is non-blocking so we need to make it blocking so our data buffer remains in scope for the duration of the transfer
+        while (nrfx_uarte_tx_in_progress(&BSP::UART_Inits[m_instance].uarte))
+        {}
+        
+        size -= transfer_size;
+        write_ptr += transfer_size;
+    }
 
     return size;
+}
+
+void NrfUARTM8::change_baudrate(uint32_t baudrate)
+{
+    nrf_uarte_baudrate_t nrf_baudrate;
+
+    switch (baudrate)
+    {
+        case 1200:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_1200;
+            break;
+        case 2400:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_2400;
+            break;
+        case 4800:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_4800;
+            break;
+        case 9600:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_9600;
+            break;
+        case 14400:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_14400;
+            break;
+        case 19200:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_19200;
+            break;
+        case 28800:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_28800;
+            break;
+        case 31250:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_31250;
+            break;
+        case 38400:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_38400;
+            break;
+        case 56000:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_56000;
+            break;
+        case 57600:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_57600;
+            break;
+        case 76800:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_76800;
+            break;
+        case 115200:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_115200;
+            break;
+        case 230400:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_230400;
+            break;
+        case 250000:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_250000;
+            break;
+        case 460800:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_460800;
+            break;
+        case 921600:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_921600;
+            break;
+        case 1000000:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_1000000;
+            break;
+
+        default:
+            nrf_baudrate = NRF_UARTE_BAUDRATE_9600;
+            break;
+    }
+
+    nrf_uarte_baudrate_set(BSP::UART_Inits[m_instance].uarte.p_reg, nrf_baudrate);
 }
