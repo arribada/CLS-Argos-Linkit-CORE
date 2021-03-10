@@ -76,7 +76,10 @@ void SWS::start(std::function<void(bool)> func) {
 	m_period_underwater_ms = m_sched_units * 1000 * configuration_store->read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ);
 	m_period_surface_ms = m_sched_units * 1000 * configuration_store->read_param<unsigned int>(ParamID::SAMPLING_SURF_FREQ);
 	m_sample_iteration = 0;
-	m_task_handle = system_scheduler->post_task_prio(std::bind(&SWS::sample_sws, this));
+	bool is_underwater_enabled = configuration_store->read_param<bool>(ParamID::UNDERWATER_EN);
+	// Do not schedule first sampling unless UNDERWATER_EN is set
+	if (is_underwater_enabled)
+		m_task_handle = system_scheduler->post_task_prio(std::bind(&SWS::sample_sws, this));
 }
 
 void SWS::stop() {

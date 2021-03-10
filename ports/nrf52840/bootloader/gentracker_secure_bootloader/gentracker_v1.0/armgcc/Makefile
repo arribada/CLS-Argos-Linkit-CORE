@@ -1,11 +1,11 @@
 PROJECT_NAME     := secure_bootloader_usb_mbr_gentracker_v1
-TARGETS          := gentracker_v1_xxaa
+TARGETS          := LinkIt_v1_xxaa
 OUTPUT_DIRECTORY := _build
 
 PROJ_DIR := ../..
 SDK_ROOT := ../../../../drivers/nRF5_SDK_17.0.2
 
-$(OUTPUT_DIRECTORY)/gentracker_v1_xxaa.out: \
+$(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa.out: \
   LINKER_SCRIPT  := secure_bootloader_gcc_nrf52.ld
 
 # Source files common to all targets
@@ -207,8 +207,8 @@ LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs
 
-gentracker_v1_xxaa: CFLAGS += -D__HEAP_SIZE=0
-gentracker_v1_xxaa: ASMFLAGS += -D__HEAP_SIZE=0
+LinkIt_v1_xxaa: CFLAGS += -D__HEAP_SIZE=0
+LinkIt_v1_xxaa: ASMFLAGS += -D__HEAP_SIZE=0
 
 # Add standard libraries at the very end of the linker input, after all objects
 # that may need symbols provided by these libraries.
@@ -218,12 +218,12 @@ LIB_FILES += -lc -lnosys -lm
 .PHONY: default help
 
 # Default target - first one defined
-default: gentracker_v1_xxaa
+default: LinkIt_v1_xxaa
 
 # Print all targets that can be built
 help:
 	@echo following targets are available:
-	@echo		gentracker_v1_xxaa
+	@echo		LinkIt_v1_xxaa
 	@echo		flash_mbr
 	@echo		sdk_config - starting external tool for editing sdk_config.h
 	@echo		flash      - flashing binary
@@ -239,12 +239,12 @@ $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
 # Flash the program
 mergehex: default
-	mergehex -m ${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa.hex -o $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa_merged.hex
+	mergehex -m ${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex $(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa.hex -o $(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa_merged.hex
 
 flash: mergehex
-	@echo Flashing: $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa_merged.hex
+	@echo Flashing: $(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa_merged.hex
 	nrfjprog -f nrf52 --eraseall
-	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/gentracker_v1_xxaa_merged.hex --sectoranduicrerase
+	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa_merged.hex --sectoranduicrerase
 	nrfjprog -f nrf52 --reset
 
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(GenTracker
+project(LinkIt
     VERSION 0.1
     LANGUAGES CXX C ASM
 )
@@ -17,21 +17,21 @@ set(LIB_DIR       ../../libraries)
 
 option(BOARD "Board to compile for" NONE)
 
+if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE)
+    set(DEVICE_MODEL LINKIT-${MODEL})
+else()
+    message(FATAL_ERROR "MODEL must be one of {SB, CORE, UW}")
+endif()
+
 # Append board model to the target name
 if(${BOARD} MATCHES HORIZON)
     set(TARGET_NAME ${PROJECT_NAME}_horizon_board)
     set(BOARD_DIR     "${PROJ_DIR}/bsp/horizon_v4.0")
-elseif(${BOARD} MATCHES GENTRACKER)
-    set(TARGET_NAME ${PROJECT_NAME}_gentracker_board)
+elseif(${BOARD} MATCHES LINKIT)
+    set(TARGET_NAME ${PROJECT_NAME}_${MODEL}_board)
     set(BOARD_DIR     "${PROJ_DIR}/bsp/gentracker_v1.0")
 else()
-    message(FATAL_ERROR "Board must be HORIZON or GENTRACKER")
-endif()
-
-if(${MODEL} MATCHES SURFACEBOX OR ${MODEL} MATCHES UNDERWATER)
-    set(DEVICE_MODEL ${MODEL})
-else()
-    message(FATAL_ERROR "MODEL must be SURFACEBOX or UNDERWATER")
+    message(FATAL_ERROR "Board must be HORIZON or LINKIT")
 endif()
 
 if (DEBUG_LEVEL)
@@ -224,7 +224,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     SOFTDEVICE_PRESENT
     __HEAP_SIZE=8192
     __STACK_SIZE=65536
-    DEVICE_MODEL_NAME="${MODEL}"s
+    DEVICE_MODEL_NAME="${DEVICE_MODEL}"s
     #LFS_YES_TRACE
     #BATTERY_NOT_FITTED
     DEBUG_TO_SYSTEMLOG

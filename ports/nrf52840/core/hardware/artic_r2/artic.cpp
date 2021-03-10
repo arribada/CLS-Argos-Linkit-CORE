@@ -643,7 +643,7 @@ void ArticTransceiver::set_frequency(const double freq) {
 }
 
 void ArticTransceiver::set_tx_power(const BaseArgosPower power) {
-#ifndef BOARD_GENTRACKER
+#ifndef BOARD_LINKIT
 	(void)power;
 #else
 	// GA16 and GA8 pins allows PA gain to be set only coarsely as:

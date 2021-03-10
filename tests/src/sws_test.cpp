@@ -42,7 +42,9 @@ TEST(SWS, UnderwaterEvent)
 
 	unsigned int surf_period = 1;
 	unsigned int under_period = 1;
+	bool underwater_en = true;
 
+	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
 	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
 	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
@@ -72,7 +74,9 @@ TEST(SWS, SurfacedEvent)
 
 	unsigned int surf_period = 1;
 	unsigned int under_period = 1;
+	bool underwater_en = true;
 
+	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
 	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
 	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
@@ -102,7 +106,9 @@ TEST(SWS, SchedulingPeriodSurfaced)
 
 	unsigned int surf_period = 2;
 	unsigned int under_period = 1;
+	bool underwater_en = true;
 
+	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
 	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
 	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
@@ -133,7 +139,9 @@ TEST(SWS, SchedulingPeriodUnderwater)
 
 	unsigned int surf_period = 1;
 	unsigned int under_period = 2;
+	bool underwater_en = true;
 
+	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
 	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
 	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
@@ -149,6 +157,28 @@ TEST(SWS, SchedulingPeriodUnderwater)
 
 	CHECK_TRUE(switch_state);
 	CHECK_EQUAL(1, num_callbacks);
+
+	s.stop();
+}
+
+TEST(SWS, UnderwaterModeDisabled)
+{
+	SWS s(1);   // Use 1 sec scheduling units
+	bool switch_state = false;
+	unsigned int num_callbacks = 0;
+
+	system_timer->start();
+
+	unsigned int surf_period = 1;
+	unsigned int under_period = 2;
+	bool underwater_en = false;
+
+	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
+	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
+	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
+
+	CHECK_FALSE(system_scheduler->is_any_task_scheduled());
 
 	s.stop();
 }

@@ -103,7 +103,7 @@ void BootState::entry() {
 		sensor_log->create();
 		system_log->create();
 		configuration_store->init();
-	    DEBUG_INFO("GenTracker Version: %s", FW_APP_VERSION_STR_C);
+	    DEBUG_INFO("Firmware Version: %s", FW_APP_VERSION_STR_C);
 		DEBUG_INFO("sensor_log: has %u entries", sensor_log->num_entries());
 		DEBUG_INFO("system_log: has %u entries", system_log->num_entries());
 		DEBUG_INFO("configuration_store: is_valid=%u", configuration_store->is_valid());
