@@ -346,11 +346,11 @@ void ArgosScheduler::notify_sensor_log_update() {
 		unsigned int idx = sensor_log->num_entries() - 1;  // Most recent entry in log
 		sensor_log->read(&gps_entry, idx);
 		// Update last known position if the GPS entry is valid (otherwise we preserve the last one)
-		if (gps_entry.valid) {
+		if (gps_entry.info.valid) {
 			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: updated last known GPS position; is_rtc_set=%u",
 					rtc->is_set());
-			m_last_longitude = gps_entry.lon;
-			m_last_latitude = gps_entry.lat;
+			m_last_longitude = gps_entry.info.lon;
+			m_last_latitude = gps_entry.info.lat;
 		}
 
 		if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
@@ -420,25 +420,25 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 	PACK_BITS(SHORT_PACKET_BITFIELD, packet, base_pos, 8);
 	DEBUG_TRACE("ArgosScheduler::build_short_packet: bitfield=%u", SHORT_PACKET_BITFIELD);
 #endif
-	PACK_BITS(gps_entry.day, packet, base_pos, 5);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: day=%u", gps_entry.day);
-	PACK_BITS(gps_entry.hour, packet, base_pos, 5);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: hour=%u", gps_entry.hour);
-	PACK_BITS(gps_entry.min, packet, base_pos, 6);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: min=%u", gps_entry.min);
+	PACK_BITS(gps_entry.info.day, packet, base_pos, 5);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: day=%u", gps_entry.info.day);
+	PACK_BITS(gps_entry.info.hour, packet, base_pos, 5);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: hour=%u", gps_entry.info.hour);
+	PACK_BITS(gps_entry.info.min, packet, base_pos, 6);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: min=%u", gps_entry.info.min);
 
-	if (gps_entry.valid) {
-		PACK_BITS(convert_latitude(gps_entry.lat), packet, base_pos, 21);
-		DEBUG_TRACE("ArgosScheduler::build_short_packet: lat=%u (%lf)", convert_latitude(gps_entry.lat), gps_entry.lat);
-		PACK_BITS(convert_longitude(gps_entry.lon), packet, base_pos, 22);
-		DEBUG_TRACE("ArgosScheduler::build_short_packet: lon=%u (%lf)", convert_longitude(gps_entry.lon), gps_entry.lon);
-		double gspeed = (SECONDS_PER_HOUR * gps_entry.gSpeed) / MM_PER_KM;
+	if (gps_entry.info.valid) {
+		PACK_BITS(convert_latitude(gps_entry.info.lat), packet, base_pos, 21);
+		DEBUG_TRACE("ArgosScheduler::build_short_packet: lat=%u (%lf)", convert_latitude(gps_entry.info.lat), gps_entry.info.lat);
+		PACK_BITS(convert_longitude(gps_entry.info.lon), packet, base_pos, 22);
+		DEBUG_TRACE("ArgosScheduler::build_short_packet: lon=%u (%lf)", convert_longitude(gps_entry.info.lon), gps_entry.info.lon);
+		double gspeed = (SECONDS_PER_HOUR * gps_entry.info.gSpeed) / MM_PER_KM;
 		PACK_BITS((unsigned int)gspeed, packet, base_pos, 8);
 		DEBUG_TRACE("ArgosScheduler::build_short_packet: speed=%u", (unsigned int)gspeed);
-		PACK_BITS(gps_entry.headMot * DEGREES_PER_UNIT, packet, base_pos, 8);
-		DEBUG_TRACE("ArgosScheduler::build_short_packet: heading=%u", (unsigned int)(gps_entry.headMot * DEGREES_PER_UNIT));
-		PACK_BITS(gps_entry.height / MM_PER_METER, packet, base_pos, 8);
-		DEBUG_TRACE("ArgosScheduler::build_short_packet: altitude=%u", (gps_entry.height / MM_PER_METER));
+		PACK_BITS(gps_entry.info.headMot * DEGREES_PER_UNIT, packet, base_pos, 8);
+		DEBUG_TRACE("ArgosScheduler::build_short_packet: heading=%u", (unsigned int)(gps_entry.info.headMot * DEGREES_PER_UNIT));
+		PACK_BITS(gps_entry.info.height / MM_PER_METER, packet, base_pos, 8);
+		DEBUG_TRACE("ArgosScheduler::build_short_packet: altitude=%u", (gps_entry.info.height / MM_PER_METER));
 	} else {
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);
@@ -447,8 +447,8 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 		PACK_BITS(0xFF, packet, base_pos, 8);
 	}
 
-	PACK_BITS(gps_entry.batt_voltage / MV_PER_UNIT, packet, base_pos, 8);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: voltage=%u", gps_entry.batt_voltage / MV_PER_UNIT);
+	PACK_BITS(gps_entry.info.batt_voltage / MV_PER_UNIT, packet, base_pos, 8);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: voltage=%u", gps_entry.info.batt_voltage / MV_PER_UNIT);
 
 	// Calculate CRC8
 #ifdef ARGOS_USE_CRC8
@@ -479,8 +479,8 @@ BaseDeltaTimeLoc ArgosScheduler::delta_time_loc(GPSLogEntry const& a, GPSLogEntr
 {
 	std::time_t t_a, t_b, t_diff;
 
-	t_a = convert_epochtime(a.year, a.month, a.day, a.hour, a.min, a.sec);
-	t_b = convert_epochtime(b.year, b.month, b.day, b.hour, b.min, b.sec);
+	t_a = convert_epochtime(a.info.year, a.info.month, a.info.day, a.info.hour, a.info.min, a.info.sec);
+	t_b = convert_epochtime(b.info.year, b.info.month, b.info.day, b.info.hour, b.info.min, b.info.sec);
 
 	if (t_a >= t_b) {
 		t_diff = t_a - t_b;
@@ -539,20 +539,20 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	PACK_BITS(LONG_PACKET_BITFIELD, packet, base_pos, 8);
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: bitfield=%u", LONG_PACKET_BITFIELD);
 #endif
-	PACK_BITS(gps_entries[0].day, packet, base_pos, 5);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: day=%u", gps_entries[0].day);
-	PACK_BITS(gps_entries[0].hour, packet, base_pos, 5);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: hour=%u", gps_entries[0].hour);
-	PACK_BITS(gps_entries[0].min, packet, base_pos, 6);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: min=%u", gps_entries[0].min);
+	PACK_BITS(gps_entries[0].info.day, packet, base_pos, 5);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: day=%u", gps_entries[0].info.day);
+	PACK_BITS(gps_entries[0].info.hour, packet, base_pos, 5);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: hour=%u", gps_entries[0].info.hour);
+	PACK_BITS(gps_entries[0].info.min, packet, base_pos, 6);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: min=%u", gps_entries[0].info.min);
 
 	// First GPS entry
-	if (gps_entries[0].valid) {
-		PACK_BITS(convert_latitude(gps_entries[0].lat), packet, base_pos, 21);
-		DEBUG_TRACE("ArgosScheduler::build_long_packet: lat=%u (%lf)", convert_latitude(gps_entries[0].lat), gps_entries[0].lat);
-		PACK_BITS(convert_longitude(gps_entries[0].lon), packet, base_pos, 22);
-		DEBUG_TRACE("ArgosScheduler::build_long_packet: lon=%u (%lf)", convert_longitude(gps_entries[0].lon), gps_entries[0].lon);
-		double gspeed = (SECONDS_PER_HOUR * gps_entries[0].gSpeed) / MM_PER_KM;
+	if (gps_entries[0].info.valid) {
+		PACK_BITS(convert_latitude(gps_entries[0].info.lat), packet, base_pos, 21);
+		DEBUG_TRACE("ArgosScheduler::build_long_packet: lat=%u (%lf)", convert_latitude(gps_entries[0].info.lat), gps_entries[0].info.lat);
+		PACK_BITS(convert_longitude(gps_entries[0].info.lon), packet, base_pos, 22);
+		DEBUG_TRACE("ArgosScheduler::build_long_packet: lon=%u (%lf)", convert_longitude(gps_entries[0].info.lon), gps_entries[0].info.lon);
+		double gspeed = (SECONDS_PER_HOUR * gps_entries[0].info.gSpeed) / MM_PER_KM;
 		PACK_BITS((unsigned int)gspeed, packet, base_pos, 8);
 		DEBUG_TRACE("ArgosScheduler::build_long_packet: speed=%u", (unsigned int)gspeed);
 	} else {
@@ -561,8 +561,8 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 		PACK_BITS(0xFF, packet, base_pos, 8);
 	}
 
-	PACK_BITS(gps_entries[0].batt_voltage / MV_PER_UNIT, packet, base_pos, 8);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: voltage=%u", gps_entries[0].batt_voltage / MV_PER_UNIT);
+	PACK_BITS(gps_entries[0].info.batt_voltage / MV_PER_UNIT, packet, base_pos, 8);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: voltage=%u", gps_entries[0].info.batt_voltage / MV_PER_UNIT);
 
 	// Delta time loc
 	PACK_BITS((unsigned int)delta_time_loc(gps_entries[0], gps_entries[1]), packet, base_pos, 4);
@@ -570,15 +570,15 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 
 	// Subsequent GPS entries
 	for (unsigned int i = 1; i < MAX_GPS_ENTRIES_IN_PACKET; i++) {
-		DEBUG_TRACE("ArgosScheduler::build_long_packet: gps_valid[%u]=%u", i, gps_entries[i].valid);
-		if (gps_entries.size() <= i || 0 == gps_entries[i].valid) {
+		DEBUG_TRACE("ArgosScheduler::build_long_packet: gps_valid[%u]=%u", i, gps_entries[i].info.valid);
+		if (gps_entries.size() <= i || 0 == gps_entries[i].info.valid) {
 			PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
 			PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);
 		} else {
-			PACK_BITS(convert_latitude(gps_entries[i].lat), packet, base_pos, 21);
-			DEBUG_TRACE("ArgosScheduler::build_long_packet: lat[%u]=%u (%lf)", i, convert_latitude(gps_entries[i].lat), gps_entries[i].lat);
-			PACK_BITS(convert_longitude(gps_entries[i].lon), packet, base_pos, 22);
-			DEBUG_TRACE("ArgosScheduler::build_long_packet: lon[%u]=%u (%lf)", i, convert_longitude(gps_entries[i].lon), gps_entries[i].lon);
+			PACK_BITS(convert_latitude(gps_entries[i].info.lat), packet, base_pos, 21);
+			DEBUG_TRACE("ArgosScheduler::build_long_packet: lat[%u]=%u (%lf)", i, convert_latitude(gps_entries[i].info.lat), gps_entries[i].info.lat);
+			PACK_BITS(convert_longitude(gps_entries[i].info.lon), packet, base_pos, 22);
+			DEBUG_TRACE("ArgosScheduler::build_long_packet: lon[%u]=%u (%lf)", i, convert_longitude(gps_entries[i].info.lon), gps_entries[i].info.lon);
 		}
 	}
 

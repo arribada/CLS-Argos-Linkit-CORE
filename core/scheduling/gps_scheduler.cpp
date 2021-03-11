@@ -103,9 +103,9 @@ void GPSScheduler::log_invalid_gps_entry()
 
     populate_gps_log_with_time(gps_entry, rtc->gettime());
 
-    gps_entry.batt_voltage = battery_monitor->get_voltage();
-    gps_entry.event_type = GPSEventType::NO_FIX;
-    gps_entry.valid = false;
+    gps_entry.info.batt_voltage = battery_monitor->get_voltage();
+    gps_entry.info.event_type = GPSEventType::NO_FIX;
+    gps_entry.info.valid = false;
 
     sensor_log->write(&gps_entry);
 }
@@ -140,46 +140,46 @@ void GPSScheduler::task_process_gnss_data()
 
     populate_gps_log_with_time(gps_entry, rtc->gettime());
 
-    gps_entry.batt_voltage = battery_monitor->get_voltage();
+    gps_entry.info.batt_voltage = battery_monitor->get_voltage();
 
     // Store GPS data
-    gps_entry.iTOW          = m_gnss_data.data.iTOW;
-    gps_entry.year          = m_gnss_data.data.year;
-    gps_entry.month         = m_gnss_data.data.month;
-    gps_entry.day           = m_gnss_data.data.day;
-    gps_entry.hour          = m_gnss_data.data.hour;
-    gps_entry.min           = m_gnss_data.data.min;
-    gps_entry.sec           = m_gnss_data.data.sec;
-    gps_entry.valid         = m_gnss_data.data.valid;
-    gps_entry.tAcc          = m_gnss_data.data.tAcc;
-    gps_entry.nano          = m_gnss_data.data.nano;
-    gps_entry.fixType       = m_gnss_data.data.fixType;
-    gps_entry.flags         = m_gnss_data.data.flags;
-    gps_entry.flags2        = m_gnss_data.data.flags2;
-    gps_entry.flags3        = m_gnss_data.data.flags3;
-    gps_entry.numSV         = m_gnss_data.data.numSV;
-    gps_entry.lon           = m_gnss_data.data.lon;
-    gps_entry.lat           = m_gnss_data.data.lat;
-    gps_entry.height        = m_gnss_data.data.height;
-    gps_entry.hMSL          = m_gnss_data.data.hMSL;
-    gps_entry.hAcc          = m_gnss_data.data.hAcc;
-    gps_entry.vAcc          = m_gnss_data.data.vAcc;
-    gps_entry.velN          = m_gnss_data.data.velN;
-    gps_entry.velE          = m_gnss_data.data.velE;
-    gps_entry.velD          = m_gnss_data.data.velD;
-    gps_entry.gSpeed        = m_gnss_data.data.gSpeed;
-    gps_entry.headMot       = m_gnss_data.data.headMot;
-    gps_entry.sAcc          = m_gnss_data.data.sAcc;
-    gps_entry.headAcc       = m_gnss_data.data.headAcc;
-    gps_entry.pDOP          = m_gnss_data.data.pDOP;
-    gps_entry.vDOP          = m_gnss_data.data.vDOP;
-    gps_entry.hDOP          = m_gnss_data.data.hDOP;
-    gps_entry.headVeh       = m_gnss_data.data.headVeh;
+    gps_entry.info.iTOW          = m_gnss_data.data.iTOW;
+    gps_entry.info.year          = m_gnss_data.data.year;
+    gps_entry.info.month         = m_gnss_data.data.month;
+    gps_entry.info.day           = m_gnss_data.data.day;
+    gps_entry.info.hour          = m_gnss_data.data.hour;
+    gps_entry.info.min           = m_gnss_data.data.min;
+    gps_entry.info.sec           = m_gnss_data.data.sec;
+    gps_entry.info.valid         = m_gnss_data.data.valid;
+    gps_entry.info.tAcc          = m_gnss_data.data.tAcc;
+    gps_entry.info.nano          = m_gnss_data.data.nano;
+    gps_entry.info.fixType       = m_gnss_data.data.fixType;
+    gps_entry.info.flags         = m_gnss_data.data.flags;
+    gps_entry.info.flags2        = m_gnss_data.data.flags2;
+    gps_entry.info.flags3        = m_gnss_data.data.flags3;
+    gps_entry.info.numSV         = m_gnss_data.data.numSV;
+    gps_entry.info.lon           = m_gnss_data.data.lon;
+    gps_entry.info.lat           = m_gnss_data.data.lat;
+    gps_entry.info.height        = m_gnss_data.data.height;
+    gps_entry.info.hMSL          = m_gnss_data.data.hMSL;
+    gps_entry.info.hAcc          = m_gnss_data.data.hAcc;
+    gps_entry.info.vAcc          = m_gnss_data.data.vAcc;
+    gps_entry.info.velN          = m_gnss_data.data.velN;
+    gps_entry.info.velE          = m_gnss_data.data.velE;
+    gps_entry.info.velD          = m_gnss_data.data.velD;
+    gps_entry.info.gSpeed        = m_gnss_data.data.gSpeed;
+    gps_entry.info.headMot       = m_gnss_data.data.headMot;
+    gps_entry.info.sAcc          = m_gnss_data.data.sAcc;
+    gps_entry.info.headAcc       = m_gnss_data.data.headAcc;
+    gps_entry.info.pDOP          = m_gnss_data.data.pDOP;
+    gps_entry.info.vDOP          = m_gnss_data.data.vDOP;
+    gps_entry.info.hDOP          = m_gnss_data.data.hDOP;
+    gps_entry.info.headVeh       = m_gnss_data.data.headVeh;
 
-    gps_entry.event_type = GPSEventType::FIX;
-    gps_entry.valid = true;
+    gps_entry.info.event_type = GPSEventType::FIX;
+    gps_entry.info.valid = true;
 
-    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lon=%lf lat=%lf height=%d", gps_entry.lon, gps_entry.lat, gps_entry.height);
+    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lon=%lf lat=%lf height=%d", gps_entry.info.lon, gps_entry.info.lat, gps_entry.info.height);
     sensor_log->write(&gps_entry);
 
     power_off();

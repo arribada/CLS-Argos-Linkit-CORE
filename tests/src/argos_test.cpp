@@ -96,18 +96,18 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 3960;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = -0.2271;
-	gps_entry.lat = 51.3279;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
 
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
@@ -179,18 +179,18 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 3960;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = -0.2271;
-	gps_entry.lat = 51.3279;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	system_scheduler->run();
@@ -257,60 +257,60 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 7350;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 28;
-	gps_entry.hour = 14;
-	gps_entry.min = 1;
-	gps_entry.valid = 1;
-	gps_entry.lon = 11.8768;
-	gps_entry.lat = -33.8232;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 8056;  // mm/s
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 28;
+	gps_entry.info.hour = 14;
+	gps_entry.info.min = 1;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.8768;
+	gps_entry.info.lat = -33.8232;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 8056;  // mm/s
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 
-	gps_entry.batt_voltage = 7350;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 28;
-	gps_entry.hour = 15;
-	gps_entry.min = 1;
-	gps_entry.valid = 1;
-	gps_entry.lon = 11.8736;
-	gps_entry.lat = -33.8235;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;  // km/hr -> mm/s
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 28;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 1;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.8736;
+	gps_entry.info.lat = -33.8235;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 
-	gps_entry.batt_voltage = 7350;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 28;
-	gps_entry.hour = 16;
-	gps_entry.min = 1;
-	gps_entry.valid = 1;
-	gps_entry.lon = 11.8576;
-	gps_entry.lat = -35.4584;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;  // km/hr -> mm/s
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 28;
+	gps_entry.info.hour = 16;
+	gps_entry.info.min = 1;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.8576;
+	gps_entry.info.lat = -35.4584;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 
-	gps_entry.batt_voltage = 7350;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = 11.858;
-	gps_entry.lat = -35.4586;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;  // km/hr -> mm/s
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.858;
+	gps_entry.info.lat = -35.4586;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 
 	fake_rtc->settime(7200);
@@ -386,18 +386,18 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 
 	// Write initial GPS entry
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 3960;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = -0.2271;
-	gps_entry.lat = 51.3279;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
 
 	std::time_t t = 1580083200;
 	fake_rtc->settime(t);
@@ -486,18 +486,18 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 
 	// Populate 4 GPS entries
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 7350;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 28;
-	gps_entry.hour = 14;
-	gps_entry.min = 1;
-	gps_entry.valid = 1;
-	gps_entry.lon = 11.8768;
-	gps_entry.lat = -33.8232;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 8056;  // mm/s
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 28;
+	gps_entry.info.hour = 14;
+	gps_entry.info.min = 1;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.8768;
+	gps_entry.info.lat = -33.8232;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 8056;  // mm/s
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 
 	std::time_t t = 1580083200;
@@ -505,48 +505,48 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	fake_timer->set_counter(t*1000);
 	argos_sched->notify_sensor_log_update();
 
-	gps_entry.batt_voltage = 7350;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 28;
-	gps_entry.hour = 15;
-	gps_entry.min = 1;
-	gps_entry.valid = 1;
-	gps_entry.lon = 11.8736;
-	gps_entry.lat = -33.8235;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;  // km/hr -> mm/s
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 28;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 1;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.8736;
+	gps_entry.info.lat = -33.8235;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
-	gps_entry.batt_voltage = 7350;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 28;
-	gps_entry.hour = 16;
-	gps_entry.min = 1;
-	gps_entry.valid = 1;
-	gps_entry.lon = 11.8576;
-	gps_entry.lat = -35.4584;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;  // km/hr -> mm/s
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 28;
+	gps_entry.info.hour = 16;
+	gps_entry.info.min = 1;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.8576;
+	gps_entry.info.lat = -35.4584;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
-	gps_entry.batt_voltage = 7350;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = 11.858;
-	gps_entry.lat = -35.4586;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;  // km/hr -> mm/s
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.858;
+	gps_entry.info.lat = -35.4586;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
@@ -617,18 +617,18 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 3960;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = -0.2271;
-	gps_entry.lat = 51.3279;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
 
 	for (unsigned int i = 0; i < 24*3600; i += tr_nom)
 	{
@@ -702,18 +702,18 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	fake_timer->set_counter((t*1000));
 
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 3960;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = -0.2271;
-	gps_entry.lat = 51.3279;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	system_scheduler->run();
@@ -865,18 +865,18 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	mock().expectOneCall("power_off").onObject(argos_sched);
 
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 3960;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = -0.2271;
-	gps_entry.lat = 51.3279;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	while (!system_scheduler->run());
@@ -970,18 +970,18 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 
 	// Write initial GPS entry
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 3960;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = -0.2271;
-	gps_entry.lat = 51.3279;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
 
 	std::time_t t = 1580083200;
 	fake_rtc->settime(t);
@@ -1127,18 +1127,18 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketWithAllCastAOP)
 
 	// Write initial GPS entry
 	GPSLogEntry gps_entry;
-	gps_entry.batt_voltage = 3960;
-	gps_entry.year = 2020;
-	gps_entry.month = 4;
-	gps_entry.day = 7;
-	gps_entry.hour = 15;
-	gps_entry.min = 6;
-	gps_entry.valid = 1;
-	gps_entry.lon = -0.2271;
-	gps_entry.lat = 51.3279;
-	gps_entry.height = 0;
-	gps_entry.gSpeed = 0;
-	gps_entry.headMot = 0;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
 
 	std::time_t t = 1614627019;
 	fake_rtc->settime(t);

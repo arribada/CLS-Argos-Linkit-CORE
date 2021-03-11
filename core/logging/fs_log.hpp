@@ -11,6 +11,10 @@ private:
 	unsigned int m_max_size;
 	const char *m_filename;
 
+	void set_payload_size(LogEntry *entry) {
+		if (entry->header.log_type == LogType::LOG_GPS)
+			entry->header.payload_size = sizeof(GPSInfo);
+	}
 public:
 
 	FsLog(LFSFileSystem *fs, const char *filename, const unsigned int max_size) {
@@ -33,6 +37,7 @@ public:
 
 	void write(void *entry) {
 		LFSCircularFile f(m_filesystem, m_filename, LFS_O_WRONLY, m_max_size);
+		set_payload_size((LogEntry *)entry);
 		f.write(entry, (lfs_size_t)sizeof(LogEntry));
 	}
 

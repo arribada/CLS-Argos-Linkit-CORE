@@ -308,17 +308,21 @@ public:
 			m_dumpd_offset = 0;
 		}
 
-		LogEntry log_entries[DTE_HANDLER_MAX_LOG_DUMP_ENTRIES];
+		LogEntry log_entry;
 		BaseRawData raw_data;
 		unsigned int start_index = m_dumpd_offset * DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
-		unsigned int num_entries = total_entries - start_index;
-		raw_data.ptr = log_entries;
-		raw_data.length = std::min(DTE_HANDLER_MAX_LOG_DUMP_ENTRIES, num_entries);
+		unsigned int num_entries = std::min(total_entries - start_index, DTE_HANDLER_MAX_LOG_DUMP_ENTRIES);
+		raw_data.ptr = nullptr;  // log_entries;
+		raw_data.length = 0; // std::min(DTE_HANDLER_MAX_LOG_DUMP_ENTRIES, num_entries);
 
-		for (unsigned int i = 0; i < raw_data.length; i++)
-			logger->read(&log_entries[i], i + start_index);
+		for (unsigned int i = 0; i < num_entries; i++) {
+			logger->read(&log_entry, i + start_index);
+			// Concatenate header and payload into the raw_data string
+			raw_data.str.append((const char*)&log_entry.header, sizeof(log_entry.header));
+			raw_data.str.append((const char*)&log_entry.data[0], log_entry.header.payload_size);
+		}
 
-		raw_data.length *= sizeof(LogEntry);
+		//raw_data.length *= sizeof(LogEntry);
 
 		std::string msg = DTEEncoder::encode(DTECommand::DUMPD_RESP, error_code, m_dumpd_offset, m_dumpd_count, raw_data);
 

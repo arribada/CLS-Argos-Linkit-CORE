@@ -139,7 +139,7 @@ public:
 	ConfigurationStore() {
 		m_battery_voltage = 0U;
 		m_battery_level = 255U;  // Set battery level to some value that won't trigger LB mode until we get notified of a real battery level
-		m_last_gps_log_entry.valid = 0; // Mark last GPS entry as invalid
+		m_last_gps_log_entry.info.valid = 0; // Mark last GPS entry as invalid
 	}
 	virtual ~ConfigurationStore() {}
 	virtual void init() = 0;
@@ -233,20 +233,20 @@ public:
 		if (m_zone.enable_monitoring &&
 			m_zone.enable_out_of_zone_detection_mode &&
 			m_zone.zone_type == BaseZoneType::CIRCLE &&
-			m_last_gps_log_entry.valid) {
+			m_last_gps_log_entry.info.valid) {
 
 			DEBUG_TRACE("ConfigurationStore::is_zone_exclusion: enabled with valid GPS fix");
 
 			if (!m_zone.enable_activation_date || (
 				convert_epochtime(m_zone.year, m_zone.month, m_zone.day, m_zone.hour, m_zone.minute, 0) <=
-				convert_epochtime(m_last_gps_log_entry.year, m_last_gps_log_entry.month, m_last_gps_log_entry.day, m_last_gps_log_entry.hour, m_last_gps_log_entry.min, 0)
+				convert_epochtime(m_last_gps_log_entry.info.year, m_last_gps_log_entry.info.month, m_last_gps_log_entry.info.day, m_last_gps_log_entry.info.hour, m_last_gps_log_entry.info.min, 0)
 				)) {
 
 				// Compute distance between two points of longitude and latitude using haversine formula
 				double d_km = haversine_distance(m_zone.center_longitude_x,
 												 m_zone.center_latitude_y,
-												 m_last_gps_log_entry.lon,
-												 m_last_gps_log_entry.lat);
+												 m_last_gps_log_entry.info.lon,
+												 m_last_gps_log_entry.info.lat);
 
 				// Check if outside zone radius for exclusion parameter triggering
 				if (d_km > ((double)m_zone.radius_m/1000)) {

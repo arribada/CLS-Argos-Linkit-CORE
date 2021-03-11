@@ -46,59 +46,63 @@ struct __attribute__((packed)) LogHeader {
 	uint8_t  minutes;
 	uint8_t  seconds;
 	LogType  log_type;
+	uint8_t  payload_size;
 };
 
 static constexpr size_t MAX_LOG_PAYLOAD = MAX_LOG_SIZE - sizeof(LogHeader);
 
-struct LogEntry {
+struct __attribute__((packed)) LogEntry {
 	LogHeader header;
 	union {
 		uint8_t data[MAX_LOG_PAYLOAD];
 	};
 };
+
 static_assert(sizeof(LogEntry) == MAX_LOG_SIZE, "LogEntry wrong size");
 
 enum class GPSEventType : uint8_t { ON, OFF, UPDATE, FIX, NO_FIX };
 
+struct __attribute__((packed)) GPSInfo {
+	GPSEventType event_type;
+	uint16_t   batt_voltage;
+	uint32_t   iTOW;
+	uint16_t   year;
+	uint8_t    month;
+	uint8_t    day;
+	uint8_t    hour;
+	uint8_t    min;
+	uint8_t    sec;
+	uint8_t    valid;
+	uint32_t   tAcc;
+	int32_t    nano;
+	uint8_t    fixType;
+	uint8_t    flags;
+	uint8_t    flags2;
+	uint8_t    flags3;
+	uint8_t    numSV;
+	double     lon;       // Degrees
+	double     lat;       // Degrees
+	int32_t    height;    // mm
+	int32_t    hMSL;      // mm
+	uint32_t   hAcc;      // mm
+	uint32_t   vAcc;      // mm
+	int32_t    velN;      // mm
+	int32_t    velE;      // mm
+	int32_t    velD;      // mm
+	int32_t    gSpeed;    // mm/s
+	float      headMot;   // Degrees
+	uint32_t   sAcc;      // mm/s
+	float      headAcc;   // Degrees
+	float      pDOP;
+	float      vDOP;
+	float      hDOP;
+	float      headVeh;   // Degrees
+};
+
 struct __attribute__((packed)) GPSLogEntry {
 	LogHeader header;
 	union {
-		struct {
-			GPSEventType event_type;
-			uint16_t   batt_voltage;
-			uint32_t   iTOW;
-			uint16_t   year;
-			uint8_t    month;
-			uint8_t    day;
-			uint8_t    hour;
-			uint8_t    min;
-			uint8_t    sec;
-			uint8_t    valid;
-			uint32_t   tAcc;
-			int32_t    nano;
-			uint8_t    fixType;
-			uint8_t    flags;
-			uint8_t    flags2;
-			uint8_t    flags3;
-			uint8_t    numSV;
-			double     lon;       // Degrees
-			double     lat;       // Degrees
-			int32_t    height;    // mm
-			int32_t    hMSL;      // mm
-			uint32_t   hAcc;      // mm
-			uint32_t   vAcc;      // mm
-			int32_t    velN;      // mm
-			int32_t    velE;      // mm
-			int32_t    velD;      // mm
-			int32_t    gSpeed;    // mm/s
-			float      headMot;   // Degrees
-			uint32_t   sAcc;      // mm/s
-			float      headAcc;   // Degrees
-			float      pDOP;
-			float      vDOP;
-			float      hDOP;
-			float      headVeh;   // Degrees
-		};
+		GPSInfo info;
 		uint8_t data[MAX_LOG_PAYLOAD];
 	};
 };

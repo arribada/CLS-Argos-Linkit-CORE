@@ -15,7 +15,7 @@ private:
 	}
 	void gps_formatter(const GPSLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tlat: %lf lon: %lf\r\n", name, entry->lat, entry->lon);
+		printf("[%s]\tlat: %lf lon: %lf\r\n", name, entry->info.lat, entry->info.lon);
 	}
 	void startup_formatter(const SystemStartupLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];

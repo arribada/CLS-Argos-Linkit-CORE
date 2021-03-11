@@ -1,6 +1,7 @@
 #ifndef __LOGGER_HPP_
 #define __LOGGER_HPP_
 
+#include <cstring>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -53,6 +54,7 @@ public:
 			vsnprintf(reinterpret_cast<char*>(buffer.data), sizeof(buffer.data), msg, args);
 			va_end(args);
 			buffer.header.log_type = LOG_WARN;
+			buffer.header.payload_size = std::strlen(reinterpret_cast<char*>(buffer.data));
 			sync_datetime(buffer.header);
 			write(&buffer);
 		}
@@ -65,6 +67,7 @@ public:
 			vsnprintf(reinterpret_cast<char*>(buffer.data), sizeof(buffer.data), msg, args);
 			va_end(args);
 			buffer.header.log_type = LOG_ERROR;
+			buffer.header.payload_size = std::strlen(reinterpret_cast<char*>(buffer.data));
 			sync_datetime(buffer.header);
 			write(&buffer);
 		}
@@ -77,6 +80,7 @@ public:
 			vsnprintf(reinterpret_cast<char*>(buffer.data), sizeof(buffer.data), msg, args);
 			va_end(args);
 			buffer.header.log_type = LOG_INFO;
+			buffer.header.payload_size = std::strlen(reinterpret_cast<char*>(buffer.data));
 			sync_datetime(buffer.header);
 			write(&buffer);
 		}
@@ -89,6 +93,7 @@ public:
 			vsnprintf(reinterpret_cast<char*>(buffer.data), sizeof(buffer.data), msg, args);
 			va_end(args);
 			buffer.header.log_type = LOG_TRACE;
+			buffer.header.payload_size = std::strlen(reinterpret_cast<char*>(buffer.data));
 			sync_datetime(buffer.header);
 			write(&buffer);
 		}

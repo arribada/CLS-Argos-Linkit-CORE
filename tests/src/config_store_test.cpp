@@ -1009,15 +1009,15 @@ TEST(ConfigStore, ZoneExclusionCriteriaChecking) {
 
 	// Set last GPS coordinates
 	GPSLogEntry gps_location;
-	gps_location.day = 1;
-	gps_location.month = 1;
-	gps_location.year = 2021;
-	gps_location.hour = 0;
-	gps_location.min = 0;
-	gps_location.sec = 0;
-	gps_location.valid = 1;
-	gps_location.lon = -2.118413;
-	gps_location.lat = 51.3765242;
+	gps_location.info.day = 1;
+	gps_location.info.month = 1;
+	gps_location.info.year = 2021;
+	gps_location.info.hour = 0;
+	gps_location.info.min = 0;
+	gps_location.info.sec = 0;
+	gps_location.info.valid = 1;
+	gps_location.info.lon = -2.118413;
+	gps_location.info.lat = 51.3765242;
 	store->notify_gps_location(gps_location);
 
 	// Set up exclusion zone
@@ -1083,15 +1083,15 @@ TEST(ConfigStore, RetrieveArgosConfigZoneExclusionMode)
 
 	// Set last GPS coordinates
 	GPSLogEntry gps_location;
-	gps_location.day = 1;
-	gps_location.month = 1;
-	gps_location.year = 2021;
-	gps_location.hour = 0;
-	gps_location.min = 0;
-	gps_location.sec = 0;
-	gps_location.valid = 1;
-	gps_location.lon = -2.118413;
-	gps_location.lat = 51.3765242;
+	gps_location.info.day = 1;
+	gps_location.info.month = 1;
+	gps_location.info.year = 2021;
+	gps_location.info.hour = 0;
+	gps_location.info.min = 0;
+	gps_location.info.sec = 0;
+	gps_location.info.valid = 1;
+	gps_location.info.lon = -2.118413;
+	gps_location.info.lat = 51.3765242;
 	store->notify_gps_location(gps_location);
 
 	// Set up exclusion zone
@@ -1176,15 +1176,15 @@ TEST(ConfigStore, RetrieveGPSConfigZoneExclusionMode)
 
 	// Set last GPS coordinates
 	GPSLogEntry gps_location;
-	gps_location.day = 1;
-	gps_location.month = 1;
-	gps_location.year = 2021;
-	gps_location.hour = 0;
-	gps_location.min = 0;
-	gps_location.sec = 0;
-	gps_location.valid = 1;
-	gps_location.lon = -2.118413;
-	gps_location.lat = 51.3765242;
+	gps_location.info.day = 1;
+	gps_location.info.month = 1;
+	gps_location.info.year = 2021;
+	gps_location.info.hour = 0;
+	gps_location.info.min = 0;
+	gps_location.info.sec = 0;
+	gps_location.info.valid = 1;
+	gps_location.info.lon = -2.118413;
+	gps_location.info.lat = 51.3765242;
 	store->notify_gps_location(gps_location);
 
 	// Set up exclusion zone
