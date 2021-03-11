@@ -127,7 +127,8 @@ void ext_flash_update(void)
 	NRF_LOG_INFO("ext_flash_update: checking for a new firmware image...");
 
 	// Initialise flash memory
-	is25_flash_init();
+	if (is25_flash_init())
+		return;
 
 	// Read header providing us with size and crc32
 	is25_flash_read(FIRMWARE_UPDATE_BLOCK_OFFSET * IS25_BLOCK_SIZE, (uint8_t *)&header, sizeof(header));
