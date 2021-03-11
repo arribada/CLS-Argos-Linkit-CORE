@@ -5,6 +5,10 @@
 #include "nrf_battery_mon.hpp"
 #include "nrfx_saadc.h"
 
+namespace BSP
+{
+	const ADC_InitTypeDefAndInst_t ADC_Inits = {};
+};
 
 TEST_GROUP(NrfBattery)
 {
