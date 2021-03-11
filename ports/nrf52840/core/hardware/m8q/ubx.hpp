@@ -216,6 +216,26 @@ namespace UBX
             };
         } // namespace ODO
 
+        namespace RST
+        {
+            enum ResetMode : uint8_t
+            {
+                RESETMODE_HARDWARE_RESET_IMMEDIATE      = 0x00,
+                RESETMODE_SOFTWARE_RESET                = 0x01,
+                RESETMODE_SOFTWARE_RESET_GNSS_ONLY      = 0x02,
+                RESETMODE_HARDWARE_RESET_AFTER_SHUTDOWN = 0x04,
+                RESETMODE_CONTROLLED_GNSS_STOP          = 0x08,
+                RESETMODE_CONTROLLED_GNSS_START         = 0x09
+            };
+
+            struct __attribute__((__packed__)) MSG_RST
+            {
+                uint16_t  navBbrMask;
+                ResetMode resetMode;
+                uint8_t   reserved1;
+            };
+        } // namespace RST
+
         namespace TP5
         {
             struct __attribute__((__packed__)) MSG_TP5
@@ -291,6 +311,40 @@ namespace UBX
                 uint32_t extintInactivityMs;
             };
         } // namespace PM2
+
+        namespace CFG
+        {
+            enum ClearMask : uint32_t
+            {
+                CLEARMASK_IOPORT   = (1 << 0),
+                CLEARMASK_MSGCONF  = (1 << 1),
+                CLEARMASK_INFMSG   = (1 << 2),
+                CLEARMASK_NAVCONF  = (1 << 3),
+                CLEARMASK_RXMCONF  = (1 << 4),
+                CLEARMASK_SENCONF  = (1 << 8),
+                CLEARMASK_RINVCONF = (1 << 9),
+                CLEARMASK_ANTCONF  = (1 << 10),
+                CLEARMASK_LOGCONF  = (1 << 11),
+                CLEARMASK_FTSCONF  = (1 << 12)
+            };
+
+            enum DevMask : uint8_t
+            {
+                DEVMASK_BBR      = (1 << 0),
+                DEVMASK_FLASH    = (1 << 1),
+                DEVMASK_EEPROM   = (1 << 2),
+                DEVMASK_SPIFLASH = (1 << 4)
+            };
+
+
+            struct __attribute__((__packed__)) MSG_CFG
+            {
+                uint32_t clearMask;
+                uint32_t saveMask;
+                uint32_t loadMask;
+                uint8_t  deviceMask;
+            };
+        } // namespace RST
 
         namespace RXM
         {
