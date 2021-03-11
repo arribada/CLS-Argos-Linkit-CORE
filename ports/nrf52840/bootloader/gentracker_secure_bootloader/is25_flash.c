@@ -48,9 +48,13 @@ int is25_flash_init(void)
 	uint8_t status;
 	uint8_t rx_buffer[3];
 	uint8_t tx_buffer[1];
+	nrfx_err_t ret;
 
-	if (nrfx_qspi_init(&qspi_config, NULL, NULL) != NRFX_SUCCESS)
+	ret = nrfx_qspi_init(&qspi_config, NULL, NULL);
+	if (ret != NRFX_SUCCESS) {
+		NRF_LOG_ERROR("QSPI init error - %04x", ret);
 		return -1;
+	}
 
     config.io2_level = false;
 	// Keep IO3 high during transfers as this is the reset line in SPI mode
@@ -82,12 +86,14 @@ int is25_flash_init(void)
         return -1;
     }
 
+#if 0
 	// Set FLASH output drive to 12.5%
     config.opcode = SERPV;
     tx_buffer[0] = 1 << 5;
 	config.length = NRF_QSPI_CINSTR_LEN_2B;
 	config.wren = true;
     nrfx_qspi_cinstr_xfer(&config, tx_buffer, NULL);
+#endif
 
 	// Switch to QSPI mode
 	config.opcode = WRSR;
@@ -116,7 +122,7 @@ int is25_flash_read(uint32_t addr, uint8_t * buffer, uint32_t size)
 	nrfx_err_t ret = nrfx_qspi_read(buffer, size, addr);
 	if (ret != NRFX_SUCCESS)
 	{
-		NRF_LOG_ERROR("QSPI IO Error %d", ret);
+		NRF_LOG_ERROR("QSPI IO Error %04x", ret);
 		return -1;
 	}
 
@@ -128,7 +134,7 @@ int is25_flash_erase(uint32_t block)
 	nrfx_err_t qspi_ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * IS25_BLOCK_SIZE);
 	if (qspi_ret != NRFX_SUCCESS)
 	{
-		NRF_LOG_ERROR("QSPI IO Error %d", qspi_ret);
+		NRF_LOG_ERROR("QSPI IO Error %04x", qspi_ret);
 		return -1;
 	}
 

@@ -534,6 +534,8 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
 
 M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
 {
+    SendReturnCode ret;
+
     CFG::GNSS::MSG_GNSS cfg_msg_cfg_gnss =
     {
         .version = 0x00,
@@ -582,7 +584,8 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
                 .resTrkCh = 0,
                 .maxTrkCh = 3,
                 .reserved1 = 0,
-                .flags = CFG::GNSS::FLAGS_QZSS_L1CA
+                // To avoid cross-correlation issues, it is recommended that GPS and QZSS are always both enabled or both disabled
+                .flags = CFG::GNSS::FLAGS_QZSS_L1CA | CFG::GNSS::FLAGS_ENABLE
             },
             {
                 .gnssId = CFG::GNSS::GNSSID_GLONASS,
@@ -595,8 +598,53 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
     };
 
     //DEBUG_TRACE("GPS CFG-GNSS ->");
+    ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_GNSS, cfg_msg_cfg_gnss);
+    if (ret != SendReturnCode::SUCCESS)
+        return ret;
 
-    return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_GNSS, cfg_msg_cfg_gnss);
+    // Applying the GNSS system configuration takes some time. After issuing UBX-
+    // CFG-GNSS, wait first for the acknowledgement from the receiver and then 0.5
+    // seconds before sending the next command
+    nrf_delay_ms(500);
+
+    // Save the configuration up until this point into RAM so that it is retained through the CFG-RST hardware reset
+    //DEBUG_TRACE("GPS CFG-CFG ->");
+    CFG::CFG::MSG_CFG cfg_msg_cfg_cfg =
+    {
+        .clearMask   = 0,
+        .saveMask    = CFG::CFG::CLEARMASK_IOPORT   |
+                       CFG::CFG::CLEARMASK_MSGCONF  |
+                       CFG::CFG::CLEARMASK_INFMSG   |
+                       CFG::CFG::CLEARMASK_NAVCONF  |
+                       CFG::CFG::CLEARMASK_RXMCONF  |
+                       CFG::CFG::CLEARMASK_SENCONF  |
+                       CFG::CFG::CLEARMASK_RINVCONF |
+                       CFG::CFG::CLEARMASK_ANTCONF  |
+                       CFG::CFG::CLEARMASK_LOGCONF  |
+                       CFG::CFG::CLEARMASK_FTSCONF,
+        .loadMask    = 0,
+        .deviceMask  = CFG::CFG::DEVMASK_BBR,
+    };
+
+    ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_CFG, cfg_msg_cfg_cfg);
+    if (ret != SendReturnCode::SUCCESS)
+        return ret;
+
+    // If Galileo is enabled, UBX-CFG-GNSS must be followed by UBX-CFG-RST with resetMode set to Hardware reset
+    //DEBUG_TRACE("GPS CFG-RST ->");
+    CFG::RST::MSG_RST cfg_msg_cfg_rst =
+    {
+        .navBbrMask = 0x0000,
+        .resetMode = CFG::RST::RESETMODE_HARDWARE_RESET_IMMEDIATE,
+        .reserved1 = 0,
+    };
+
+    ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_RST, cfg_msg_cfg_rst, false); // No acknowledge from this message
+
+    // Wait for the device to have reset
+    nrf_delay_ms(100); // This is an estimated value
+
+    return ret;
 }
 
 M8QReceiver::SendReturnCode M8QReceiver::setup_power_management()

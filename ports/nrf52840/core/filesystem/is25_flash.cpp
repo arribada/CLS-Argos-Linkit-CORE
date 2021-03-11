@@ -18,7 +18,12 @@ void Is25Flash::init()
 	uint8_t rx_buffer[3];
 	uint8_t tx_buffer[1];
 
-	nrfx_qspi_init(&BSP::QSPI_Inits[BSP::QSPI_0].config, nullptr, nullptr);
+	nrfx_err_t ret = nrfx_qspi_init(&BSP::QSPI_Inits[BSP::QSPI_0].config, nullptr, nullptr);
+	if (ret != NRFX_SUCCESS)
+	{
+		DEBUG_ERROR("IS25LP128F QSPI initialisation failure - %d", ret);
+        return;
+	}
 
     config.io2_level = false;
 	// Keep IO3 high during transfers as this is the reset line in SPI mode
@@ -79,6 +84,8 @@ void Is25Flash::init()
 	while (status & IS25LP128F::STATUS_WIP);
 
 	power_down();
+
+	m_is_init = true;
 }
 
 // The maximum read size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
@@ -88,7 +95,7 @@ int Is25Flash::_read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t
 	nrfx_err_t ret = nrfx_qspi_read(buffer, size, block * m_block_size + off);
 	if (ret != NRFX_SUCCESS)
 	{
-		DEBUG_ERROR("QSPI IO Error %d", ret);
+		DEBUG_ERROR("QSPI IO Error %04x", ret);
 		return LFS_ERR_IO;
 	}
 
@@ -103,7 +110,7 @@ int Is25Flash::_prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_s
 	nrfx_err_t ret_write = nrfx_qspi_write(buffer, size, block * m_block_size + off);
 	if (ret_write != NRFX_SUCCESS)
 	{
-		DEBUG_ERROR("QSPI IO Error %d", ret_write);
+		DEBUG_ERROR("QSPI IO Error %04x", ret_write);
 		return LFS_ERR_IO;
 	}
 
@@ -144,7 +151,7 @@ int Is25Flash::_erase(lfs_block_t block)
 	nrfx_err_t ret_erase = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * m_block_size);
 	if (ret_erase != NRFX_SUCCESS)
 	{
-		DEBUG_ERROR("QSPI IO Error %d", ret_erase);
+		DEBUG_ERROR("QSPI IO Error %04x", ret_erase);
 		return LFS_ERR_IO;
 	}
 
@@ -183,7 +190,7 @@ int Is25Flash::_sync()
 
 	if (ret != NRFX_SUCCESS)
 	{
-		DEBUG_ERROR("QSPI IO Sync %d", ret);
+		DEBUG_ERROR("QSPI IO Sync %04x", ret);
 		return LFS_ERR_IO;
 	}
 
@@ -193,6 +200,8 @@ int Is25Flash::_sync()
 // Wrappers to ensure easier power up and power down of the QSPI peripheral
 int Is25Flash::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
 {
+	if (!m_is_init)
+		return LFS_ERR_IO;
 	power_up();
 	int ret = _read(block, off, buffer, size);
 	power_down();
@@ -201,6 +210,8 @@ int Is25Flash::read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t 
 
 int Is25Flash::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
 {
+	if (!m_is_init)
+		return LFS_ERR_IO;
 	power_up();
 	int ret = _prog(block, off, buffer, size);
 	power_down();
@@ -209,6 +220,8 @@ int Is25Flash::prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_si
 
 int Is25Flash::erase(lfs_block_t block)
 {
+	if (!m_is_init)
+		return LFS_ERR_IO;
 	power_up();
 	int ret = _erase(block);
 	power_down();
@@ -217,6 +230,8 @@ int Is25Flash::erase(lfs_block_t block)
 
 int Is25Flash::sync()
 {
+	if (!m_is_init)
+		return LFS_ERR_IO;
 	power_up();
 	int ret = _sync();
 	power_down();
