@@ -179,7 +179,7 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.info.event_type = GPSEventType::FIX;
     gps_entry.info.valid = true;
 
-    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lon=%lf lat=%lf height=%d", gps_entry.info.lon, gps_entry.info.lat, gps_entry.info.height);
+    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lat=%lf lon=%lf hDOP=%f", gps_entry.info.lat, gps_entry.info.lon, gps_entry.info.hDOP);
     sensor_log->write(&gps_entry);
 
     power_off();

@@ -217,6 +217,47 @@ void M8QReceiver::power_off()
     m_data_notification_callback = nullptr;
 }
 
+M8QReceiver::SendReturnCode M8QReceiver::print_version()
+{
+    // Request the receiver and software version
+    poll_contents(UBX::MessageClass::MSG_CLASS_MON, UBX::MON::ID_VER);
+
+    auto start_time = rtc->gettime();
+    const std::time_t timeout = 3;
+    
+    for (;;)
+    {
+        if (m_rx_buffer.pending)
+        {
+            UBX::Header *header_ptr = reinterpret_cast<UBX::Header *>(&m_rx_buffer.data[0]);
+            if (header_ptr->msgClass == UBX::MessageClass::MSG_CLASS_MON && header_ptr->msgId == UBX::MON::ID_VER)
+            {
+                uint8_t *data_ptr = &m_rx_buffer.data[sizeof(UBX::Header)];
+                DEBUG_TRACE("M8QReceiver::print_version");
+                DEBUG_TRACE("%.*s", 30, &data_ptr[0]);  // swVersion
+                DEBUG_TRACE("%.*s", 10, &data_ptr[30]); // hwVersion
+                uint32_t number_of_extensions = (header_ptr->msgLength - 40) / 30;
+                for (uint32_t i = 0; i < number_of_extensions; ++i)
+                {
+                    DEBUG_TRACE("%.*s", 30, &data_ptr[40 + (i * 30)]); // Extension
+                }
+                return SendReturnCode::SUCCESS;
+            }
+
+            m_rx_buffer.pending = false;
+        }
+
+        if (rtc->gettime() - start_time >= timeout)
+        {
+            DEBUG_ERROR("M8QReceiver::print_version: timed out waiting for response");
+            m_navigation_database_len = 0; // Invalidate the data we did receive
+            return SendReturnCode::RESPONSE_TIMEOUT;
+        }
+    }
+
+    return SendReturnCode::SUCCESS;
+}
+
 M8QReceiver::SendReturnCode M8QReceiver::fetch_navigation_database()
 {
     const std::time_t timeout = 3;
@@ -495,10 +536,10 @@ void M8QReceiver::populate_gnss_data_and_callback()
             .headVeh   = m_last_received_pvt.headVeh / 100000.0f
         };
 
-        DEBUG_TRACE("GPS Pos - %02u/%02u/%04u %02u:%02u:%02u lat: %f lon: %f hDOP: %f",
-                    gnss_data.day, gnss_data.month, gnss_data.year,
-                    gnss_data.hour, gnss_data.min, gnss_data.sec,
-                    gnss_data.lat, gnss_data.lon, static_cast<double>(gnss_data.hDOP));
+        //DEBUG_TRACE("GPS Pos - %02u/%02u/%04u %02u:%02u:%02u lat: %f lon: %f hDOP: %f",
+        //            gnss_data.day, gnss_data.month, gnss_data.year,
+        //            gnss_data.hour, gnss_data.min, gnss_data.sec,
+        //            gnss_data.lat, gnss_data.lon, static_cast<double>(gnss_data.hDOP));
 
         if (m_data_notification_callback)
             m_data_notification_callback(gnss_data);
@@ -515,7 +556,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
         .reserved1 = 0,
         .txReady = 0,
         .mode = CFG::PRT::MODE_CHARLEN_8BIT | CFG::PRT::MODE_PARITY_NO | CFG::PRT::MODE_STOP_BITS_1,
-        .baudRate = 115200,
+        .baudRate = 460800,
         .inProtoMask = CFG::PRT::PROTOMASK_UBX,
         .outProtoMask = CFG::PRT::PROTOMASK_UBX,
         .flags = 0,

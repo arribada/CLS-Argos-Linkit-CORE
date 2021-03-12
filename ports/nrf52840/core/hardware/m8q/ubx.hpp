@@ -54,6 +54,17 @@ namespace UBX
 
     } // namespace ACK
 
+    /****************************** MON *************************************/
+
+    namespace MON
+    {
+        enum Id : uint8_t
+        {
+            ID_VER = 0x04
+        };
+
+    } // namespace MON
+
     /****************************** CFG *************************************/
 
     namespace CFG

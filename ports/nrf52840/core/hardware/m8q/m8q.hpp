@@ -58,6 +58,8 @@ private:
     SendReturnCode disable_nav_pvt_message();
     SendReturnCode disable_nav_dop_message();
 
+	SendReturnCode print_version();
+
 	SendReturnCode fetch_navigation_database();
 	SendReturnCode send_navigation_database();
 
