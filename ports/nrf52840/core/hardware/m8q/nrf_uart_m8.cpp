@@ -11,6 +11,8 @@ NrfUARTM8::NrfUARTM8(unsigned int instance, std::function<void(uint8_t *data, si
     m_instance = instance;
     m_on_receive = on_receive;
     m_state = WAITING_SYNC_CHAR_1;
+    m_bytes_to_read = 0;
+    m_bytes_read = 0;
 
     // Copy the configuration and add our object to the context
     nrfx_uarte_config_t config = BSP::UART_Inits[instance].config;
@@ -58,9 +60,6 @@ void NrfUARTM8::event_handler(nrfx_uarte_event_t const * p_event)
 // Updates our reception state, this should be quick as this is called from an interrupt context
 void NrfUARTM8::update_state(uint8_t new_byte)
 {
-    static uint32_t bytes_to_read = 0;
-    static uint32_t bytes_read = 0;
-
     switch (m_state)
     {
         case WAITING_SYNC_CHAR_1:
@@ -98,9 +97,9 @@ void NrfUARTM8::update_state(uint8_t new_byte)
 
 		case WAITING_LENGTH_UPPER:
             rx_buffer[5] = new_byte;
-            bytes_to_read = reinterpret_cast<UBX::Header*>(&rx_buffer[0])->msgLength + 2; // Add two for the checksum at the end
-            bytes_read = 0;
-            if (bytes_to_read >= rx_buffer.max_size() + sizeof(UBX::Header) + 2)
+            m_bytes_to_read = reinterpret_cast<UBX::Header*>(&rx_buffer[0])->msgLength + 2; // Add two for the checksum at the end
+            m_bytes_read = 0;
+            if (m_bytes_to_read >= rx_buffer.max_size() + sizeof(UBX::Header) + 2)
             {
                 // A length this large would overrun our buffer so discard it
                 m_state = WAITING_SYNC_CHAR_1;
@@ -110,9 +109,9 @@ void NrfUARTM8::update_state(uint8_t new_byte)
             break;
 
 		case WAITING_PAYLOAD_AND_CHECKSUM:
-            rx_buffer[6 + bytes_read] = new_byte;
-            bytes_read++;
-            if (bytes_read >= bytes_to_read)
+            rx_buffer[6 + m_bytes_read] = new_byte;
+            m_bytes_read++;
+            if (m_bytes_read >= m_bytes_to_read)
             {
 
                 // All the expected bytes were received
@@ -132,7 +131,7 @@ void NrfUARTM8::update_state(uint8_t new_byte)
                     ck[1] == rx_buffer[sizeof(UBX::Header) + header_ptr->msgLength + 1])
                 {
                     if (m_on_receive)
-                        m_on_receive(&rx_buffer[0], bytes_read + sizeof(UBX::Header));
+                        m_on_receive(&rx_buffer[0], m_bytes_read + sizeof(UBX::Header));
                 }
                 else
                 {

@@ -23,6 +23,8 @@ private:
 	std::function<void(uint8_t *data, size_t len)> m_on_receive;
 	uint8_t rx_byte;
 	std::array<uint8_t, UBX::MAX_PACKET_LEN> rx_buffer;
+	uint32_t m_bytes_to_read = 0;
+	uint32_t m_bytes_read = 0;
 
 	volatile enum
 	{
