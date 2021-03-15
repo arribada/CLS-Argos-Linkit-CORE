@@ -50,8 +50,10 @@ void GPSScheduler::reschedule()
 	// Obtain fresh copy of configuration as it may have changed
 	configuration_store->get_gnss_configuration(m_gnss_config);
 
-    if (!m_gnss_config.enable)
+    if (!m_gnss_config.enable) {
+    	DEBUG_WARN("GPSScheduler::reschedule: GNSS is not enabled");
         return;
+    }
 
     std::time_t now = rtc->gettime();
     uint32_t aq_period = m_gnss_config.dloc_arg_nom;
