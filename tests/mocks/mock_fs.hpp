@@ -20,6 +20,12 @@ public:
 	int remove(const char *path) {
 		return mock().actualCall("remove").onObject(this).withParameter("path", path).returnIntValue();
 	}
+	int set_attr(const char *path, unsigned int &attr) {
+		return mock().actualCall("set_attr").onObject(this).withParameter("path", path).withParameter("attr", attr).returnIntValue();
+	}
+	int get_attr(const char *path, unsigned int &attr) {
+		return mock().actualCall("get_attr").onObject(this).withParameter("path", path).withParameter("attr", attr).returnIntValue();
+	}
 	void *get_private_data() {
 		return nullptr;
 	}

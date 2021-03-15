@@ -113,7 +113,7 @@ void BootState::entry() {
 		},
 		Scheduler::DEFAULT_PRIORITY,
 		1000);
-	} catch (int e) {
+	} catch (...) {
 		system_scheduler->post_task_prio(notify_bad_filesystem_error);
 	}
 }

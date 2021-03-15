@@ -15,7 +15,9 @@ public:
 	virtual bool is_mounted() = 0;
 	virtual int umount() = 0;
 	virtual int format() = 0;
-	virtual int remove(const char *) = 0;
+	virtual int remove(const char *path) = 0;
+	virtual int set_attr(const char *path, unsigned int &attr) = 0;
+	virtual int get_attr(const char *path, unsigned int &attr) = 0;
 	virtual void *get_private_data() = 0;
 };
 
@@ -128,6 +130,14 @@ public:
 		return m_cfg.block_size;
 	}
 
+	int set_attr(const char *path, unsigned int &attr) override {
+		return lfs_setattr(&m_lfs, path, 0, &attr, sizeof(attr));
+	}
+
+	int get_attr(const char *path, unsigned int &attr) override {
+		return lfs_getattr(&m_lfs, path, 0, &attr, sizeof(attr));
+	}
+
 	void *get_private_data() override {
 		return &m_lfs;
 	}
@@ -229,14 +239,18 @@ private:
 public:
 	LFSCircularFile(FileSystem *fs, const char *path, int flags, lfs_size_t max_size) : LFSFile(fs, path, flags) {
 		int ret;
+		unsigned int attr = 0;
 		m_max_size = max_size;
-		m_offset = 0;
 		m_flags = flags;
-		if (flags & LFS_O_CREAT)
-			ret = lfs_setattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
-		else
-			ret = lfs_getattr(m_lfs, m_path, 0, &m_offset, sizeof(m_offset));
-		
+		if (flags & LFS_O_CREAT) {
+			ret = fs->set_attr(m_path, attr);
+		}
+		else {
+			ret = fs->get_attr(m_path, attr);
+		}
+
+		m_offset = attr;
+
 		if (ret < 0)
 			throw ret;
 		
