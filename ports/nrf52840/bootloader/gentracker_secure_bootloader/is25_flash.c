@@ -86,15 +86,6 @@ int is25_flash_init(void)
         return -1;
     }
 
-#if 0
-	// Set FLASH output drive to 12.5%
-    config.opcode = SERPV;
-    tx_buffer[0] = 1 << 5;
-	config.length = NRF_QSPI_CINSTR_LEN_2B;
-	config.wren = true;
-    nrfx_qspi_cinstr_xfer(&config, tx_buffer, NULL);
-#endif
-
 	// Switch to QSPI mode
 	config.opcode = WRSR;
     tx_buffer[0] = STATUS_QE;
@@ -131,10 +122,33 @@ int is25_flash_read(uint32_t addr, uint8_t * buffer, uint32_t size)
 
 int is25_flash_erase(uint32_t block)
 {
-	nrfx_err_t qspi_ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * IS25_BLOCK_SIZE);
-	if (qspi_ret != NRFX_SUCCESS)
+	nrfx_err_t ret;
+
+	ret = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, block * IS25_BLOCK_SIZE);
+	if (ret != NRFX_SUCCESS)
 	{
-		NRF_LOG_ERROR("QSPI IO Error %04x", qspi_ret);
+		NRF_LOG_ERROR("QSPI IO Error %04x", ret);
+		return -1;
+	}
+
+	// Wait for erase to complete
+	// Expected max wait time is 300ms as this is how long a 4kB erase can take
+	const uint32_t WAIT_TIME_US = 10;
+	const uint32_t WAIT_ATTEMPTS = 30000;
+
+	uint32_t remaining_attempts = WAIT_ATTEMPTS;                
+	do
+	{
+		ret = nrfx_qspi_mem_busy_check();
+		if (ret == NRFX_SUCCESS)
+			break;
+
+		nrf_delay_us(WAIT_TIME_US);
+	} while (--remaining_attempts);
+
+	if (ret != NRFX_SUCCESS)
+	{
+		NRF_LOG_ERROR("QSPI IO Error %04x", ret);
 		return -1;
 	}
 
