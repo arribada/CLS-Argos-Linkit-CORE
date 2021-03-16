@@ -20,6 +20,9 @@ public:
 	int remove(const char *path) {
 		return mock().actualCall("remove").onObject(this).withParameter("path", path).returnIntValue();
 	}
+	int stat(const char *path, struct lfs_info *info) {
+		return mock().actualCall("stat").onObject(this).withParameter("path", path).withParameter("info", info).returnIntValue();
+	}
 	int set_attr(const char *path, unsigned int &attr) {
 		return mock().actualCall("set_attr").onObject(this).withParameter("path", path).withParameter("attr", attr).returnIntValue();
 	}

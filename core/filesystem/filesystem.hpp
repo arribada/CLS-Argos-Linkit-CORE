@@ -16,6 +16,7 @@ public:
 	virtual int umount() = 0;
 	virtual int format() = 0;
 	virtual int remove(const char *path) = 0;
+	virtual int stat(const char *path, struct lfs_info *info) = 0;
 	virtual int set_attr(const char *path, unsigned int &attr) = 0;
 	virtual int get_attr(const char *path, unsigned int &attr) = 0;
 	virtual void *get_private_data() = 0;
@@ -128,6 +129,10 @@ public:
 
 	lfs_size_t get_block_size() {
 		return m_cfg.block_size;
+	}
+
+	int stat(const char *path, struct lfs_info *info) override {
+		return lfs_stat(&m_lfs, path, info);
 	}
 
 	int set_attr(const char *path, unsigned int &attr) override {

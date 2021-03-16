@@ -69,15 +69,13 @@ public:
 				throw ErrorCode::BAD_FILESYSTEM;
 			}
 
-			// Check existence of all required log file chunks
-			for (unsigned int i = 0; i <= (m_has_wrapped ? m_max_size-1 : m_write_offset) / LOG_CHUNK_SIZE; i++) {
-				unsigned int file_index = i;
+			// Check existence of first log file chunk
+			{
+				unsigned int file_index = 0;
 				std::string filename(m_filename);
 				filename += "." + std::to_string(file_index);
-				try
-				{
-					LFSFile f(m_filesystem, filename.c_str(), LFS_O_RDONLY);
-				} catch (int e) {
+				struct lfs_info info;
+				if (m_filesystem->stat(filename.c_str(), &info)) {
 					DEBUG_ERROR("FsLog::create: missing log chunk %u", file_index);
 					throw ErrorCode::BAD_FILESYSTEM;
 				}
