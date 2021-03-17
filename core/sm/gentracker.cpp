@@ -175,8 +175,13 @@ void OperationalState::entry() {
 		status_led->flash(RGBLedColor::GREEN);
 	system_scheduler->post_task_prio([](){ status_led->off(); }, Scheduler::DEFAULT_PRIORITY, LED_INDICATION_PERIOD_MS);
 	saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
-	comms_scheduler->start();
-	location_scheduler->start([]() { comms_scheduler->notify_sensor_log_update(); });
+	comms_scheduler->start([](ServiceEvent e) {
+		if (e == ServiceEvent::ARGOS_TX_START)
+			status_led->set(RGBLedColor::MAGENTA);
+		else if (e == ServiceEvent::ARGOS_TX_END)
+			status_led->off();
+	});
+	location_scheduler->start([](ServiceEvent) { comms_scheduler->notify_sensor_log_update(); });
 }
 
 void OperationalState::exit() {

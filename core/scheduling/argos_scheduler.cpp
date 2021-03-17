@@ -613,7 +613,11 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	power_on();
 	set_frequency(m_argos_config.frequency);
 	set_tx_power(m_argos_config.power);
+	if (m_data_notification_callback)
+		m_data_notification_callback(ServiceEvent::ARGOS_TX_START);
 	send_packet(packet, total_bits, mode);
+	if (m_data_notification_callback)
+		m_data_notification_callback(ServiceEvent::ARGOS_TX_END);
 	power_off();
 
 	// Update the LAST_TX in the configuration store
@@ -670,9 +674,9 @@ void ArgosScheduler::periodic_algorithm() {
 	m_msg_index++;
 }
 
-void ArgosScheduler::start(std::function<void()> data_notification_callback) {
-	(void)data_notification_callback;
+void ArgosScheduler::start(std::function<void(ServiceEvent)> data_notification_callback) {
 	DEBUG_INFO("ArgosScheduler::start");
+	m_data_notification_callback = data_notification_callback;
 	m_is_running = true;
 	m_is_deferred = false;
 	m_msg_index = 0;

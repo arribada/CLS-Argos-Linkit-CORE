@@ -455,7 +455,7 @@ private:
 #endif
 	}
 
-	static void allcast_sat_orbit_params_decode(const std::string& data, unsigned int &pos, std::map<uint8_t, AopSatelliteEntry_t> &orbit_params, uint8_t a_dcs) {
+	static void allcast_sat_orbit_params_decode(const std::string& data, unsigned int &pos, bool type_a, std::map<uint8_t, AopSatelliteEntry_t> &orbit_params, uint8_t a_dcs) {
 		uint32_t working, day_of_year;
 		AopSatelliteEntry_t aop_entry;
 
@@ -501,18 +501,33 @@ private:
 				aop_entry.bulletin.hour, aop_entry.bulletin.minute, aop_entry.bulletin.second);
 
 		// 86 bits of bulletin
-		EXTRACT_BITS(working, data, pos, 19); // Longitude of the ascending node
-		aop_entry.ascNodeLongitudeDeg = working / 1000.f;
-		EXTRACT_BITS(working, data, pos, 10); // angular separation between two successive ascending nodes
-		aop_entry.ascNodeDriftDeg = (working / 1000.f) - 26;
-		EXTRACT_BITS(working, data, pos, 14); // nodal period
-		aop_entry.orbitPeriodMin = (working / 1000.f) + 95;
-		EXTRACT_BITS(working, data, pos, 19); // semi-major axis
-		aop_entry.semiMajorAxisKm = (working / 1000.f) + 7000;
-		EXTRACT_BITS(working, data, pos, 8); // semi-major axis decay
-		aop_entry.semiMajorAxisDriftMeterPerDay = working * -0.1f;
-		EXTRACT_BITS(working, data, pos, 16); // inclination
-		aop_entry.inclinationDeg = (working / 10000.f) + 97;
+		if (type_a) {
+			EXTRACT_BITS(working, data, pos, 19); // Longitude of the ascending node
+			aop_entry.ascNodeLongitudeDeg = working / 1000.f;
+			EXTRACT_BITS(working, data, pos, 10); // angular separation between two successive ascending nodes
+			aop_entry.ascNodeDriftDeg = (working / 1000.f) - 26;
+			EXTRACT_BITS(working, data, pos, 14); // nodal period
+			aop_entry.orbitPeriodMin = (working / 1000.f) + 95;
+			EXTRACT_BITS(working, data, pos, 19); // semi-major axis
+			aop_entry.semiMajorAxisKm = (working / 1000.f) + 7000;
+			EXTRACT_BITS(working, data, pos, 8); // semi-major axis decay
+			aop_entry.semiMajorAxisDriftMeterPerDay = working * -0.1f;
+			EXTRACT_BITS(working, data, pos, 16); // inclination
+			aop_entry.inclinationDeg = (working / 10000.f) + 97;
+		} else {
+			EXTRACT_BITS(working, data, pos, 19); // Longitude of the ascending node
+			aop_entry.ascNodeLongitudeDeg = working / 1000.f;
+			EXTRACT_BITS(working, data, pos, 10); // angular separation between two successive ascending nodes
+			aop_entry.ascNodeDriftDeg = (working / 1000.f) - 24;
+			EXTRACT_BITS(working, data, pos, 14); // nodal period
+			aop_entry.orbitPeriodMin = (working / 1000.f) + 85;
+			EXTRACT_BITS(working, data, pos, 19); // semi-major axis
+			aop_entry.semiMajorAxisKm = (working / 1000.f) + 6500;
+			EXTRACT_BITS(working, data, pos, 8); // semi-major axis decay
+			aop_entry.semiMajorAxisDriftMeterPerDay = working * -0.1f;
+			EXTRACT_BITS(working, data, pos, 16); // inclination
+			aop_entry.inclinationDeg = (working / 10000.f) + 95;
+		}
 
 		uint8_t key = aop_entry.satHexId | (a_dcs << 4);
 		if (orbit_params.count(key))
@@ -543,14 +558,17 @@ private:
 		}
 
 		switch (addressee_identification) {
-		case 0xC7: // Constellation Satellite Status - version A
+		case 0xC7: // Constellation Satellite Status Version A
 			allcast_constellation_status_decode(data, pos, true, constellation_status, a_dcs);
 			break;
-		case 0x5F: // Constellation Satellite Status - version B
+		case 0x5F: // Constellation Satellite Status Version B
 			allcast_constellation_status_decode(data, pos, false, constellation_status, a_dcs);
 			break;
-		case 0xBE: // Satellite Orbit Parameters
-			allcast_sat_orbit_params_decode(data, pos, orbit_params, a_dcs);
+		case 0xBE: // Satellite Orbit Parameters Type A
+			allcast_sat_orbit_params_decode(data, pos, true, orbit_params, a_dcs);
+			break;
+		case 0xDF: // Satellite Orbit Parameters Type B
+			allcast_sat_orbit_params_decode(data, pos, false, orbit_params, a_dcs);
 			break;
 		default:
 			DEBUG_ERROR("allcast_packet_decode: unrecognised allcast packet ID (%08x)", addressee_identification);
@@ -582,7 +600,7 @@ public:
 		for ( const auto &it : orbit_params ) {
 			if (constellation_status.count(it.first)) {
 				if (pass_predict.num_records < MAX_AOP_SATELLITE_ENTRIES) {
-					DEBUG_INFO("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", pass_predict.num_records, it.second.satDcsId, it.second.satHexId);
+					DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", pass_predict.num_records, it.second.satDcsId, it.second.satHexId);
 					pass_predict.records[pass_predict.num_records] = it.second;
 					pass_predict.records[pass_predict.num_records].downlinkStatus = constellation_status[it.first].downlinkStatus;
 					pass_predict.records[pass_predict.num_records].uplinkStatus = constellation_status[it.first].uplinkStatus;

@@ -41,10 +41,11 @@ private:
 	double 		 m_last_latitude;
 	std::array<unsigned int, MAX_MSG_INDEX> m_msg_burst_counter;
 	std::array<std::vector<GPSLogEntry>, MAX_MSG_INDEX> m_gps_entries;
+	std::function<void(ServiceEvent)> m_data_notification_callback;
 
 public:
 	ArgosScheduler();
-	void start(std::function<void()> data_notification_callback = nullptr) override;
+	void start(std::function<void(ServiceEvent)> data_notification_callback = nullptr) override;
 	void stop() override;
 	void notify_saltwater_switch_state(bool state) override;
 	void notify_sensor_log_update() override;

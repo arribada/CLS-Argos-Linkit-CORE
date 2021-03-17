@@ -14,7 +14,7 @@ extern RTC *rtc;
 #define MS_PER_SEC  (1000)
 #define SEC_PER_MIN (60)
 
-void GPSScheduler::start(std::function<void()> data_notification_callback)
+void GPSScheduler::start(std::function<void(ServiceEvent)> data_notification_callback)
 {
     DEBUG_INFO("GPSScheduler::start");
 
@@ -86,7 +86,7 @@ void GPSScheduler::task_acquisition_period() {
         // If our power on failed then log this as a failed GPS fix and notify the user
         log_invalid_gps_entry();
         if (m_data_notification_callback)
-            m_data_notification_callback();
+            m_data_notification_callback(ServiceEvent::SENSOR_LOG_UPDATED);
         reschedule();
         return;
     }
@@ -119,7 +119,7 @@ void GPSScheduler::task_acquisition_timeout() {
     log_invalid_gps_entry();
 
     if (m_data_notification_callback)
-        m_data_notification_callback();
+        m_data_notification_callback(ServiceEvent::SENSOR_LOG_UPDATED);
 
     reschedule();
 }
@@ -190,7 +190,7 @@ void GPSScheduler::task_process_gnss_data()
     configuration_store->notify_gps_location(gps_entry);
 
     if (m_data_notification_callback)
-        m_data_notification_callback();
+        m_data_notification_callback(ServiceEvent::SENSOR_LOG_UPDATED);
 
     reschedule();
 
