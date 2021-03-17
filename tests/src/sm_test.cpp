@@ -310,6 +310,34 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 }
 
+TEST(Sm, CheckOffStateCanBeCancelled)
+{
+	mock().disable();
+	fsm_handle::start();
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
+
+	// Swipe gesture and hold for 3 seconds
+	fake_reed_switch->set_state(true);
+	linux_timer->set_counter(3999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
+
+	// Continue to hold for 7 more seconds
+	linux_timer->set_counter(10999);
+	while(!system_scheduler->run());
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+
+	// Release reed switch and apply again for 3 seconds to cancel the off sequence
+	fake_reed_switch->set_state(false);
+	fake_reed_switch->set_state(true);
+	linux_timer->set_counter(13999);
+	while(!system_scheduler->run());
+
+	// Ensure ConfigurationState has been entered
+	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
+}
+
 TEST(Sm, CheckBLEInactivityTimeout)
 {
 	mock().disable();

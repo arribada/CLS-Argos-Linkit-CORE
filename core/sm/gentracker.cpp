@@ -130,12 +130,14 @@ void OffState::entry() {
 	DEBUG_INFO("entry: OffState");
 	battery_monitor->stop();
 	status_led->flash(RGBLedColor::WHITE, 125);  // Flash 4X speed during power down
-	system_scheduler->post_task_prio([](){ status_led->off(); PMU::powerdown(); }, Scheduler::DEFAULT_PRIORITY, OFF_LED_PERIOD_MS);
+	m_off_state_task = system_scheduler->post_task_prio([](){ status_led->off(); PMU::powerdown(); }, Scheduler::DEFAULT_PRIORITY, OFF_LED_PERIOD_MS);
 }
 
 void OffState::exit() {
-	// !!! This state should never be entered !!!
-	DEBUG_ERROR("exit: OffState");
+	DEBUG_INFO("exit: OffState");
+	system_scheduler->cancel_task(m_off_state_task);
+	battery_monitor->start();
+	status_led->off();
 }
 
 void IdleState::entry() {

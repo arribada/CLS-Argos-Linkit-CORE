@@ -44,6 +44,7 @@ class OffState : public GenTracker
 {
 private:
 	static inline const unsigned int OFF_LED_PERIOD_MS = 5000;
+	Scheduler::TaskHandle m_off_state_task;
 
 public:
 	void entry() override;
