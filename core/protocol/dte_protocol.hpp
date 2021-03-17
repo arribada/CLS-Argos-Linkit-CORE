@@ -567,7 +567,7 @@ private:
 		case 0xBE: // Satellite Orbit Parameters Type A
 			allcast_sat_orbit_params_decode(data, pos, true, orbit_params, a_dcs);
 			break;
-		case 0xDF: // Satellite Orbit Parameters Type B
+		case 0xD4: // Satellite Orbit Parameters Type B
 			allcast_sat_orbit_params_decode(data, pos, false, orbit_params, a_dcs);
 			break;
 		default:
