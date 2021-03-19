@@ -18,7 +18,6 @@ private:
 	static inline Scheduler::TaskHandle m_task_trigger_off_state;
 	static inline const unsigned int TRANSIT_CONFIG_HOLD_TIME_MS = 3000;
 	static inline const unsigned int TRANSIT_OFF_HOLD_TIME_MS = 10000;
-	static inline const unsigned int SWIPE_TIME_MS = 500;
 	static inline uint64_t m_reed_trigger_start_time;
 
 public:
@@ -54,7 +53,7 @@ public:
 class IdleState : public GenTracker
 {
 private:
-	static inline const unsigned int IDLE_PERIOD_MS = 120 * 1000;
+	static inline const unsigned int IDLE_PERIOD_MS = 15000;
 	Scheduler::TaskHandle m_idle_state_task;
 
 public:
