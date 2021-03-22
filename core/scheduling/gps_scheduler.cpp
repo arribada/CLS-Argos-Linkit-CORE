@@ -21,6 +21,7 @@ void GPSScheduler::start(std::function<void(ServiceEvent)> data_notification_cal
     m_data_notification_callback = data_notification_callback;
     m_gnss_data.pending_data_logging = false;
     m_gnss_data.pending_rtc_set = false;
+    m_is_first_fix_found = false;
 
     reschedule();
 }
@@ -91,7 +92,15 @@ void GPSScheduler::task_acquisition_period() {
         return;
     }
 
-    m_task_acquisition_timeout = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_timeout, this), Scheduler::DEFAULT_PRIORITY, m_gnss_config.acquisition_timeout * MS_PER_SEC);
+    unsigned int aq_timeout;
+    if (m_is_first_fix_found) {
+    	aq_timeout = m_gnss_config.acquisition_timeout;
+    	DEBUG_TRACE("GPSScheduler::task_acquisition_period: using timeout of %u secs", aq_timeout);
+    } else {
+    	aq_timeout = m_gnss_config.acquisition_timeout_cold_start;
+    	DEBUG_TRACE("GPSScheduler::task_acquisition_period: using cold start timeout of %u secs", aq_timeout);
+    }
+    m_task_acquisition_timeout = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_timeout, this), Scheduler::DEFAULT_PRIORITY, aq_timeout * MS_PER_SEC);
 }
 
 void GPSScheduler::log_invalid_gps_entry()
@@ -207,6 +216,9 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
     // Update our time based off this data, schedule this as high priority
     m_gnss_data.pending_rtc_set = true;
     m_task_update_rtc = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_update_rtc, this), Scheduler::HIGHEST_PRIORITY);
+
+    // Mark first fix flag
+    m_is_first_fix_found = true;
 
     // Only process this data if it satisfies an optional hdop threshold
     if (!m_gnss_config.hdop_filter_enable || (m_gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP <= m_gnss_config.hdop_filter_threshold)))

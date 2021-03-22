@@ -53,6 +53,7 @@ protected:
 
 private:
 	GNSSConfig m_gnss_config;
+	bool       m_is_first_fix_found;
 
 	struct {
 		GNSSData data;

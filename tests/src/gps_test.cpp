@@ -91,6 +91,7 @@ TEST(GpsScheduler, GNSSDisabled)
 	bool gnss_en = false;
 	unsigned int dloc_arg_nom = 10*60;
 	unsigned int gnss_acq_timeout = 0;
+	unsigned int gnss_acq_timeout_cold_start = 0;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -100,6 +101,7 @@ TEST(GpsScheduler, GNSSDisabled)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -119,6 +121,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesNoFixB)
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 10*60;
 	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -128,6 +131,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesNoFixB)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -166,6 +170,7 @@ TEST(GpsScheduler, GNSSEnabled15MinutesNoFix)
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 15*60;
 	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -175,6 +180,7 @@ TEST(GpsScheduler, GNSSEnabled15MinutesNoFix)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -213,6 +219,7 @@ TEST(GpsScheduler, GNSSEnabled30MinutesNoFix)
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 30*60;
 	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -222,6 +229,7 @@ TEST(GpsScheduler, GNSSEnabled30MinutesNoFix)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -260,6 +268,7 @@ TEST(GpsScheduler, GNSSEnabled60MinutesNoFix)
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 60*60;
 	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -269,6 +278,7 @@ TEST(GpsScheduler, GNSSEnabled60MinutesNoFix)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -307,6 +317,7 @@ TEST(GpsScheduler, GNSSEnabled120MinutesNoFix)
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 120*60;
 	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -316,6 +327,7 @@ TEST(GpsScheduler, GNSSEnabled120MinutesNoFix)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -354,6 +366,7 @@ TEST(GpsScheduler, GNSSEnabled360MinutesNoFix)
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 360*60;
 	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -363,6 +376,7 @@ TEST(GpsScheduler, GNSSEnabled360MinutesNoFix)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -401,6 +415,7 @@ TEST(GpsScheduler, GNSSEnabled720MinutesNoFix)
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 720*60;
 	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -410,6 +425,7 @@ TEST(GpsScheduler, GNSSEnabled720MinutesNoFix)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -448,6 +464,7 @@ TEST(GpsScheduler, GNSSEnabled1440MinutesNoFix)
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 1440*60;
 	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -457,6 +474,7 @@ TEST(GpsScheduler, GNSSEnabled1440MinutesNoFix)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -495,6 +513,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesNoFixOffSchedule)
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 10*60;
 	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
 	bool gnss_hdopfilt_en = false;
 	unsigned int gnss_hdopfilt_thres = 0;
 	bool underwater_en = false;
@@ -504,6 +523,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesNoFixOffSchedule)
 	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
 	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
@@ -531,4 +551,105 @@ TEST(GpsScheduler, GNSSEnabled10MinutesNoFixOffSchedule)
 		mock().expectOneCall("power_off").onObject(gps_sched);
 		increment_time_s(gnss_acq_timeout);
 	}
+}
+
+TEST(GpsScheduler, GNSSEnabledColdStartTimeoutCheck)
+{
+	bool lb_en = false;
+	unsigned int lb_threshold = 0U;
+	bool gnss_en = true;
+	unsigned int dloc_arg_nom = 10*60;
+	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 120;
+	bool gnss_hdopfilt_en = false;
+	unsigned int gnss_hdopfilt_thres = 0;
+	bool underwater_en = false;
+
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+
+	fake_rtc->settime(1580083500); // 27/01/2020 00:05:00
+
+	location_scheduler->start();
+
+	// We're expecting the device to turn on at 27/01/2020 00:10:00
+	increment_time_min(4);
+
+	mock().expectOneCall("power_on").onObject(gps_sched).ignoreOtherParameters();
+	increment_time_min(1);
+
+	// Should not power down yet
+	increment_time_s(gnss_acq_timeout);
+
+	// Should now power down
+	mock().expectOneCall("power_off").onObject(gps_sched);
+	increment_time_s(gnss_acq_timeout_cold_start - gnss_acq_timeout);
+
+	// Repeat to make sure cold start is still used
+	mock().expectOneCall("power_on").onObject(gps_sched).ignoreOtherParameters();
+	increment_time_min(8);
+
+	// Should not power down yet
+	increment_time_s(gnss_acq_timeout);
+
+	// Should now power down
+	mock().expectOneCall("power_off").onObject(gps_sched);
+	increment_time_s(gnss_acq_timeout_cold_start - gnss_acq_timeout);
+}
+
+TEST(GpsScheduler, GNSSEnabledNominalTimeoutAfterFirstFix)
+{
+	bool lb_en = false;
+	unsigned int lb_threshold = 0U;
+	bool gnss_en = true;
+	unsigned int dloc_arg_nom = 10*60;
+	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 120;
+	bool gnss_hdopfilt_en = false;
+	unsigned int gnss_hdopfilt_thres = 0;
+	bool underwater_en = false;
+
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+
+	fake_rtc->settime(1580083500); // 27/01/2020 00:05:00
+
+	location_scheduler->start();
+
+	// We're expecting the device to turn on at 27/01/2020 00:10:00
+	increment_time_min(4);
+
+	mock().expectOneCall("power_on").onObject(gps_sched).ignoreOtherParameters();
+	increment_time_min(1);
+
+	// Should not power down yet
+	increment_time_s(gnss_acq_timeout);
+
+	// Send a dummy GNSS data event to mark the first fix as being made
+	mock_m8q->notify_gnss_data(fake_rtc->gettime());
+
+	// Should now power down
+	mock().expectOneCall("power_off").onObject(gps_sched);
+	increment_time_min(1);
+
+	mock().expectOneCall("power_on").onObject(gps_sched).ignoreOtherParameters();
+	increment_time_min(9);
+
+	// Should now power down at nominal timeout
+	mock().expectOneCall("power_off").onObject(gps_sched);
+	increment_time_s(gnss_acq_timeout);
 }

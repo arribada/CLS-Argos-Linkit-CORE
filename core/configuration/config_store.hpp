@@ -19,6 +19,7 @@ struct GNSSConfig {
 	bool enable;
 	bool hdop_filter_enable;
 	unsigned int hdop_filter_threshold;
+	unsigned int acquisition_timeout_cold_start;
 	unsigned int acquisition_timeout;
 	unsigned int dloc_arg_nom;
 	bool underwater_en;
@@ -97,6 +98,7 @@ protected:
 		/* PP_MAX_PASSES */ 1000U,
 		/* PP_LINEAR_MARGIN */ 300U,
 		/* PP_COMP_STEP */ 10U,
+		/* GNSS_COLD_ACQ_TIMEOUT */ 60U
 	}};
 	static inline const BaseZone default_zone = {
 		/* zone_id */ 1,
@@ -274,6 +276,7 @@ public:
 			gnss_config.enable = read_param<bool>(ParamID::LB_GNSS_EN);
 			gnss_config.dloc_arg_nom = read_param<unsigned int>(ParamID::DLOC_ARG_LB);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::LB_GNSS_ACQ_TIMEOUT);
+			gnss_config.acquisition_timeout_cold_start = read_param<unsigned int>(ParamID::GNSS_COLD_ACQ_TIMEOUT);
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);  // FIXME: should there be a LB_xxx variant?
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::LB_GNSS_HDOPFILT_THR);
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
@@ -283,6 +286,7 @@ public:
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT);
+			gnss_config.acquisition_timeout_cold_start = read_param<unsigned int>(ParamID::GNSS_COLD_ACQ_TIMEOUT);
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR);
 			// Apply zone exclusion where applicable
 			if (m_zone.gnss_extra_flags_enable) {
@@ -294,6 +298,7 @@ public:
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
 			gnss_config.dloc_arg_nom = read_param<unsigned int>(ParamID::DLOC_ARG_NOM);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT);
+			gnss_config.acquisition_timeout_cold_start = read_param<unsigned int>(ParamID::GNSS_COLD_ACQ_TIMEOUT);
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR);
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);

@@ -33,7 +33,7 @@ static const BaseMap param_map[] = {
 	{ "GLONASS_CONST_SELECT", "GNP08", BaseEncoding::DECIMAL, 0, 0, {}, false, true },
 	{ "GNSS_HDOPFILT_EN", "GNP02", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "GNSS_HDOPFILT_THR", "GNP03", BaseEncoding::UINT, 2U, 15U, {}, true, true },
-	{ "GNSS_ACQ_TIMEOUT", "GNP05", BaseEncoding::UINT, 10U, 60U, {}, true, true },
+	{ "GNSS_ACQ_TIMEOUT", "GNP05", BaseEncoding::UINT, 10U, 600U, {}, true, true },
 	{ "GNSS_NTRY", "GNP04", BaseEncoding::UINT, 0U, 0U, {}, false, true },
 	{ "UNDERWATER_EN", "UNP01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "DRY_TIME_BEFORE_TX", "UNP02", BaseEncoding::UINT, 1U, 1440U, {}, true, true },
@@ -48,7 +48,7 @@ static const BaseMap param_map[] = {
 	{ "DLOC_ARG_LB", "ARP12", BaseEncoding::AQPERIOD, 0, 0, { 1, 2, 3, 4, 5, 6, 7, 8 }, true, true },
 	{ "LB_GNSS_HDOPFILT_THR", "LBP07", BaseEncoding::UINT, 2U, 15U, {}, true, true },
 	{ "LB_ARGOS_DEPTH_PILE", "LBP08", BaseEncoding::DEPTHPILE, 0U, 0U, {1U, 2U, 3U, 4U, 8U, 9U, 10U, 11U, 12U}, true, true },
-	{ "LB_GNSS_ACQ_TIMEOUT", "LBP09", BaseEncoding::UINT, 10U, 60U, {}, true, true },
+	{ "LB_GNSS_ACQ_TIMEOUT", "LBP09", BaseEncoding::UINT, 10U, 600U, {}, true, true },
 	{ "SAMPLING_SURF_FREQ", "UNP04", BaseEncoding::UINT, 1U, 1440U, {}, true, true },
     { "PP_MIN_ELEVATION", "PPP01", BaseEncoding::FLOAT, 0.0, 90.0, {}, true, true },
 	{ "PP_MAX_ELEVATION", "PPP02", BaseEncoding::FLOAT, 0.0, 90.0, {}, true, true },
@@ -56,6 +56,7 @@ static const BaseMap param_map[] = {
 	{ "PP_MAX_PASSES", "PPP04", BaseEncoding::UINT, 1U, 10000U, {}, true, true },
 	{ "PP_LINEAR_MARGIN", "PPP05", BaseEncoding::UINT, 1U, 3600U, {}, true, true },
 	{ "PP_COMP_STEP", "PPP06", BaseEncoding::UINT, 1U, 1000U, {}, true, true },
+	{ "GNSS_COLD_ACQ_TIMEOUT", "GNP09", BaseEncoding::UINT, 10U, 600U, {}, true, true },
 };
 
 #endif // __DTE_PARAMS_HPP_

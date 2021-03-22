@@ -641,7 +641,22 @@ TEST(Encoder, PARAM_GNSS_ACQ_TIMEOUT_OutOfRangeCheck)
 	ParamValue p = { ParamID::GNSS_ACQ_TIMEOUT, 9U };
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
-	p = { ParamID::GNSS_ACQ_TIMEOUT, 61U};
+	p = { ParamID::GNSS_ACQ_TIMEOUT, 601U};
+	v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+}
+
+TEST(Encoder, PARAM_GNSS_COLD_ACQ_TIMEOUT)
+{
+	std::string s;
+	ParamValue p = { ParamID::GNSS_COLD_ACQ_TIMEOUT, 30U };
+	std::vector<ParamValue> v = { p };
+	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
+	STRCMP_EQUAL("$O;PARMR#008;GNP09=30\r", s.c_str());
+	p = { ParamID::GNSS_COLD_ACQ_TIMEOUT, 9U };
+	v = { p };
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
+	p = { ParamID::GNSS_COLD_ACQ_TIMEOUT, 601U};
 	v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
 }
@@ -929,7 +944,7 @@ TEST(Encoder, PARAM_LB_GNSS_ACQ_TIMEOUT_OutOfRangeCheck)
 	ParamValue p = { ParamID::LB_GNSS_ACQ_TIMEOUT, 9U };
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
-	p = { ParamID::LB_GNSS_ACQ_TIMEOUT, 61U};
+	p = { ParamID::LB_GNSS_ACQ_TIMEOUT, 601U};
 	v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
 }
