@@ -47,7 +47,7 @@ extern "C" {
 #define LONG_PACKET_MSG_LENGTH		15
 #define LONG_PACKET_BITFIELD        0x8B
 
-#define PACKET_SYNC					0xFFFC2F
+#define PACKET_SYNC					0xFFFE2F
 
 #define ARGOS_TX_MARGIN_SECS        12
 
@@ -607,7 +607,7 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	DEBUG_TRACE("ArgosScheduler::handle_packet: data=");
 #if defined(DEBUG_ENABLE) && DEBUG_LEVEL >= 4
 	for (unsigned int i = 0; i < packet.size(); i++)
-		printf("%02X", (unsigned int)packet[i]);
+		printf("%02X", (unsigned int)packet[i] & 0xFF);
 	printf("\r\n");
 #endif
 	power_on();
