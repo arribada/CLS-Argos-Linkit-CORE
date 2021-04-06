@@ -20,6 +20,8 @@ extern "C" {
 
 #define INVALID_SCHEDULE    (std::time_t)-1
 
+#define FIXTYPE_3D			3
+
 #define HOURS_PER_DAY       24
 #define SECONDS_PER_MINUTE	60
 #define SECONDS_PER_HOUR    3600
@@ -28,8 +30,12 @@ extern "C" {
 #define MM_PER_KM   		1000000
 #define MV_PER_UNIT			30
 #define MS_PER_SEC			1000
+#define METRES_PER_UNIT     40
 #define DEGREES_PER_UNIT	(1.0f/1.42f)
 #define BITS_PER_BYTE		8
+#define MIN_ALTITUDE		0
+#define MAX_ALTITUDE		254
+#define INVALID_ALTITUDE	255
 
 #define LON_LAT_RESOLUTION  10000
 
@@ -437,8 +443,21 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 		DEBUG_TRACE("ArgosScheduler::build_short_packet: speed=%u", (unsigned int)gspeed);
 		PACK_BITS(gps_entry.info.headMot * DEGREES_PER_UNIT, packet, base_pos, 8);
 		DEBUG_TRACE("ArgosScheduler::build_short_packet: heading=%u", (unsigned int)(gps_entry.info.headMot * DEGREES_PER_UNIT));
-		PACK_BITS(gps_entry.info.height / MM_PER_METER, packet, base_pos, 8);
-		DEBUG_TRACE("ArgosScheduler::build_short_packet: altitude=%u", (gps_entry.info.height / MM_PER_METER));
+		if (gps_entry.info.fixType == FIXTYPE_3D) {
+			int32_t altitude = gps_entry.info.height / (MM_PER_METER * METRES_PER_UNIT);
+			if (altitude > MAX_ALTITUDE) {
+				DEBUG_WARN("ArgosScheduler::build_short_packet: altitude %d (x 40m) exceeds maximum - truncating", altitude);
+				altitude = MAX_ALTITUDE;
+			} else if (altitude < MIN_ALTITUDE) {
+				DEBUG_WARN("ArgosScheduler::build_short_packet: altitude %d (x 40m) below minimum - truncating", altitude);
+				altitude = MIN_ALTITUDE;
+			}
+			DEBUG_TRACE("ArgosScheduler::build_short_packet: altitude=%d (x 40m)", altitude);
+			PACK_BITS(altitude, packet, base_pos, 8);
+		} else {
+			DEBUG_WARN("ArgosScheduler::build_short_packet: altitude not available without 3D fix");
+			PACK_BITS(INVALID_ALTITUDE, packet, base_pos, 8);
+		}
 	} else {
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);

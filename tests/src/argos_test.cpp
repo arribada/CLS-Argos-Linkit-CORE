@@ -108,6 +108,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
@@ -191,6 +192,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	system_scheduler->run();
@@ -269,6 +271,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 8056;  // mm/s
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 
 	gps_entry.info.batt_voltage = 7350;
@@ -283,6 +286,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 
 	gps_entry.info.batt_voltage = 7350;
@@ -311,6 +315,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 
 	fake_rtc->settime(7200);
@@ -398,6 +403,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 
 	std::time_t t = 1580083200;
 	fake_rtc->settime(t);
@@ -498,6 +504,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 8056;  // mm/s
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 
 	std::time_t t = 1580083200;
@@ -517,6 +524,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
@@ -532,6 +540,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
@@ -547,6 +556,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
@@ -629,6 +639,7 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 
 	for (unsigned int i = 0; i < 24*3600; i += tr_nom)
 	{
@@ -714,6 +725,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	system_scheduler->run();
@@ -877,6 +889,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	while (!system_scheduler->run());
@@ -982,6 +995,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 
 	std::time_t t = 1580083200;
 	fake_rtc->settime(t);
@@ -1139,6 +1153,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketWithAllCastAOP)
 	gps_entry.info.height = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
 
 	std::time_t t = 1614627019;
 	fake_rtc->settime(t);
@@ -1173,5 +1188,253 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketWithAllCastAOP)
 	CHECK_EQUAL("\xFF\xFE\x2F\x61\x23\x45\x67\xDC\x3B\xC6\x3E\xA7\xFC\x01\x1B\xE0\x00\x00\x10\x9F\x55\xB0"s, mock_artic->m_last_packet);
 #else
 	CHECK_EQUAL("\xff\xfe\x2f\x61\x23\x45\x67\x11\x3b\xc6\x3e\xa7\xfc\x01\x1b\xe0\x00\x00\x10\x85\xd7\x86"s, mock_artic->m_last_packet);
+#endif
+}
+
+
+TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0U;
+	double frequency = 900.11;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	unsigned int ntry_per_message = 1;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	bool underwater_en = false;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+
+	fake_rtc->settime(0);
+	fake_timer->set_counter(0);
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+	argos_sched->start();
+
+	GPSLogEntry gps_entry;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 400 * 1000;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+
+	fake_log->write(&gps_entry);
+	argos_sched->notify_sensor_log_update();
+	while (!system_scheduler->run());
+
+	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
+	CHECK_EQUAL(1, tx_counter);
+
+	fake_rtc->settime(60);
+	fake_timer->set_counter(60000);
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+
+	fake_log->write(&gps_entry);
+	argos_sched->notify_sensor_log_update();
+	while (!system_scheduler->run());
+
+	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
+	CHECK_EQUAL(2, tx_counter);
+
+	// Reference packet from CLS
+#ifdef ARGOS_USE_CRC8
+	CHECK_EQUAL("\xFF\xFE\x2F\x61\x23\x45\x67\x5E\x3B\xC6\x3E\xA7\xFC\x01\x1B\xE0\x00\x01\x50\x9F\xA9\xBF"s, mock_artic->m_last_packet);
+#endif
+}
+
+TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0U;
+	double frequency = 900.11;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	unsigned int ntry_per_message = 1;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	bool underwater_en = false;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+
+	fake_rtc->settime(0);
+	fake_timer->set_counter(0);
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+	argos_sched->start();
+
+	GPSLogEntry gps_entry;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = 15000 * 1000;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+
+	fake_log->write(&gps_entry);
+	argos_sched->notify_sensor_log_update();
+	while (!system_scheduler->run());
+
+	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
+	CHECK_EQUAL(1, tx_counter);
+
+	fake_rtc->settime(60);
+	fake_timer->set_counter(60000);
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+
+	fake_log->write(&gps_entry);
+	argos_sched->notify_sensor_log_update();
+	while (!system_scheduler->run());
+
+	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
+	CHECK_EQUAL(2, tx_counter);
+
+	// Reference packet from CLS
+#ifdef ARGOS_USE_CRC8
+	CHECK_EQUAL("\xFF\xFE\x2F\x61\x23\x45\x67\x1E\x3B\xC6\x3E\xA7\xFC\x01\x1B\xE0\x00\x1F\xD0\x8C\x83\xD8"s, mock_artic->m_last_packet);
+#endif
+}
+
+
+TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0U;
+	double frequency = 900.11;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	unsigned int ntry_per_message = 1;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	bool underwater_en = false;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+
+	fake_rtc->settime(0);
+	fake_timer->set_counter(0);
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+	argos_sched->start();
+
+	GPSLogEntry gps_entry;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.height = -50 * 1000;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+
+	fake_log->write(&gps_entry);
+	argos_sched->notify_sensor_log_update();
+	while (!system_scheduler->run());
+
+	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
+	CHECK_EQUAL(1, tx_counter);
+
+	fake_rtc->settime(60);
+	fake_timer->set_counter(60000);
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+
+	fake_log->write(&gps_entry);
+	argos_sched->notify_sensor_log_update();
+	while (!system_scheduler->run());
+
+	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
+	CHECK_EQUAL(2, tx_counter);
+
+	// Reference packet from CLS
+#ifdef ARGOS_USE_CRC8
+	CHECK_EQUAL("\xFF\xFE\x2F\x61\x23\x45\x67\xDC\x3B\xC6\x3E\xA7\xFC\x01\x1B\xE0\x00\x00\x10\x9F\x55\xB0"s, mock_artic->m_last_packet);
 #endif
 }
