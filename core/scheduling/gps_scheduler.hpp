@@ -7,6 +7,11 @@
 #include "service_scheduler.hpp"
 #include "scheduler.hpp"
 
+struct GPSNavSettings {
+	BaseGNSSFixMode  fix_mode;
+	BaseGNSSDynModel dyn_model;
+};
+
 class GPSScheduler : public ServiceScheduler {
 public:
 	virtual ~GPSScheduler() {}
@@ -83,7 +88,8 @@ private:
 	
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	virtual void power_off() = 0;
-	virtual void power_on(std::function<void(GNSSData data)> data_notification_callback = nullptr) = 0;
+	virtual void power_on(const GPSNavSettings& nav_settings,
+						  std::function<void(GNSSData data)> data_notification_callback = nullptr) = 0;
 };
 
 #endif // __GPS_SCHEDULER_HPP_

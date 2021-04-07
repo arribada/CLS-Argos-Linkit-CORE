@@ -80,7 +80,12 @@ void GPSScheduler::task_acquisition_period() {
     DEBUG_TRACE("GPSScheduler::task_acquisition_period");
     try
     {
-        power_on(std::bind(&GPSScheduler::gnss_data_callback, this, std::placeholders::_1));
+    	GPSNavSettings nav_settings = {
+        	m_gnss_config.fix_mode,
+    		m_gnss_config.dyn_model
+    	};
+        power_on(nav_settings,
+        		 std::bind(&GPSScheduler::gnss_data_callback, this, std::placeholders::_1));
     }
     catch(ErrorCode e)
     {

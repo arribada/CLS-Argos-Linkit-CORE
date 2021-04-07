@@ -105,7 +105,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -189,7 +189,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -268,7 +268,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8768;
 	gps_entry.info.lat = -33.8232;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 8056;  // mm/s
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -283,7 +283,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8736;
 	gps_entry.info.lat = -33.8235;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -298,7 +298,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8576;
 	gps_entry.info.lat = -35.4584;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
 	fake_log->write(&gps_entry);
@@ -312,7 +312,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.858;
 	gps_entry.info.lat = -35.4586;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -400,7 +400,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -501,7 +501,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8768;
 	gps_entry.info.lat = -33.8232;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 8056;  // mm/s
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -521,7 +521,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8736;
 	gps_entry.info.lat = -33.8235;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -537,7 +537,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8576;
 	gps_entry.info.lat = -35.4584;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -553,7 +553,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.858;
 	gps_entry.info.lat = -35.4586;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;  // km/hr -> mm/s
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -636,7 +636,7 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -722,7 +722,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -886,7 +886,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -992,7 +992,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -1150,7 +1150,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketWithAllCastAOP)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 0;
+	gps_entry.info.hMSL = 0;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -1241,7 +1241,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 400 * 1000;
+	gps_entry.info.hMSL = 400 * 1000;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -1323,7 +1323,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = 15000 * 1000;
+	gps_entry.info.hMSL = 15000 * 1000;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
@@ -1406,7 +1406,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
-	gps_entry.info.height = -50 * 1000;
+	gps_entry.info.hMSL = -50 * 1000;
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;

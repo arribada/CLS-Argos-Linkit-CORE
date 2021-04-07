@@ -5,6 +5,7 @@
 #include "nrf_uart_m8.hpp"
 #include "ubx.hpp"
 
+
 class M8QReceiver : public GPSScheduler {
 public:
 	M8QReceiver();
@@ -13,7 +14,8 @@ public:
 private:
 	// These methods are specific to the chipset and should be implemented by a device-specific subclass
 	void power_off() override;
-	void power_on(std::function<void(GNSSData data)> data_notification_callback) override;
+	void power_on(const GPSNavSettings& nav_settings,
+			      std::function<void(GNSSData data)> data_notification_callback) override;
 
 	enum class SendReturnCode
 	{
@@ -48,7 +50,7 @@ private:
     SendReturnCode setup_gnss_channel_sharing();
     SendReturnCode setup_power_management();
     SendReturnCode setup_lower_power_mode();
-    SendReturnCode setup_simple_navigation_settings();
+    SendReturnCode setup_simple_navigation_settings(const GPSNavSettings& nav_settings);
     SendReturnCode setup_expert_navigation_settings();
 	SendReturnCode supply_time_assistance();
 	SendReturnCode disable_odometer();

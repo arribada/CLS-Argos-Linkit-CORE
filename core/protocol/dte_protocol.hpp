@@ -681,6 +681,12 @@ protected:
 	static inline void encode(std::ostringstream& output, const BaseArgosPower& value) {
 		encode(output, (unsigned int&)value);
 	}
+	static inline void encode(std::ostringstream& output, const BaseGNSSFixMode& value) {
+		encode(output, (unsigned int&)value);
+	}
+	static inline void encode(std::ostringstream& output, const BaseGNSSDynModel& value) {
+		encode(output, (unsigned int&)value);
+	}
 	static inline void encode(std::ostringstream& output, const std::time_t& value) {
 		output << std::put_time(std::gmtime(&value), "%c");
 	}
@@ -811,6 +817,16 @@ protected:
 	}
 
 	static void validate(const BaseMap &arg_map, const BaseArgosDepthPile& value) {
+		(void)arg_map;
+		(void)value;
+	}
+
+	static void validate(const BaseMap &arg_map, const BaseGNSSFixMode& value) {
+		(void)arg_map;
+		(void)value;
+	}
+
+	static void validate(const BaseMap &arg_map, const BaseGNSSDynModel& value) {
 		(void)arg_map;
 		(void)value;
 	}
@@ -1116,6 +1132,46 @@ private:
 		}
 	}
 
+	static BaseGNSSFixMode decode_gnss_fix_mode(std::string& s) {
+		if (s == "1") {
+			return BaseGNSSFixMode::FIX_2D;
+		} else if (s == "2") {
+			return BaseGNSSFixMode::FIX_3D;
+		} else if (s == "3") {
+			return BaseGNSSFixMode::AUTO;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
+	static BaseGNSSDynModel decode_gnss_dyn_model(std::string& s) {
+		if (s == "0") {
+			return BaseGNSSDynModel::PORTABLE;
+		} else if (s == "2") {
+			return BaseGNSSDynModel::STATIONARY;
+		} else if (s == "3") {
+			return BaseGNSSDynModel::PEDESTRIAN;
+		} else if (s == "4") {
+			return BaseGNSSDynModel::AUTOMOTIVE;
+		} else if (s == "5") {
+			return BaseGNSSDynModel::SEA;
+		} else if (s == "6") {
+			return BaseGNSSDynModel::AIRBORNE_1G;
+		} else if (s == "7") {
+			return BaseGNSSDynModel::AIRBORNE_2G;
+		} else if (s == "8") {
+			return BaseGNSSDynModel::AIRBORNE_4G;
+		} else if (s == "9") {
+			return BaseGNSSDynModel::WRIST_WORN_WATCH;
+		} else if (s == "10") {
+			return BaseGNSSDynModel::BIKE;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
 	static BaseArgosPower decode_power(std::istringstream& ss) {
 		std::string s = fetch_param(ss);
 		return decode_power(s);
@@ -1330,6 +1386,20 @@ private:
 						key_values.push_back(key_value);
 						break;
 					}
+					case BaseEncoding::GNSSFIXMODE:
+					{
+						BaseGNSSFixMode x = decode_gnss_fix_mode(value);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
+					case BaseEncoding::GNSSDYNMODEL:
+					{
+						BaseGNSSDynModel x = decode_gnss_dyn_model(value);
+						key_value.value = x;
+						key_values.push_back(key_value);
+						break;
+					}
 					case BaseEncoding::KEY_LIST:
 					case BaseEncoding::KEY_VALUE_LIST:
 					default:
@@ -1480,6 +1550,8 @@ public:
 				case BaseEncoding::ARGOSPOWER:
 				case BaseEncoding::AQPERIOD:
 				case BaseEncoding::ARGOSFREQ:
+				case BaseEncoding::GNSSFIXMODE:
+				case BaseEncoding::GNSSDYNMODEL:
 				default:
 					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;

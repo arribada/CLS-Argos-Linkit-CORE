@@ -1,8 +1,8 @@
 #ifndef __MOCK_LOCATION_HPP_
 #define __MOCK_LOCATION_HPP_
 
+#include "mock_comparators.hpp"
 #include "service_scheduler.hpp"
-#include "mock_std_function_comparator.hpp"
 
 class MockLocationScheduler : public ServiceScheduler {
 public:

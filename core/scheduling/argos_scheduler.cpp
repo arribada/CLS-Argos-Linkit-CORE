@@ -444,7 +444,7 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 		PACK_BITS(gps_entry.info.headMot * DEGREES_PER_UNIT, packet, base_pos, 8);
 		DEBUG_TRACE("ArgosScheduler::build_short_packet: heading=%u", (unsigned int)(gps_entry.info.headMot * DEGREES_PER_UNIT));
 		if (gps_entry.info.fixType == FIXTYPE_3D) {
-			int32_t altitude = gps_entry.info.height / (MM_PER_METER * METRES_PER_UNIT);
+			int32_t altitude = gps_entry.info.hMSL / (MM_PER_METER * METRES_PER_UNIT);
 			if (altitude > MAX_ALTITUDE) {
 				DEBUG_WARN("ArgosScheduler::build_short_packet: altitude %d (x 40m) exceeds maximum - truncating", altitude);
 				altitude = MAX_ALTITUDE;

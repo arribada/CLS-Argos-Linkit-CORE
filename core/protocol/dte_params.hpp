@@ -57,6 +57,8 @@ static const BaseMap param_map[] = {
 	{ "PP_LINEAR_MARGIN", "PPP05", BaseEncoding::UINT, 1U, 3600U, {}, true, true },
 	{ "PP_COMP_STEP", "PPP06", BaseEncoding::UINT, 1U, 1000U, {}, true, true },
 	{ "GNSS_COLD_ACQ_TIMEOUT", "GNP09", BaseEncoding::UINT, 10U, 600U, {}, true, true },
+	{ "GNSS_FIX_MODE", "GNP10", BaseEncoding::GNSSFIXMODE, 0U, 0U, {1U, 2U, 3U}, true, true },
+	{ "GNSS_DYN_MODEL", "GNP11", BaseEncoding::GNSSDYNMODEL, 0U, 0U, {0U, 2U, 3U, 4U, 5U, 6U, 7U, 8U, 9U, 10U}, true, true },
 };
 
 #endif // __DTE_PARAMS_HPP_

@@ -393,7 +393,8 @@ M8QReceiver::SendReturnCode M8QReceiver::send_navigation_database()
     return SendReturnCode::SUCCESS;
 }
 
-void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_callback = nullptr)
+void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
+		                   std::function<void(GNSSData data)> data_notification_callback = nullptr)
 {
     if (m_state == State::POWERED_ON)
         return;
@@ -425,7 +426,7 @@ void M8QReceiver::power_on(std::function<void(GNSSData data)> data_notification_
     ret = disable_timepulse_output();         if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_power_management();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_lower_power_mode();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
-    ret = setup_simple_navigation_settings(); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
+    ret = setup_simple_navigation_settings(nav_settings); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_expert_navigation_settings(); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = supply_time_assistance();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = send_navigation_database();         if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
@@ -724,13 +725,13 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_lower_power_mode()
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_RXM, cfg_msg_cfg_rxm);
 }
 
-M8QReceiver::SendReturnCode M8QReceiver::setup_simple_navigation_settings()
+M8QReceiver::SendReturnCode M8QReceiver::setup_simple_navigation_settings(const GPSNavSettings& nav_settings)
 {
     CFG::NAV5::MSG_NAV5 cfg_msg_cfg_nav5 =
     {
         .mask = CFG::NAV5::MASK_DYN | CFG::NAV5::MASK_MIN_EL | CFG::NAV5::MASK_POS_FIX_MODE | CFG::NAV5::MASK_POS_MASK | CFG::NAV5::MASK_TIME_MASK | CFG::NAV5::MASK_STATIC_HOLD_MASK | CFG::NAV5::MASK_DGPS_MASK | CFG::NAV5::MASK_CNO_THRESHOLD | CFG::NAV5::MASK_UTC,
-        .dynModel = CFG::NAV5::DYNMODEL_SEA,
-        .fixMode = CFG::NAV5::FIXMODE_2D_ONLY,
+        .dynModel = (CFG::NAV5::DynModel)nav_settings.dyn_model,
+        .fixMode = (CFG::NAV5::FixMode)nav_settings.fix_mode,
         .fixedAlt = 0,
         .fixedAltVar = 10000,
         .minElev = 5,

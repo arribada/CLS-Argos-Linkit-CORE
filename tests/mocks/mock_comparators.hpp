@@ -2,6 +2,25 @@
 
 #include "CppUTestExt/MockSupportPlugin.h"
 #include <functional>
+#include "gps_scheduler.hpp"
+
+class MockGPSNavSettingsComparator : public MockNamedValueComparator
+{
+public:
+    virtual bool isEqual(const void* object1, const void* object2)
+	{
+    	return ((GPSNavSettings *)object1)->fix_mode == ((GPSNavSettings *)object2)->fix_mode &&
+    			((GPSNavSettings *)object1)->dyn_model == ((GPSNavSettings *)object2)->dyn_model;
+	}
+
+    virtual SimpleString valueToString(const void* object)
+	{
+    	(void)object;
+		// The valueToString is called when an error message is printed and it needs to print the actual and expected values
+		// It is unclear how this should be implemented
+    	return "Unknown";
+	}
+};
 
 // Compares two "const std::function<void()>" for equality
 class MockStdFunctionVoidComparator : public MockNamedValueComparator
