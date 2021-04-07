@@ -11,8 +11,10 @@ extern Logger *sensor_log;
 extern BatteryMonitor *battery_monitor;
 extern RTC *rtc;
 
-#define MS_PER_SEC  (1000)
-#define SEC_PER_MIN (60)
+#define MS_PER_SEC         (1000)
+#define SEC_PER_MIN        (60)
+#define FIRST_AQPERIOD_SEC (30)     // Schedule for first AQPERIOD to accelerate first fix
+
 
 void GPSScheduler::start(std::function<void(ServiceEvent)> data_notification_callback)
 {
@@ -22,6 +24,7 @@ void GPSScheduler::start(std::function<void(ServiceEvent)> data_notification_cal
     m_gnss_data.pending_data_logging = false;
     m_gnss_data.pending_rtc_set = false;
     m_is_first_fix_found = false;
+    m_is_first_schedule = true;
 
     reschedule();
 }
@@ -57,7 +60,7 @@ void GPSScheduler::reschedule()
     }
 
     std::time_t now = rtc->gettime();
-    uint32_t aq_period = m_gnss_config.dloc_arg_nom;
+    uint32_t aq_period = m_is_first_schedule ? FIRST_AQPERIOD_SEC : m_gnss_config.dloc_arg_nom;
 
     // Find the next schedule time aligned to UTC 00:00
     std::time_t next_schedule = now - (now % aq_period) + aq_period;
@@ -80,6 +83,9 @@ void GPSScheduler::task_acquisition_period() {
     DEBUG_TRACE("GPSScheduler::task_acquisition_period");
     try
     {
+    	// Clear the first schedule indication flag
+    	m_is_first_schedule = false;
+
     	GPSNavSettings nav_settings = {
         	m_gnss_config.fix_mode,
     		m_gnss_config.dyn_model
