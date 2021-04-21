@@ -460,11 +460,11 @@ TEST(Encoder, PARAM_ARGOS_MODE)
 	p = { ParamID::ARGOS_MODE, BaseArgosMode::LEGACY};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;ARP01=1\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;ARP01=2\r", s.c_str());
 	p = { ParamID::ARGOS_MODE, BaseArgosMode::PASS_PREDICTION};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;ARP01=2\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;ARP01=1\r", s.c_str());
 	p = { ParamID::ARGOS_MODE, BaseArgosMode::DUTY_CYCLE};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
@@ -792,11 +792,11 @@ TEST(Encoder, PARAM_LB_ARGOS_MODE)
 	p = { ParamID::LB_ARGOS_MODE, BaseArgosMode::LEGACY};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;LBP04=1\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;LBP04=2\r", s.c_str());
 	p = { ParamID::LB_ARGOS_MODE, BaseArgosMode::PASS_PREDICTION};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#007;LBP04=2\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#007;LBP04=1\r", s.c_str());
 	p = { ParamID::LB_ARGOS_MODE, BaseArgosMode::DUTY_CYCLE};
 	v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);

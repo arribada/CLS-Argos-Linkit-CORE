@@ -79,12 +79,12 @@ TEST(Decoder, ArgosModeParsing)
 	s = "$O;PARMR#007;ARP01=1\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMR_RESP == command);
-	CHECK_TRUE(BaseArgosMode::LEGACY == std::get<BaseArgosMode>(param_values[0].value));
+	CHECK_TRUE(BaseArgosMode::PASS_PREDICTION == std::get<BaseArgosMode>(param_values[0].value));
 	param_values.clear();
 	s = "$O;PARMR#007;ARP01=2\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMR_RESP == command);
-	CHECK_TRUE(BaseArgosMode::PASS_PREDICTION == std::get<BaseArgosMode>(param_values[0].value));
+	CHECK_TRUE(BaseArgosMode::LEGACY == std::get<BaseArgosMode>(param_values[0].value));
 	param_values.clear();
 	s = "$O;PARMR#007;ARP01=3\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));

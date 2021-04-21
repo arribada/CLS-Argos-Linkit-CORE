@@ -676,7 +676,23 @@ protected:
 		encode(output, x);
 	}
 	static inline void encode(std::ostringstream& output, const BaseArgosMode& value) {
-		encode(output, (unsigned int&)value);
+		switch (value) {
+		case BaseArgosMode::OFF:
+			encode(output, 0U);
+			break;
+		case BaseArgosMode::PASS_PREDICTION:
+			encode(output, 1U);
+			break;
+		case BaseArgosMode::LEGACY:
+			encode(output, 2U);
+			break;
+		case BaseArgosMode::DUTY_CYCLE:
+			encode(output, 3U);
+			break;
+		default:
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+			break;
+		}
 	}
 	static inline void encode(std::ostringstream& output, const BaseArgosPower& value) {
 		encode(output, (unsigned int&)value);
@@ -1181,9 +1197,9 @@ private:
 		if (s == "0") {
 			return BaseArgosMode::OFF;
 		} else if (s == "1") {
-			return BaseArgosMode::LEGACY;
-		} else if (s == "2") {
 			return BaseArgosMode::PASS_PREDICTION;
+		} else if (s == "2") {
+			return BaseArgosMode::LEGACY;
 		} else if (s == "3") {
 			return BaseArgosMode::DUTY_CYCLE;
 		} else {

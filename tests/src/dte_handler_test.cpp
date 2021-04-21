@@ -386,20 +386,20 @@ TEST(DTEHandler, DUMPD_REQ)
 	mock().expectOneCall("read").onObject(mock_sensor_log).withIntParameter("index", 0).ignoreOtherParameters();
 
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;DUMPD#010;0,1,AAAAAAAAAAAA\r", resp.c_str());
+	STRCMP_EQUAL("$O;DUMPD#010;0,0,AAAAAAAAAAAA\r", resp.c_str());
 
 	// Check N entries are retrieved requiring two passes
 	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(20);
 	for (unsigned int i = 0; i < 16; i++)
 		mock().expectOneCall("read").onObject(mock_sensor_log).withIntParameter("index", i).ignoreOtherParameters();
 	CHECK_TRUE(DTEAction::AGAIN == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;DUMPD#0C4;0,2,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r", resp.c_str());
+	STRCMP_EQUAL("$O;DUMPD#0C4;0,1,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r", resp.c_str());
 
 	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(20);
 	for (unsigned int i = 16; i < 20; i++)
 		mock().expectOneCall("read").onObject(mock_sensor_log).withIntParameter("index", i).ignoreOtherParameters();
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;DUMPD#034;1,2,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r", resp.c_str());
+	STRCMP_EQUAL("$O;DUMPD#034;1,1,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r", resp.c_str());
 
 	mock().checkExpectations();
 }
@@ -412,7 +412,7 @@ TEST(DTEHandler, DUMPD_REQ_EmptyLogFile)
 	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(0);
 
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;DUMPD#004;0,1,\r", resp.c_str());
+	STRCMP_EQUAL("$O;DUMPD#004;0,0,\r", resp.c_str());
 
 	mock().checkExpectations();
 }

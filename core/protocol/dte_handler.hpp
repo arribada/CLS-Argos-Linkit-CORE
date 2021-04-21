@@ -38,13 +38,13 @@ extern Logger *system_log;
 
 class DTEHandler {
 private:
-	unsigned int m_dumpd_count;
-	unsigned int m_dumpd_offset;
+	unsigned int m_dumpd_NNN;
+	unsigned int m_dumpd_mmm;
 
 public:
 	DTEHandler() {
-		m_dumpd_count = 0;
-		m_dumpd_offset = 0;
+		m_dumpd_NNN = 0;
+		m_dumpd_mmm = 0;
 	}
 
 	static std::string PARML_REQ(int error_code) {
@@ -281,10 +281,14 @@ public:
 
 		action = DTEAction::NONE;
 
+		// A bit of explanation here.  The protocol for DUMPD sends back a payload format of
+		// mmm,MMM,<payload>
+		// where mmm is a packet index and MMM is the maximum packet index whose value
+		// is NNN-1, where NNN is the total number of packets to send.
 		if (error_code) {
 			// Reset state variables back to zero if an error arises
-			m_dumpd_count = 0;
-			m_dumpd_offset = 0;
+			m_dumpd_NNN = 0;
+			m_dumpd_mmm = 0;
 			return DTEEncoder::encode(DTECommand::DUMPD_RESP, error_code);
 		}
 
@@ -301,19 +305,19 @@ public:
 
 		// Check to see if this is the first item
 		unsigned int total_entries = logger->num_entries();
-		if (0 == m_dumpd_count) {
-			m_dumpd_count = (total_entries + (DTE_HANDLER_MAX_LOG_DUMP_ENTRIES-1)) / DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
-			// Special case where log file is empty
-			m_dumpd_count = m_dumpd_count == 0 ? 1 : m_dumpd_count;
-			m_dumpd_offset = 0;
+		if (0 == m_dumpd_NNN) {
+			m_dumpd_NNN = (total_entries + (DTE_HANDLER_MAX_LOG_DUMP_ENTRIES-1)) / DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
+			// Special case where log file is empty we set NNN to 1 and will send an empty payload
+			m_dumpd_NNN = m_dumpd_NNN == 0 ? 1 : m_dumpd_NNN;
+			m_dumpd_mmm = 0;
 		}
 
 		LogEntry log_entry;
 		BaseRawData raw_data;
-		unsigned int start_index = m_dumpd_offset * DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
+		unsigned int start_index = m_dumpd_mmm * DTE_HANDLER_MAX_LOG_DUMP_ENTRIES;
 		unsigned int num_entries = std::min(total_entries - start_index, DTE_HANDLER_MAX_LOG_DUMP_ENTRIES);
-		raw_data.ptr = nullptr;  // log_entries;
-		raw_data.length = 0; // std::min(DTE_HANDLER_MAX_LOG_DUMP_ENTRIES, num_entries);
+		raw_data.ptr = nullptr;
+		raw_data.length = 0;
 
 		for (unsigned int i = 0; i < num_entries; i++) {
 			logger->read(&log_entry, i + start_index);
@@ -322,13 +326,12 @@ public:
 			raw_data.str.append((const char*)&log_entry.data[0], log_entry.header.payload_size);
 		}
 
-		//raw_data.length *= sizeof(LogEntry);
+		// Note that MMM=NNN-1
+		std::string msg = DTEEncoder::encode(DTECommand::DUMPD_RESP, error_code, m_dumpd_mmm, m_dumpd_NNN - 1, raw_data);
 
-		std::string msg = DTEEncoder::encode(DTECommand::DUMPD_RESP, error_code, m_dumpd_offset, m_dumpd_count, raw_data);
-
-		m_dumpd_offset++; // Increment in readiness for next iteration
-		if (m_dumpd_offset == m_dumpd_count) {
-			m_dumpd_count = 0; // Marks the sequence as complete
+		m_dumpd_mmm++; // Increment in readiness for next iteration
+		if (m_dumpd_mmm == m_dumpd_NNN) {
+			m_dumpd_NNN = 0; // Marks the sequence as complete
 		} else {
 			action = DTEAction::AGAIN;  // Inform caller that we need another iteration
 		}
