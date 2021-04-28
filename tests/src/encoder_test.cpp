@@ -402,10 +402,10 @@ TEST(Encoder, PARAM_ARGOS_FREQ)
 
 TEST(Encoder, PARAM_ARGOS_FREQ_OutOfRangeCheck)
 {
-	ParamValue p = { ParamID::ARGOS_FREQ, 300.0};
+	ParamValue p = { ParamID::ARGOS_FREQ, 401.6199};
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
-	p = { ParamID::ARGOS_FREQ, 402.0};
+	p = { ParamID::ARGOS_FREQ, 401.6801};
 	v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
 }

@@ -118,7 +118,7 @@ protected:
 		/* minute */ 0,
 		/* comms_vector */ BaseCommsVector::UNCHANGED,
 		/* delta_arg_loc_argos_seconds */ 0,
-		/* delta_arg_loc_cellular_seconds */ 0,
+		/* delta_arg_loc_cellular_seconds */ 1,
 		/* argos_extra_flags_enable */ false,
 		/* argos_depth_pile */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* argos_power */ BaseArgosPower::POWER_500_MW,

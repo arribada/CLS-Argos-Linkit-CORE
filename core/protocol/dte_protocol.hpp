@@ -350,7 +350,7 @@ public:
 		PACK_BITS_CAST(uint32_t, zone.comms_vector, data, base_pos, 2);
 		unsigned int delta_arg_loc_argos_seconds = encode_arg_loc_argos(zone.delta_arg_loc_argos_seconds);
 		PACK_BITS(delta_arg_loc_argos_seconds, data, base_pos, 4);
-		PACK_BITS(0U, data, base_pos, 7); // zone.delta_arg_loc_cellular_seconds not used!
+		PACK_BITS(zone.delta_arg_loc_cellular_seconds, data, base_pos, 7);
 		PACK_BITS(zone.argos_extra_flags_enable, data, base_pos, 1);
 		unsigned int argos_depth_pile;
 		argos_depth_pile = encode_depth_pile(zone.argos_depth_pile);
