@@ -158,7 +158,7 @@ public:
 
 	template <typename T>
 	T& read_param(ParamID param_id) {
-		{ // try {
+		try {
 			if (is_valid()) {
 
 				if (param_id == ParamID::BATT_SOC) {
@@ -179,22 +179,22 @@ public:
 			}
 			else
 				throw CONFIG_STORE_CORRUPTED;
-		} //catch (...) {
-		//	throw CONFIG_STORE_CORRUPTED;
-		//}
+		} catch (...) {
+			throw CONFIG_STORE_CORRUPTED;
+		}
 	}
 
 	template<typename T>
 	void write_param(ParamID param_id, T& value) {
-		//try {
+		try {
 			if (is_valid()) {
 				m_params.at((unsigned)param_id) = value;
 				//serialize_config(param_id);
 			} else
 				throw CONFIG_STORE_CORRUPTED;
-		//} catch (...) {
-		//	throw CONFIG_STORE_CORRUPTED;
-		//}
+		} catch (...) {
+			throw CONFIG_STORE_CORRUPTED;
+		}
 	}
 
 	void save_params() {

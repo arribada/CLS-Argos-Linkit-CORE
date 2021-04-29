@@ -136,13 +136,13 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
         return err_code;
     }
 
-    // Add File Upload End Status characteristic.
+    // Add File Upload Status characteristic.
     memset(&add_char_params, 0, sizeof(add_char_params));
-    add_char_params.uuid             = STM_OTA_UUID_FILE_UPLOAD_END_STATUS;
+    add_char_params.uuid             = STM_OTA_UUID_FILE_UPLOAD_STATUS;
     add_char_params.uuid_type        = p_stm_ota->uuid_type;
     add_char_params.init_len         = 0;
     add_char_params.is_var_len       = false;
-    add_char_params.max_len          = 1;
+    add_char_params.max_len          = 3;
     add_char_params.char_props.write  = 0;
     add_char_params.char_props.read   = 1;
     add_char_params.char_props.notify = 1;
@@ -176,15 +176,15 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
                               &p_stm_ota->ota_raw_data_char_handles);
 }
 
-uint32_t ble_stm_ota_on_file_upload_end_status(uint16_t conn_handle, ble_stm_ota_t * p_stm_ota, uint8_t status)
+uint32_t ble_stm_ota_on_file_upload_status(uint16_t conn_handle, ble_stm_ota_t * p_stm_ota, uint8_t status[3])
 {
     ble_gatts_hvx_params_t params;
-    uint16_t len = sizeof(status);
+    uint16_t len = 3;
 
     memset(&params, 0, sizeof(params));
     params.type   = BLE_GATT_HVX_NOTIFICATION;
     params.handle = p_stm_ota->file_upload_end_status_char_handles.value_handle;
-    params.p_data = &status;
+    params.p_data = status;
     params.p_len  = &len;
 
     return sd_ble_gatts_hvx(conn_handle, &params);

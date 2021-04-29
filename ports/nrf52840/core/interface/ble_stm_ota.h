@@ -45,17 +45,19 @@
  *
  * @brief STM OTA Update Service
  *
- * @details This module implements the STM OTA Update Service (0000FE20-CC7A-482A-984A-7F2ED5B3E58F) comprising the following characteristics:
+ * @details This module implements the STM OTA Update Service (0000FE20-8E22-4541-9D4C-21EDAE82ED19) comprising the following characteristics:
  *
- *          Base Address (0000FE22-CC7A-482A-984A-7F2ED5B3E58F) - 4 bytes
+ *          Base Address (0000FE22-8E22-4541-9D4C-21EDAE82ED19) - 4 bytes
  *            Byte 0 - Actions:  0=>STOP all upload, 1=>START file upload, 2=>start user app upload, 7=>upload finished
  *                            :  8=>cancel upload
  *            Bytes 1-3: Address: 0xXXXXXX
  *
- *          File Upload End Status (0000FE23-CC7A-482A-984A-7F2ED5B3E58F)
- *            Byte 0 - Status: 0=>OK, 1=>Not OK
+ *          File Upload End Status (0000FE23-8E22-4541-9D4C-21EDAE82ED19)
+ *            Byte 0 - File Reception: 0=>OK, 1=>Interrupted, FF=>Ignore
+ *            Byte 1 - File Integrity: 0=>OK, 1=>Not OK, FF=>Ignore
+ *            Byte 2 - Start Upload: 0=>OK, 1=>Invalid Base Addr 2=>Busy, FF=>Ignore
  *
- *          OTA Raw Data (0000FE24-CC7A-482A-984A-7F2ED5B3E58F)
+ *          OTA Raw Data (0000FE24-8E22-4541-9D4C-21EDAE82ED19)
  *            Bytes 0-19: Raw File Data
  *
  *          During initialization, the module adds the characteristics to the BLE stack database.
@@ -99,17 +101,24 @@ NRF_SDH_BLE_OBSERVER(_name ## _obs,                                             
                      BLE_STM_OTA_BLE_OBSERVER_PRIO,                                                 \
                      ble_stm_ota_on_ble_evt, &_name)
 
-#define STM_OTA_UUID_BASE        {0x8F, 0xE5, 0xB3, 0xD5, 0x2E, 0x7F, 0x4A, 0x98, \
-                              	  0x2A, 0x48, 0x7A, 0xCC, 0x00, 0x00, 0x00, 0x00}
+// 00000000-8E22-4541-9D4C-21EDAE82ED19
+#define STM_OTA_UUID_BASE        {0x19, 0xED, 0x82, 0xAE, 0xED, 0x21, 0x4C, 0x9D, \
+                              	  0x41, 0x45, 0x22, 0x8E, 0x00, 0x00, 0x00, 0x00}
 
 
 #define STM_OTA_UUID_SERVICE     			0xFE20
 #define STM_OTA_UUID_BASE_ADDRESS 			0xFE22
-#define STM_OTA_UUID_FILE_UPLOAD_END_STATUS	0xFE23
+#define STM_OTA_UUID_FILE_UPLOAD_STATUS		0xFE23
 #define STM_OTA_UUID_OTA_RAW_DATA			0xFE24
 
-#define STM_OTA_FILE_UPLOAD_STATUS_OK		0
-#define STM_OTA_FILE_UPLOAD_STATUS_NOT_OK	1
+#define STM_OTA_STATUS_IGNORE						0xFF
+#define STM_OTA_STATUS_FILE_RECEPTION_OK			0x00
+#define STM_OTA_STATUS_FILE_RECEPTION_INTERRUPTED	0x01
+#define STM_OTA_STATUS_INTEGRITY_OK					0x00
+#define STM_OTA_STATUS_INTEGRITY_NOT_OK				0x01
+#define STM_OTA_STATUS_START_UPLOAD_OK				0x00
+#define STM_OTA_STATUS_START_UPLOAD_BUSY			0x01
+
 
 // Forward declaration of the ble_lbs_t type.
 typedef struct ble_stm_ota_s ble_stm_ota_t;
@@ -185,15 +194,15 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
 void ble_stm_ota_on_ble_evt(ble_evt_t const * p_ble_evt, void * p_context);
 
 
-/**@brief Function for sending File Upload End Status.
+/**@brief Function for sending File Upload Status.
  *
  ' @param[in] conn_handle   Handle of the peripheral connection to which the button state notification will be sent.
  * @param[in] p_lbs         STM OTA Button Service structure.
- * @param[in] status        Success/Failure status code
+ * @param[in] status        Success/Failure status code (3 bytes refer to above characteristic definition)
  *
  * @retval NRF_SUCCESS If the notification was sent successfully. Otherwise, an error code is returned.
  */
-uint32_t ble_stm_ota_on_file_upload_end_status(uint16_t conn_handle, ble_stm_ota_t * p_stm_ota, uint8_t status);
+uint32_t ble_stm_ota_on_file_upload_status(uint16_t conn_handle, ble_stm_ota_t * p_stm_ota, uint8_t status[3]);
 
 
 #ifdef __cplusplus
