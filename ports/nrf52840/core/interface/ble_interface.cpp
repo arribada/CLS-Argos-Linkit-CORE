@@ -408,12 +408,12 @@ void BleInterface::stm_ota_event_handler(uint16_t conn_handle, ble_stm_ota_t * p
 				s_evt.event_type = BLEServiceEventType::OTA_END;
 				try {
 					m_on_event(s_evt);
-					uint8_t status[3] = { STM_OTA_STATUS_FILE_RECEPTION_OK, STM_OTA_STATUS_IGNORE, STM_OTA_STATUS_IGNORE };
+					uint8_t status[3] = { STM_OTA_STATUS_FILE_RECEPTION_OK, STM_OTA_STATUS_INTEGRITY_OK, STM_OTA_STATUS_IGNORE };
 					ble_stm_ota_on_file_upload_status(conn_handle, p_stm_ota, status);
 				} catch (ErrorCode e) {
 					DEBUG_TRACE("OTA_END: Got error: %u", e);
 					if (OTA_TRANSFER_CRC_ERROR == e) {
-						uint8_t status[3] = { STM_OTA_STATUS_IGNORE, STM_OTA_STATUS_INTEGRITY_NOT_OK, STM_OTA_STATUS_IGNORE };
+						uint8_t status[3] = { STM_OTA_STATUS_FILE_RECEPTION_OK, STM_OTA_STATUS_INTEGRITY_NOT_OK, STM_OTA_STATUS_IGNORE };
 						ble_stm_ota_on_file_upload_status(conn_handle, p_stm_ota, status);
 						break;
 					} else {
