@@ -47,16 +47,17 @@ public:
 	TaskHandle post_task_prio(std::function<void()> const &task_func, unsigned int priority = DEFAULT_PRIORITY, unsigned int delay_ms = 0) {
 
 		Task task;
-		task.m_id = m_unique_id++;
 		task.m_priority = priority;
 		task.m_func = task_func;
 
-		if (!delay_ms)
 		{
-			// Task is requested to be processed on next run()
-			// Safetly add this task to our task list in priority order
+			InterruptLock lock;
+			task.m_id = m_unique_id++; // Incrementing this is non-atomic so we must do so within a lock
+
+			if (!delay_ms)
 			{
-				InterruptLock lock;
+				// Task is requested to be processed on next run()
+				// Safetly add this task to our task list in priority order
 				auto iter = m_tasks.begin();
 				while (iter != m_tasks.end())
 				{
@@ -66,18 +67,14 @@ public:
 				}
 				m_tasks.insert(iter, task);
 			}
-		}
-		else
-		{
-			// If this task was delayed then schedule a timer to start it
-			uint64_t t_sched = m_timer->get_counter() + delay_ms;
-			//DEBUG_TRACE("Scheduler::post_task_prio: #m_tasks=%u now=%llu delay_ms=%u t_sched=%llu", m_tasks.size(), m_timer->get_counter(), delay_ms, t_sched);
+			else
 			{
-				InterruptLock lock;
+				// If this task was delayed then schedule a timer to start it
+				uint64_t t_sched = m_timer->get_counter() + delay_ms;
+
 				// We do this by setting up our timer to call this function after the delay has elapsed
 				m_timer_schedules[*task.m_id] = m_timer->add_schedule([this, task_func, priority]() { this->post_task_prio(task_func, priority, 0); }, t_sched);
 			}
-
 		}
 
 		TaskHandle handle;
