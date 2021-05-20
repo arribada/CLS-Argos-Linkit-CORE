@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iostream>
 
 #include "dte_handler.hpp"
 #include "config_store_fs.hpp"

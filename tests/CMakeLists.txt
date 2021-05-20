@@ -31,6 +31,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     LFS_NO_DEBUG
     #DEBUG_ENABLE
+    CPPUTEST
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
@@ -119,7 +120,6 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/hardware/sws.cpp"
     "${ROOT_DIR}/core/sm/gentracker.cpp"
     "${LINUX_DIR}/interrupt_lock.cpp"
-    "${NRF_DIR}/core/hardware/nrf_timer.cpp"
     "${NRF_DIR}/core/hardware/nrf_switch.cpp"
     "${NRF_DIR}/core/hardware/nrf_battery_mon.cpp"
     "src/timer_test.cpp"
@@ -131,7 +131,6 @@ target_sources(${PROJECT_NAME} PRIVATE
 	"src/decoder_test.cpp"
 	"src/config_store_test.cpp"
     "src/dte_handler_test.cpp"
-    "src/nrf_timer_test.cpp"
     "src/argos_test.cpp"
     "src/bch_test.cpp"
     "src/crc8_test.cpp"

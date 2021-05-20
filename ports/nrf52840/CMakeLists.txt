@@ -233,6 +233,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     FW_APP_VERSION_STR="${FW_APP_VERSION}"s
     FW_APP_VERSION_STR_C="${FW_APP_VERSION}"
     #WORKAROUND_ALLCAST_CONSTELLATION_STATUS_ENCODING_BUG
+    _XOPEN_SOURCE=700 # Enables strptime() usage
 )
 
 target_compile_options(${TARGET_NAME} PRIVATE
