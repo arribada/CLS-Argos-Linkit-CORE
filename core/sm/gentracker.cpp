@@ -43,8 +43,17 @@ void GenTracker::react(ReedSwitchEvent const &event)
 	if (event.state) {
 		// Start reed switch hold timer tasks in case this is a hold gesture
 		m_reed_trigger_start_time = system_timer->get_counter();
-		m_task_trigger_config_state = system_scheduler->post_task_prio([this](){ if (!is_in_state<ConfigurationState>()) transit<ConfigurationState>(); }, Scheduler::DEFAULT_PRIORITY, TRANSIT_CONFIG_HOLD_TIME_MS);
-		m_task_trigger_off_state = system_scheduler->post_task_prio([this](){ transit<OffState>(); }, Scheduler::DEFAULT_PRIORITY, TRANSIT_OFF_HOLD_TIME_MS);
+		m_task_trigger_config_state = system_scheduler->post_task_prio([this](){
+			if (!is_in_state<ConfigurationState>())
+				transit<ConfigurationState>();
+		},
+		"GenTrackerReedSwitchTransitConfigState",
+		Scheduler::DEFAULT_PRIORITY, TRANSIT_CONFIG_HOLD_TIME_MS);
+		m_task_trigger_off_state = system_scheduler->post_task_prio([this](){
+			transit<OffState>();
+		},
+		"GenTrackerReedSwitchTransitOffState",
+		Scheduler::DEFAULT_PRIORITY, TRANSIT_OFF_HOLD_TIME_MS);
 	} else {
 		// Cancel any pending hold gestures
 		system_scheduler->cancel_task(m_task_trigger_config_state);
@@ -83,7 +92,7 @@ void BootState::entry() {
 		if (main_filesystem->format() < 0 || main_filesystem->mount() < 0)
 		{
 			// We can't mount a formatted filesystem, something bad has happened
-			system_scheduler->post_task_prio(notify_bad_filesystem_error);
+			system_scheduler->post_task_prio(notify_bad_filesystem_error, "GenTrackerFileSystemError");
 			return;
 		}
 	}
@@ -111,10 +120,11 @@ void BootState::entry() {
 		system_scheduler->post_task_prio([this](){
 			transit<IdleState>();
 		},
+		"GenTrackerBootStateTransitIdleState",
 		Scheduler::DEFAULT_PRIORITY,
 		1000);
 	} catch (...) {
-		system_scheduler->post_task_prio(notify_bad_filesystem_error);
+		system_scheduler->post_task_prio(notify_bad_filesystem_error, "GenTrackerFilesystemError");
 	}
 }
 
@@ -130,7 +140,12 @@ void OffState::entry() {
 	DEBUG_INFO("entry: OffState");
 	battery_monitor->stop();
 	status_led->flash(RGBLedColor::WHITE, 125);  // Flash 4X speed during power down
-	m_off_state_task = system_scheduler->post_task_prio([](){ status_led->off(); PMU::powerdown(); }, Scheduler::DEFAULT_PRIORITY, OFF_LED_PERIOD_MS);
+	m_off_state_task = system_scheduler->post_task_prio([](){
+		status_led->off();
+		PMU::powerdown();
+	},
+	"GenTrackerOffStateTransitPowerDown",
+	Scheduler::DEFAULT_PRIORITY, OFF_LED_PERIOD_MS);
 }
 
 void OffState::exit() {
@@ -147,10 +162,18 @@ void IdleState::entry() {
 			status_led->set(RGBLedColor::YELLOW);
 		else
 			status_led->set(RGBLedColor::GREEN);
-		m_idle_state_task = system_scheduler->post_task_prio([this](){ transit<OperationalState>(); }, Scheduler::DEFAULT_PRIORITY, IDLE_PERIOD_MS);
+		m_idle_state_task = system_scheduler->post_task_prio([this](){
+			transit<OperationalState>();
+		},
+		"GenTrackerIdleStateTransitOperationalState",
+		Scheduler::DEFAULT_PRIORITY, IDLE_PERIOD_MS);
 	} else {
 		status_led->set(RGBLedColor::RED);
-		m_idle_state_task = system_scheduler->post_task_prio([this](){ transit<ErrorState>(); }, Scheduler::DEFAULT_PRIORITY, IDLE_PERIOD_MS);
+		m_idle_state_task = system_scheduler->post_task_prio([this](){
+			transit<ErrorState>();
+		},
+		"GenTrackerIdleStateTransitErrorState",
+		Scheduler::DEFAULT_PRIORITY, IDLE_PERIOD_MS);
 	}
 }
 
@@ -173,7 +196,11 @@ void OperationalState::entry() {
 		status_led->flash(RGBLedColor::YELLOW);
 	else
 		status_led->flash(RGBLedColor::GREEN);
-	system_scheduler->post_task_prio([](){ status_led->off(); }, Scheduler::DEFAULT_PRIORITY, LED_INDICATION_PERIOD_MS);
+	system_scheduler->post_task_prio([](){
+		status_led->off();
+	},
+	"GenTrackerOperationalStateTransitLedOff",
+	Scheduler::DEFAULT_PRIORITY, LED_INDICATION_PERIOD_MS);
 	saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
 	comms_scheduler->start([](ServiceEvent e) {
 		if (e == ServiceEvent::ARGOS_TX_START)
@@ -228,7 +255,8 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 	case BLEServiceEventType::DTE_DATA_RECEIVED:
 		DEBUG_TRACE("ConfigurationState::on_ble_event: DTE_DATA_RECEIVED");
 		restart_inactivity_timeout();
-		system_scheduler->post_task_prio(std::bind(&ConfigurationState::process_received_data, this));
+		system_scheduler->post_task_prio(std::bind(&ConfigurationState::process_received_data, this),
+				"BLEProcessReceivedData");
 		break;
 	case BLEServiceEventType::OTA_START:
 		DEBUG_INFO("ConfigurationState::on_ble_event: OTA_START");
@@ -239,7 +267,9 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 		DEBUG_INFO("ConfigurationState::on_ble_event: OTA_END");
 		restart_inactivity_timeout();
 		ota_updater->complete_file_transfer();
-		system_scheduler->post_task_prio(std::bind(&OTAFileUpdater::apply_file_update, ota_updater));
+		system_scheduler->post_task_prio(std::bind(&OTAFileUpdater::apply_file_update, ota_updater),
+				"BLEApplyOTAFileUpdate"
+				);
 		break;
 	case BLEServiceEventType::OTA_ABORT:
 		DEBUG_INFO("ConfigurationState::on_ble_event: OTA_ABORT");
@@ -267,7 +297,9 @@ void ConfigurationState::on_ble_inactivity_timeout() {
 void ConfigurationState::restart_inactivity_timeout() {
 	//DEBUG_TRACE("Restart BLE inactivity timeout: %lu", system_timer->get_counter());
 	system_scheduler->cancel_task(m_ble_inactivity_timeout_task);
-	m_ble_inactivity_timeout_task = system_scheduler->post_task_prio(std::bind(&ConfigurationState::on_ble_inactivity_timeout, this), Scheduler::DEFAULT_PRIORITY, BLE_INACTIVITY_TIMEOUT_MS);
+	m_ble_inactivity_timeout_task = system_scheduler->post_task_prio(std::bind(&ConfigurationState::on_ble_inactivity_timeout, this),
+			"BLEInactivityTimeout",
+			Scheduler::DEFAULT_PRIORITY, BLE_INACTIVITY_TIMEOUT_MS);
 }
 
 void ConfigurationState::process_received_data() {
@@ -306,7 +338,11 @@ void ConfigurationState::process_received_data() {
 				DEBUG_INFO("Perform device reset");
 
 				// Execute this after 3 seconds to allow time for the BLE response to be sent
-				system_scheduler->post_task_prio([](){ PMU::reset(false); }, Scheduler::DEFAULT_PRIORITY, 3000);
+				system_scheduler->post_task_prio([](){
+					PMU::reset(false);
+				},
+				"DTEActionPMUReset",
+				Scheduler::DEFAULT_PRIORITY, 3000);
 			}
 			else if (action == DTEAction::SECUR)
 			{
@@ -321,7 +357,11 @@ void ConfigurationState::process_received_data() {
 void ErrorState::entry() {
 	DEBUG_INFO("entry: ErrorState");
 	status_led->flash(RGBLedColor::RED);
-	m_shutdown_task = system_scheduler->post_task_prio([this](){ transit<OffState>(); }, Scheduler::DEFAULT_PRIORITY, 5000);
+	m_shutdown_task = system_scheduler->post_task_prio([this](){
+		transit<OffState>();
+	},
+	"GenTrackerErrorStateTransitOffState",
+	Scheduler::DEFAULT_PRIORITY, 5000);
 }
 
 void ErrorState::exit() {

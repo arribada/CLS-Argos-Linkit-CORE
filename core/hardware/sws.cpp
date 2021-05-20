@@ -58,11 +58,15 @@ void SWS::sample_sws() {
 		m_sample_iteration = 0;
 		unsigned int new_sched = new_state ? m_period_underwater_ms : m_period_surface_ms;
 		DEBUG_TRACE("SWS::sample_sws: new_sched=%u", new_sched);
-		m_task_handle = system_scheduler->post_task_prio(std::bind(&SWS::sample_sws, this), Scheduler::DEFAULT_PRIORITY, new_sched);
+		m_task_handle = system_scheduler->post_task_prio(std::bind(&SWS::sample_sws, this),
+				"SWSSampleSwitch",
+				Scheduler::DEFAULT_PRIORITY, new_sched);
 
 	} else {
 		DEBUG_TRACE("SWS::sample_sws: new_sched=%u", SAMPLING_PERIOD_MS);
-		m_task_handle = system_scheduler->post_task_prio(std::bind(&SWS::sample_sws, this), Scheduler::DEFAULT_PRIORITY, SAMPLING_PERIOD_MS);
+		m_task_handle = system_scheduler->post_task_prio(std::bind(&SWS::sample_sws, this),
+				"SWSSampleSwitch",
+				Scheduler::DEFAULT_PRIORITY, SAMPLING_PERIOD_MS);
 	}
 }
 
@@ -79,7 +83,7 @@ void SWS::start(std::function<void(bool)> func) {
 	bool is_underwater_enabled = configuration_store->read_param<bool>(ParamID::UNDERWATER_EN);
 	// Do not schedule first sampling unless UNDERWATER_EN is set
 	if (is_underwater_enabled)
-		m_task_handle = system_scheduler->post_task_prio(std::bind(&SWS::sample_sws, this));
+		m_task_handle = system_scheduler->post_task_prio(std::bind(&SWS::sample_sws, this), "SWSSampleSwitch");
 }
 
 void SWS::stop() {

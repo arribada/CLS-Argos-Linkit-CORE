@@ -4,7 +4,7 @@
 #include "sdk_config.h"
 #include "nrfx_uarte.h"
 #include "nrfx_qspi.h"
-#include "nrfx_rtc.h"
+#include "drv_rtc.h"
 #include "nrfx_spim.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_saadc.h"
@@ -127,21 +127,21 @@ namespace BSP
     ////////////////////////////////// RTC definitions /////////////////////////////////
     enum RTC
     {
-    #if NRFX_CHECK(NRFX_RTC0_ENABLED)
-        RTC_RESERVED, // Reserved by the softdevice
-    #endif
-    #if NRFX_CHECK(NRFX_RTC1_ENABLED)
-        RTC_1, // Used by the app timer (there is likely scope to free this up by modifying the BLE connection handling)
-    #endif
-    #if NRFX_CHECK(NRFX_RTC2_ENABLED)
-        RTC_2,
-    #endif
-        RTC_TOTAL_NUMBER
+#if APP_TIMER_V2_RTC0_ENABLED
+    	RTC_RESERVED, // Reserved by the softdevice
+#endif
+#if APP_TIMER_V2_RTC1_ENABLED
+		RTC_1,
+#endif
+#if APP_TIMER_V2_RTC2_ENABLED
+		RTC_2,
+#endif
+		RTC_TOTAL_NUMBER
     };
 
     typedef struct
     {
-        nrfx_rtc_t rtc;
+    	drv_rtc_t rtc;
         uint8_t irq_priority;
     } RTC_InitTypeDefAndInst_t;
 

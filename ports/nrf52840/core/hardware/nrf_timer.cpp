@@ -1,7 +1,8 @@
 #include <atomic>
 #include <cstdint>
 #include "nrf_timer.hpp"
-#include "nrfx_rtc.h"
+#include "nrf_delay.h"
+#include "drv_rtc.h"
 #include "interrupt_lock.hpp"
 #include "bsp.hpp"
 #include "debug.hpp"
@@ -18,9 +19,8 @@ static constexpr uint16_t RTC_TIMER_PRESCALER = 32;
 static constexpr uint32_t TICKS_PER_OVERFLOW = 16777216;
 static constexpr uint32_t MILLISECONDS_PER_OVERFLOW = TICKS_TO_MS(TICKS_PER_OVERFLOW);
 
-//static volatile uint32_t g_overflows_occured;
-static std::atomic<uint32_t> g_overflows_occured;
-static_assert(std::atomic<uint32_t>::is_always_lock_free);
+static volatile uint32_t g_overflows_occured;
+static volatile uint64_t g_stamp64;
 
 struct Schedule
 {
@@ -32,90 +32,120 @@ struct Schedule
 static std::list<Schedule> g_schedules;
 static unsigned int g_unique_id;
 
-// If calling this function it is advisable to disable interrupts using an InterruptLock
+// Return current 64 bit tick count
+static uint64_t current_ticks()
+{
+    uint64_t now = drv_rtc_counter_get(&BSP::RTC_Inits[RTC_TIMER].rtc) + (g_overflows_occured * TICKS_PER_OVERFLOW);
+
+    // It is possible that base was not updated and an overflow occured, in this case 'now' will be
+    // 24bit value behind. An additional tick count updated on every 24 bit period is used to detect
+    // that case. Apart from that 'now' should never be behind previously read tick count.
+
+    if (now < g_stamp64) {
+        now += TICKS_PER_OVERFLOW;
+    }
+
+    return now;
+}
+
+// This should only be run from our RTC interrupt context
 static void setup_compare_interrupt()
 {
     if (!g_schedules.size())
     {
         // There is nothing scheduled so ensure our compare0 interrupt will not fire
-        nrfx_rtc_cc_disable(&BSP::RTC_Inits[RTC_TIMER].rtc, 0);
+        drv_rtc_compare_disable(&BSP::RTC_Inits[RTC_TIMER].rtc, 0);
         return;
     }
 
     // Check to see if the next scheduled task will occur before the RTC overflow
     uint64_t next_counter_overflow_ticks = (g_overflows_occured + 1) * TICKS_PER_OVERFLOW;
-    //uint64_t current_time_ticks = nrfx_rtc_counter_get(&BSP::RTC_Inits[RTC_TIMER].rtc) + (g_overflows_occured * TICKS_PER_OVERFLOW);
     uint64_t next_schedule_ticks = g_schedules.front().m_target_ticks;
 
-    //DEBUG_TRACE("setup_compare_interrupt: next_counter_overflow_ticks=%llu current_time_ticks=%llu next_schedule_ticks=%llu",
-    //		next_counter_overflow_ticks, current_time_ticks, next_schedule_ticks);
+    // Ensure that we only set an alarm that is at least 5 ticks away from now
+    // This is to ensure we do not set an alarm for a time that has already elapsed
+    auto current_tick = current_ticks();
+    if (next_schedule_ticks <= current_tick + 5)
+        next_schedule_ticks = current_tick + 5;
 
     if (next_schedule_ticks < next_counter_overflow_ticks)
     {
         // This schedule will occcur before our RTC overflow interrupt
         // Because of this we need to schedule a new interrupt so we wake up earlier to service it
         uint32_t compare_value = next_schedule_ticks % TICKS_PER_OVERFLOW;
-        nrfx_rtc_cc_set(&BSP::RTC_Inits[RTC_TIMER].rtc, 0, compare_value, true);
+        drv_rtc_compare_set(&BSP::RTC_Inits[RTC_TIMER].rtc, 0, compare_value, true);
     }
 }
 
-static void rtc_time_keeping_event_handler(nrfx_rtc_int_type_t int_type)
+static void rtc_time_keeping_event_handler(drv_rtc_t const * const  p_instance)
 {
     //DEBUG_TRACE("rtc_time_keeping_event_handler: int_type=%u", int_type);
 
-    if (NRFX_RTC_INT_OVERFLOW == int_type)
+    if (drv_rtc_overflow_pending(p_instance))
     {
         g_overflows_occured++;
-        setup_compare_interrupt();
     }
-    else if (NRFX_RTC_INT_COMPARE0 == int_type)
+    else if (drv_rtc_compare_pending(p_instance, 0))
     {
-        // A schedule must be due, so lets run it
+        // Schedule/s must be due, so lets run them
 
-        if (g_schedules.size())
+        auto schedule_itr = g_schedules.begin();
+        while (schedule_itr != g_schedules.end())
         {
-            Schedule schedule = g_schedules.front();
-            g_schedules.pop_front();
+            Schedule schedule = *schedule_itr; 
+            if (schedule.m_target_ticks <= current_ticks())
+            {
+                schedule_itr = g_schedules.erase(schedule_itr);
 
-            if (schedule.m_func)
-                schedule.m_func();
+                if (schedule.m_func)
+                    schedule.m_func();
+            }
+            else
+            {
+                // As schedules are in time order we can exit early as an optimisation
+                break;
+            }
         }
 
         //printf("Woken by COMPARE0\r\n");
-
-        setup_compare_interrupt();
+    } else if (drv_rtc_compare_pending(p_instance, 1))
+    {
+        g_stamp64 = current_ticks();
     }
+
+    setup_compare_interrupt();
 }
 
 void NrfTimer::init()
 {
     g_overflows_occured = 0;
+    g_stamp64 = 0;
 
-    const nrfx_rtc_config_t rtc_config =
-    {
+    drv_rtc_config_t rtc_config = {
         .prescaler          = RTC_TIMER_PRESCALER,
-        .interrupt_priority = BSP::RTC_Inits[RTC_TIMER].irq_priority,
-        .tick_latency       = 0,
-        .reliable           = false
+        .interrupt_priority = BSP::RTC_Inits[RTC_TIMER].irq_priority
     };
 
-    nrfx_rtc_init(&BSP::RTC_Inits[RTC_TIMER].rtc, &rtc_config, rtc_time_keeping_event_handler);
-    nrfx_rtc_overflow_enable(&BSP::RTC_Inits[RTC_TIMER].rtc, true);
+    drv_rtc_init(&BSP::RTC_Inits[RTC_TIMER].rtc, &rtc_config, rtc_time_keeping_event_handler);
+    drv_rtc_compare_set(&BSP::RTC_Inits[RTC_TIMER].rtc, 1, RTC_COUNTER_COUNTER_Msk >> 1, true);
+    drv_rtc_overflow_enable(&BSP::RTC_Inits[RTC_TIMER].rtc, true);
 }
 
 void NrfTimer::uninit()
 {
-    nrfx_rtc_uninit(&BSP::RTC_Inits[RTC_TIMER].rtc);
+    stop();
+
+    // Wait for the RTC instance to have actually stopped
+    nrf_delay_us(50);
 
     g_schedules.clear();
 }
 
 uint64_t NrfTimer::get_counter()
 {
-    uint64_t uptime;
-
+    // Current ticks is not atomic/thread-safe so we need to lock before calling it
     InterruptLock lock;
-    uptime = TICKS_TO_MS(nrfx_rtc_counter_get(&BSP::RTC_Inits[RTC_TIMER].rtc) + (g_overflows_occured * TICKS_PER_OVERFLOW));
+    uint64_t uptime = TICKS_TO_MS(current_ticks());
 
     return uptime;
 }
@@ -130,33 +160,32 @@ Timer::TimerHandle NrfTimer::add_schedule(std::function<void()> const &task_func
     schedule.m_func = task_func;
     schedule.m_target_ticks = target_count_ticks;
 
-    InterruptLock lock;
-
-    // Add this schedule to our list in time order
-    unsigned int index = 0;
-    auto iter = g_schedules.begin();
-    bool new_schedule_first = true;
-    while (iter != g_schedules.end())
-    {
-        if (iter->m_target_ticks > target_count_ticks)
-            break;
-        iter++;
-        index++;
-        new_schedule_first = false;
-    }
-    g_schedules.insert(iter, schedule);
-
-	//DEBUG_TRACE("NrfTimer::add_schedule: #g_schedules=%u index=%u is_first=%u", g_schedules.size(), index, new_schedule_first);
-
-    // If this task will occur before any others then we may need to set an alarm to service it next
-    if (new_schedule_first)
-        setup_compare_interrupt();
-
-    // Generate a handle that refers to this new schedule
     TimerHandle handle;
-    handle = g_unique_id;
 
-    g_unique_id++;
+    {
+        InterruptLock lock;
+
+        // Add this schedule to our list in time order
+        unsigned int index = 0;
+        auto iter = g_schedules.begin();
+        
+        while (iter != g_schedules.end())
+        {
+            if (iter->m_target_ticks > target_count_ticks)
+                break;
+            iter++;
+            index++;
+        }
+        g_schedules.insert(iter, schedule);
+
+        // Generate a handle that refers to this new schedule
+        handle = g_unique_id;
+
+        g_unique_id++;
+    }
+
+    // Update our schedule
+    drv_rtc_irq_trigger(&BSP::RTC_Inits[RTC_TIMER].rtc);
 
     return handle;
 }
@@ -171,7 +200,6 @@ void NrfTimer::cancel_schedule(TimerHandle &handle)
 
     // Find the given handle in our schedule list
     auto iter = g_schedules.begin();
-    bool front_removed = true;
     while (iter != g_schedules.end())
     {
         if (iter->m_id == *handle)
@@ -185,24 +213,20 @@ void NrfTimer::cancel_schedule(TimerHandle &handle)
         else
         {
             iter++;
-            front_removed = false;
         }
     }
 
-    // If we removed our first task we will need to update our next potential interrupt time
-    if (front_removed)
-        setup_compare_interrupt();
-
-    // Probably an error if we get to here without returning
-    //std::cout << "Tried to cancel schedule with id: " << *handle << " which did not exist in the timer schedule" << std::endl;
+    // Update our schedule if we removed something
+    if (iter != g_schedules.end())
+        drv_rtc_irq_trigger(&BSP::RTC_Inits[RTC_TIMER].rtc);
 }
 
 void NrfTimer::start()
 {
-    nrfx_rtc_enable(&BSP::RTC_Inits[RTC_TIMER].rtc);
+    drv_rtc_start(&BSP::RTC_Inits[RTC_TIMER].rtc);
 }
 
 void NrfTimer::stop()
 {
-    nrfx_rtc_disable(&BSP::RTC_Inits[RTC_TIMER].rtc);
+    drv_rtc_stop(&BSP::RTC_Inits[RTC_TIMER].rtc);
 }

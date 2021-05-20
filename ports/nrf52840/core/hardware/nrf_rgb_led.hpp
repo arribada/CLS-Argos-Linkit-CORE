@@ -33,6 +33,7 @@ private:
 		m_is_flashing = true;
 		m_flash_state = !m_flash_state;
 		m_led_task = system_scheduler->post_task_prio(std::bind(&NrfRGBLed::toggle_led, this),
+				"NrfRGBLedFlashToggle",
 				Scheduler::DEFAULT_PRIORITY, m_flash_interval);
 	}
 

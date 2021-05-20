@@ -97,5 +97,7 @@ void NrfSwitch::process_event(bool state) {
 	// Each time we get a new event we trigger the task to post it after the hysteresis time.
 	// If we receive another event, we cancel the previous task and start a new one.
 	system_scheduler->cancel_task(m_task_handle);
-	m_task_handle = system_scheduler->post_task_prio(std::bind(&NrfSwitch::update_state, this, state), Scheduler::DEFAULT_PRIORITY, m_hysteresis_time_ms);
+	m_task_handle = system_scheduler->post_task_prio(std::bind(&NrfSwitch::update_state, this, state),
+			"NrfSwitchUpdateState",
+			Scheduler::DEFAULT_PRIORITY, m_hysteresis_time_ms);
 }

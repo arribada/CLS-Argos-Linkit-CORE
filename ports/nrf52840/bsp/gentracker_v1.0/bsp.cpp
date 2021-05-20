@@ -147,24 +147,24 @@ namespace BSP
     ////////////////////////////////// RTC definitions /////////////////////////////////
     const RTC_InitTypeDefAndInst_t RTC_Inits[RTC_TOTAL_NUMBER] =
     {
-    #if NRFX_CHECK(NRFX_RTC0_ENABLED)
-        {
-            .rtc = NRFX_RTC_INSTANCE(0),
-            .irq_priority = INTERRUPT_PRIORITY_RTC_0
-        },
-    #endif
-    #if NRFX_CHECK(NRFX_RTC1_ENABLED)
-        {
-            .rtc = NRFX_RTC_INSTANCE(1),
-            .irq_priority = INTERRUPT_PRIORITY_RTC_1
-        },
-    #endif
-    #if NRFX_CHECK(NRFX_RTC2_ENABLED)
-        {
-            .rtc = NRFX_RTC_INSTANCE(2),
-            .irq_priority = INTERRUPT_PRIORITY_RTC_2
-        }
-    #endif
+#if APP_TIMER_V2_RTC0_ENABLED
+		{
+			.rtc = DRV_RTC_INSTANCE(0),
+			.irq_priority = INTERRUPT_PRIORITY_RTC_0
+		},
+#endif
+#if APP_TIMER_V2_RTC1_ENABLED
+		{
+			.rtc = DRV_RTC_INSTANCE(1),
+			.irq_priority = INTERRUPT_PRIORITY_RTC_1
+		},
+#endif
+#if APP_TIMER_V2_RTC2_ENABLED
+		{
+			.rtc = DRV_RTC_INSTANCE(2),
+			.irq_priority = INTERRUPT_PRIORITY_RTC_2
+		}
+#endif
     };
 
     ////////////////////////////////// SPI definitions /////////////////////////////////

@@ -95,7 +95,9 @@ void ArgosScheduler::reschedule() {
 	if (INVALID_SCHEDULE != schedule) {
 		DEBUG_INFO("ArgosScheduler: schedule in: %llu secs", schedule);
 		deschedule();
-		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this), Scheduler::DEFAULT_PRIORITY, MS_PER_SEC * schedule);
+		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this),
+				"ArgosSchedulerProcessSchedule",
+				Scheduler::DEFAULT_PRIORITY, MS_PER_SEC * schedule);
 	} else {
 		DEBUG_INFO("ArgosScheduler: not rescheduling");
 	}

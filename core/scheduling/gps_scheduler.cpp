@@ -71,7 +71,9 @@ void GPSScheduler::reschedule()
     DEBUG_INFO("GPSScheduler::schedule_aquisition in %llu seconds", time_until_next_schedule_ms / 1000);
 
     deschedule(); // Ensure any previous schedule has been cleared
-    m_task_acquisition_period = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_period, this), Scheduler::DEFAULT_PRIORITY, time_until_next_schedule_ms);
+    m_task_acquisition_period = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_period, this),
+    		"GPSSchedulerAcquisitionPeriod",
+    		Scheduler::DEFAULT_PRIORITY, time_until_next_schedule_ms);
 }
 
 void GPSScheduler::deschedule() {
@@ -111,7 +113,9 @@ void GPSScheduler::task_acquisition_period() {
     	aq_timeout = m_gnss_config.acquisition_timeout_cold_start;
     	DEBUG_TRACE("GPSScheduler::task_acquisition_period: using cold start timeout of %u secs", aq_timeout);
     }
-    m_task_acquisition_timeout = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_timeout, this), Scheduler::DEFAULT_PRIORITY, aq_timeout * MS_PER_SEC);
+    m_task_acquisition_timeout = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_timeout, this),
+    		"GPSSchedulerAcquisitionTimeout",
+    		Scheduler::DEFAULT_PRIORITY, aq_timeout * MS_PER_SEC);
 }
 
 void GPSScheduler::log_invalid_gps_entry()
@@ -226,7 +230,9 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
 
     // Update our time based off this data, schedule this as high priority
     m_gnss_data.pending_rtc_set = true;
-    m_task_update_rtc = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_update_rtc, this), Scheduler::HIGHEST_PRIORITY);
+    m_task_update_rtc = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_update_rtc, this),
+    		"GPSSchedulerUpdateRTC",
+    		Scheduler::HIGHEST_PRIORITY);
 
     // Mark first fix flag
     m_is_first_fix_found = true;
@@ -239,7 +245,9 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
 
         // Defer processing this data till we are outside of this interrupt context
         m_gnss_data.pending_data_logging = true;
-        m_task_process_gnss_data = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_process_gnss_data, this), Scheduler::DEFAULT_PRIORITY);
+        m_task_process_gnss_data = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_process_gnss_data, this),
+        		"GPSSchedulerProcessGNSSData",
+        		Scheduler::DEFAULT_PRIORITY);
     }
 }
 

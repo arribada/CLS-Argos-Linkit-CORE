@@ -37,7 +37,7 @@ TEST_GROUP(Scheduler)
 TEST(Scheduler, SchedulerSingleTaskSingleShot)
 {
 	static bool fired = false;
-	scheduler->post_task_prio([]() { fired = true; }, scheduler->DEFAULT_PRIORITY, 0);
+	scheduler->post_task_prio([]() { fired = true; }, "SchedulerSingleTaskSingleShot", scheduler->DEFAULT_PRIORITY, 0);
 	delay_ms(10);
 	scheduler->run();
 	CHECK_TRUE(fired);
@@ -46,7 +46,7 @@ TEST(Scheduler, SchedulerSingleTaskSingleShot)
 TEST(Scheduler, SchedulerDeferredSingleTaskSingleShot)
 {
 	static bool fired = false;
-	scheduler->post_task_prio([]() { fired = true; }, scheduler->DEFAULT_PRIORITY, 5);
+	scheduler->post_task_prio([]() { fired = true; }, "SchedulerSingleTaskSingleShot", scheduler->DEFAULT_PRIORITY, 5);
 	delay_ms(100);
 	scheduler->run();
 	CHECK_TRUE(fired);
@@ -55,8 +55,8 @@ TEST(Scheduler, SchedulerDeferredSingleTaskSingleShot)
 TEST(Scheduler, SchedulerDeferredMultiTaskSingleShot)
 {
 	static bool fired[2] = { false };
-	scheduler->post_task_prio([]() { fired[0] = true; }, scheduler->DEFAULT_PRIORITY, 5);
-	scheduler->post_task_prio([]() { fired[1] = true; }, scheduler->DEFAULT_PRIORITY, 10);
+	scheduler->post_task_prio([]() { fired[0] = true; }, "SchedulerDeferredMultiTaskSingleShot0", scheduler->DEFAULT_PRIORITY, 5);
+	scheduler->post_task_prio([]() { fired[1] = true; }, "SchedulerDeferredMultiTaskSingleShot1", scheduler->DEFAULT_PRIORITY, 10);
 	delay_ms(100);
 	scheduler->run();
 	CHECK_TRUE(fired[0]);
@@ -67,7 +67,7 @@ TEST(Scheduler, SchedulerCancelSingleTaskSingleShot)
 {
 	static bool fired = false;
 	auto t = []() { fired = true; };
-	auto task_handle = scheduler->post_task_prio(t, scheduler->DEFAULT_PRIORITY);
+	auto task_handle = scheduler->post_task_prio(t, "SchedulerCancelSingleTaskSingleShot", scheduler->DEFAULT_PRIORITY);
 	scheduler->cancel_task(task_handle);
 	scheduler->run();
 	CHECK_FALSE(scheduler->is_scheduled(task_handle));
@@ -80,7 +80,7 @@ TEST(Scheduler, SchedulerCancelDeferredTaskSingleShot)
 {
 	static bool fired = false;
 	auto t = []() { fired = true; };
-	auto task_handle = scheduler->post_task_prio(t, scheduler->DEFAULT_PRIORITY, 5);
+	auto task_handle = scheduler->post_task_prio(t, "SchedulerCancelDeferredTaskSingleShot", scheduler->DEFAULT_PRIORITY, 5);
 	scheduler->run();
 	scheduler->cancel_task(task_handle);
 	CHECK_FALSE(scheduler->is_scheduled(task_handle));
@@ -93,7 +93,7 @@ TEST(Scheduler, SchedulerIsScheduledApiCall)
 {
 	static bool fired = false;
 	auto t = []() { fired = true; };
-	auto task_handle = scheduler->post_task_prio(t, scheduler->DEFAULT_PRIORITY, 5);
+	auto task_handle = scheduler->post_task_prio(t, "SchedulerIsScheduledApiCall", scheduler->DEFAULT_PRIORITY, 5);
 	scheduler->run();
 	CHECK_TRUE(scheduler->is_scheduled(task_handle));
 	delay_ms(100);
@@ -105,13 +105,13 @@ TEST(Scheduler, SchedulerPriorityOrdering)
 {
 	static int order = 0;
 	static int fired[7] = { -1 };
-	scheduler->post_task_prio([]() { fired[0] = order++; }, 7, 5);
-	scheduler->post_task_prio([]() { fired[1] = order++; }, 6, 5);
-	scheduler->post_task_prio([]() { fired[2] = order++; }, 5, 5);
-	scheduler->post_task_prio([]() { fired[3] = order++; }, 4, 5);
-	scheduler->post_task_prio([]() { fired[4] = order++; }, 3, 5);
-	scheduler->post_task_prio([]() { fired[5] = order++; }, 2, 5);
-	scheduler->post_task_prio([]() { fired[6] = order++; }, 1, 5);
+	scheduler->post_task_prio([]() { fired[0] = order++; }, "SchedulerPriorityOrdering7", 7, 5);
+	scheduler->post_task_prio([]() { fired[1] = order++; }, "SchedulerPriorityOrdering6", 6, 5);
+	scheduler->post_task_prio([]() { fired[2] = order++; }, "SchedulerPriorityOrdering5", 5, 5);
+	scheduler->post_task_prio([]() { fired[3] = order++; }, "SchedulerPriorityOrdering4", 4, 5);
+	scheduler->post_task_prio([]() { fired[4] = order++; }, "SchedulerPriorityOrdering3", 3, 5);
+	scheduler->post_task_prio([]() { fired[5] = order++; }, "SchedulerPriorityOrdering2", 2, 5);
+	scheduler->post_task_prio([]() { fired[6] = order++; }, "SchedulerPriorityOrdering1", 1, 5);
 	delay_ms(100);
 	scheduler->run();
 	CHECK_EQUAL(6, fired[0]);
@@ -135,7 +135,7 @@ TEST(Scheduler, SchedulerMultithreadedCounting)
 	};
 
 	auto create_counter_task_func = [=]() {
-		scheduler->post_task_prio(counter_func);
+		scheduler->post_task_prio(counter_func, "SchedulerMultithreadedCounting");
 	};
 
 	unsigned int test_iterations = 100;
@@ -172,7 +172,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingCancelled)
 	};
 
 	auto create_counter_task_func = [=]() {
-		auto handle = scheduler->post_task_prio(counter_func);
+		auto handle = scheduler->post_task_prio(counter_func, "SchedulerMultithreadedCountingCancelled");
 		scheduler->cancel_task(handle);
 	};
 
@@ -207,7 +207,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferred)
 	};
 
 	auto create_counter_task_func = [=]() {
-		scheduler->post_task_prio(counter_func, 5);
+		scheduler->post_task_prio(counter_func, "SchedulerMultithreadedCountingDeferred", 5);
 	};
 
 	unsigned int test_iterations = 100;
@@ -242,7 +242,7 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredCancelled)
 	};
 
 	auto create_counter_task_func = [=]() {
-		auto handle = scheduler->post_task_prio(counter_func, 5);
+		auto handle = scheduler->post_task_prio(counter_func, "SchedulerMultithreadedCountingDeferredCancelled", 5);
 		scheduler->cancel_task(handle);
 	};
 
@@ -278,11 +278,11 @@ TEST(Scheduler, SchedulerMultithreadedCountingHalfCancelled)
 	};
 
 	auto create_counter_task_func = [=]() {
-		scheduler->post_task_prio(counter_func);
+		scheduler->post_task_prio(counter_func, "SchedulerMultithreadedCountingHalfCancelled");
 	};
 
 	auto create_counter_task_func_then_cancel = [=]() {
-		auto handle = scheduler->post_task_prio(counter_func);
+		auto handle = scheduler->post_task_prio(counter_func, "SchedulerMultithreadedCountingHalfCancelled");
 		scheduler->cancel_task(handle);
 	};
 
@@ -323,11 +323,11 @@ TEST(Scheduler, SchedulerMultithreadedCountingDeferredHalfCancelled)
 	};
 
 	auto create_counter_task_func = [=]() {
-		scheduler->post_task_prio(counter_func, 5);
+		scheduler->post_task_prio(counter_func, "SchedulerMultithreadedCountingDeferredHalfCancelled", 5);
 	};
 
 	auto create_counter_task_func_then_cancel = [=]() {
-		auto handle = scheduler->post_task_prio(counter_func, 5);
+		auto handle = scheduler->post_task_prio(counter_func, "SchedulerMultithreadedCountingDeferredHalfCancelled", 5);
 		scheduler->cancel_task(handle);
 	};
 
