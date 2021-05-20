@@ -119,28 +119,29 @@ public:
 		int flags;
 		if ((m_write_offset % LOG_CHUNK_SIZE) == 0) {
 			// File should be forcibly created on each log chunk boundary
-			flags = LFS_O_CREAT | LFS_O_WRONLY;
+			flags = LFS_O_CREAT | LFS_O_TRUNC | LFS_O_WRONLY;
 		} else {
 			// Log chunk should be opened normally as it has already been created
-			flags = LFS_O_WRONLY;
+			flags = LFS_O_WRONLY | LFS_O_APPEND;
 		}
 
-		//DEBUG_TRACE("FsLog::write: chunk=%u offset=%u", file_index, m_write_offset);
+		//DEBUG_TRACE("FsLog::write: chunk=%u offset=%u flags=%02x", file_index, m_write_offset, flags);
 		LFSFile f(m_filesystem, filename.c_str(), flags);
-		set_payload_size((LogEntry *)entry);
 
-		// Note that we always do a seek before writing -- this is a safety measure
-		// just in case there was a power loss between writing the file and the
-		// file attribute.  It assures we don't get log chunks that could exceed the
-		// log chunk size.
-		f.seek(m_write_offset % LOG_CHUNK_SIZE);  // Should be the end of the file
-		f.write(entry, (lfs_size_t)sizeof(LogEntry));
-
-		// Update write index, wrapped status and write the file attribute
-		m_write_offset += sizeof(LogEntry);
-		if (m_write_offset >= m_max_size) {
-			m_write_offset = 0;
-			m_has_wrapped = 0x80000000;
+		// Check to ensure the file size and write offset are equal
+		if ((unsigned int)f.size() != (m_write_offset % LOG_CHUNK_SIZE)) {
+			DEBUG_TRACE("File size (%u) does not match expected write offset (%u)", f.size(), (m_write_offset % LOG_CHUNK_SIZE));
+			// We need to reset this chunk back to its start -- this log entry will be lost
+			m_write_offset &= ~(LOG_CHUNK_SIZE-1);
+		} else {
+			set_payload_size((LogEntry *)entry);
+			f.write(entry, (lfs_size_t)sizeof(LogEntry));
+			// Update write index, wrapped status and write the file attribute
+			m_write_offset += sizeof(LogEntry);
+			if (m_write_offset >= m_max_size) {
+				m_write_offset = 0;
+				m_has_wrapped = 0x80000000;
+			}
 		}
 		unsigned int attr = m_write_offset | m_has_wrapped;
 		m_filesystem->set_attr(m_filename, attr);

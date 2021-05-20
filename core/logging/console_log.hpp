@@ -11,7 +11,12 @@ class ConsoleLog : public Logger {
 
 private:
 	void debug_formatter(const char *level, LogHeader *header, const char *msg) {
-		printf("%02u/%02u/%04u %02u:%02u:%02u [%s]\t%s\r\n", header->day, header->month, header->year, header->hours, header->minutes, header->seconds, level, msg);
+#ifndef CPPUTEST
+		if (__get_IPSR()) // Indicate if this was created from an IRQ
+			printf("%02u/%02u/%04u %02u:%02u:%02u [%s] IRQ\t%s\r\n", header->day, header->month, header->year, header->hours, header->minutes, header->seconds, level, msg);
+		else
+#endif
+			printf("%02u/%02u/%04u %02u:%02u:%02u [%s]\t%s\r\n", header->day, header->month, header->year, header->hours, header->minutes, header->seconds, level, msg);
 	}
 	void gps_formatter(const GPSLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
