@@ -83,7 +83,7 @@ TEST(DTEHandler, PARMW_REQ)
 {
 	std::string resp;
 	std::string req = "$PARMW#007;ARP04=4\r";
-	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	CHECK_TRUE(DTEAction::CONFIG_UPDATED == dte_handler->handle_dte_message(req, resp));
 	STRCMP_EQUAL("$O;PARMW#000;\r", resp.c_str());
 	CHECK_TRUE(BaseArgosPower::POWER_500_MW == configuration_store->read_param<BaseArgosPower>(ParamID::ARGOS_POWER));
 }
@@ -422,7 +422,7 @@ TEST(DTEHandler, WritingReadOnlyAttributesIsIgnored)
 {
 	std::string resp;
 	std::string req = "$PARMW#007;ART02=1\r";
-	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	CHECK_TRUE(DTEAction::CONFIG_UPDATED == dte_handler->handle_dte_message(req, resp));
 	STRCMP_EQUAL("$O;PARMW#000;\r", resp.c_str());
 
 	unsigned int tx_counter = configuration_store->read_param<unsigned int>(ParamID::TX_COUNTER);

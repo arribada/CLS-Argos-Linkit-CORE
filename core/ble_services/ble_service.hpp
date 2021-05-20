@@ -36,6 +36,7 @@ public:
 	virtual void stop() = 0;
 	virtual void write(std::string str) = 0;
 	virtual std::string read_line() = 0;
+	virtual void set_device_name(const std::string&) = 0;
 };
 
 #endif // __BLE_SERVICE_HPP_

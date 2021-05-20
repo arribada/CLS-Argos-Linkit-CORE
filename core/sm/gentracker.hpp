@@ -81,6 +81,7 @@ private:
 	void on_ble_inactivity_timeout();
 	void restart_inactivity_timeout();
 	void process_received_data();
+	void set_ble_device_name();
 
 public:
 	void entry() override;

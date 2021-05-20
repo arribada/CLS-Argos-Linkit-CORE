@@ -18,7 +18,8 @@ enum class DTEAction {
 	AGAIN,   // More data is remaining in a multi-message response, call the handler again with the same input message
 	RESET,   // Deferred action since DTE must respond first before reset can be performed
 	FACTR,   // Deferred action since DTE must respond first before factory reset can be performed
-	SECUR    // DTE service must be notified when SECUR is requested to grant privileges for OTA FW commands
+	SECUR,   // DTE service must be notified when SECUR is requested to grant privileges for OTA FW commands
+	CONFIG_UPDATED,  // Notified on a successful PARMW
 };
 
 enum class DTEError {
@@ -64,7 +65,7 @@ public:
 		return DTEEncoder::encode(DTECommand::PARML_RESP, params);
 	}
 
-	static std::string PARMW_REQ(int error_code, std::vector<ParamValue>& param_values) {
+	static std::string PARMW_REQ(int error_code, std::vector<ParamValue>& param_values, DTEAction& action) {
 
 		if (error_code) {
 			return DTEEncoder::encode(DTECommand::PARMW_RESP, error_code);
@@ -79,6 +80,9 @@ public:
 
 		// Save all the parameters
 		configuration_store->save_params();
+
+		// Notify configuration updated action
+		action = DTEAction::CONFIG_UPDATED;
 
 		return DTEEncoder::encode(DTECommand::PARMW_RESP, DTEError::OK);
 	}
@@ -382,7 +386,7 @@ public:
 			resp = PARML_REQ(error_code);
 			break;
 		case DTECommand::PARMW_REQ:
-			resp = PARMW_REQ(error_code, param_values);
+			resp = PARMW_REQ(error_code, param_values, action);
 			break;
 		case DTECommand::PARMR_REQ:
 			resp = PARMR_REQ(error_code, params);

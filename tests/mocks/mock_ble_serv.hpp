@@ -53,6 +53,9 @@ public:
 	std::string read_line() {
 		return *static_cast<const std::string*>(mock().actualCall("read_line").onObject(this).returnConstPointerValue());
 	}
+	void set_device_name(const std::string& name) {
+		mock().actualCall("set_device_name").onObject(this).withParameter("name", name.c_str());
+	}
 
 	int invoke_event(BLEServiceEvent& event) {
 		return m_on_event(event);

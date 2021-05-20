@@ -277,6 +277,11 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToConfigurationState)
 	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
 
 	// Swipe gesture and hold for 3 seconds
+	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
+	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);
 	fake_timer->set_counter(4000);
 	system_scheduler->run();
@@ -295,12 +300,18 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
 	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
 
 	// Swipe gesture and hold for 3 seconds
+	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
+	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);
 	fake_timer->set_counter(4000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 
 	// Continue to hold for 7 more seconds
+	mock().disable();
 	fake_timer->set_counter(11000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
@@ -326,17 +337,29 @@ TEST(Sm, CheckOffStateCanBeCancelled)
 	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
 
 	// Swipe gesture and hold for 3 seconds
+	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
+	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);
 	fake_timer->set_counter(4000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 
 	// Continue to hold for 7 more seconds
+	mock().disable();
 	fake_timer->set_counter(11000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 
 	// Release reed switch and apply again for 3 seconds to cancel the off sequence
+	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
+	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
+	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fake_reed_switch->set_state(false);
 	fake_reed_switch->set_state(true);
 	fake_timer->set_counter(14000);
@@ -355,11 +378,17 @@ TEST(Sm, CheckBLEInactivityTimeout)
 	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
 
 	// Swipe gesture and hold for 3 seconds
+	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
+	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);
 	fake_timer->set_counter(4000);
 	system_scheduler->run();
 	fake_reed_switch->set_state(false);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
+	mock().disable();
 
 	// Wait until BLE inactivity timeout
 	fake_timer->set_counter(364000);
@@ -377,6 +406,11 @@ TEST(Sm, CheckTransitionToConfigurationStateAndVerifyOTAUpdateEvents)
 	system_scheduler->run();
 
 	// Swipe gesture and hold for 3 seconds -> ConfigurationState
+	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
+	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);
 	fake_timer->set_counter(4000);
 	system_scheduler->run();

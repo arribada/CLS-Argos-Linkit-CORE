@@ -15,7 +15,7 @@
 
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
-#define DEVICE_NAME                     "linkit"                                	/**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "<unknown>"                                	/**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 #define STM_OTA_SERVICE_UUID_TYPE       BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the STM OTA Service (vendor specific). */
 
@@ -70,14 +70,11 @@ void BleInterface::init()
     gap_params_init();
     gatt_init();
     services_init();
-    advertising_init();
 }
 
 void BleInterface::start(std::function<int(BLEServiceEvent& event)> on_event)
 {
     m_on_event = on_event;
-
-    advertising_start();
 }
 
 void BleInterface::stop()
@@ -110,8 +107,25 @@ std::string BleInterface::read_line()
         m_carriage_return_received = false;
         return str;
     }
-    
+
     return std::string();
+}
+
+void BleInterface::set_device_name(const std::string& name)
+{
+	ret_code_t err_code;
+	ble_gap_conn_sec_mode_t sec_mode;
+
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
+    err_code = sd_ble_gap_device_name_set(&sec_mode,
+                                          (const uint8_t *)name.c_str(),
+                                          name.size());
+    APP_ERROR_CHECK(err_code);
+
+	// Setup advertising parameters
+    advertising_stop();
+    advertising_init();
+    advertising_start();
 }
 
 void BleInterface::write(std::string str)

@@ -13,6 +13,7 @@ public:
 	BasePassPredict m_pass_predict;
 
 	void init() {
+		m_params = default_params;
 		mock().actualCall("init").onObject(this);
 	}
 	bool is_valid() {
