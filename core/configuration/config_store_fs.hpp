@@ -64,7 +64,7 @@ protected:
 
 	void serialize_config() override {
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_config");
-		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT);
+		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC);
 		unsigned int i;
 		for (i = 0; i < MAX_CONFIG_ITEMS; i++) {
 			if (!serialize_config_entry(f, m_params.at(i)))
@@ -84,7 +84,7 @@ protected:
 
 	void serialize_zone() override {
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_zone");
-		LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_WRONLY);
+		LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC);
 		m_is_zone_valid = false;
 		m_is_zone_valid = f.write(&m_zone, sizeof(m_zone)) == sizeof(m_zone);
 		DEBUG_TRACE("m_is_zone_valid = %u", m_is_zone_valid);
@@ -95,7 +95,7 @@ protected:
 
 	void serialize_pass_predict() {
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_pass_predict");
-		LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_WRONLY);
+		LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC);
 		m_is_pass_predict_valid = false;
 		m_is_pass_predict_valid = f.write(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict);
 	}
@@ -146,7 +146,7 @@ public:
 		// Read in pass predict file
 		m_is_pass_predict_valid = false;
 		try {
-			LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_CREAT | LFS_O_RDWR);
+			LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_RDWR);
 			if (f.read(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict))
 				m_is_pass_predict_valid = true;
 		} catch (int e) {
