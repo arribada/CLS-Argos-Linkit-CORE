@@ -18,7 +18,7 @@ set(LIB_DIR       ../../libraries)
 option(BOARD "Board to compile for" NONE)
 
 if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE)
-    set(DEVICE_MODEL LINKIT-${MODEL})
+    set(DEVICE_MODEL "Linkit ${MODEL}")
 else()
     message(FATAL_ERROR "MODEL must be one of {SB, CORE, UW}")
 endif()
