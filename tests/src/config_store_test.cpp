@@ -68,9 +68,9 @@ TEST(ConfigStore, CheckBaseTypeReadAccess)
 
 	// Modify some parameter values
 	std::string model = "GenTracker";
-	store->write_param(ParamID::DEVICE_MODEL, model);
+	store->write_param(ParamID::PROFILE_NAME, model);
 
-	BaseType x = store->read_param<BaseType>(ParamID::DEVICE_MODEL);
+	BaseType x = store->read_param<BaseType>(ParamID::PROFILE_NAME);
 	CHECK_EQUAL(model, std::get<std::string>(x));
 
 
@@ -88,7 +88,7 @@ TEST(ConfigStore, CheckConfigStorePersistence)
 	std::string model = "GenTracker";
 	unsigned int dec_id = 1234U;
 	store->write_param(ParamID::ARGOS_DECID, dec_id);
-	store->write_param(ParamID::DEVICE_MODEL, model);
+	store->write_param(ParamID::PROFILE_NAME, model);
 	store->save_params();
 
 	// Delete the object and recreate a new one
@@ -98,7 +98,61 @@ TEST(ConfigStore, CheckConfigStorePersistence)
 
 	// Check modified parameters
 	CHECK_EQUAL(1234U, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
-	CHECK_EQUAL(model, store->read_param<std::string>(ParamID::DEVICE_MODEL));
+	CHECK_EQUAL(model, store->read_param<std::string>(ParamID::PROFILE_NAME));
+
+	delete store;
+}
+
+TEST(ConfigStore, CheckConfigStoreResetsBadVariantType)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	// Modify some parameter values
+	std::string model = "GenTracker";
+	store->write_param(ParamID::ARGOS_DECID, model);
+	store->save_params();
+
+	// Delete the object and recreate a new one
+	delete store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();  // This will read in the saved file
+
+	// Check default value has been restored
+	CHECK_EQUAL(0U, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
+
+	delete store;
+}
+
+TEST(ConfigStore, CheckFactoryResetRetainsProtectedParams)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	// Set protected parameter values
+	unsigned int dec_id = 1234U;
+	unsigned int hex_id = 0x1234567U;
+	store->write_param(ParamID::ARGOS_DECID, dec_id);
+	store->write_param(ParamID::ARGOS_HEXID, hex_id);
+
+	// Save parameters
+	store->save_params();
+
+	// Factory reset
+	store->factory_reset();
+
+	// Delete the object and recreate a new one
+	delete store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();  // This will read in the partially saved file
+
+	// Check default value has been restored
+	CHECK_EQUAL(dec_id, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
+	CHECK_EQUAL(hex_id, store->read_param<unsigned int>(ParamID::ARGOS_HEXID));
 
 	delete store;
 }

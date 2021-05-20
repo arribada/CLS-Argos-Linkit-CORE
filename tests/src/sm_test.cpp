@@ -278,8 +278,6 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToConfigurationState)
 
 	// Swipe gesture and hold for 3 seconds
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
 	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);
@@ -301,8 +299,6 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
 
 	// Swipe gesture and hold for 3 seconds
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
 	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);
@@ -338,8 +334,6 @@ TEST(Sm, CheckOffStateCanBeCancelled)
 
 	// Swipe gesture and hold for 3 seconds
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
 	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);
@@ -355,8 +349,6 @@ TEST(Sm, CheckOffStateCanBeCancelled)
 
 	// Release reed switch and apply again for 3 seconds to cancel the off sequence
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
 	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	mock().expectOneCall("start").onObject(mock_battery_monitor);
@@ -379,8 +371,6 @@ TEST(Sm, CheckBLEInactivityTimeout)
 
 	// Swipe gesture and hold for 3 seconds
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
 	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);
@@ -407,8 +397,6 @@ TEST(Sm, CheckTransitionToConfigurationStateAndVerifyOTAUpdateEvents)
 
 	// Swipe gesture and hold for 3 seconds -> ConfigurationState
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX_0000000");
 	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
 	fake_reed_switch->set_state(true);

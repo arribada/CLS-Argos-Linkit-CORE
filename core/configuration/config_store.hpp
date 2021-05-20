@@ -159,26 +159,37 @@ public:
 	template <typename T>
 	T& read_param(ParamID param_id) {
 		try {
-			if (is_valid()) {
+			bool b_is_valid = false;
 
-				if (param_id == ParamID::BATT_SOC) {
-					update_battery_level();
-					m_params.at((unsigned)param_id) = (unsigned int)m_battery_level;
-				}
+			// These parameters must always be accessible
+			if (param_id == ParamID::BATT_SOC) {
+				update_battery_level();
+				m_params.at((unsigned)param_id) = (unsigned int)m_battery_level;
+				b_is_valid = true;
+			} else if (param_id == ParamID::FW_APP_VERSION) {
+				m_params.at((unsigned)param_id) = FW_APP_VERSION_STR;
+				b_is_valid = true;
+			} else if (param_id == ParamID::ARGOS_DECID) {
+				b_is_valid = true;
+			} else if (param_id == ParamID::ARGOS_HEXID) {
+				b_is_valid = true;
+			} else if (param_id == ParamID::DEVICE_MODEL) {
+				m_params.at((unsigned)param_id) = DEVICE_MODEL_NAME;
+				b_is_valid = true;
+			} else {
+				b_is_valid = is_valid();
+			}
 
-				if (param_id == ParamID::FW_APP_VERSION) {
-					m_params.at((unsigned)param_id) = FW_APP_VERSION_STR;
-				}
-
+			if (b_is_valid) {
 				if constexpr (std::is_same<T, BaseType>::value) {
 					return m_params.at((unsigned)param_id);
 				}
 				else {
 					return std::get<T>(m_params.at((unsigned)param_id));
 				};
-			}
-			else
+			} else {
 				throw CONFIG_STORE_CORRUPTED;
+			}
 		} catch (...) {
 			throw CONFIG_STORE_CORRUPTED;
 		}
@@ -189,7 +200,6 @@ public:
 		try {
 			if (is_valid()) {
 				m_params.at((unsigned)param_id) = value;
-				//serialize_config(param_id);
 			} else
 				throw CONFIG_STORE_CORRUPTED;
 		} catch (...) {

@@ -52,27 +52,54 @@ protected:
 	void deserialize_config() {
 		DEBUG_TRACE("ConfigurationStoreLFS::deserialize_config");
 		LFSFile f(&m_filesystem, "config.dat", LFS_O_RDONLY);
-		unsigned int i;
 
-		for (i = 0; i < MAX_CONFIG_ITEMS; i++) {
-			if (!deserialize_config_entry(f, m_params.at(i)))
-				break;
+		for (unsigned int i = 0; i < MAX_CONFIG_ITEMS; i++) {
+
+			if (!deserialize_config_entry(f, m_params.at(i))) {
+				DEBUG_WARN("deserialize_config: unable to deserialize param %u - resetting...", i);
+				// Reset parameter to factory default
+				m_params.at(i) = default_params.at(i);
+			}
+
+			// Check variant index (type) matches default parameters
+			if (m_params.at(i).index() != default_params.at(i).index()) {
+				DEBUG_WARN("deserialize_config: param %u variant index mismatch expected %u but got %u - resetting...",
+						i,
+						default_params.at(i).index(),
+						m_params.at(i).index());
+				// Reset parameter to factory default
+				m_params.at(i) = default_params.at(i);
+			}
 		}
 
-		m_is_config_valid = (i == MAX_CONFIG_ITEMS);
+		m_is_config_valid = true;
 	}
 
 	void serialize_config() override {
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_config");
 		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC);
-		unsigned int i;
-		for (i = 0; i < MAX_CONFIG_ITEMS; i++) {
-			if (!serialize_config_entry(f, m_params.at(i)))
-				break;
-		}
-		m_is_config_valid = i == MAX_CONFIG_ITEMS;
 
-		DEBUG_TRACE("ConfigurationStoreLFS::serialize_config: saved new config.data (is_valid=%u)", m_is_config_valid);
+		for (unsigned int i = 0; i < MAX_CONFIG_ITEMS; i++) {
+
+			// Check variant index (type) matches default parameter
+			if (m_params.at(i).index() != default_params.at(i).index()) {
+				DEBUG_WARN("serialize_config: param %u variant index mismatch expected %u but got %u - resetting...",
+						i,
+						default_params.at(i).index(),
+						m_params.at(i).index());
+				// Reset parameter to back to factory default
+				m_params.at(i) = default_params.at(i);
+			}
+
+			if (!serialize_config_entry(f, m_params.at(i))) {
+				DEBUG_ERROR("serialize_config: failed to serialize param %u", i);
+				throw CONFIG_STORE_CORRUPTED;
+			}
+		}
+
+		m_is_config_valid = true;
+
+		DEBUG_INFO("ConfigurationStoreLFS::serialize_config: saved new file config.data");
 	}
 
 	void deserialize_zone() {
@@ -87,8 +114,8 @@ protected:
 		LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC);
 		m_is_zone_valid = false;
 		m_is_zone_valid = f.write(&m_zone, sizeof(m_zone)) == sizeof(m_zone);
-		DEBUG_TRACE("m_is_zone_valid = %u", m_is_zone_valid);
 		if (!m_is_zone_valid) {
+			DEBUG_ERROR("serialize_zone: failed to serialize zone");
 			throw CONFIG_STORE_CORRUPTED;
 		}
 	}
@@ -98,6 +125,10 @@ protected:
 		LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC);
 		m_is_pass_predict_valid = false;
 		m_is_pass_predict_valid = f.write(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict);
+		if (!m_is_pass_predict_valid) {
+			DEBUG_ERROR("serialize_pass_predict: failed to serialize pass predict");
+			throw CONFIG_STORE_CORRUPTED;
+		}
 	}
 
 	void create_default_zone() {
@@ -112,6 +143,28 @@ protected:
 
 private:
 	FileSystem &m_filesystem;
+
+	void serialize_protected_config() {
+		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC);
+		for (unsigned int i = 0; i <= (unsigned int)ParamID::ARGOS_HEXID ; i++) {
+			// Check variant index (type) matches default parameter
+			if (m_params.at(i).index() != default_params.at(i).index()) {
+				DEBUG_WARN("serialize_config: protected param %u variant index mismatch expected %u but got %u - repairing",
+						i,
+						default_params.at(i).index(),
+						m_params.at(i).index());
+				// Reset parameter to back to factory default
+				m_params.at(i) = default_params.at(i);
+			}
+
+			if (!serialize_config_entry(f, m_params.at(i))) {
+				DEBUG_ERROR("serialize_config: failed to serialize protected param %u", i);
+				throw CONFIG_STORE_CORRUPTED;
+			}
+		}
+
+		DEBUG_INFO("ConfigurationStoreLFS::serialize_protected_config: saved protected params to config.data");
+	}
 
 public:
 	LFSConfigurationStore(FileSystem &filesystem) : m_is_pass_predict_valid(false), m_is_zone_valid(false), m_is_config_valid(false), m_filesystem(filesystem) {}
@@ -139,7 +192,7 @@ public:
 		try {
 			deserialize_zone();
 		} catch (int e) {
-			DEBUG_WARN("Zone file does not exist");
+			DEBUG_WARN("Zone file does not exist or is corrupted - resetting zone file");
 			create_default_zone();
 		}
 
@@ -150,7 +203,7 @@ public:
 			if (f.read(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict))
 				m_is_pass_predict_valid = true;
 		} catch (int e) {
-			DEBUG_WARN("Prepass file does not exist");
+			DEBUG_WARN("Prepass file does not exist - requires configuration");
 		}
 	}
 
@@ -164,6 +217,8 @@ public:
 
 	void factory_reset() override {
 		m_filesystem.format();
+		m_filesystem.mount();
+		serialize_protected_config(); // Recover "protected" parameters
 		m_is_config_valid = false;
 		m_is_pass_predict_valid = false;
 		m_is_zone_valid = false;
