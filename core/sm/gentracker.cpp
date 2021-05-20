@@ -240,13 +240,8 @@ void ConfigurationState::exit() {
 
 void ConfigurationState::set_ble_device_name() {
 	std::string device_model = configuration_store->read_param<std::string>(ParamID::DEVICE_MODEL);
-	unsigned int argos_hex_id = configuration_store->read_param<unsigned int>(ParamID::ARGOS_HEXID);
-	std::transform(device_model.begin(), device_model.end(), device_model.begin(), [](char ch) {
-	    return ch == ' ' ? '_' : ch;
-	});
-	char argos_hex_str[8];
-	snprintf(argos_hex_str, sizeof(argos_hex_str), "%07X", argos_hex_id);
-	std::string device_name = device_model + "_" + argos_hex_str;
+	unsigned int argos_dec_id = configuration_store->read_param<unsigned int>(ParamID::ARGOS_DECID);
+	std::string device_name = device_model + " " + std::to_string(argos_dec_id);
 	DEBUG_TRACE("ConfigurationState::set_ble_device_name: %s", device_name.c_str());
 	ble_service->set_device_name(device_name);
 }
