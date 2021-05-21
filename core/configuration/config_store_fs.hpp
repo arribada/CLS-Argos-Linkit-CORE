@@ -59,6 +59,7 @@ protected:
 				DEBUG_WARN("deserialize_config: unable to deserialize param %u - resetting...", i);
 				// Reset parameter to factory default
 				m_params.at(i) = default_params.at(i);
+				m_requires_serialization = true;
 			}
 
 			// Check variant index (type) matches default parameters
@@ -69,6 +70,7 @@ protected:
 						m_params.at(i).index());
 				// Reset parameter to factory default
 				m_params.at(i) = default_params.at(i);
+				m_requires_serialization = true;
 			}
 		}
 
@@ -143,13 +145,14 @@ protected:
 
 private:
 	FileSystem &m_filesystem;
+	bool        m_requires_serialization;
 
 	void serialize_protected_config() {
 		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC);
 		for (unsigned int i = 0; i <= (unsigned int)ParamID::ARGOS_HEXID ; i++) {
 			// Check variant index (type) matches default parameter
 			if (m_params.at(i).index() != default_params.at(i).index()) {
-				DEBUG_WARN("serialize_config: protected param %u variant index mismatch expected %u but got %u - repairing",
+				DEBUG_TRACE("serialize_config: protected param %u variant index mismatch expected %u but got %u - repairing",
 						i,
 						default_params.at(i).index(),
 						m_params.at(i).index());
@@ -158,18 +161,19 @@ private:
 			}
 
 			if (!serialize_config_entry(f, m_params.at(i))) {
-				DEBUG_ERROR("serialize_config: failed to serialize protected param %u", i);
+				DEBUG_TRACE("serialize_config: failed to serialize protected param %u", i);
 				throw CONFIG_STORE_CORRUPTED;
 			}
 		}
 
-		DEBUG_INFO("ConfigurationStoreLFS::serialize_protected_config: saved protected params to config.data");
+		DEBUG_TRACE("ConfigurationStoreLFS::serialize_protected_config: saved protected params to config.data");
 	}
 
 public:
 	LFSConfigurationStore(FileSystem &filesystem) : m_is_pass_predict_valid(false), m_is_zone_valid(false), m_is_config_valid(false), m_filesystem(filesystem) {}
 
 	void init() override {
+		m_requires_serialization = false;
 		m_is_zone_valid = false;
 		m_is_pass_predict_valid = false;
 		m_is_config_valid = false;
@@ -182,8 +186,11 @@ public:
 			deserialize_config();
 		} catch (int e) {
 			DEBUG_WARN("No configuration file so creating a default file");
-			serialize_config();
+			m_requires_serialization = true;
 		}
+
+		if (m_requires_serialization)
+			serialize_config();
 
 		if (!m_is_config_valid)
 			throw CONFIG_STORE_CORRUPTED; // This is a non-recoverable error
@@ -216,6 +223,7 @@ public:
 	}
 
 	void factory_reset() override {
+		m_filesystem.umount();
 		m_filesystem.format();
 		m_filesystem.mount();
 		serialize_protected_config(); // Recover "protected" parameters
