@@ -203,6 +203,7 @@ void M8QReceiver::power_off()
 
     // Disable any messages so they don't interrupt our navigation database dump
     disable_nav_pvt_message();
+    disable_nav_status_message();
     disable_nav_dop_message();
 
     fetch_navigation_database();
@@ -412,6 +413,7 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
     // Clear our dop and pvt message containers
     memset(&m_last_received_pvt, 0, sizeof(m_last_received_pvt));
     memset(&m_last_received_dop, 0, sizeof(m_last_received_dop));
+    memset(&m_last_received_status, 0, sizeof(m_last_received_status));
 
     // Enable the power supply for the GPS
     GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);
@@ -431,6 +433,7 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
     ret = supply_time_assistance();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = send_navigation_database();         if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = enable_nav_pvt_message();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
+    ret = enable_nav_status_message();        if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = enable_nav_dop_message();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
 
     m_capture_messages = false;
@@ -489,6 +492,15 @@ void M8QReceiver::reception_callback(uint8_t *data, size_t len)
 
                 populate_gnss_data_and_callback();
             }
+            else if (header_ptr->msgId == UBX::NAV::ID_STATUS)
+            {
+                UBX::NAV::STATUS::MSG_STATUS *msg_status_ptr = reinterpret_cast<UBX::NAV::STATUS::MSG_STATUS *>(&data[sizeof(UBX::Header)]);
+                memcpy(&m_last_received_status, msg_status_ptr, sizeof(m_last_received_status));
+
+                //DEBUG_TRACE("GPS NAV-STATUS <-");
+
+                populate_gnss_data_and_callback();
+            }
         }
     }
 }
@@ -499,7 +511,8 @@ void M8QReceiver::populate_gnss_data_and_callback()
     if (m_last_received_pvt.fixType != UBX::NAV::PVT::FIXTYPE_NO &&    // GPS Fix must be achieved
         m_last_received_pvt.valid & UBX::NAV::PVT::VALID_VALID_DATE && // Date must be valid
         m_last_received_pvt.valid & UBX::NAV::PVT::VALID_VALID_TIME && // Time must be valid
-        m_last_received_pvt.iTow == m_last_received_dop.iTow)          // Both received DOP and NAV must refer to the same position
+        m_last_received_pvt.iTow == m_last_received_dop.iTow &&        // All received DOP, NAV and STATUS,
+        m_last_received_status.iTow == m_last_received_dop.iTow)       // must refer to the same position
     {
         GNSSData gnss_data = 
         {
@@ -534,13 +547,9 @@ void M8QReceiver::populate_gnss_data_and_callback()
             .pDOP      = m_last_received_dop.pDOP / 100.0f,
             .vDOP      = m_last_received_dop.vDOP / 100.0f,
             .hDOP      = m_last_received_dop.hDOP / 100.0f,
-            .headVeh   = m_last_received_pvt.headVeh / 100000.0f
+            .headVeh   = m_last_received_pvt.headVeh / 100000.0f,
+            .ttff      = m_last_received_status.ttff
         };
-
-        //DEBUG_TRACE("GPS Pos - %02u/%02u/%04u %02u:%02u:%02u lat: %f lon: %f hDOP: %f",
-        //            gnss_data.day, gnss_data.month, gnss_data.year,
-        //            gnss_data.hour, gnss_data.min, gnss_data.sec,
-        //            gnss_data.lat, gnss_data.lon, static_cast<double>(gnss_data.hDOP));
 
         if (m_data_notification_callback)
             m_data_notification_callback(gnss_data);
@@ -550,6 +559,8 @@ void M8QReceiver::populate_gnss_data_and_callback()
 M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
 {
     // Disable NMEA and only allow UBX messages
+
+    m_nrf_uart_m8->change_baudrate(9600);
 
     CFG::PRT::MSG_UART uart_prt = 
     {
@@ -943,6 +954,20 @@ M8QReceiver::SendReturnCode M8QReceiver::enable_nav_dop_message()
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
 }
 
+M8QReceiver::SendReturnCode M8QReceiver::enable_nav_status_message()
+{
+    CFG::MSG::MSG_MSG cfg_msg_nav_dop =
+    {
+        .msgClass = MessageClass::MSG_CLASS_NAV,
+        .msgID = NAV::ID_STATUS,
+        .rate = 1
+    };
+
+    //DEBUG_TRACE("GPS CFG-MSG ->");
+
+    return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
+}
+
 M8QReceiver::SendReturnCode M8QReceiver::disable_nav_pvt_message()
 {
     CFG::MSG::MSG_MSG cfg_msg_nav_pvt =
@@ -963,6 +988,20 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_nav_dop_message()
     {
         .msgClass = MessageClass::MSG_CLASS_NAV,
         .msgID = NAV::ID_DOP,
+        .rate = 0
+    };
+
+    //DEBUG_TRACE("GPS CFG-MSG ->");
+
+    return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::disable_nav_status_message()
+{
+    CFG::MSG::MSG_MSG cfg_msg_nav_dop =
+    {
+        .msgClass = MessageClass::MSG_CLASS_NAV,
+        .msgID = NAV::ID_STATUS,
         .rate = 0
     };
 

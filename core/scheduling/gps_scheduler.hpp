@@ -54,12 +54,14 @@ protected:
 		float      vDOP;
 		float      hDOP;
 		float      headVeh;   // Degrees
+		uint32_t   ttff;      // ms
 	};
 
 private:
-	GNSSConfig m_gnss_config;
-	bool       m_is_first_fix_found;
-	bool       m_is_first_schedule;
+	GNSSConfig 	m_gnss_config;
+	bool       	m_is_first_fix_found;
+	bool       	m_is_first_schedule;
+	uint64_t    m_wakeup_time;
 
 	struct {
 		GNSSData data;

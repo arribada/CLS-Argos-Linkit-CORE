@@ -57,8 +57,10 @@ private:
     SendReturnCode disable_timepulse_output();
     SendReturnCode enable_nav_pvt_message();
     SendReturnCode enable_nav_dop_message();
+	SendReturnCode enable_nav_status_message();
     SendReturnCode disable_nav_pvt_message();
     SendReturnCode disable_nav_dop_message();
+	SendReturnCode disable_nav_status_message();
 
 	SendReturnCode print_version();
 
@@ -71,6 +73,7 @@ private:
 
 	UBX::NAV::PVT::MSG_PVT m_last_received_pvt;
 	UBX::NAV::DOP::MSG_DOP m_last_received_dop;
+	UBX::NAV::STATUS::MSG_STATUS m_last_received_status;
 
 	struct {
 		volatile bool pending;

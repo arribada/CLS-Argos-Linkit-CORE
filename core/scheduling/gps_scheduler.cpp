@@ -10,6 +10,7 @@ extern Scheduler *system_scheduler;
 extern Logger *sensor_log;
 extern BatteryMonitor *battery_monitor;
 extern RTC *rtc;
+extern Timer *system_timer;
 
 #define MS_PER_SEC         (1000)
 #define SEC_PER_MIN        (60)
@@ -87,6 +88,7 @@ void GPSScheduler::task_acquisition_period() {
     {
     	// Clear the first schedule indication flag
     	m_is_first_schedule = false;
+    	m_wakeup_time = system_timer->get_counter();
 
     	GPSNavSettings nav_settings = {
         	m_gnss_config.fix_mode,
@@ -132,6 +134,7 @@ void GPSScheduler::log_invalid_gps_entry()
     gps_entry.info.batt_voltage = battery_monitor->get_voltage();
     gps_entry.info.event_type = GPSEventType::NO_FIX;
     gps_entry.info.valid = false;
+    gps_entry.info.onTime = system_timer->get_counter() - m_wakeup_time;
 
     sensor_log->write(&gps_entry);
 }
@@ -177,8 +180,6 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.info.min           = m_gnss_data.data.min;
     gps_entry.info.sec           = m_gnss_data.data.sec;
     gps_entry.info.valid         = m_gnss_data.data.valid;
-    gps_entry.info.tAcc          = m_gnss_data.data.tAcc;
-    gps_entry.info.nano          = m_gnss_data.data.nano;
     gps_entry.info.fixType       = m_gnss_data.data.fixType;
     gps_entry.info.flags         = m_gnss_data.data.flags;
     gps_entry.info.flags2        = m_gnss_data.data.flags2;
@@ -201,6 +202,8 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.info.vDOP          = m_gnss_data.data.vDOP;
     gps_entry.info.hDOP          = m_gnss_data.data.hDOP;
     gps_entry.info.headVeh       = m_gnss_data.data.headVeh;
+    gps_entry.info.ttff          = m_gnss_data.data.ttff;
+    gps_entry.info.onTime        = system_timer->get_counter() - m_wakeup_time;
 
     gps_entry.info.event_type = GPSEventType::FIX;
     gps_entry.info.valid = true;

@@ -73,8 +73,8 @@ struct __attribute__((packed)) GPSInfo {
 	uint8_t    min;
 	uint8_t    sec;
 	uint8_t    valid;
-	uint32_t   tAcc;
-	int32_t    nano;
+	uint32_t   onTime;
+	uint32_t   ttff;
 	uint8_t    fixType;
 	uint8_t    flags;
 	uint8_t    flags2;

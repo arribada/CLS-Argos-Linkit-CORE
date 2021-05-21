@@ -37,6 +37,7 @@ struct ArgosConfig {
 	unsigned int ntry_per_message;
 	unsigned int duty_cycle;
 	BaseArgosDepthPile depth_pile;
+	BaseDeltaTimeLoc delta_time_loc;
 	unsigned int dry_time_before_tx;
 	unsigned int argos_id;
 	bool underwater_en;
@@ -140,6 +141,36 @@ protected:
 	virtual void serialize_config() = 0;
 	virtual void serialize_zone() = 0;
 	virtual void update_battery_level() = 0;
+
+private:
+	static const inline unsigned int HOURS_PER_DAY = 24;
+	static const inline unsigned int SECONDS_PER_MINUTE	= 60;
+	static const inline unsigned int SECONDS_PER_HOUR = 3600;
+	static const inline unsigned int SECONDS_PER_DAY = (SECONDS_PER_HOUR * HOURS_PER_DAY);
+
+	BaseDeltaTimeLoc calc_delta_time_loc(unsigned int dloc_arg_nom) {
+		if (dloc_arg_nom >= (24 * SECONDS_PER_HOUR)) {
+			return BaseDeltaTimeLoc::DELTA_T_24HR;
+		} else if (dloc_arg_nom >= (12 * SECONDS_PER_HOUR)) {
+			return BaseDeltaTimeLoc::DELTA_T_12HR;
+		} else if (dloc_arg_nom >= (6 * SECONDS_PER_HOUR)) {
+			return BaseDeltaTimeLoc::DELTA_T_6HR;
+		} else if (dloc_arg_nom >= (4 * SECONDS_PER_HOUR)) {
+			return BaseDeltaTimeLoc::DELTA_T_4HR;
+		} else if (dloc_arg_nom >= (3 * SECONDS_PER_HOUR)) {
+			return BaseDeltaTimeLoc::DELTA_T_3HR;
+		} else if (dloc_arg_nom >= (2 * SECONDS_PER_HOUR)) {
+			return BaseDeltaTimeLoc::DELTA_T_2HR;
+		} else if (dloc_arg_nom >= (1 * SECONDS_PER_HOUR)) {
+			return BaseDeltaTimeLoc::DELTA_T_1HR;
+		} else if (dloc_arg_nom >= (30 * SECONDS_PER_MINUTE)) {
+			return BaseDeltaTimeLoc::DELTA_T_30MIN;
+		} else if (dloc_arg_nom >= (15 * SECONDS_PER_MINUTE)) {
+			return BaseDeltaTimeLoc::DELTA_T_15MIN;
+		} else {
+			return BaseDeltaTimeLoc::DELTA_T_10MIN;
+		}
+	}
 
 public:
 	ConfigurationStore() {
@@ -348,6 +379,8 @@ public:
 			argos_config.prepass_max_passes = read_param<unsigned int>(ParamID::PP_MAX_PASSES);
 			argos_config.prepass_linear_margin = read_param<unsigned int>(ParamID::PP_LINEAR_MARGIN);
 			argos_config.prepass_comp_step = read_param<unsigned int>(ParamID::PP_COMP_STEP);
+			unsigned int delta_time_loc = read_param<unsigned int>(ParamID::DLOC_ARG_LB);
+			argos_config.delta_time_loc = calc_delta_time_loc(delta_time_loc);
 		} else if (is_zone_exclusion()) {
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
@@ -366,6 +399,8 @@ public:
 			argos_config.prepass_max_passes = read_param<unsigned int>(ParamID::PP_MAX_PASSES);
 			argos_config.prepass_linear_margin = read_param<unsigned int>(ParamID::PP_LINEAR_MARGIN);
 			argos_config.prepass_comp_step = read_param<unsigned int>(ParamID::PP_COMP_STEP);
+			unsigned int delta_time_loc = m_zone.delta_arg_loc_argos_seconds == 0 ? read_param<unsigned int>(ParamID::DLOC_ARG_NOM) : m_zone.delta_arg_loc_argos_seconds;
+			argos_config.delta_time_loc = calc_delta_time_loc(delta_time_loc);
 			// Apply zone exclusion where applicable
 			if (m_zone.argos_extra_flags_enable) {
 				argos_config.mode = m_zone.argos_mode;
@@ -393,6 +428,8 @@ public:
 			argos_config.prepass_max_passes = read_param<unsigned int>(ParamID::PP_MAX_PASSES);
 			argos_config.prepass_linear_margin = read_param<unsigned int>(ParamID::PP_LINEAR_MARGIN);
 			argos_config.prepass_comp_step = read_param<unsigned int>(ParamID::PP_COMP_STEP);
+			unsigned int delta_time_loc = read_param<unsigned int>(ParamID::DLOC_ARG_NOM);
+			argos_config.delta_time_loc = calc_delta_time_loc(delta_time_loc);
 		}
 	}
 

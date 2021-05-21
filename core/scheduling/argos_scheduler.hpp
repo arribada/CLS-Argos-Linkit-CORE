@@ -60,7 +60,7 @@ public:
 	unsigned int convert_longitude(double x);
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
 	void build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet);
-	BaseDeltaTimeLoc delta_time_loc(GPSLogEntry const& a, GPSLogEntry const& b);
+	void adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute);
 	std::time_t next_duty_cycle(unsigned int duty_cycle);
 	std::time_t next_prepass();
 

@@ -241,6 +241,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = false;
+	unsigned int dloc_arg_nom = 60*60U;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -255,10 +256,17 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 14;
+	gps_entry.header.minutes = 1;
+	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -307,8 +315,8 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
 	gps_entry.info.day = 7;
-	gps_entry.info.hour = 15;
-	gps_entry.info.min = 6;
+	gps_entry.info.hour = 17;
+	gps_entry.info.min = 1;
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.858;
 	gps_entry.info.lat = -35.4586;
@@ -454,6 +462,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	unsigned int tx_counter = 0;
 	unsigned int argos_hexid = 0x01234567U;
 	unsigned int lb_threshold = 0U;
+	unsigned int dloc_arg_nom = 60*60U;
 	bool lb_en = false;
 	bool underwater_en = false;
 
@@ -470,6 +479,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 
 	// Sample configuration provided with prepass library V3.4
 	BasePassPredict pass_predict = {
@@ -492,6 +502,12 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 
 	// Populate 4 GPS entries
 	GPSLogEntry gps_entry;
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 14;
+	gps_entry.header.minutes = 1;
+	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -512,6 +528,12 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	fake_timer->set_counter(t*1000);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 15;
+	gps_entry.header.minutes = 1;
+	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -528,6 +550,12 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 16;
+	gps_entry.header.minutes = 1;
+	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -544,6 +572,12 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 17;
+	gps_entry.header.minutes = 1;
+	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;

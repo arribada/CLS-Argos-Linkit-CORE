@@ -496,40 +496,15 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 #endif
 }
 
-BaseDeltaTimeLoc ArgosScheduler::delta_time_loc(GPSLogEntry const& a, GPSLogEntry const& b)
+void ArgosScheduler::adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute)
 {
-	std::time_t t_a, t_b, t_diff;
-
-	t_a = convert_epochtime(a.info.year, a.info.month, a.info.day, a.info.hour, a.info.min, a.info.sec);
-	t_b = convert_epochtime(b.info.year, b.info.month, b.info.day, b.info.hour, b.info.min, b.info.sec);
-
-	if (t_a >= t_b) {
-		t_diff = t_a - t_b;
-	} else {
-		t_diff = t_b - t_a;
-	}
-
-	if (t_diff >= (24 * SECONDS_PER_HOUR)) {
-		return BaseDeltaTimeLoc::DELTA_T_24HR;
-	} else if (t_diff >= (12 * SECONDS_PER_HOUR)) {
-		return BaseDeltaTimeLoc::DELTA_T_12HR;
-	} else if (t_diff >= (6 * SECONDS_PER_HOUR)) {
-		return BaseDeltaTimeLoc::DELTA_T_6HR;
-	} else if (t_diff >= (4 * SECONDS_PER_HOUR)) {
-		return BaseDeltaTimeLoc::DELTA_T_4HR;
-	} else if (t_diff >= (3 * SECONDS_PER_HOUR)) {
-		return BaseDeltaTimeLoc::DELTA_T_3HR;
-	} else if (t_diff >= (2 * SECONDS_PER_HOUR)) {
-		return BaseDeltaTimeLoc::DELTA_T_2HR;
-	} else if (t_diff >= (1 * SECONDS_PER_HOUR)) {
-		return BaseDeltaTimeLoc::DELTA_T_1HR;
-	} else if (t_diff >= (30 * SECONDS_PER_MINUTE)) {
-		return BaseDeltaTimeLoc::DELTA_T_30MIN;
-	} else if (t_diff >= (15 * SECONDS_PER_MINUTE)) {
-		return BaseDeltaTimeLoc::DELTA_T_15MIN;
-	} else {
-		return BaseDeltaTimeLoc::DELTA_T_10MIN;
-	}
+	uint16_t year;
+	uint8_t  month;
+	uint8_t  second;
+	std::time_t t;
+	t = convert_epochtime(a.header.year, a.header.month, a.header.day, a.header.hours, a.header.minutes, a.header.seconds);
+	t -= ((unsigned int)a.info.onTime / 1000);
+	convert_datetime_to_epoch(t, year, month, day, hour, minute, second);
 }
 
 void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet)
@@ -560,12 +535,18 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	PACK_BITS(LONG_PACKET_BITFIELD, packet, base_pos, 8);
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: bitfield=%u", LONG_PACKET_BITFIELD);
 #endif
-	PACK_BITS(gps_entries[0].info.day, packet, base_pos, 5);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: day=%u", gps_entries[0].info.day);
-	PACK_BITS(gps_entries[0].info.hour, packet, base_pos, 5);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: hour=%u", gps_entries[0].info.hour);
-	PACK_BITS(gps_entries[0].info.min, packet, base_pos, 6);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: min=%u", gps_entries[0].info.min);
+
+	// This will adjust the log time for the GPS on time since we want the time
+	// of when the GPS was scheduled and not the log time
+	uint8_t day, hour, minute;
+	adjust_logtime_for_gps_ontime(gps_entries[0], day, hour, minute);
+
+	PACK_BITS(day, packet, base_pos, 5);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: day=%u", (unsigned int)day);
+	PACK_BITS(hour, packet, base_pos, 5);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: hour=%u", (unsigned int)hour);
+	PACK_BITS(minute, packet, base_pos, 6);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: min=%u", (unsigned int)minute);
 
 	// First GPS entry
 	if (gps_entries[0].info.valid) {
@@ -586,8 +567,8 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: voltage=%u", gps_entries[0].info.batt_voltage / MV_PER_UNIT);
 
 	// Delta time loc
-	PACK_BITS((unsigned int)delta_time_loc(gps_entries[0], gps_entries[1]), packet, base_pos, 4);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: delta_time_loc=%u", (unsigned int)delta_time_loc(gps_entries[0], gps_entries[1]));
+	PACK_BITS((unsigned int)m_argos_config.delta_time_loc, packet, base_pos, 4);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: delta_time_loc=%u", (unsigned int)m_argos_config.delta_time_loc);
 
 	// Subsequent GPS entries
 	for (unsigned int i = 1; i < MAX_GPS_ENTRIES_IN_PACKET; i++) {

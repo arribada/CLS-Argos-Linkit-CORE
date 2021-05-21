@@ -145,6 +145,24 @@ namespace UBX
             };
         } // namespace PRT
 
+        namespace ANT
+        {
+            enum FLAGS : uint16_t
+            {
+                FLAGS_SVCS        = 1 << 0,
+                FLAGS_SCD         = 1 << 1,
+                FLAGS_OCD         = 1 << 2,
+                FLAGS_PDWN_ON_SCD = 1 << 3,
+                FLAGS_RECOVERY    = 1 << 4
+            };
+
+            struct __attribute__((__packed__)) MSG_ANT
+            {
+                uint16_t  flags;
+                uint16_t  pins;
+            };
+        } // namespace ANT
+
         namespace MSG
         {
             struct __attribute__((__packed__)) MSG_MSG
@@ -544,6 +562,20 @@ namespace UBX
                 uint16_t eDOP;
             };
         } // namespace DOP
+
+        namespace STATUS
+        {
+            struct __attribute__((__packed__)) MSG_STATUS
+            {
+                uint32_t iTow;
+                uint8_t gpsFix;
+                uint8_t flags;
+                uint8_t fixStat;
+                uint8_t flags2;
+                uint32_t ttff;
+                uint32_t msss;
+            };
+        } // namespace STATUS
 
         namespace PVT
         {
