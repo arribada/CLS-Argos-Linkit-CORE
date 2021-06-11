@@ -640,7 +640,7 @@ protected:
 	static inline void encode(std::string& output, const std::time_t& value) {
 		char buff[256];
 		auto time = std::gmtime(&value);
-		int written = std::strftime(buff, sizeof(buff), "%c", time);
+		int written = std::strftime(buff, sizeof(buff), "%d/%m/%Y %H:%M:%S", time);
 
 		if (written == 0)
 			throw DTE_PROTOCOL_MESSAGE_TOO_LARGE;
@@ -1175,9 +1175,17 @@ private:
 
 	static std::time_t decode_datestring(const std::string& s) {
 		struct tm tm = {};
-		strptime(s.c_str(), "%a %b %d %H:%M:%S %Y", &tm);
+		char *p;
+
+		// Try default datestring format
+		p = strptime(s.c_str(), "%d/%m/%Y %H:%M:%S", &tm);
+
+		// Try alternative datestring format if this fails
+		if (p == nullptr || *p != '\0')
+			p = strptime(s.c_str(), "%a %b %d %H:%M:%S %Y", &tm);
+
 		time_t t = mktime(&tm);
-		if (t == -1)
+		if (t == -1 || p == nullptr || *p != '\0')
 		{
 			{
 				DEBUG_ERROR("DTE_PROTOCOL_BAD_FORMAT in %s()", __FUNCTION__);

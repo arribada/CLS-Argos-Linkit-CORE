@@ -166,8 +166,32 @@ TEST(ConfigStore, CheckDefaultZoneFile)
 
 	BaseZone& default_zone = store->read_zone();
 	CHECK_EQUAL(1, default_zone.zone_id);
-	CHECK_FALSE(default_zone.enable_monitoring);
-
+	CHECK_TRUE(default_zone.enable_monitoring);
+	CHECK_TRUE(default_zone.argos_depth_pile == BaseArgosDepthPile::DEPTH_PILE_1);
+	CHECK_TRUE(default_zone.argos_duty_cycle == 0xFFFFFF);
+	CHECK_TRUE(default_zone.argos_extra_flags_enable);
+	CHECK_TRUE(default_zone.argos_mode == BaseArgosMode::LEGACY);
+	CHECK_TRUE(default_zone.argos_power == BaseArgosPower::POWER_200_MW);
+	CHECK_TRUE(default_zone.argos_time_repetition_seconds == 240);
+	CHECK_TRUE(default_zone.center_latitude_y == -48.8752);
+	CHECK_TRUE(default_zone.center_longitude_x == -123.3925);
+	CHECK_TRUE(default_zone.comms_vector == BaseCommsVector::UNCHANGED);
+	CHECK_TRUE(default_zone.day == 1);
+	CHECK_TRUE(default_zone.delta_arg_loc_argos_seconds == 3600);
+	CHECK_TRUE(default_zone.delta_arg_loc_cellular_seconds == 65);
+	CHECK_TRUE(default_zone.enable_activation_date);
+	CHECK_TRUE(default_zone.enable_entering_leaving_events);
+	CHECK_TRUE(default_zone.enable_monitoring);
+	CHECK_FALSE(default_zone.enable_out_of_zone_detection_mode);
+	CHECK_TRUE(default_zone.gnss_acquisition_timeout_seconds == 240);
+	CHECK_TRUE(default_zone.gnss_extra_flags_enable);
+	CHECK_TRUE(default_zone.hdop_filter_threshold == 2);
+	CHECK_TRUE(default_zone.hour == 0);
+	CHECK_TRUE(default_zone.minute == 0);
+	CHECK_TRUE(default_zone.month == 1);
+	CHECK_TRUE(default_zone.radius_m == 100);
+	CHECK_TRUE(default_zone.year == 2020);
+	CHECK_TRUE(default_zone.zone_type == BaseZoneType::CIRCLE);
 	delete store;
 }
 

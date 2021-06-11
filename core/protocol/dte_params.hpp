@@ -1,5 +1,4 @@
-#ifndef __DTE_PARAMS_HPP_
-#define __DTE_PARAMS_HPP_
+#pragma once
 
 #include "base_types.hpp"
 
@@ -9,8 +8,8 @@ struct ParamValue {
 };
 
 static const BaseMap param_map[] = {
-	{ "ARGOS_DECID", "IDT06", BaseEncoding::UINT, 0U, 0xFFFFFFFU, {}, true, true },
-	{ "ARGOS_HEXID", "IDT07", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFFU, {}, true, true },
+	{ "ARGOS_DECID", "IDP12", BaseEncoding::UINT, 0U, 0xFFFFFFFU, {}, true, true },
+	{ "ARGOS_HEXID", "IDT06", BaseEncoding::HEXADECIMAL, 0U, 0xFFFFFFFU, {}, true, true },
 	{ "DEVICE_MODEL", "IDT02", BaseEncoding::TEXT, "", "", {}, true, true },
 	{ "FW_APP_VERSION", "IDT03", BaseEncoding::TEXT, "", "", {}, true, false },
 	{ "LAST_TX", "ART01", BaseEncoding::DATESTRING, 0, 0, {}, true, false },
@@ -60,5 +59,3 @@ static const BaseMap param_map[] = {
 	{ "GNSS_FIX_MODE", "GNP10", BaseEncoding::GNSSFIXMODE, 0U, 0U, {1U, 2U, 3U}, true, true },
 	{ "GNSS_DYN_MODEL", "GNP11", BaseEncoding::GNSSDYNMODEL, 0U, 0U, {0U, 2U, 3U, 4U, 5U, 6U, 7U, 8U, 9U, 10U}, true, true },
 };
-
-#endif // __DTE_PARAMS_HPP_

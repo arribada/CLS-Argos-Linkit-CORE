@@ -47,28 +47,28 @@ TEST(Encoder, PARML_RESP)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PARML_RESP, params);
-	STRCMP_EQUAL("$O;PARML#04D;IDT07,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05\r", s.c_str());
+	STRCMP_EQUAL("$O;PARML#04D;IDT06,IDP12,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05\r", s.c_str());
 }
 
 TEST(Encoder, PARMR_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PARMR_REQ, params);
-	STRCMP_EQUAL("$PARMR#04D;IDT07,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05\r", s.c_str());
+	STRCMP_EQUAL("$PARMR#04D;IDT06,IDP12,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05\r", s.c_str());
 }
 
 TEST(Encoder, STATR_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::STATR_REQ, params);
-	STRCMP_EQUAL("$STATR#04D;IDT07,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05\r", s.c_str());
+	STRCMP_EQUAL("$STATR#04D;IDT06,IDP12,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05\r", s.c_str());
 }
 
 TEST(Encoder, PARMW_REQ)
 {
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::PARMW_REQ, values);
-	STRCMP_EQUAL("$PARMW#016;IDT07=DEAD,IDT06=57005\r", s.c_str());
+	STRCMP_EQUAL("$PARMW#016;IDT06=DEAD,IDP12=57005\r", s.c_str());
 }
 
 TEST(Encoder, ZONER_REQ)
@@ -302,7 +302,7 @@ TEST(Encoder, PARAM_LAST_TX)
 	ParamValue p = { ParamID::LAST_TX, (std::time_t)0 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#01E;ART01=Thu Jan  1 00:00:00 1970\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#019;ART01=01/01/1970 00:00:00\r", s.c_str());
 }
 
 TEST(Encoder, STAT_LAST_TX)
@@ -311,7 +311,7 @@ TEST(Encoder, STAT_LAST_TX)
 	ParamValue p = { ParamID::LAST_TX, (std::time_t)0 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::STATR_RESP, v);
-	STRCMP_EQUAL("$O;STATR#01E;ART01=Thu Jan  1 00:00:00 1970\r", s.c_str());
+	STRCMP_EQUAL("$O;STATR#019;ART01=01/01/1970 00:00:00\r", s.c_str());
 }
 
 TEST(Encoder, STAT_DEVICE_MODEL)
@@ -359,7 +359,7 @@ TEST(Encoder, PARAM_LAST_FULL_CHARGE_DATE)
 	ParamValue p = { ParamID::LAST_FULL_CHARGE_DATE, (std::time_t)0 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#01E;POT05=Thu Jan  1 00:00:00 1970\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#019;POT05=01/01/1970 00:00:00\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_PROFILE_NAME)
@@ -388,7 +388,7 @@ TEST(Encoder, PARAM_ARGOS_AOP_DATE)
 	ParamValue p = { ParamID::ARGOS_AOP_DATE, (std::time_t)0 };
 	std::vector<ParamValue> v = { p };
 	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#01E;ART03=Thu Jan  1 00:00:00 1970\r", s.c_str());
+	STRCMP_EQUAL("$O;PARMR#019;ART03=01/01/1970 00:00:00\r", s.c_str());
 }
 
 TEST(Encoder, PARAM_ARGOS_FREQ)

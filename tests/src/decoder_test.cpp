@@ -194,7 +194,7 @@ TEST(Decoder, CommandResponseWithErrorCode)
 TEST(Decoder, ParamKeyList)
 {
 	std::string s;
-	s = "$PARMR#011;IDT06,IDT07,IDT03\r";
+	s = "$PARMR#011;IDP12,IDT06,IDT03\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_EQUAL(0, error_code);
 	CHECK_TRUE(DTECommand::PARMR_REQ == command);
@@ -206,7 +206,7 @@ TEST(Decoder, ParamKeyList)
 TEST(Decoder, StatKeyList)
 {
 	std::string s;
-	s = "$STATR#011;IDT06,IDT07,IDT03\r";
+	s = "$STATR#011;IDP12,IDT06,IDT03\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_EQUAL(0, error_code);
 	CHECK_TRUE(DTECommand::STATR_REQ == command);
@@ -218,7 +218,7 @@ TEST(Decoder, StatKeyList)
 TEST(Decoder, BasicKeyValueList)
 {
 	std::string s;
-	s = "$PARMW#015;IDT06=1234,IDT07=DEAD\r";
+	s = "$PARMW#015;IDP12=1234,IDT06=DEAD\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(ParamID::ARGOS_DECID == param_values[0].param);
 	CHECK_EQUAL(1234, std::get<unsigned int>(param_values[0].value));
@@ -240,7 +240,7 @@ TEST(Decoder, MultiTextParams)
 TEST(Decoder, KeyValueListWrongArgType)
 {
 	std::string s;
-	s = "$PARMW#015;IDT06=DEAD,IDT07=1234\r";
+	s = "$PARMW#015;IDP12=DEAD,IDT06=1234\r";
 	CHECK_THROWS(ErrorCode, DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 }
 
@@ -328,7 +328,7 @@ TEST(Decoder, PARML_REQ)
 TEST(Decoder, PARMR_REQ)
 {
 	std::string s;
-	s = "$PARMR#00B;IDT06,IDT07\r";
+	s = "$PARMR#00B;IDP12,IDT06\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMR_REQ == command);
 	CHECK_TRUE(ParamID::ARGOS_DECID == params[0]);
@@ -338,7 +338,7 @@ TEST(Decoder, PARMR_REQ)
 TEST(Decoder, STATR_REQ)
 {
 	std::string s;
-	s = "$STATR#00B;IDT06,IDT07\r";
+	s = "$STATR#00B;IDP12,IDT06\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::STATR_REQ == command);
 	CHECK_TRUE(ParamID::ARGOS_DECID == params[0]);
@@ -348,7 +348,7 @@ TEST(Decoder, STATR_REQ)
 TEST(Decoder, PARMW_REQ)
 {
 	std::string s;
-	s = "$PARMW#00C;IDT06=123456\r";
+	s = "$PARMW#00C;IDP12=123456\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMW_REQ == command);
 	CHECK_TRUE(ParamID::ARGOS_DECID == param_values[0].param);
@@ -500,7 +500,7 @@ TEST(Decoder, FACTW_REQ)
 TEST(Decoder, PARML_RESP)
 {
 	std::string s;
-	s = "$O;PARML#00B;IDT06,IDT07\r";
+	s = "$O;PARML#00B;IDP12,IDT06\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARML_RESP == command);
 	CHECK_TRUE(ParamID::ARGOS_DECID == params[0]);
@@ -510,7 +510,7 @@ TEST(Decoder, PARML_RESP)
 TEST(Decoder, PARMR_RESP)
 {
 	std::string s;
-	s = "$O;PARMR#016;IDT06=57005,IDT07=DEAD\r";
+	s = "$O;PARMR#016;IDP12=57005,IDT06=DEAD\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMR_RESP == command);
 	CHECK_TRUE(ParamID::ARGOS_DECID == param_values[0].param);
@@ -522,7 +522,7 @@ TEST(Decoder, PARMR_RESP)
 TEST(Decoder, STATR_RESP)
 {
 	std::string s;
-	s = "$O;STATR#016;IDT06=57005,IDT07=DEAD\r";
+	s = "$O;STATR#016;IDP12=57005,IDT06=DEAD\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::STATR_RESP == command);
 	CHECK_TRUE(ParamID::ARGOS_DECID == param_values[0].param);
