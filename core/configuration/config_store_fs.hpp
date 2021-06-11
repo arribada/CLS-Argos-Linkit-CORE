@@ -6,6 +6,8 @@
 #include "filesystem.hpp"
 #include "debug.hpp"
 #include "battery.hpp"
+#include "dte_params.hpp"
+
 
 extern BatteryMonitor *battery_monitor;
 
@@ -17,60 +19,206 @@ protected:
 	bool m_is_config_valid;
 	BasePassPredict m_pass_predict;
 
-	bool serialize_config_entry(LFSFile &f, BaseType& d) {
+	// Serialization format is as follows:
+	//
+	// <KEY><BINARY_DATA_ZERO_PADDED_TO_128_BYTES>
+	//
+	// Note that <KEY> must match the entry at index inside the
+	// param_map table otherwise the configuration item is
+	// rejected.  <KEY> has fixed length of 5 e.g., "IDT01".
 
-		// std::string is dynamically allocated so we can't write the std::variant
-		// directly and have to translate it first to a char array
+	bool serialize_config_entry(LFSFile &f, unsigned int index) {
+		if (index >= MAX_CONFIG_ITEMS)
+			return false;
+		const BaseMap* entry = &param_map[index];
+		struct Serializer {
+			uint8_t entry_buffer[BASE_TEXT_MAX_LENGTH];
+			void operator()(std::string& s) {
+				std::memset(entry_buffer, 0, sizeof(entry_buffer));
+				std::memcpy(entry_buffer, s.data(), s.size());
+			};
+			// BaseGNSSDynModel
+			void operator()(unsigned int &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(int &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(double &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(std::time_t &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(BaseArgosMode &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(BaseArgosPower &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(BaseArgosDepthPile &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(bool &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(BaseGNSSFixMode &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(BaseGNSSDynModel &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(BaseRawData &) {
+			};
+		} s;
+		std::visit(s, m_params.at(index));
 
-		char entry[BASE_TEXT_MAX_LENGTH];
-		if (d.index() == 0) {  // std::string type
-			std::strcpy(entry, std::get<std::string>(d).c_str());
-			return f.write(entry, BASE_TEXT_MAX_LENGTH) == BASE_TEXT_MAX_LENGTH;
-		} else {   			// All other types
-			return f.write(&d, sizeof(BaseType)) == sizeof(BaseType) &&
-				f.write(entry, BASE_TEXT_MAX_LENGTH - sizeof(BaseType)) == BASE_TEXT_MAX_LENGTH - sizeof(BaseType);
-		}
+		return f.write((void *)entry->key.data(), entry->key.size()) == (lfs_ssize_t)entry->key.size() &&
+				f.write(s.entry_buffer, sizeof(s.entry_buffer)) == sizeof(s.entry_buffer);
 	}
 
-	bool deserialize_config_entry(LFSFile &f, BaseType& d) {
+	bool deserialize_config_entry(LFSFile &f, unsigned int index) {
+		if (index >= MAX_CONFIG_ITEMS)
+			return false;
+		const BaseMap* entry = &param_map[index];
+		uint8_t entry_buffer[KEY_LENGTH + BASE_TEXT_MAX_LENGTH];
 
-		// std::string is dynamically allocated so we can't read into the std::variant
-		// directly and have to translate it first from a char array
+		// Read entry from file
+		if (f.read(entry_buffer, KEY_LENGTH + BASE_TEXT_MAX_LENGTH) != KEY_LENGTH + BASE_TEXT_MAX_LENGTH)
+			return false;
 
-		char entry[BASE_TEXT_MAX_LENGTH];
-		if (d.index() == 0) {  // std::string type
-			if (f.read(entry, BASE_TEXT_MAX_LENGTH) != BASE_TEXT_MAX_LENGTH)
-				return false;
-			d = std::string(entry);
-			return true;
-		} else {             // All other types
-			return f.read(&d, sizeof(BaseType)) == sizeof(BaseType) &&
-					f.read(entry, BASE_TEXT_MAX_LENGTH - sizeof(BaseType));
+		// Check param key matches
+		if (std::string((const char *)entry_buffer, KEY_LENGTH) != entry->key)
+			return false;
+
+		uint8_t *param_value = &entry_buffer[KEY_LENGTH];
+
+		switch (entry->encoding) {
+		case BaseEncoding::DECIMAL:
+		{
+			int value = *(int *)param_value;
+			m_params.at(index) = value;
+			break;
 		}
+		case BaseEncoding::AQPERIOD:
+		case BaseEncoding::HEXADECIMAL:
+		case BaseEncoding::UINT:
+		{
+			unsigned int value = *(unsigned int *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::TEXT:
+		{
+			std::string value((const char *)param_value);
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::DATESTRING:
+		{
+			std::time_t value = *(std::time_t *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::BOOLEAN:
+		{
+			bool value = *(bool *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::ARGOSFREQ:
+		case BaseEncoding::FLOAT:
+		{
+			double value = *(double *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::DEPTHPILE:
+		{
+			BaseArgosDepthPile value = *(BaseArgosDepthPile *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::ARGOSMODE:
+		{
+			BaseArgosMode value = *(BaseArgosMode *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::ARGOSPOWER:
+		{
+			BaseArgosPower value = *(BaseArgosPower *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::GNSSFIXMODE:
+		{
+			BaseGNSSFixMode value = *(BaseGNSSFixMode *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::GNSSDYNMODEL:
+		{
+			BaseGNSSDynModel value = *(BaseGNSSDynModel *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::KEY_LIST:
+		case BaseEncoding::KEY_VALUE_LIST:
+		case BaseEncoding::BASE64:
+		default:
+			return false;
+		}
+
+		return true;
 	}
 
 	void deserialize_config() {
 		DEBUG_TRACE("ConfigurationStoreLFS::deserialize_config");
 		LFSFile f(&m_filesystem, "config.dat", LFS_O_RDONLY);
 
+		unsigned int config_version_code = 0;
+
+		// Read configuration version field
+		if (f.read(&config_version_code, sizeof(config_version_code)) != sizeof(config_version_code) ||
+				config_version_code != m_config_version_code) {
+
+			DEBUG_WARN("deserialize_config: configuration version mismatch; try to recover protected & reset all others");
+
+			// Try to recover the protected fields
+			if (!deserialize_config_entry(f, (unsigned int)ParamID::ARGOS_DECID))
+				DEBUG_WARN("deserialize_config: failed to recover ARGOS_DECID");
+			else
+				DEBUG_INFO("deserialize_config: recovered ARGOS_DECID");
+			if (!deserialize_config_entry(f, (unsigned int)ParamID::ARGOS_HEXID))
+				DEBUG_WARN("deserialize_config: failed to recover ARGOS_HEXID");
+			else
+				DEBUG_INFO("deserialize_config: recovered ARGOS_HEXID");
+
+			m_requires_serialization = true;
+			return;
+		}
+
 		for (unsigned int i = 0; i < MAX_CONFIG_ITEMS; i++) {
 
-			if (!deserialize_config_entry(f, m_params.at(i))) {
-				DEBUG_WARN("deserialize_config: unable to deserialize param %u - resetting...", i);
+			if (!deserialize_config_entry(f, i)) {
+				DEBUG_WARN("deserialize_config: unable to deserialize param %s - resetting...", param_map[i].name.c_str());
 				// Reset parameter to factory default
 				m_params.at(i) = default_params.at(i);
 				m_requires_serialization = true;
+				continue;
 			}
 
 			// Check variant index (type) matches default parameters
 			if (m_params.at(i).index() != default_params.at(i).index()) {
-				DEBUG_WARN("deserialize_config: param %u variant index mismatch expected %u but got %u - resetting...",
-						i,
+				DEBUG_WARN("deserialize_config: param %s variant index mismatch expected %u but got %u - resetting...",
+						param_map[i].name.c_str(),
 						default_params.at(i).index(),
 						m_params.at(i).index());
 				// Reset parameter to factory default
 				m_params.at(i) = default_params.at(i);
 				m_requires_serialization = true;
+				continue;
 			}
 		}
 
@@ -81,19 +229,23 @@ protected:
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_config");
 		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC);
 
+		// Write configuration version field
+		if (f.write((void *)&m_config_version_code, sizeof(m_config_version_code)) != sizeof(m_config_version_code))
+			throw CONFIG_STORE_CORRUPTED;
+
 		for (unsigned int i = 0; i < MAX_CONFIG_ITEMS; i++) {
 
 			// Check variant index (type) matches default parameter
 			if (m_params.at(i).index() != default_params.at(i).index()) {
-				DEBUG_WARN("serialize_config: param %u variant index mismatch expected %u but got %u - resetting...",
-						i,
+				DEBUG_WARN("serialize_config: param %s variant index mismatch expected %u but got %u - resetting...",
+						param_map[i].name.c_str(),
 						default_params.at(i).index(),
 						m_params.at(i).index());
 				// Reset parameter to back to factory default
 				m_params.at(i) = default_params.at(i);
 			}
 
-			if (!serialize_config_entry(f, m_params.at(i))) {
+			if (!serialize_config_entry(f, i)) {
 				DEBUG_ERROR("serialize_config: failed to serialize param %u", i);
 				throw CONFIG_STORE_CORRUPTED;
 			}
@@ -149,6 +301,11 @@ private:
 
 	void serialize_protected_config() {
 		LFSFile f(&m_filesystem, "config.dat", LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC);
+
+		// Write configuration version field
+		if (f.write((void *)&m_config_version_code, sizeof(m_config_version_code)) != sizeof(m_config_version_code))
+			throw CONFIG_STORE_CORRUPTED;
+
 		for (unsigned int i = 0; i <= (unsigned int)ParamID::ARGOS_HEXID ; i++) {
 			// Check variant index (type) matches default parameter
 			if (m_params.at(i).index() != default_params.at(i).index()) {
@@ -160,7 +317,7 @@ private:
 				m_params.at(i) = default_params.at(i);
 			}
 
-			if (!serialize_config_entry(f, m_params.at(i))) {
+			if (!serialize_config_entry(f, i)) {
 				DEBUG_TRACE("serialize_config: failed to serialize protected param %u", i);
 				throw CONFIG_STORE_CORRUPTED;
 			}

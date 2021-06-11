@@ -371,17 +371,6 @@ TEST(Encoder, PARAM_ARGOS_PROFILE_NAME)
 	STRCMP_EQUAL("$O;PARMR#014;IDP11=Turtle Tracker\r", s.c_str());
 }
 
-TEST(Encoder, PARAM_ARGOS_AOP_STATUS)
-{
-	std::string s;
-	unsigned char buffer[] = { 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15 };
-	BaseRawData raw_data = { buffer, sizeof(buffer), "" };
-	ParamValue p = { ParamID::AOP_STATUS, raw_data };
-	std::vector<ParamValue> v = { p };
-	s = DTEEncoder::encode(DTECommand::PARMR_RESP, v);
-	STRCMP_EQUAL("$O;PARMR#01A;XXXXX=AAECAwQFBgcJCgsMDQ4P\r", s.c_str());
-}
-
 TEST(Encoder, PARAM_ARGOS_AOP_DATE)
 {
 	std::string s;

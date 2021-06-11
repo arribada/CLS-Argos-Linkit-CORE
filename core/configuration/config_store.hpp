@@ -11,7 +11,7 @@
 #include "haversine.hpp"
 #include "timeutils.hpp"
 
-#define MAX_CONFIG_ITEMS  50
+#define MAX_CONFIG_ITEMS  (unsigned int)ParamID::__PARAM_SIZE
 
 using namespace std::string_literals;
 
@@ -53,6 +53,7 @@ struct ArgosConfig {
 class ConfigurationStore {
 
 protected:
+	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x00;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,

@@ -126,6 +126,77 @@ TEST(ConfigStore, CheckConfigStoreResetsBadVariantType)
 	delete store;
 }
 
+TEST(ConfigStore, CheckPartiallyCorruptedConfigurationStoreRetainsProtectedParams)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	// Set protected parameter values
+	unsigned int dec_id = 1234U;
+	unsigned int hex_id = 0x1234567U;
+	store->write_param(ParamID::ARGOS_DECID, dec_id);
+	store->write_param(ParamID::ARGOS_HEXID, hex_id);
+
+	// Save parameters
+	store->save_params();
+
+	{
+		// Overwrite first 4 bytes (configuration version)
+		LFSFile f(main_filesystem, "config.dat", LFS_O_WRONLY);
+		uint32_t clobbered_version = 0;
+		f.write(&clobbered_version, sizeof(uint32_t));
+	}
+
+	// Delete the object and recreate a new one
+	delete store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();  // This will read in the partially saved file
+
+	// Check default value has been restored
+	CHECK_EQUAL(dec_id, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
+	CHECK_EQUAL(hex_id, store->read_param<unsigned int>(ParamID::ARGOS_HEXID));
+
+	delete store;
+}
+
+
+TEST(ConfigStore, CheckFullyCorruptedConfigurationStore)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	// Set protected parameter values
+	unsigned int dec_id = 1234U;
+	unsigned int hex_id = 0x1234567U;
+	store->write_param(ParamID::ARGOS_DECID, dec_id);
+	store->write_param(ParamID::ARGOS_HEXID, hex_id);
+
+	// Save parameters
+	store->save_params();
+
+	{
+		// Overwrite first 1024 bytes (configuration version)
+		LFSFile f(main_filesystem, "config.dat", LFS_O_WRONLY);
+		uint8_t clobber[1024];
+		f.write(clobber, sizeof(clobber));
+	}
+
+	// Delete the object and recreate a new one
+	delete store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();  // This will read in the partially saved file
+
+	// Check default values are restored
+	CHECK_EQUAL(0U, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
+	CHECK_EQUAL(0U, store->read_param<unsigned int>(ParamID::ARGOS_HEXID));
+
+	delete store;
+}
+
 TEST(ConfigStore, CheckFactoryResetRetainsProtectedParams)
 {
 	LFSConfigurationStore *store;

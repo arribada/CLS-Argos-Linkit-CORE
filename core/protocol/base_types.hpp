@@ -1,5 +1,4 @@
-#ifndef __BASE_TYPES_HPP_
-#define __BASE_TYPES_HPP_
+#pragma once
 
 #include <cstring>
 #include <string>
@@ -13,6 +12,7 @@ extern "C" {
 
 #define BASE_TEXT_MAX_LENGTH  128
 #define BASE_MAX_PAYLOAD_LENGTH 0xFFF
+#define KEY_LENGTH            5
 
 // Offset applied to Argos frequency parameter supplied over DTE interface
 #define ARGOS_FREQUENCY_OFFSET	4016200U
@@ -69,6 +69,7 @@ enum class ParamID {
 	GNSS_COLD_ACQ_TIMEOUT,
 	GNSS_FIX_MODE,
 	GNSS_DYN_MODEL,
+	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
 };
 
@@ -237,5 +238,3 @@ struct BaseMap {
 	bool           is_implemented;
 	bool           is_writable;
 };
-
-#endif // __BASE_TYPES_HPP_

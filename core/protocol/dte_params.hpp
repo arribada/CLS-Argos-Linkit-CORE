@@ -17,7 +17,7 @@ static const BaseMap param_map[] = {
 	{ "BATT_SOC", "POT03", BaseEncoding::UINT, 0U, 100U, {}, true, false },
 	{ "LAST_FULL_CHARGE_DATE", "POT05", BaseEncoding::DATESTRING, 0, 0, {}, true, false },
 	{ "PROFILE_NAME", "IDP11", BaseEncoding::TEXT, "", "", {}, true, true },
-	{ "AOP_STATUS", "XXXXX", BaseEncoding::BASE64, 0, 0, {}, false, false },  // FIXME: missing parameter key
+	{ "AOP_STATUS", "XXX01", BaseEncoding::UINT, 0, 0, {}, false, false },  // FIXME: missing parameter key
 	{ "ARGOS_AOP_DATE", "ART03", BaseEncoding::DATESTRING, 0, 0, {}, true, false },
 	{ "ARGOS_FREQ", "ARP03", BaseEncoding::ARGOSFREQ, 401.6200, 401.6800, {}, true, true },
 	{ "ARGOS_POWER", "ARP04", BaseEncoding::ARGOSPOWER, 0, 0, { 0, 1, 2, 3 }, true, true },
@@ -28,8 +28,8 @@ static const BaseMap param_map[] = {
 	{ "GNSS_EN", "GNP01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "DLOC_ARG_NOM", "ARP11", BaseEncoding::AQPERIOD, 0, 0, { 1, 2, 3, 4, 5, 6, 7, 8 }, true, true },
 	{ "ARGOS_DEPTH_PILE", "ARP16", BaseEncoding::DEPTHPILE, 0U, 0U, {1U, 2U, 3U, 4U, 8U, 9U, 10U, 11U, 12U}, true, true },
-	{ "GPS_CONST_SELECT", "", BaseEncoding::DECIMAL, 0, 0, {}, false, true },  // FIXME: missing parameter key
-	{ "GLONASS_CONST_SELECT", "GNP08", BaseEncoding::DECIMAL, 0, 0, {}, false, true },
+	{ "GPS_CONST_SELECT", "XXX02", BaseEncoding::UINT, 0, 0, {}, false, true },  // FIXME: missing parameter key
+	{ "GLONASS_CONST_SELECT", "GNP08", BaseEncoding::UINT, 0, 0, {}, false, true },
 	{ "GNSS_HDOPFILT_EN", "GNP02", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "GNSS_HDOPFILT_THR", "GNP03", BaseEncoding::UINT, 2U, 15U, {}, true, true },
 	{ "GNSS_ACQ_TIMEOUT", "GNP05", BaseEncoding::UINT, 10U, 600U, {}, true, true },
