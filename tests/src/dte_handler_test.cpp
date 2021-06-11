@@ -192,7 +192,7 @@ TEST(DTEHandler, ZONEW_REQ)
 	zone.enable_entering_leaving_events = true;
 	zone.enable_out_of_zone_detection_mode = true;
 	zone.enable_activation_date = true;
-	zone.year = 1970;
+	zone.year = 2020;
 	zone.month = 1;
 	zone.day = 1;
 	zone.hour = 0;
@@ -209,8 +209,8 @@ TEST(DTEHandler, ZONEW_REQ)
 	zone.gnss_extra_flags_enable = true;
 	zone.hdop_filter_threshold = 2U;
 	zone.gnss_acquisition_timeout_seconds = 60U;
-	zone.center_latitude_y = 0;
-	zone.center_longitude_x = 0;
+	zone.center_latitude_y = -48.8752;
+	zone.center_longitude_x = -123.3925;
 	zone.radius_m = 0;
 	ZoneCodec::encode(zone, zone_raw.str);
 
@@ -232,7 +232,7 @@ TEST(DTEHandler, ZONER_REQ)
 	zone.enable_entering_leaving_events = true;
 	zone.enable_out_of_zone_detection_mode = true;
 	zone.enable_activation_date = true;
-	zone.year = 1970;
+	zone.year = 2020;
 	zone.month = 1;
 	zone.day = 1;
 	zone.hour = 0;
@@ -249,8 +249,8 @@ TEST(DTEHandler, ZONER_REQ)
 	zone.gnss_extra_flags_enable = true;
 	zone.hdop_filter_threshold = 2U;
 	zone.gnss_acquisition_timeout_seconds = 60U;
-	zone.center_latitude_y = 0;
-	zone.center_longitude_x = 0;
+	zone.center_latitude_y = -48.8752;
+	zone.center_longitude_x = -123.3925;
 	zone.radius_m = 0;
 	configuration_store->write_zone(zone);
 
@@ -258,8 +258,8 @@ TEST(DTEHandler, ZONER_REQ)
 	std::string req = DTEEncoder::encode(DTECommand::ZONER_REQ, 1);
 
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;ZONER#01C;A/cIQAIgI4bqqqqkeNu6Abd0AAA=\r"s, resp);
-	std::string zone_resp_bits = websocketpp::base64_decode("A/cIQAIgI4bqqqqkeNu6Abd0AAA="s);
+	CHECK_EQUAL("$O;ZONER#01C;A/AIQAIgI4bqqqqkeSDT2MjOAAA=\r"s, resp);
+	std::string zone_resp_bits = websocketpp::base64_decode("A/AIQAIgI4bqqqqkeSDT2MjOAAA="s);
 	BaseZone zone_resp_decoded;
 	ZoneCodec::decode(zone_resp_bits, zone_resp_decoded);
 	CHECK_TRUE(zone == zone_resp_decoded);
