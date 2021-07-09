@@ -132,6 +132,9 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
 	CHECK_EQUAL(2, tx_counter);
 
+	// Make sure configuration store has been saved for each transmission
+	CHECK_EQUAL(2, fake_config_store->get_saved_count());
+
 	// Reference packet from CLS
 #ifdef ARGOS_USE_CRC8
 	CHECK_EQUAL("\xFF\xFE\x2F\x61\x23\x45\x67\xDC\x3B\xC6\x3E\xA7\xFC\x01\x1B\xE0\x00\x00\x10\x9F\x55\xB0"s, mock_artic->m_last_packet);

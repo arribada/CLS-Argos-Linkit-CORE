@@ -384,6 +384,9 @@ public:
 			// Use the first AOP entry to set the AOP last updated date
 			std::time_t argos_aop_date = convert_epochtime(pass_predict.records[0].bulletin.year, pass_predict.records[0].bulletin.month, pass_predict.records[0].bulletin.day, pass_predict.records[0].bulletin.hour, pass_predict.records[0].bulletin.minute, pass_predict.records[0].bulletin.second);
 			configuration_store->write_param(ParamID::ARGOS_AOP_DATE, argos_aop_date);
+
+			// Save configuration to commit AOPDATE
+			configuration_store->save_params();
 			break;
 		}
 

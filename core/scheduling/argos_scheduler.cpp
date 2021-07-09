@@ -628,6 +628,9 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 
 	// Increment TX counter
 	configuration_store->increment_tx_counter();
+
+	// Save configuration params
+	configuration_store->save_params();
 }
 
 void ArgosScheduler::periodic_algorithm() {

@@ -291,8 +291,13 @@ TEST(DTEHandler, PASPW_REQ)
 
 	std::time_t actual_aop_date = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
 	std::time_t expected_aop_date = convert_epochtime(pass_predict.records[0].bulletin.year, pass_predict.records[0].bulletin.month, pass_predict.records[0].bulletin.day, pass_predict.records[0].bulletin.hour, pass_predict.records[0].bulletin.minute, pass_predict.records[0].bulletin.second);
-
 	CHECK_EQUAL(expected_aop_date, actual_aop_date);
+
+	// Reload configuration store to confirm the parameter was committed
+	configuration_store->init();
+	actual_aop_date = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
+	CHECK_EQUAL(expected_aop_date, actual_aop_date);
+
 }
 
 TEST(DTEHandler, PASPW_REQ2)
