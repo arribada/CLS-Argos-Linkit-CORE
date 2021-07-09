@@ -31,12 +31,12 @@ TEST_GROUP(GpsScheduler)
 	FakeRTC *fake_rtc;
 	FakeTimer *fake_timer;
 	FakeLog *fake_log;
+    MockStdFunctionVoidComparator m_comparator_std_func;
+    MockGPSNavSettingsComparator  m_comparator_nav;
 
 	void setup() {
-	    MockStdFunctionVoidComparator m_comparator;
-	    MockGPSNavSettingsComparator  m_comparator2;
-	    mock().installComparator("std::function<void()>", m_comparator);
-	    mock().installComparator("const GPSNavSettings&", m_comparator2);
+	    mock().installComparator("std::function<void()>", m_comparator_std_func);
+	    mock().installComparator("const GPSNavSettings&", m_comparator_nav);
 		mock_m8q = new MockM8Q;
 		gps_sched = mock_m8q;
 		location_scheduler = gps_sched;
@@ -52,6 +52,9 @@ TEST_GROUP(GpsScheduler)
 		system_timer = fake_timer;
 		system_scheduler = new Scheduler(system_timer);
 		m_current_ms = 0;
+
+		// Initialise configuration store (applies defaults)
+		configuration_store->init();
 	}
 
 	void teardown() {
@@ -151,7 +154,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesNoFixB)
 	fake_config_store->write_param(ParamID::GNSS_FIX_MODE, fix_mode);
 	BaseGNSSDynModel dyn_model = BaseGNSSDynModel::SEA;
 	fake_config_store->write_param(ParamID::GNSS_DYN_MODEL, dyn_model);
-	GPSNavSettings nav_settings = { fix_mode, dyn_model };
+	const GPSNavSettings nav_settings = { fix_mode, dyn_model };
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
@@ -202,7 +205,7 @@ TEST(GpsScheduler, GNSSEnabled15MinutesNoFix)
 	fake_config_store->write_param(ParamID::GNSS_FIX_MODE, fix_mode);
 	BaseGNSSDynModel dyn_model = BaseGNSSDynModel::AUTOMOTIVE;
 	fake_config_store->write_param(ParamID::GNSS_DYN_MODEL, dyn_model);
-	GPSNavSettings nav_settings = { fix_mode, dyn_model };
+	const GPSNavSettings nav_settings = { fix_mode, dyn_model };
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 

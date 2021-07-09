@@ -19,6 +19,8 @@ struct GNSSConfig {
 	bool enable;
 	bool hdop_filter_enable;
 	unsigned int hdop_filter_threshold;
+	bool hacc_filter_enable;
+	unsigned int hacc_filter_threshold;
 	unsigned int acquisition_timeout_cold_start;
 	unsigned int acquisition_timeout;
 	unsigned int dloc_arg_nom;
@@ -104,12 +106,14 @@ protected:
 		/* PP_COMP_STEP */ 10U,
 		/* GNSS_COLD_ACQ_TIMEOUT */ 530U,
 		/* GNSS_FIX_MODE */ BaseGNSSFixMode::FIX_2D,
-		/* GNSS_DYN_MODEL */ BaseGNSSDynModel::SEA
+		/* GNSS_DYN_MODEL */ BaseGNSSDynModel::SEA,
+		/* GNSS_HACCFILT_EN */ (bool)false,
+		/* GNSS_HACCFILT_THR */ 50U,
 	}};
 	static inline const BaseZone default_zone = {
 		/* zone_id */ 1,
 		/* zone_type */ BaseZoneType::CIRCLE,
-		/* enable_monitoring */ true,
+		/* enable_monitoring */ false,
 		/* enable_entering_leaving_events */ true,
 		/* enable_out_of_zone_detection_mode */ false,
 		/* enable_activation_date */ true,
@@ -323,8 +327,10 @@ public:
 			gnss_config.dloc_arg_nom = read_param<unsigned int>(ParamID::DLOC_ARG_LB);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::LB_GNSS_ACQ_TIMEOUT);
 			gnss_config.acquisition_timeout_cold_start = read_param<unsigned int>(ParamID::GNSS_COLD_ACQ_TIMEOUT);
-			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);  // FIXME: should there be a LB_xxx variant?
+			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::LB_GNSS_HDOPFILT_THR);
+			gnss_config.hacc_filter_enable = read_param<bool>(ParamID::GNSS_HACCFILT_EN);
+			gnss_config.hacc_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HACCFILT_THR);
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			gnss_config.fix_mode = read_param<BaseGNSSFixMode>(ParamID::GNSS_FIX_MODE);
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
@@ -332,6 +338,8 @@ public:
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
 			gnss_config.dloc_arg_nom = m_zone.delta_arg_loc_argos_seconds == 0 ? read_param<unsigned int>(ParamID::DLOC_ARG_NOM) : m_zone.delta_arg_loc_argos_seconds;
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
+			gnss_config.hacc_filter_enable = read_param<bool>(ParamID::GNSS_HACCFILT_EN);
+			gnss_config.hacc_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HACCFILT_THR);
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::GNSS_ACQ_TIMEOUT);
 			gnss_config.acquisition_timeout_cold_start = read_param<unsigned int>(ParamID::GNSS_COLD_ACQ_TIMEOUT);
@@ -351,6 +359,8 @@ public:
 			gnss_config.acquisition_timeout_cold_start = read_param<unsigned int>(ParamID::GNSS_COLD_ACQ_TIMEOUT);
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR);
+			gnss_config.hacc_filter_enable = read_param<bool>(ParamID::GNSS_HACCFILT_EN);
+			gnss_config.hacc_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HACCFILT_THR);
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			gnss_config.fix_mode = read_param<BaseGNSSFixMode>(ParamID::GNSS_FIX_MODE);
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);

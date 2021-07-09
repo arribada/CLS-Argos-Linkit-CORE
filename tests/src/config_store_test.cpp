@@ -237,7 +237,7 @@ TEST(ConfigStore, CheckDefaultZoneFile)
 
 	BaseZone& default_zone = store->read_zone();
 	CHECK_EQUAL(1, default_zone.zone_id);
-	CHECK_TRUE(default_zone.enable_monitoring);
+	CHECK_FALSE(default_zone.enable_monitoring);
 	CHECK_TRUE(default_zone.argos_depth_pile == BaseArgosDepthPile::DEPTH_PILE_1);
 	CHECK_TRUE(default_zone.argos_duty_cycle == 0xFFFFFF);
 	CHECK_TRUE(default_zone.argos_extra_flags_enable);
@@ -252,7 +252,6 @@ TEST(ConfigStore, CheckDefaultZoneFile)
 	CHECK_TRUE(default_zone.delta_arg_loc_cellular_seconds == 65);
 	CHECK_TRUE(default_zone.enable_activation_date);
 	CHECK_TRUE(default_zone.enable_entering_leaving_events);
-	CHECK_TRUE(default_zone.enable_monitoring);
 	CHECK_FALSE(default_zone.enable_out_of_zone_detection_mode);
 	CHECK_TRUE(default_zone.gnss_acquisition_timeout_seconds == 240);
 	CHECK_TRUE(default_zone.gnss_extra_flags_enable);

@@ -378,42 +378,90 @@ TEST(DTEHandler, PASPW_REQ2)
 	}
 }
 
-TEST(DTEHandler, DUMPD_REQ)
+TEST(DTEHandler, DUMPD_REQ_SensorLog)
 {
+	DTECommand command;
+	std::vector<ParamID> params;
+	std::vector<ParamValue> param_values;
+	std::vector<BaseType> arg_list;
+	unsigned int error_code;
 	std::string req = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::SENSOR);
 	std::string resp;
 
-	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(1);
-	mock().expectOneCall("read").onObject(mock_sensor_log).withIntParameter("index", 0).ignoreOtherParameters();
-
+	// Empty log file should just output a CSV header
+	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(0);
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;DUMPD#010;0,0,AAAAAAAAAAAA\r", resp.c_str());
+
+	// Decode the response and check the contents
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::DUMPD_RESP == command);
+	STRCMP_EQUAL("log_datetime,batt_voltage,iTOW,fix_datetime,valid,onTime,ttff,fixType,flags,flags2,flags3,numSV,lon,lat,height,hMSL,hAcc,vAcc,velN,velE,velD,gSpeed,headMot,sAcc,headAcc,pDOP,vDOP,hDOP,headVeh\r\n",
+			std::get<std::string>(arg_list[2]).c_str());
 
 	// Check N entries are retrieved requiring two passes
-	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(20);
-	for (unsigned int i = 0; i < 16; i++)
+	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(12);
+	for (unsigned int i = 0; i < 8; i++)
 		mock().expectOneCall("read").onObject(mock_sensor_log).withIntParameter("index", i).ignoreOtherParameters();
 	CHECK_TRUE(DTEAction::AGAIN == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;DUMPD#0C4;0,1,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r", resp.c_str());
 
-	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(20);
-	for (unsigned int i = 16; i < 20; i++)
+	arg_list.clear();
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::DUMPD_RESP == command);
+	printf(std::get<std::string>(arg_list[2]).c_str());
+
+	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(12);
+	for (unsigned int i = 8; i < 12; i++)
 		mock().expectOneCall("read").onObject(mock_sensor_log).withIntParameter("index", i).ignoreOtherParameters();
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;DUMPD#034;1,1,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r", resp.c_str());
+
+	arg_list.clear();
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::DUMPD_RESP == command);
+	printf(std::get<std::string>(arg_list[2]).c_str());
 
 	mock().checkExpectations();
 }
 
-TEST(DTEHandler, DUMPD_REQ_EmptyLogFile)
+TEST(DTEHandler, DUMPD_REQ_InternalLog)
 {
-	std::string req = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::SENSOR);
+	DTECommand command;
+	std::vector<ParamID> params;
+	std::vector<ParamValue> param_values;
+	std::vector<BaseType> arg_list;
+	unsigned int error_code;
+	std::string req = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::INTERNAL);
 	std::string resp;
 
-	mock().expectOneCall("num_entries").onObject(mock_sensor_log).andReturnValue(0);
-
+	// Empty log file should just output a CSV header
+	mock().expectOneCall("num_entries").onObject(mock_system_log).andReturnValue(0);
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;DUMPD#004;0,0,\r", resp.c_str());
+
+	// Decode the response and check the contents
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::DUMPD_RESP == command);
+	STRCMP_EQUAL("log_datetime,log_level,message\r\n",
+			std::get<std::string>(arg_list[2]).c_str());
+
+	// Check N entries are retrieved requiring two passes
+	mock().expectOneCall("num_entries").onObject(mock_system_log).andReturnValue(12);
+	for (unsigned int i = 0; i < 8; i++)
+		mock().expectOneCall("read").onObject(mock_system_log).withIntParameter("index", i).ignoreOtherParameters();
+	CHECK_TRUE(DTEAction::AGAIN == dte_handler->handle_dte_message(req, resp));
+
+	arg_list.clear();
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::DUMPD_RESP == command);
+	printf(std::get<std::string>(arg_list[2]).c_str());
+
+	mock().expectOneCall("num_entries").onObject(mock_system_log).andReturnValue(12);
+	for (unsigned int i = 8; i < 12; i++)
+		mock().expectOneCall("read").onObject(mock_system_log).withIntParameter("index", i).ignoreOtherParameters();
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+
+	arg_list.clear();
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::DUMPD_RESP == command);
+	printf(std::get<std::string>(arg_list[2]).c_str());
 
 	mock().checkExpectations();
 }

@@ -7,26 +7,28 @@
 class MockGPSNavSettingsComparator : public MockNamedValueComparator
 {
 public:
-    virtual bool isEqual(const void* object1, const void* object2)
+    bool isEqual(const void* object1, const void* object2) override
 	{
-    	return ((GPSNavSettings *)object1)->fix_mode == ((GPSNavSettings *)object2)->fix_mode &&
-    			((GPSNavSettings *)object1)->dyn_model == ((GPSNavSettings *)object2)->dyn_model;
+        // Casting here the void pointers to the type to compare
+        const auto *pointObject1 = (const GPSNavSettings *) object1;
+        const auto *pointObject2 = (const GPSNavSettings *) object2;
+    	return pointObject1->fix_mode == pointObject2->fix_mode &&
+    			pointObject1->dyn_model == pointObject2->dyn_model;
 	}
 
-    virtual SimpleString valueToString(const void* object)
-	{
-    	(void)object;
+    virtual SimpleString valueToString(const void*)
+    {
 		// The valueToString is called when an error message is printed and it needs to print the actual and expected values
 		// It is unclear how this should be implemented
-    	return "Unknown";
-	}
+		return "Unknown";
+    }
 };
 
 // Compares two "const std::function<void()>" for equality
 class MockStdFunctionVoidComparator : public MockNamedValueComparator
 {
 public:
-    virtual bool isEqual(const void* object1, const void* object2)
+    bool isEqual(const void* object1, const void* object2) override
 	{
 		typedef void(functionType)();
 
@@ -46,9 +48,8 @@ public:
 		return true;
 	}
 
-    virtual SimpleString valueToString(const void* object)
+    virtual SimpleString valueToString(const void*)
 	{
-		(void) object;
 		// The valueToString is called when an error message is printed and it needs to print the actual and expected values
 		// It is unclear how this should be implemented
 		return "Unknown";
