@@ -208,7 +208,9 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.info.event_type = GPSEventType::FIX;
     gps_entry.info.valid = true;
 
-    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lat=%lf lon=%lf hDOP=%lf", gps_entry.info.lat, gps_entry.info.lon, static_cast<double>(gps_entry.info.hDOP));
+    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lat=%lf lon=%lf hDOP=%lf hAcc=%lf", gps_entry.info.lat, gps_entry.info.lon,
+    		static_cast<double>(gps_entry.info.hDOP),
+			static_cast<double>(gps_entry.info.hAcc));
     sensor_log->write(&gps_entry);
 
     power_off();
@@ -241,7 +243,18 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
     m_is_first_fix_found = true;
 
     // Only process this data if it satisfies an optional hdop threshold
-    if (!m_gnss_config.hdop_filter_enable || (m_gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP <= m_gnss_config.hdop_filter_threshold)))
+    if (m_gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP > m_gnss_config.hdop_filter_threshold)) {
+    	DEBUG_TRACE("GPSScheduler::gnss_data_callback: HDOP threshold %u not met with %f", m_gnss_config.hdop_filter_threshold, (double)m_gnss_data.data.hDOP);
+    	return;
+    }
+
+    // Only process this data if it satisfies an optional hacc threshold
+    if (m_gnss_config.hacc_filter_enable && (m_gnss_data.data.hAcc > 1000 * m_gnss_config.hacc_filter_threshold)) {
+    	DEBUG_TRACE("GPSScheduler::gnss_data_callback: HACC threshold %u not met with %f", 1000 * m_gnss_config.hacc_filter_threshold, (double)m_gnss_data.data.hAcc);
+    	return;
+    }
+
+    // All filter criteria is met
     {
         // We have a valid fix so there's no need to timeout anymore
         system_scheduler->cancel_task(m_task_acquisition_timeout);
