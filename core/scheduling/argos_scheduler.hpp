@@ -37,8 +37,10 @@ private:
 	ArgosMode    m_next_mode;
 	unsigned int m_msg_index;
 	unsigned int m_prepass_duration;
+	unsigned int m_num_gps_entries;
 	double		 m_last_longitude;
 	double 		 m_last_latitude;
+	std::map<unsigned int, unsigned int> m_gps_entry_burst_counter;
 	std::array<unsigned int, MAX_MSG_INDEX> m_msg_burst_counter;
 	std::array<std::vector<GPSLogEntry>, MAX_MSG_INDEX> m_gps_entries;
 	std::function<void(ServiceEvent)> m_data_notification_callback;
