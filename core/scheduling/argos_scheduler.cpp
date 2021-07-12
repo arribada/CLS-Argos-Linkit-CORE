@@ -204,12 +204,12 @@ std::time_t ArgosScheduler::next_prepass() {
 	if (m_next_prepass != INVALID_SCHEDULE &&
 		m_is_deferred &&
 		m_earliest_tx != INVALID_SCHEDULE &&
-		m_earliest_tx > curr_time &&
+		m_earliest_tx >= curr_time &&
 		m_earliest_tx < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS))
 	{
-		DEBUG_INFO("ArgosScheduler::next_prepass: using earliest TX=%lu", m_earliest_tx);
+		DEBUG_INFO("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX=%llu epoch=%llu", m_earliest_tx, m_next_prepass);
 		m_is_deferred = false;
-		return m_earliest_tx - curr_time;
+		return std::max(m_earliest_tx, m_next_prepass) - curr_time;
 	}
 
 	if (m_next_prepass != INVALID_SCHEDULE &&
@@ -218,11 +218,10 @@ std::time_t ArgosScheduler::next_prepass() {
 		return INVALID_SCHEDULE;
 	}
 
-	// Ensure start window is sufficiently advanced from previous prepass window to avoid repeated transmissions
-	// in the existing window
+	// Ensure start window is advanced from the previous transmission by the TR_NOM (repetition period)
 	std::time_t start_time;
 	if (m_last_transmission_schedule != INVALID_SCHEDULE)
-		start_time = std::max(curr_time, (m_last_transmission_schedule + m_prepass_duration + 1));
+		start_time = std::max(curr_time, (m_last_transmission_schedule + m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS));
 	else
 		start_time = curr_time;
 
@@ -249,33 +248,43 @@ std::time_t ArgosScheduler::next_prepass() {
 	};
 	SatelliteNextPassPrediction_t next_pass;
 
-	if (PREVIPASS_compute_next_pass(
+	while (PREVIPASS_compute_next_pass(
     		&config,
 			pass_predict.records,
 			pass_predict.num_records,
 			&next_pass)) {
 
-		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x now=%llu epoch=%u duration=%u elevation_max=%u ul_status=%01x",
-					next_pass.satHexId, curr_time, (unsigned int)next_pass.epoch, (unsigned int)next_pass.duration, (unsigned int)next_pass.elevationMax, (unsigned char)next_pass.uplinkStatus);
-
+		// Computed schedule is advanced by ARGOS_TX_MARGIN_SECS so that Artic R2 programming delay is not included in the window
 		std::time_t now = rtc->gettime();
-		if (now <= ((std::time_t)next_pass.epoch + next_pass.duration - ARGOS_TX_MARGIN_SECS)) {
+		std::time_t schedule = (std::time_t)(next_pass.epoch - ARGOS_TX_MARGIN_SECS) < now ? now : ((std::time_t)next_pass.epoch - ARGOS_TX_MARGIN_SECS);
+		// Ensure the schedule is at least TR_NOM away from previous transmission
+		if (m_last_transmission_schedule != INVALID_SCHEDULE)
+			schedule = std::max(schedule, (m_last_transmission_schedule + m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS));
+
+		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x last=%llu now=%llu s=%u c=%llu e=%u",
+					next_pass.satHexId, (m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 : m_last_transmission_schedule, curr_time, (unsigned int)next_pass.epoch, schedule, (unsigned int)next_pass.epoch + next_pass.duration);
+
+		// Check we fit inside the prepass window
+		if ((schedule + ARGOS_TX_MARGIN_SECS) < ((std::time_t)next_pass.epoch + next_pass.duration)) {
 			// Compute delay until epoch arrives for scheduling and select Argos transmission mode
-			std::time_t schedule = (std::time_t)next_pass.epoch < now ? now : (std::time_t)next_pass.epoch;
 			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %llu seconds from now", schedule - now);
 			m_next_prepass = schedule;
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
 			m_prepass_duration = next_pass.duration;
 			return schedule - now;
 		} else {
-			DEBUG_WARN("ArgosScheduler::next_prepass: computed prepass window=[%llu,%u] is too late", next_pass.epoch, next_pass.duration);
-			return INVALID_SCHEDULE;
+			DEBUG_TRACE("ArgosScheduler::next_prepass: computed prepass window is too late", next_pass.epoch, next_pass.duration);
+			start_time = (std::time_t)next_pass.epoch + next_pass.duration;
+			p_tm = std::gmtime(&start_time);
+			tm_start = *p_tm;
+			config.start = { (uint16_t)(1900 + tm_start.tm_year), (uint8_t)(tm_start.tm_mon + 1), (uint8_t)tm_start.tm_mday, (uint8_t)tm_start.tm_hour, (uint8_t)tm_start.tm_min, (uint8_t)tm_start.tm_sec };
+			DEBUG_INFO("ArgosScheduler::next_prepass: now=%llu start=%llu stop=%llu", curr_time, start_time, stop_time);
 		}
-	} else {
-		// No passes reported
-		DEBUG_WARN("ArgosScheduler::next_prepass: PREVIPASS_compute_next_pass returned no passes");
-		return INVALID_SCHEDULE;
 	}
+
+	// No passes reported
+	DEBUG_ERROR("ArgosScheduler::next_prepass: PREVIPASS_compute_next_pass returned no passes");
+	return INVALID_SCHEDULE;
 }
 
 void ArgosScheduler::process_schedule() {
@@ -338,7 +347,7 @@ void ArgosScheduler::pass_prediction_algorithm() {
 
 	m_msg_burst_counter[index]--;
 	m_msg_index++;
-	m_last_transmission_schedule = m_next_prepass;
+	m_last_transmission_schedule = rtc->gettime();
 	m_next_prepass = INVALID_SCHEDULE;
 
 	// Check if message burst count has reached zero and perform clean-up of this slot
