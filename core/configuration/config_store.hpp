@@ -28,6 +28,8 @@ struct GNSSConfig {
 	uint16_t battery_voltage;
 	BaseGNSSFixMode fix_mode;
 	BaseGNSSDynModel dyn_model;
+	bool is_out_of_zone;
+	bool is_lb;
 };
 
 struct ArgosConfig {
@@ -49,6 +51,8 @@ struct ArgosConfig {
 	unsigned int prepass_max_passes;
 	unsigned int prepass_linear_margin;
 	unsigned int prepass_comp_step;
+	bool is_out_of_zone;
+	bool is_lb;
 };
 
 
@@ -320,9 +324,12 @@ public:
 		update_battery_level();
 
 		gnss_config.battery_voltage = m_battery_voltage;
+		gnss_config.is_out_of_zone = is_zone_exclusion();
+		gnss_config.is_lb = false;
 
 		if (lb_en && m_battery_level <= lb_threshold) {
 			// Use LB mode which takes priority
+			gnss_config.is_lb = true;
 			gnss_config.enable = read_param<bool>(ParamID::LB_GNSS_EN);
 			gnss_config.dloc_arg_nom = read_param<unsigned int>(ParamID::DLOC_ARG_LB);
 			gnss_config.acquisition_timeout = read_param<unsigned int>(ParamID::LB_GNSS_ACQ_TIMEOUT);
@@ -334,7 +341,7 @@ public:
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			gnss_config.fix_mode = read_param<BaseGNSSFixMode>(ParamID::GNSS_FIX_MODE);
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
-		} else if (is_zone_exclusion()) {
+		} else if (gnss_config.is_out_of_zone) {
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
 			gnss_config.dloc_arg_nom = m_zone.delta_arg_loc_argos_seconds == 0 ? read_param<unsigned int>(ParamID::DLOC_ARG_NOM) : m_zone.delta_arg_loc_argos_seconds;
 			gnss_config.hdop_filter_enable = read_param<bool>(ParamID::GNSS_HDOPFILT_EN);
@@ -372,7 +379,11 @@ public:
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();
 
+		argos_config.is_out_of_zone = is_zone_exclusion();
+		argos_config.is_lb = false;
+
 		if (lb_en && m_battery_level <= lb_threshold) {
+			argos_config.is_lb = true;
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::LB_ARGOS_MODE);
 			argos_config.depth_pile = read_param<BaseArgosDepthPile>(ParamID::LB_ARGOS_DEPTH_PILE);
@@ -392,7 +403,7 @@ public:
 			argos_config.prepass_comp_step = read_param<unsigned int>(ParamID::PP_COMP_STEP);
 			unsigned int delta_time_loc = read_param<unsigned int>(ParamID::DLOC_ARG_LB);
 			argos_config.delta_time_loc = calc_delta_time_loc(delta_time_loc);
-		} else if (is_zone_exclusion()) {
+		} else if (argos_config.is_out_of_zone) {
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
 			argos_config.depth_pile = read_param<BaseArgosDepthPile>(ParamID::ARGOS_DEPTH_PILE);

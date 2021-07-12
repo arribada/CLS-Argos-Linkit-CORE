@@ -29,7 +29,7 @@ extern "C" {
 #define SECONDS_PER_DAY     (SECONDS_PER_HOUR * HOURS_PER_DAY)
 #define MM_PER_METER		1000
 #define MM_PER_KM   		1000000
-#define MV_PER_UNIT			30
+#define MV_PER_UNIT			20
 #define MS_PER_SEC			1000
 #define METRES_PER_UNIT     40
 #define DEGREES_PER_UNIT	(1.0f/1.42f)
@@ -302,6 +302,9 @@ void ArgosScheduler::pass_prediction_algorithm() {
 	unsigned int max_msg_index;
 	ArgosPacket packet;
 
+	// Get latest configuration
+	configuration_store->get_argos_configuration(m_argos_config);
+
 	DEBUG_INFO("ArgosScheduler::pass_prediction_algorithm: m_msg_index=%u max_index=%u", m_msg_index, max_index);
 
 	// Find first eligible slot for transmission
@@ -453,9 +456,14 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 		DEBUG_TRACE("ArgosScheduler::build_short_packet: lat=%u (%lf)", convert_latitude(gps_entry.info.lat), gps_entry.info.lat);
 		PACK_BITS(convert_longitude(gps_entry.info.lon), packet, base_pos, 22);
 		DEBUG_TRACE("ArgosScheduler::build_short_packet: lon=%u (%lf)", convert_longitude(gps_entry.info.lon), gps_entry.info.lon);
-		double gspeed = (SECONDS_PER_HOUR * gps_entry.info.gSpeed) / MM_PER_KM;
-		PACK_BITS((unsigned int)gspeed, packet, base_pos, 8);
+		double gspeed = (SECONDS_PER_HOUR * gps_entry.info.gSpeed) / (2*MM_PER_KM);
+		PACK_BITS((unsigned int)gspeed, packet, base_pos, 7);
 		DEBUG_TRACE("ArgosScheduler::build_short_packet: speed=%u", (unsigned int)gspeed);
+
+		// OUTOFZONE_FLAG
+		PACK_BITS(m_argos_config.is_out_of_zone, packet, base_pos, 1);
+		DEBUG_TRACE("ArgosScheduler::build_short_packet: is_out_of_zone=%u", m_argos_config.is_out_of_zone);
+
 		PACK_BITS(gps_entry.info.headMot * DEGREES_PER_UNIT, packet, base_pos, 8);
 		DEBUG_TRACE("ArgosScheduler::build_short_packet: heading=%u", (unsigned int)(gps_entry.info.headMot * DEGREES_PER_UNIT));
 		if (gps_entry.info.fixType == FIXTYPE_3D) {
@@ -476,13 +484,20 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 	} else {
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);
-		PACK_BITS(0xFF, packet, base_pos, 8);
+		PACK_BITS(0xFF, packet, base_pos, 7);
+		PACK_BITS(m_argos_config.is_out_of_zone, packet, base_pos, 1);
+		DEBUG_TRACE("ArgosScheduler::build_short_packet: is_out_of_zone=%u", m_argos_config.is_out_of_zone);
 		PACK_BITS(0xFF, packet, base_pos, 8);
 		PACK_BITS(0xFF, packet, base_pos, 8);
 	}
 
-	PACK_BITS(gps_entry.info.batt_voltage / MV_PER_UNIT, packet, base_pos, 8);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: voltage=%u", gps_entry.info.batt_voltage / MV_PER_UNIT);
+	unsigned int batt = std::min(127, std::max((int)gps_entry.info.batt_voltage - 2700, (int)0) / MV_PER_UNIT);
+	PACK_BITS(batt, packet, base_pos, 7);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: voltage=%u (%u)", batt, gps_entry.info.batt_voltage);
+
+	// LOWBATERY_FLAG
+	PACK_BITS(m_argos_config.is_lb, packet, base_pos, 1);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: is_lb=%u", m_argos_config.is_lb);
 
 	// Calculate CRC8
 #ifdef ARGOS_USE_CRC8
@@ -567,17 +582,26 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 		DEBUG_TRACE("ArgosScheduler::build_long_packet: lat=%u (%lf)", convert_latitude(gps_entries[0].info.lat), gps_entries[0].info.lat);
 		PACK_BITS(convert_longitude(gps_entries[0].info.lon), packet, base_pos, 22);
 		DEBUG_TRACE("ArgosScheduler::build_long_packet: lon=%u (%lf)", convert_longitude(gps_entries[0].info.lon), gps_entries[0].info.lon);
-		double gspeed = (SECONDS_PER_HOUR * gps_entries[0].info.gSpeed) / MM_PER_KM;
-		PACK_BITS((unsigned int)gspeed, packet, base_pos, 8);
+		double gspeed = (SECONDS_PER_HOUR * gps_entries[0].info.gSpeed) / (2*MM_PER_KM);
+		PACK_BITS((unsigned int)gspeed, packet, base_pos, 7);
 		DEBUG_TRACE("ArgosScheduler::build_long_packet: speed=%u", (unsigned int)gspeed);
 	} else {
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);
-		PACK_BITS(0xFF, packet, base_pos, 8);
+		PACK_BITS(0xFF, packet, base_pos, 7);
 	}
 
-	PACK_BITS(gps_entries[0].info.batt_voltage / MV_PER_UNIT, packet, base_pos, 8);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: voltage=%u", gps_entries[0].info.batt_voltage / MV_PER_UNIT);
+	// OUTOFZONE_FLAG
+	PACK_BITS(m_argos_config.is_out_of_zone, packet, base_pos, 1);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: is_out_of_zone=%u", m_argos_config.is_out_of_zone);
+
+	unsigned int batt = std::min(127, std::max((int)gps_entries[0].info.batt_voltage - 2700, (int)0) / MV_PER_UNIT);
+	PACK_BITS(batt, packet, base_pos, 7);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: voltage=%u (%u)", batt, gps_entries[0].info.batt_voltage);
+
+	// LOWBATERY_FLAG
+	PACK_BITS(m_argos_config.is_lb, packet, base_pos, 1);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: is_lb=%u", m_argos_config.is_lb);
 
 	// Delta time loc
 	PACK_BITS((unsigned int)m_argos_config.delta_time_loc, packet, base_pos, 4);
@@ -651,6 +675,9 @@ void ArgosScheduler::periodic_algorithm() {
 	unsigned int max_msg_index;
 	ArgosPacket packet;
 	GPSLogEntry gps_entry;
+
+	// Get latest configuration
+	configuration_store->get_argos_configuration(m_argos_config);
 
 	DEBUG_TRACE("ArgosScheduler::periodic_algorithm: msg_index=%u/%u span=%u num_log_entries=%u", m_msg_index % max_index, max_index, span, m_num_gps_entries);
 
