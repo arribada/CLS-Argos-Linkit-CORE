@@ -60,4 +60,5 @@ static const BaseMap param_map[] = {
 	{ "GNSS_DYN_MODEL", "GNP11", BaseEncoding::GNSSDYNMODEL, 0U, 0U, {0U, 2U, 3U, 4U, 5U, 6U, 7U, 8U, 9U, 10U}, true, true },
 	{ "GNSS_HACCFILT_EN", "GNP20", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "GNSS_HACCFILT_THR", "GNP21", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+	{ "GNSS_MIN_NUM_FIXES", "GNP22", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
 };

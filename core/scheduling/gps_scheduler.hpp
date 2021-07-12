@@ -58,10 +58,11 @@ protected:
 	};
 
 private:
-	GNSSConfig 	m_gnss_config;
-	bool       	m_is_first_fix_found;
-	bool       	m_is_first_schedule;
-	uint64_t    m_wakeup_time;
+	GNSSConfig 	 m_gnss_config;
+	bool       	 m_is_first_fix_found;
+	bool       	 m_is_first_schedule;
+	uint64_t     m_wakeup_time;
+	unsigned int m_num_consecutive_fixes;
 
 	struct {
 		GNSSData data;

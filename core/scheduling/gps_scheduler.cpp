@@ -89,6 +89,7 @@ void GPSScheduler::task_acquisition_period() {
     	// Clear the first schedule indication flag
     	m_is_first_schedule = false;
     	m_wakeup_time = system_timer->get_counter();
+    	m_num_consecutive_fixes = m_gnss_config.min_num_fixes;
 
     	GPSNavSettings nav_settings = {
         	m_gnss_config.fix_mode,
@@ -244,14 +245,22 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
 
     // Only process this data if it satisfies an optional hdop threshold
     if (m_gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP > m_gnss_config.hdop_filter_threshold)) {
+    	m_num_consecutive_fixes = m_gnss_config.min_num_fixes;
     	DEBUG_TRACE("GPSScheduler::gnss_data_callback: HDOP threshold %u not met with %f", m_gnss_config.hdop_filter_threshold, (double)m_gnss_data.data.hDOP);
     	return;
     }
 
     // Only process this data if it satisfies an optional hacc threshold
     if (m_gnss_config.hacc_filter_enable && (m_gnss_data.data.hAcc > 1000 * m_gnss_config.hacc_filter_threshold)) {
+    	m_num_consecutive_fixes = m_gnss_config.min_num_fixes;
     	DEBUG_TRACE("GPSScheduler::gnss_data_callback: HACC threshold %u not met with %f", 1000 * m_gnss_config.hacc_filter_threshold, (double)m_gnss_data.data.hAcc);
     	return;
+    }
+
+    // Now check the requisite number of consecutive fixes have been made
+    if (--m_num_consecutive_fixes) {
+       	DEBUG_TRACE("GPSScheduler::gnss_data_callback: criteria met with %u consecutive fixes remaining", m_num_consecutive_fixes);
+        return;
     }
 
     // All filter criteria is met

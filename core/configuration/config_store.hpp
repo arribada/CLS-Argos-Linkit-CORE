@@ -30,6 +30,7 @@ struct GNSSConfig {
 	BaseGNSSDynModel dyn_model;
 	bool is_out_of_zone;
 	bool is_lb;
+	unsigned int min_num_fixes;
 };
 
 struct ArgosConfig {
@@ -113,6 +114,7 @@ protected:
 		/* GNSS_DYN_MODEL */ BaseGNSSDynModel::SEA,
 		/* GNSS_HACCFILT_EN */ (bool)false,
 		/* GNSS_HACCFILT_THR */ 50U,
+		/* GNSS_MIN_NUM_FIXES */ 1U,
 	}};
 	static inline const BaseZone default_zone = {
 		/* zone_id */ 1,
@@ -341,6 +343,7 @@ public:
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			gnss_config.fix_mode = read_param<BaseGNSSFixMode>(ParamID::GNSS_FIX_MODE);
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
+			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 		} else if (gnss_config.is_out_of_zone) {
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
 			gnss_config.dloc_arg_nom = m_zone.delta_arg_loc_argos_seconds == 0 ? read_param<unsigned int>(ParamID::DLOC_ARG_NOM) : m_zone.delta_arg_loc_argos_seconds;
@@ -353,6 +356,7 @@ public:
 			gnss_config.hdop_filter_threshold = read_param<unsigned int>(ParamID::GNSS_HDOPFILT_THR);
 			gnss_config.fix_mode = read_param<BaseGNSSFixMode>(ParamID::GNSS_FIX_MODE);
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
+			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 			// Apply zone exclusion where applicable
 			if (m_zone.gnss_extra_flags_enable) {
 				gnss_config.acquisition_timeout = m_zone.gnss_acquisition_timeout_seconds;
@@ -371,6 +375,7 @@ public:
 			gnss_config.underwater_en = read_param<bool>(ParamID::UNDERWATER_EN);
 			gnss_config.fix_mode = read_param<BaseGNSSFixMode>(ParamID::GNSS_FIX_MODE);
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
+			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 		}
 	}
 

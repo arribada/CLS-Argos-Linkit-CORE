@@ -754,3 +754,82 @@ TEST(GpsScheduler, GNSSEnabledWithHdopAndHaccFilter)
 	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 3, 35000);
 	increment_time_s(1);
 }
+
+TEST(GpsScheduler, GNSSEnabledWithHdopAndHaccFilterAndNConsecutiveFixes)
+{
+	bool lb_en = false;
+	unsigned int lb_threshold = 0U;
+	bool gnss_en = true;
+	unsigned int dloc_arg_nom = 10*60;
+	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 120;
+	bool gnss_hdopfilt_en = true;
+	unsigned int gnss_hdopfilt_thres = 5;
+	bool gnss_haccfilt_en = true;
+	unsigned int gnss_haccfilt_thres = 50;
+	bool underwater_en = false;
+	unsigned int consecutive_fixes = 3;
+
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
+	fake_config_store->write_param(ParamID::GNSS_HACCFILT_EN, gnss_haccfilt_en);
+	fake_config_store->write_param(ParamID::GNSS_HACCFILT_THR, gnss_haccfilt_thres);
+	fake_config_store->write_param(ParamID::GNSS_MIN_NUM_FIXES, consecutive_fixes);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	BaseGNSSFixMode fix_mode = BaseGNSSFixMode::FIX_2D;
+	fake_config_store->write_param(ParamID::GNSS_FIX_MODE, fix_mode);
+	BaseGNSSDynModel dyn_model = BaseGNSSDynModel::SEA;
+	fake_config_store->write_param(ParamID::GNSS_DYN_MODEL, dyn_model);
+
+	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
+
+	location_scheduler->start();
+
+	// We're expecting the device to turn on at 27/01/2020 00:00:30
+	increment_time_s(FIRST_AQPERIOD - 1);
+
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(1);
+
+	// Should not power down yet
+	increment_time_s(gnss_acq_timeout);
+
+	// HDOP and HACC not met
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 7, 100000);
+	increment_time_s(1);
+
+	// HACC not met
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 3, 100000);
+	increment_time_s(1);
+
+	// Both met (1 fix)
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 3, 35000);
+	increment_time_s(1);
+
+	// Both met (2 fixes)
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 3, 35000);
+	increment_time_s(1);
+
+	// Should reset the counter
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 3, 100000);
+	increment_time_s(1);
+
+	// Both met (1 fix)
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 3, 35000);
+	increment_time_s(1);
+
+	// Both met (2 fixes)
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 3, 35000);
+	increment_time_s(1);
+
+	// Both met (3 fixes)
+	mock().expectOneCall("power_off").onObject(mock_m8q);
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 3, 35000);
+	increment_time_s(1);
+}
