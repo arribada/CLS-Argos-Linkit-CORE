@@ -15,7 +15,7 @@ struct GPSNavSettings {
 class GPSScheduler : public ServiceScheduler {
 public:
 	virtual ~GPSScheduler() {}
-	void start(std::function<void(ServiceEvent)> data_notification_callback = nullptr) override;
+	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override;
 	void stop() override;
 	void notify_saltwater_switch_state(bool state) override;
 	void notify_sensor_log_update() override {};
@@ -70,7 +70,7 @@ private:
 		std::atomic<bool> pending_data_logging;
 	} m_gnss_data;
 
-	std::function<void(ServiceEvent)> m_data_notification_callback;
+	std::function<void(ServiceEvent&)> m_data_notification_callback;
 
 	// Tasks
 	Scheduler::TaskHandle m_task_acquisition_period;

@@ -6,7 +6,7 @@
 
 class MockCommsScheduler : public ServiceScheduler {
 public:
-	void start(std::function<void(ServiceEvent)> data_notification_callback = nullptr) {
+	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) {
 		(void)data_notification_callback;
 		mock().actualCall("start").onObject(this);
 	}

@@ -119,6 +119,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/filesystem/ota_flash_file_updater.cpp"
     "${ROOT_DIR}/core/hardware/sws.cpp"
     "${ROOT_DIR}/core/sm/gentracker.cpp"
+    "${ROOT_DIR}/core/sm/ledsm.cpp"
     "${LINUX_DIR}/interrupt_lock.cpp"
     "${NRF_DIR}/core/hardware/nrf_switch.cpp"
     "${NRF_DIR}/core/hardware/nrf_battery_mon.cpp"

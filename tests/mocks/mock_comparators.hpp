@@ -56,7 +56,7 @@ public:
 	}
 };
 
-// Compares two "const std::function<void(ServiceEvent)>" for equality
+// Compares two "const std::function<void(ServiceEvent&)>" for equality
 class MockStdFunctionServiceEventComparator : public MockNamedValueComparator
 {
 public:
@@ -64,8 +64,8 @@ public:
 	{
 		typedef void(functionType)();
 
-		auto object1_func_ptr = reinterpret_cast< const std::function<void(ServiceEvent)>* >(object1);
-		auto object2_func_ptr = reinterpret_cast< const std::function<void(ServiceEvent)>* >(object2);
+		auto object1_func_ptr = reinterpret_cast< const std::function<void(ServiceEvent&)>* >(object1);
+		auto object2_func_ptr = reinterpret_cast< const std::function<void(ServiceEvent&)>* >(object2);
 
 		// Check function target is of the same type
 		if (object1_func_ptr->target_type() != object2_func_ptr->target_type())

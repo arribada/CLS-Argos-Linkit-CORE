@@ -12,7 +12,7 @@
 #include "timer.hpp"
 #include "debug.hpp"
 #include "switch.hpp"
-#include "rgb_led.hpp"
+#include "ledsm.hpp"
 #include "battery.hpp"
 #include "ble_service.hpp"
 #include "gentracker.hpp"
@@ -31,9 +31,13 @@ extern OTAFileUpdater *ota_updater;
 extern DTEHandler *dte_handler;
 extern Switch *saltwater_switch;
 extern Switch *reed_switch;
-extern RGBLed *status_led;
 extern BatteryMonitor *battery_monitor;
 
+
+// FSM initial state -> LEDOff
+FSM_INITIAL_STATE(LEDState, LEDOff);
+
+using led_handle = LEDState;
 
 void GenTracker::react(tinyfsm::Event const &) { }
 
@@ -104,7 +108,8 @@ void BootState::entry() {
 	battery_monitor->start();
 
 	// Turn status LED white to indicate boot up
-	status_led->set(RGBLedColor::WHITE);
+	led_handle::start();
+	led_handle::dispatch<SetLEDBoot>({});
 
 	try {
 		// The underlying classes will create the files on the filesystem if they do not
@@ -133,15 +138,15 @@ void BootState::exit() {
 	DEBUG_INFO("exit: BootState");
 
 	// Turn status LED off to indicate exit from boot state
-	status_led->off();
+	led_handle::dispatch<SetLEDOff>({});
 }
 
 void OffState::entry() {
 	DEBUG_INFO("entry: OffState");
 	battery_monitor->stop();
-	status_led->flash(RGBLedColor::WHITE, 125);  // Flash 4X speed during power down
+	led_handle::dispatch<SetLEDPowerDown>({});
 	m_off_state_task = system_scheduler->post_task_prio([](){
-		status_led->off();
+		led_handle::dispatch<SetLEDOff>({});
 		PMU::powerdown();
 	},
 	"GenTrackerOffStateTransitPowerDown",
@@ -152,23 +157,23 @@ void OffState::exit() {
 	DEBUG_INFO("exit: OffState");
 	system_scheduler->cancel_task(m_off_state_task);
 	battery_monitor->start();
-	status_led->off();
+	led_handle::dispatch<SetLEDOff>({});
 }
 
 void IdleState::entry() {
 	DEBUG_INFO("entry: IdleState");
 	if (configuration_store->is_valid()) {
 		if (configuration_store->is_battery_level_low())
-			status_led->set(RGBLedColor::YELLOW);
+			led_handle::dispatch<SetLEDPreOperationalBatteryLow>({});
 		else
-			status_led->set(RGBLedColor::GREEN);
+			led_handle::dispatch<SetLEDPreOperationalBatteryNominal>({});
 		m_idle_state_task = system_scheduler->post_task_prio([this](){
 			transit<OperationalState>();
 		},
 		"GenTrackerIdleStateTransitOperationalState",
 		Scheduler::DEFAULT_PRIORITY, IDLE_PERIOD_MS);
 	} else {
-		status_led->set(RGBLedColor::RED);
+		led_handle::dispatch<SetLEDPreOperationalError>({});
 		m_idle_state_task = system_scheduler->post_task_prio([this](){
 			transit<ErrorState>();
 		},
@@ -180,7 +185,7 @@ void IdleState::entry() {
 void IdleState::exit() {
 	DEBUG_INFO("exit: IdleState");
 	system_scheduler->cancel_task(m_idle_state_task);
-	status_led->off();
+	led_handle::dispatch<SetLEDOff>({});
 }
 
 void OperationalState::react(SaltwaterSwitchEvent const &event)
@@ -193,27 +198,37 @@ void OperationalState::react(SaltwaterSwitchEvent const &event)
 void OperationalState::entry() {
 	DEBUG_INFO("entry: OperationalState");
 	if (configuration_store->is_battery_level_low())
-		status_led->flash(RGBLedColor::YELLOW);
+		led_handle::dispatch<SetLEDOperationalBatteryLow>({});
 	else
-		status_led->flash(RGBLedColor::GREEN);
+		led_handle::dispatch<SetLEDOperationalBatteryNominal>({});
 	system_scheduler->post_task_prio([](){
-		status_led->off();
+		led_handle::dispatch<SetLEDOff>({});
 	},
 	"GenTrackerOperationalStateTransitLedOff",
 	Scheduler::DEFAULT_PRIORITY, LED_INDICATION_PERIOD_MS);
 	saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
-	comms_scheduler->start([](ServiceEvent e) {
-		if (e == ServiceEvent::ARGOS_TX_START)
-			status_led->set(RGBLedColor::MAGENTA);
-		else if (e == ServiceEvent::ARGOS_TX_END)
-			status_led->off();
+	comms_scheduler->start([](ServiceEvent& e) {
+		if (e.event_type == ServiceEventType::ARGOS_TX_START)
+			led_handle::dispatch<SetLEDArgosTX>({});
+		else if (e.event_type == ServiceEventType::ARGOS_TX_END)
+			led_handle::dispatch<SetLEDArgosTXComplete>({});
 	});
-	location_scheduler->start([](ServiceEvent) { comms_scheduler->notify_sensor_log_update(); });
+	location_scheduler->start([](ServiceEvent& e) {
+		if (e.event_type == ServiceEventType::GNSS_ON) {
+			led_handle::dispatch<SetLEDGNSSOn>({});
+		} else {
+			if (std::get<bool>(e.event_data))
+				led_handle::dispatch<SetLEDGNSSOffWithFix>({});
+			else
+				led_handle::dispatch<SetLEDGNSSOffWithoutFix>({});
+			comms_scheduler->notify_sensor_log_update();
+		}
+	});
 }
 
 void OperationalState::exit() {
 	DEBUG_INFO("exit: OperationalState");
-	status_led->off();
+	led_handle::dispatch<SetLEDOff>({});
 	location_scheduler->stop();
 	comms_scheduler->stop();
 	saltwater_switch->stop();
@@ -224,7 +239,7 @@ void ConfigurationState::entry() {
 
 	// Flash the blue LED to indicate we have started BLE and we are
 	// waiting for a connection
-	status_led->flash(RGBLedColor::BLUE);
+	led_handle::dispatch<SetLEDConfigNotConnected>({});
 
 	set_ble_device_name();
 	ble_service->start([this](BLEServiceEvent& event) -> int { return on_ble_event(event); } );
@@ -235,7 +250,7 @@ void ConfigurationState::exit() {
 	DEBUG_INFO("exit: ConfigurationState");
 	system_scheduler->cancel_task(m_ble_inactivity_timeout_task);
 	ble_service->stop();
-	status_led->off();
+	led_handle::dispatch<SetLEDOff>({});
 }
 
 void ConfigurationState::set_ble_device_name() {
@@ -253,13 +268,13 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 	case BLEServiceEventType::CONNECTED:
 		DEBUG_TRACE("ConfigurationState::on_ble_event: CONNECTED");
 		// Indicate DTE connection is made
-		status_led->set(RGBLedColor::BLUE);
+		led_handle::dispatch<SetLEDConfigConnected>({});
 		restart_inactivity_timeout();
 		break;
 	case BLEServiceEventType::DISCONNECTED:
 		DEBUG_TRACE("ConfigurationState::on_ble_event: DISCONNECTED");
 		ota_updater->abort_file_transfer();
-		status_led->flash(RGBLedColor::BLUE);
+		led_handle::dispatch<SetLEDConfigNotConnected>({});
 		break;
 	case BLEServiceEventType::DTE_DATA_RECEIVED:
 		DEBUG_TRACE("ConfigurationState::on_ble_event: DTE_DATA_RECEIVED");
@@ -369,7 +384,7 @@ void ConfigurationState::process_received_data() {
 
 void ErrorState::entry() {
 	DEBUG_INFO("entry: ErrorState");
-	status_led->flash(RGBLedColor::RED);
+	led_handle::dispatch<SetLEDError>({});
 	m_shutdown_task = system_scheduler->post_task_prio([this](){
 		transit<OffState>();
 	},
@@ -380,5 +395,5 @@ void ErrorState::entry() {
 void ErrorState::exit() {
 	DEBUG_INFO("exit: ErrorState");
 	system_scheduler->cancel_task(m_shutdown_task);
-	status_led->off();
+	led_handle::dispatch<SetLEDOff>({});
 }

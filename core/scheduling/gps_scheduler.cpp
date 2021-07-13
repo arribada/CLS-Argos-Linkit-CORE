@@ -17,7 +17,7 @@ extern Timer *system_timer;
 #define FIRST_AQPERIOD_SEC (30)     // Schedule for first AQPERIOD to accelerate first fix
 
 
-void GPSScheduler::start(std::function<void(ServiceEvent)> data_notification_callback)
+void GPSScheduler::start(std::function<void(ServiceEvent&)> data_notification_callback)
 {
     DEBUG_INFO("GPSScheduler::start");
 
@@ -97,6 +97,11 @@ void GPSScheduler::task_acquisition_period() {
         	m_gnss_config.fix_mode,
     		m_gnss_config.dyn_model
     	};
+        if (m_data_notification_callback) {
+        	ServiceEvent e;
+        	e.event_type = ServiceEventType::GNSS_ON;
+            m_data_notification_callback(e);
+        }
         power_on(nav_settings,
         		 std::bind(&GPSScheduler::gnss_data_callback, this, std::placeholders::_1));
     }
@@ -104,8 +109,12 @@ void GPSScheduler::task_acquisition_period() {
     {
         // If our power on failed then log this as a failed GPS fix and notify the user
         log_invalid_gps_entry();
-        if (m_data_notification_callback)
-            m_data_notification_callback(ServiceEvent::SENSOR_LOG_UPDATED);
+        if (m_data_notification_callback) {
+        	ServiceEvent ev;
+        	ev.event_type = ServiceEventType::SENSOR_LOG_UPDATED;
+        	ev.event_data = false;
+            m_data_notification_callback(ev);
+        }
         reschedule();
         return;
     }
@@ -148,8 +157,12 @@ void GPSScheduler::task_acquisition_timeout() {
 
     log_invalid_gps_entry();
 
-    if (m_data_notification_callback)
-        m_data_notification_callback(ServiceEvent::SENSOR_LOG_UPDATED);
+    if (m_data_notification_callback) {
+    	ServiceEvent e;
+    	e.event_type = ServiceEventType::SENSOR_LOG_UPDATED;
+    	e.event_data = false;
+        m_data_notification_callback(e);
+    }
 
     reschedule();
 }
@@ -221,8 +234,12 @@ void GPSScheduler::task_process_gnss_data()
     // Notify configuration store that we have a new valid GPS fix
     configuration_store->notify_gps_location(gps_entry);
 
-    if (m_data_notification_callback)
-        m_data_notification_callback(ServiceEvent::SENSOR_LOG_UPDATED);
+    if (m_data_notification_callback) {
+    	ServiceEvent e;
+    	e.event_type = ServiceEventType::SENSOR_LOG_UPDATED;
+    	e.event_data = true;
+        m_data_notification_callback(e);
+    }
 
     reschedule();
 
