@@ -415,7 +415,7 @@ void ArgosScheduler::notify_sensor_log_update() {
 			// doesn't keep growing in size
 			if (m_num_gps_entries > (unsigned int)m_argos_config.depth_pile) {
 				unsigned int index = m_num_gps_entries - (unsigned int)m_argos_config.depth_pile - 1;
-				DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: erasing entry %u from depth pile", idx);
+				DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: erasing entry %u from depth pile", index);
 				m_gps_entry_burst_counter.erase(index);
 			}
 

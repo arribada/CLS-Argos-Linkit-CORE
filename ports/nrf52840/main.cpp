@@ -96,13 +96,6 @@ int main()
 	SWS nrf_saltwater_switch;
 	saltwater_switch = &nrf_saltwater_switch;
 
-	DEBUG_TRACE("LED...");
-	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
-	status_led = &nrf_status_led;
-
-	DEBUG_TRACE("BLE...");
-    BleInterface::get_instance().init();
-
     DEBUG_TRACE("Timer...");
 	system_timer = &NrfTimer::get_instance();
 	NrfTimer::get_instance().init();
@@ -110,6 +103,13 @@ int main()
 	DEBUG_TRACE("Scheduler...");
 	Scheduler scheduler(system_timer);
 	system_scheduler = &scheduler;
+
+	DEBUG_TRACE("LED...");
+	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
+	status_led = &nrf_status_led;
+
+	DEBUG_TRACE("BLE...");
+    BleInterface::get_instance().init();
 
 	DEBUG_TRACE("IS25 flash...");
 	Is25Flash is25_flash;

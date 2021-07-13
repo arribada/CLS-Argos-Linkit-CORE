@@ -50,7 +50,7 @@ void LEDConfigConnected::entry() {
 
 void LEDGNSSOn::entry() {
 	m_is_gnss_on = true;
-	status_led->flash(RGBLedColor::CYAN, 750);
+	status_led->flash(RGBLedColor::CYAN, 1000);
 }
 
 void LEDGNSSOffWithFix::entry() {
@@ -58,7 +58,7 @@ void LEDGNSSOffWithFix::entry() {
 	status_led->set(RGBLedColor::GREEN);
 	system_timer->add_schedule([this]() {
 		transit<LEDOff>();
-	}, system_timer->get_counter() + 1500);
+	}, system_timer->get_counter() + 3000);
 }
 
 void LEDGNSSOffWithoutFix::entry() {
@@ -66,7 +66,7 @@ void LEDGNSSOffWithoutFix::entry() {
 	status_led->set(RGBLedColor::RED);
 	system_timer->add_schedule([this]() {
 		transit<LEDOff>();
-	}, system_timer->get_counter() + 1500);
+	}, system_timer->get_counter() + 3000);
 }
 
 void LEDArgosTX::entry() {

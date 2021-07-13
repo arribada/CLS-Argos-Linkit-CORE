@@ -119,6 +119,7 @@ protected:
 		/* GNSS_MIN_NUM_FIXES */ 1U,
 		/* GNSS_COLD_START_RETRY_PERIOD */ 60U,
 		/* ARGOS_TIME_SYNC_BURST_EN */ (bool)false,
+		/* LED_MODE */ BaseLEDMode::HRS_24,
 	}};
 	static inline const BaseZone default_zone = {
 		/* zone_id */ 1,

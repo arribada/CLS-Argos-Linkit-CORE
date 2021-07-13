@@ -33,6 +33,11 @@ extern Switch *saltwater_switch;
 extern Switch *reed_switch;
 extern BatteryMonitor *battery_monitor;
 
+// Macro for determining LED mode state
+#define LED_MODE_GUARD \
+	if (configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::ALWAYS || \
+		(configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::HRS_24 && \
+		 system_timer->get_counter() < (24 * 3600 * 1000)))
 
 // FSM initial state -> LEDOff
 FSM_INITIAL_STATE(LEDState, LEDOff);
@@ -208,19 +213,25 @@ void OperationalState::entry() {
 	Scheduler::DEFAULT_PRIORITY, LED_INDICATION_PERIOD_MS);
 	saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
 	comms_scheduler->start([](ServiceEvent& e) {
-		if (e.event_type == ServiceEventType::ARGOS_TX_START)
-			led_handle::dispatch<SetLEDArgosTX>({});
-		else if (e.event_type == ServiceEventType::ARGOS_TX_END)
-			led_handle::dispatch<SetLEDArgosTXComplete>({});
+		LED_MODE_GUARD {
+			if (e.event_type == ServiceEventType::ARGOS_TX_START)
+				led_handle::dispatch<SetLEDArgosTX>({});
+			else if (e.event_type == ServiceEventType::ARGOS_TX_END)
+				led_handle::dispatch<SetLEDArgosTXComplete>({});
+		}
 	});
 	location_scheduler->start([](ServiceEvent& e) {
 		if (e.event_type == ServiceEventType::GNSS_ON) {
-			led_handle::dispatch<SetLEDGNSSOn>({});
+			LED_MODE_GUARD {
+				led_handle::dispatch<SetLEDGNSSOn>({});
+			}
 		} else {
-			if (std::get<bool>(e.event_data))
-				led_handle::dispatch<SetLEDGNSSOffWithFix>({});
-			else
-				led_handle::dispatch<SetLEDGNSSOffWithoutFix>({});
+			LED_MODE_GUARD {
+				if (std::get<bool>(e.event_data))
+					led_handle::dispatch<SetLEDGNSSOffWithFix>({});
+				else
+					led_handle::dispatch<SetLEDGNSSOffWithoutFix>({});
+			}
 			comms_scheduler->notify_sensor_log_update();
 		}
 	});

@@ -625,6 +625,9 @@ protected:
 	static inline void encode(std::string& output, const BaseGNSSDynModel& value) {
 		encode(output, (unsigned int&)value);
 	}
+	static inline void encode(std::string& output, const BaseLEDMode& value) {
+		encode(output, (unsigned int&)value);
+	}
 	static inline void encode(std::string& output, const std::time_t& value) {
 		char buff[256];
 		auto time = std::gmtime(&value);
@@ -830,6 +833,8 @@ protected:
 	static void validate(const BaseMap &, const BaseArgosMode&) {
 	}
 	static void validate(const BaseMap &, const BaseArgosPower&) {
+	}
+	static void validate(const BaseMap &, const BaseLEDMode&) {
 	}
 public:
 	static std::string encode(DTECommand command, ...) {
@@ -1128,6 +1133,19 @@ private:
 			return BaseGNSSFixMode::FIX_3D;
 		} else if (s == "3") {
 			return BaseGNSSFixMode::AUTO;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
+	static BaseLEDMode decode_led_mode(const std::string& s) {
+		if (s == "0") {
+			return BaseLEDMode::OFF;
+		} else if (s == "1") {
+			return BaseLEDMode::HRS_24;
+		} else if (s == "3") {
+			return BaseLEDMode::ALWAYS;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -1446,6 +1464,13 @@ private:
 							val.push_back(key_value);
 							break;
 						}
+						case BaseEncoding::LEDMODE:
+						{
+							BaseLEDMode x = decode_led_mode(value);
+							key_value.value = x;
+							val.push_back(key_value);
+							break;
+						}
 						case BaseEncoding::KEY_LIST:
 						case BaseEncoding::KEY_VALUE_LIST:
 						default:
@@ -1665,6 +1690,7 @@ public:
 				case BaseEncoding::ARGOSFREQ:
 				case BaseEncoding::GNSSFIXMODE:
 				case BaseEncoding::GNSSDYNMODEL:
+				case BaseEncoding::LEDMODE:
 				default:
 					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;
