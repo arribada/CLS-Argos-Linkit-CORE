@@ -84,6 +84,10 @@ void ArgosScheduler::reschedule() {
 	} else if (!rtc->is_set()) {
 		DEBUG_WARN("ArgosScheduler: RTC is not yet set -- not scheduling");
 		return;
+	} else if (m_argos_config.time_sync_burst_en && !m_time_sync_burst_sent && m_num_gps_entries) {
+		// Schedule an immediate time sync burst
+		DEBUG_TRACE("ArgosScheduler: scheduling immediate time sync burst");
+		schedule = 0;
 	} else if (m_argos_config.mode == BaseArgosMode::LEGACY) {
 		// In legacy mode we schedule every hour aligned to UTC
 		schedule = next_duty_cycle(0xFFFFFFU);
@@ -291,7 +295,9 @@ void ArgosScheduler::process_schedule() {
 
 	std::time_t now = rtc->gettime();
 	if (!m_switch_state && (m_earliest_tx == INVALID_SCHEDULE || m_earliest_tx <= now)) {
-		if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
+		if (m_argos_config.time_sync_burst_en && !m_time_sync_burst_sent && m_num_gps_entries && rtc->is_set()) {
+			time_sync_burst_algorithm();
+		} else if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
 			pass_prediction_algorithm();
 		} else {
 			periodic_algorithm();
@@ -395,7 +401,10 @@ void ArgosScheduler::notify_sensor_log_update() {
 			} else {
 				DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: PASS_PREDICTION mode: no free slots");
 			}
-		} else {
+		}
+
+		// Keep a running track of number of GPS entries even if we are not in periodic mode
+		{
 			// Update the GPS map based on the most recent entry
 			m_gps_entry_burst_counter[m_num_gps_entries] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;
 
@@ -674,6 +683,30 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	configuration_store->save_params();
 }
 
+void ArgosScheduler::time_sync_burst_algorithm() {
+	unsigned int num_entries = sensor_log->num_entries();
+
+	DEBUG_TRACE("ArgosScheduler::time_sync_burst_algorithm: num_gps_entries=%u log_size=%u", m_num_gps_entries, num_entries);
+
+	if (m_num_gps_entries && num_entries) {
+		ArgosPacket packet;
+		GPSLogEntry gps_entry;
+		unsigned int index = num_entries - 1;
+
+		// Read most recent log entry but don't decrement any counters
+		sensor_log->read(&gps_entry, index);
+
+		build_short_packet(gps_entry, packet);
+		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
+
+	} else {
+		DEBUG_ERROR("ArgosScheduler::time_sync_burst_algorithm: sensor log state is invalid, can't transmit");
+	}
+
+	// Even on an error we mark the time sync burst as sent because otherwise we would enter an infinite rescheduling scenario
+	m_time_sync_burst_sent = true;
+}
+
 void ArgosScheduler::periodic_algorithm() {
 	unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
 	unsigned int index = m_msg_index % max_index;
@@ -771,6 +804,7 @@ void ArgosScheduler::start(std::function<void(ServiceEvent)> data_notification_c
 	m_data_notification_callback = data_notification_callback;
 	m_is_running = true;
 	m_is_deferred = false;
+	m_time_sync_burst_sent = false;
 	m_msg_index = 0;
 	m_num_gps_entries = 0;
 	m_next_prepass = INVALID_SCHEDULE;

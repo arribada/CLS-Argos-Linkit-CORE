@@ -30,6 +30,7 @@ private:
 	bool         m_switch_state;
 	bool         m_is_running;
 	bool         m_is_deferred;
+	bool         m_time_sync_burst_sent;
 	std::time_t  m_earliest_tx;
 	std::time_t  m_next_prepass;
 	std::time_t  m_tr_nom_schedule;
@@ -55,6 +56,7 @@ public:
 	void reschedule();
 	void deschedule();
 	void process_schedule();
+	void time_sync_burst_algorithm();
 	void periodic_algorithm();
 	void pass_prediction_algorithm();
 	void handle_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode);

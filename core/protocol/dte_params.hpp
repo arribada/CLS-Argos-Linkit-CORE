@@ -61,4 +61,6 @@ static const BaseMap param_map[] = {
 	{ "GNSS_HACCFILT_EN", "GNP20", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "GNSS_HACCFILT_THR", "GNP21", BaseEncoding::UINT, 0U, 0U, {}, true, true },
 	{ "GNSS_MIN_NUM_FIXES", "GNP22", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
+	{ "GNSS_COLD_START_RETRY_PERIOD", "GNP23", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
+	{ "ARGOS_TIME_SYNC_BURST_EN", "ARP30", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 };

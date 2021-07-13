@@ -31,6 +31,7 @@ struct GNSSConfig {
 	bool is_out_of_zone;
 	bool is_lb;
 	unsigned int min_num_fixes;
+	unsigned int cold_start_retry_period;
 };
 
 struct ArgosConfig {
@@ -54,6 +55,7 @@ struct ArgosConfig {
 	unsigned int prepass_comp_step;
 	bool is_out_of_zone;
 	bool is_lb;
+	bool time_sync_burst_en;
 };
 
 
@@ -115,6 +117,8 @@ protected:
 		/* GNSS_HACCFILT_EN */ (bool)false,
 		/* GNSS_HACCFILT_THR */ 50U,
 		/* GNSS_MIN_NUM_FIXES */ 1U,
+		/* GNSS_COLD_START_RETRY_PERIOD */ 60U,
+		/* ARGOS_TIME_SYNC_BURST_EN */ (bool)false,
 	}};
 	static inline const BaseZone default_zone = {
 		/* zone_id */ 1,
@@ -344,6 +348,7 @@ public:
 			gnss_config.fix_mode = read_param<BaseGNSSFixMode>(ParamID::GNSS_FIX_MODE);
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
+			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
 		} else if (gnss_config.is_out_of_zone) {
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
 			gnss_config.dloc_arg_nom = m_zone.delta_arg_loc_argos_seconds == 0 ? read_param<unsigned int>(ParamID::DLOC_ARG_NOM) : m_zone.delta_arg_loc_argos_seconds;
@@ -357,6 +362,7 @@ public:
 			gnss_config.fix_mode = read_param<BaseGNSSFixMode>(ParamID::GNSS_FIX_MODE);
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
+			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
 			// Apply zone exclusion where applicable
 			if (m_zone.gnss_extra_flags_enable) {
 				gnss_config.acquisition_timeout = m_zone.gnss_acquisition_timeout_seconds;
@@ -376,6 +382,7 @@ public:
 			gnss_config.fix_mode = read_param<BaseGNSSFixMode>(ParamID::GNSS_FIX_MODE);
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
+			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
 		}
 	}
 
@@ -389,6 +396,7 @@ public:
 
 		if (lb_en && m_battery_level <= lb_threshold) {
 			argos_config.is_lb = true;
+			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::LB_ARGOS_MODE);
 			argos_config.depth_pile = read_param<BaseArgosDepthPile>(ParamID::LB_ARGOS_DEPTH_PILE);
@@ -409,6 +417,7 @@ public:
 			unsigned int delta_time_loc = read_param<unsigned int>(ParamID::DLOC_ARG_LB);
 			argos_config.delta_time_loc = calc_delta_time_loc(delta_time_loc);
 		} else if (argos_config.is_out_of_zone) {
+			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
 			argos_config.depth_pile = read_param<BaseArgosDepthPile>(ParamID::ARGOS_DEPTH_PILE);
@@ -438,6 +447,7 @@ public:
 			}
 		} else {
 			// Use default params
+			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
 			argos_config.depth_pile = read_param<BaseArgosDepthPile>(ParamID::ARGOS_DEPTH_PILE);

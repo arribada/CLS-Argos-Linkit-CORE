@@ -61,7 +61,10 @@ void GPSScheduler::reschedule()
     }
 
     std::time_t now = rtc->gettime();
-    uint32_t aq_period = m_is_first_schedule ? FIRST_AQPERIOD_SEC : m_gnss_config.dloc_arg_nom;
+    uint32_t aq_period = m_is_first_schedule ? FIRST_AQPERIOD_SEC : (m_is_first_fix_found ? m_gnss_config.dloc_arg_nom : m_gnss_config.cold_start_retry_period);
+
+    // Since we are now scheduling, this is no longer the first schedule
+    m_is_first_schedule = false;
 
     // Find the next schedule time aligned to UTC 00:00
     std::time_t next_schedule = now - (now % aq_period) + aq_period;
@@ -87,7 +90,6 @@ void GPSScheduler::task_acquisition_period() {
     try
     {
     	// Clear the first schedule indication flag
-    	m_is_first_schedule = false;
     	m_wakeup_time = system_timer->get_counter();
     	m_num_consecutive_fixes = m_gnss_config.min_num_fixes;
 
@@ -240,9 +242,6 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
     		"GPSSchedulerUpdateRTC",
     		Scheduler::HIGHEST_PRIORITY);
 
-    // Mark first fix flag
-    m_is_first_fix_found = true;
-
     // Only process this data if it satisfies an optional hdop threshold
     if (m_gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP > m_gnss_config.hdop_filter_threshold)) {
     	m_num_consecutive_fixes = m_gnss_config.min_num_fixes;
@@ -262,6 +261,9 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
        	DEBUG_TRACE("GPSScheduler::gnss_data_callback: criteria met with %u consecutive fixes remaining", m_num_consecutive_fixes);
         return;
     }
+
+    // Mark first fix flag
+    m_is_first_fix_found = true;
 
     // All filter criteria is met
     {
