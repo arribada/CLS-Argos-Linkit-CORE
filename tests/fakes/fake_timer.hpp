@@ -112,7 +112,7 @@ private:
         // Check to see if any schedules are due and run any that are
         for (auto itr = m_schedules.begin(); itr != m_schedules.end(); )
         {
-            if (itr->m_target_counter_value == m_counter_value)
+            if (itr->m_target_counter_value <= m_counter_value)
             {
                 if (itr->m_func)
                 {

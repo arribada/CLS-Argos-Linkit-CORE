@@ -14,6 +14,7 @@
 #include "gentracker.hpp"
 #include "nrf_timer.hpp"
 #include "nrf_switch.hpp"
+#include "reed.hpp"
 #include "sws.hpp"
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
@@ -39,7 +40,7 @@ Timer *system_timer;
 Scheduler *system_scheduler;
 RGBLed *status_led;
 Switch *saltwater_switch;
-Switch *reed_switch;
+ReedSwitch *reed_switch;
 DTEHandler *dte_handler;
 RTC *rtc;
 BatteryMonitor *battery_monitor;
@@ -51,7 +52,7 @@ FSM_INITIAL_STATE(GenTracker, BootState)
 #define OTA_UPDATE_RESERVED_BLOCKS ((1024 * 1024) / IS25_BLOCK_SIZE)
 
 // Reed switch debouncing time (ms)
-#define REED_SWITCH_DEBOUNCE_TIME_MS    50
+#define REED_SWITCH_DEBOUNCE_TIME_MS    25
 
 // Redirect std::cout and printf output to debug UART
 // We have to define this as extern "C" as we are overriding a weak C function
@@ -90,7 +91,10 @@ int main()
 
     DEBUG_TRACE("Reed switch...");
     NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS);
-	reed_switch = &nrf_reed_switch;
+
+    DEBUG_TRACE("Reed gesture...");
+	ReedSwitch reed_gesture_switch(nrf_reed_switch);
+	reed_switch = &reed_gesture_switch;
 
 	DEBUG_TRACE("SWS...");
 	SWS nrf_saltwater_switch;

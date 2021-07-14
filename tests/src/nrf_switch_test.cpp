@@ -3,13 +3,13 @@
 
 #include "nrfx_gpiote.h"
 #include "bsp.hpp"
-#include "linux_timer.hpp"
+#include "fake_timer.hpp"
 #include "scheduler.hpp"
 #include "gpio.hpp"
 #include "nrf_switch.hpp"
 #include "nrfx_gpiote.h"
 
-extern Scheduler *system_scheduler;
+
 extern Timer *system_timer;
 
 
@@ -21,16 +21,14 @@ namespace BSP
 
 TEST_GROUP(NrfSwitch)
 {
-	LinuxTimer *linux_timer;
+	FakeTimer *fake_timer;
 	void setup() {
-		linux_timer = new LinuxTimer;
-		system_timer = linux_timer;
-		system_scheduler = new Scheduler(system_timer);
+		fake_timer = new FakeTimer;
+		system_timer = fake_timer;
 	}
 
 	void teardown() {
-		delete system_scheduler;
-		delete linux_timer;
+		delete fake_timer;
 	}
 };
 
@@ -46,14 +44,14 @@ TEST(NrfSwitch, SwitchTriggeringCallbackNoHysteresis) {
 
 	mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SWITCH).andReturnValue(1);
 	GPIOTE::trigger(BSP::GPIO::GPIO_SWITCH, NRF_GPIOTE_POLARITY_TOGGLE);
-	while (!system_scheduler->run());
+	fake_timer->increment_counter(1);
 
 	CHECK_EQUAL(1, trigger_counter);
 	CHECK_TRUE(actual_state);
 
 	mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SWITCH).andReturnValue(0);
 	GPIOTE::trigger(BSP::GPIO::GPIO_SWITCH, NRF_GPIOTE_POLARITY_TOGGLE);
-	while (!system_scheduler->run());
+	fake_timer->increment_counter(1);
 
 	CHECK_EQUAL(2, trigger_counter);
 	CHECK_FALSE(actual_state);
@@ -78,9 +76,11 @@ TEST(NrfSwitch, SwitchTriggeringCallbackWithHysteresis) {
 	mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SWITCH).andReturnValue(1);
 
 	GPIOTE::trigger(BSP::GPIO::GPIO_SWITCH, NRF_GPIOTE_POLARITY_TOGGLE);  // 0->1
+	fake_timer->increment_counter(100);
 	GPIOTE::trigger(BSP::GPIO::GPIO_SWITCH, NRF_GPIOTE_POLARITY_TOGGLE);  // 1->0
+	fake_timer->increment_counter(100);
 	GPIOTE::trigger(BSP::GPIO::GPIO_SWITCH, NRF_GPIOTE_POLARITY_TOGGLE);  // 0->1
-	while (!system_scheduler->run());
+	fake_timer->increment_counter(1000);
 
 	CHECK_EQUAL(1, trigger_counter);
 	CHECK_TRUE(actual_state);
@@ -90,9 +90,11 @@ TEST(NrfSwitch, SwitchTriggeringCallbackWithHysteresis) {
 	mock().expectOneCall("value").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SWITCH).andReturnValue(0);
 
 	GPIOTE::trigger(BSP::GPIO::GPIO_SWITCH, NRF_GPIOTE_POLARITY_TOGGLE);  // 1->0
+	fake_timer->increment_counter(100);
 	GPIOTE::trigger(BSP::GPIO::GPIO_SWITCH, NRF_GPIOTE_POLARITY_TOGGLE);  // 0->1
+	fake_timer->increment_counter(100);
 	GPIOTE::trigger(BSP::GPIO::GPIO_SWITCH, NRF_GPIOTE_POLARITY_TOGGLE);  // 1->0
-	while (!system_scheduler->run());
+	fake_timer->increment_counter(1000);
 
 	CHECK_EQUAL(2, trigger_counter);
 	CHECK_FALSE(actual_state);

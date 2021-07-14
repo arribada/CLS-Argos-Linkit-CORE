@@ -1,25 +1,18 @@
-#ifndef __GENTRACKER_HPP_INC
-#define __GENTRACKER_HPP_INC
+#pragma once
 
 #include "tinyfsm.hpp"
 #include "scheduler.hpp"
 #include "error.hpp"
 #include "ble_service.hpp"
+#include "reed.hpp"
 
-struct ReedSwitchEvent              : tinyfsm::Event { bool state; };
+struct ReedSwitchEvent              : tinyfsm::Event { ReedSwitchGesture state; };
 struct SaltwaterSwitchEvent         : tinyfsm::Event { bool state; };
 struct ErrorEvent : tinyfsm::Event { ErrorCode error_code; };
 
 
 class GenTracker : public tinyfsm::Fsm<GenTracker>
 {
-private:
-	static inline Scheduler::TaskHandle m_task_trigger_config_state;
-	static inline Scheduler::TaskHandle m_task_trigger_off_state;
-	static inline const unsigned int TRANSIT_CONFIG_HOLD_TIME_MS = 3000;
-	static inline const unsigned int TRANSIT_OFF_HOLD_TIME_MS = 10000;
-	static inline uint64_t m_reed_trigger_start_time;
-
 public:
 	void react(tinyfsm::Event const &);
 	void react(ReedSwitchEvent const &event);
@@ -61,11 +54,30 @@ public:
 	void exit() override;
 };
 
-class OperationalState : public GenTracker
+class MenuState : public GenTracker
 {
 private:
-	static inline const unsigned int LED_INDICATION_PERIOD_MS = 5000;
+	static inline const unsigned int MENU_TIMEOUT_PERIOD_MS = 60000;
+	Scheduler::TaskHandle m_menu_state_task;
 
+public:
+	void entry() override;
+	void exit() override;
+};
+
+class PreOperationalState : public GenTracker
+{
+private:
+	static inline const unsigned int TRANSIT_PERIOD_MS = 5000;
+	Scheduler::TaskHandle m_preop_state_task;
+
+public:
+	void entry() override;
+	void exit() override;
+};
+
+class OperationalState : public GenTracker
+{
 public:
 	void react(SaltwaterSwitchEvent const &event) override;
 	void entry() override;
@@ -96,5 +108,3 @@ public:
 	void entry();
 	void exit();
 };
-
-#endif // __GENTRACKER_HPP_INC

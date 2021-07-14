@@ -16,12 +16,12 @@ struct SetLEDOff : tinyfsm::Event { };
 struct SetLEDMenu : tinyfsm::Event { };
 struct SetLEDBoot : tinyfsm::Event { };
 struct SetLEDPowerDown : tinyfsm::Event { };
-struct SetLEDPreOperationalError : tinyfsm::Event { };
+struct SetLEDIdleError : tinyfsm::Event { };
+struct SetLEDIdleBatteryNominal : tinyfsm::Event { };
+struct SetLEDIdleBatteryLow : tinyfsm::Event { };
+struct SetLEDError : tinyfsm::Event { };
 struct SetLEDPreOperationalBatteryNominal : tinyfsm::Event { };
 struct SetLEDPreOperationalBatteryLow : tinyfsm::Event { };
-struct SetLEDError : tinyfsm::Event { };
-struct SetLEDOperationalBatteryNominal : tinyfsm::Event { };
-struct SetLEDOperationalBatteryLow : tinyfsm::Event { };
 struct SetLEDConfigNotConnected : tinyfsm::Event { };
 struct SetLEDConfigConnected : tinyfsm::Event { };
 struct SetLEDGNSSOn : tinyfsm::Event { };
@@ -34,12 +34,12 @@ class LEDOff;
 class LEDMenu;
 class LEDBoot;
 class LEDPowerDown;
-class LEDPreOperationalError;
+class LEDIdleError;
+class LEDIdleBatteryNominal;
+class LEDIdleBatteryLow;
+class LEDError;
 class LEDPreOperationalBatteryNominal;
 class LEDPreOperationalBatteryLow;
-class LEDError;
-class LEDOperationalBatteryNominal;
-class LEDOperationalBatteryLow;
 class LEDConfigNotConnected;
 class LEDConfigConnected;
 class LEDGNSSOn;
@@ -53,9 +53,8 @@ class LEDState : public tinyfsm::Fsm<LEDState> {
 protected:
 	static inline LEDMenuState m_last_menu_state = LEDMenuState::INACTIVE;
 	static inline bool m_is_gnss_on = false;
-	static inline Timer::TimerHandle m_timer_handle;
 public:
-	LEDMenuState get_last_menu_state() { return m_last_menu_state; }
+	static LEDMenuState get_last_menu_state() { return m_last_menu_state; }
 	static LEDMenuState next_menu_state(const LEDMenuState s) {
 		int x = (int)s + 1;
 		if (x > (int)LEDMenuState::POWERDOWN)
@@ -76,12 +75,12 @@ public:
 	void react(SetLEDMenu const &) { transit<LEDMenu>(); }
 	void react(SetLEDBoot const &) { transit<LEDBoot>(); }
 	void react(SetLEDPowerDown const &) { transit<LEDPowerDown>(); }
-	void react(SetLEDPreOperationalError const &) { transit<LEDPreOperationalError>(); }
+	void react(SetLEDIdleError const &) { transit<LEDIdleError>(); }
+	void react(SetLEDIdleBatteryNominal const &) { transit<LEDIdleBatteryNominal>(); }
+	void react(SetLEDIdleBatteryLow const &) { transit<LEDIdleBatteryLow>(); }
+	void react(SetLEDError const &) { transit<LEDError>(); }
 	void react(SetLEDPreOperationalBatteryNominal const &) { transit<LEDPreOperationalBatteryNominal>(); }
 	void react(SetLEDPreOperationalBatteryLow const &) { transit<LEDPreOperationalBatteryLow>(); }
-	void react(SetLEDError const &) { transit<LEDError>(); }
-	void react(SetLEDOperationalBatteryNominal const &) { transit<LEDOperationalBatteryNominal>(); }
-	void react(SetLEDOperationalBatteryLow const &) { transit<LEDOperationalBatteryLow>(); }
 	void react(SetLEDConfigNotConnected const &) { transit<LEDConfigNotConnected>(); }
 	void react(SetLEDConfigConnected const &) { transit<LEDConfigConnected>(); }
 	void react(SetLEDGNSSOn const &) { transit<LEDGNSSOn>(); }
@@ -105,6 +104,8 @@ public:
 
 class LEDMenu : public LEDState
 {
+private:
+	static inline Timer::TimerHandle m_timer_handle;
 public:
 	void entry() override;
 	void exit(void) override;
@@ -124,7 +125,28 @@ public:
 	void exit() override {};
 };
 
-class LEDPreOperationalError : public LEDState
+class LEDIdleError : public LEDState
+{
+public:
+	void entry() override;
+	void exit() override {};
+};
+
+class LEDIdleBatteryNominal : public LEDState
+{
+public:
+	void entry() override;
+	void exit() override {};
+};
+
+class LEDIdleBatteryLow : public LEDState
+{
+public:
+	void entry() override;
+	void exit() override {};
+};
+
+class LEDError : public LEDState
 {
 public:
 	void entry() override;
@@ -139,27 +161,6 @@ public:
 };
 
 class LEDPreOperationalBatteryLow : public LEDState
-{
-public:
-	void entry() override;
-	void exit() override {};
-};
-
-class LEDError : public LEDState
-{
-public:
-	void entry() override;
-	void exit() override {};
-};
-
-class LEDOperationalBatteryNominal : public LEDState
-{
-public:
-	void entry() override;
-	void exit() override {};
-};
-
-class LEDOperationalBatteryLow : public LEDState
 {
 public:
 	void entry() override;

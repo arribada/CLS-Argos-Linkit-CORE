@@ -6,12 +6,11 @@
 #include "switch.hpp"
 #include "nrf_switch.hpp"
 #include "bsp.hpp"
-#include "scheduler.hpp"
+#include "timer.hpp"
 #include "error.hpp"
 #include "debug.hpp"
 
 
-extern Scheduler *system_scheduler;
 extern Timer *system_timer;
 
 // This class maps the pin number to an NrfSwitch object -- this is largely needed because
@@ -76,7 +75,7 @@ void NrfSwitch::start(std::function<void(bool)> func) {
 }
 
 void NrfSwitch::stop() {
-	system_scheduler->cancel_task(m_task_handle);
+	system_timer->cancel_schedule(m_timer_handle);
 	nrfx_gpiote_in_event_disable(BSP::GPIO_Inits[m_pin].pin_number);
 	nrfx_gpiote_in_uninit(BSP::GPIO_Inits[m_pin].pin_number);
 	NrfSwitchManager::remove(BSP::GPIO_Inits[m_pin].pin_number);
@@ -84,7 +83,7 @@ void NrfSwitch::stop() {
 }
 
 void NrfSwitch::update_state(bool state) {
-	DEBUG_TRACE("NrfSwitch::update_state: state=%u old=%u", state, m_current_state);
+	//DEBUG_TRACE("NrfSwitch::update_state: state=%u old=%u", state, m_current_state);
 	// Call state change handler if state has changed
 	if (state != m_current_state) {
 		m_current_state = state;
@@ -93,11 +92,11 @@ void NrfSwitch::update_state(bool state) {
 }
 
 void NrfSwitch::process_event(bool state) {
-	DEBUG_TRACE("NrfSwitch::process_event: state=%u hysteresis=%u timer=%lu", state, m_hysteresis_time_ms, system_timer->get_counter());
-	// Each time we get a new event we trigger the task to post it after the hysteresis time.
+	uint64_t now = system_timer->get_counter();
+	//DEBUG_TRACE("NrfSwitch::process_event: state=%u hysteresis=%u timer=%lu", state, m_hysteresis_time_ms, now);
+	// Each time we get a new event we trigger the timer to post it after the hysteresis time.
 	// If we receive another event, we cancel the previous task and start a new one.
-	system_scheduler->cancel_task(m_task_handle);
-	m_task_handle = system_scheduler->post_task_prio(std::bind(&NrfSwitch::update_state, this, state),
-			"NrfSwitchUpdateState",
-			Scheduler::DEFAULT_PRIORITY, m_hysteresis_time_ms);
+	system_timer->cancel_schedule(m_timer_handle);
+	m_timer_handle = system_timer->add_schedule(std::bind(&NrfSwitch::update_state, this, state),
+			now + m_hysteresis_time_ms);
 }

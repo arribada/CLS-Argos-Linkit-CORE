@@ -1,14 +1,13 @@
-#ifndef __NRF_SWITCH_HPP_
-#define __NRF_SWITCH_HPP_
+#pragma once
 
 #include "switch.hpp"
-#include "scheduler.hpp"
+#include "timer.hpp"
 
 class NrfSwitchManager;
 
 class NrfSwitch : public Switch {
 private:
-	Scheduler::TaskHandle m_task_handle;
+	Timer::TimerHandle m_timer_handle;
 
 	void process_event(bool state);
 	void update_state(bool state);
@@ -21,5 +20,3 @@ public:
 
 	friend class NrfSwitchManager;
 };
-
-#endif // __NRF_SWITCH_HPP_

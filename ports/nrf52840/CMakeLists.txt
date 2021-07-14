@@ -184,6 +184,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_saadc.c
     ${SDK_ROOT}/modules/nrfx/hal/nrf_nvmc.c
     ${CORE_DIR}/hardware/sws.cpp
+    ${CORE_DIR}/hardware/reed.cpp
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/sm/ledsm.cpp

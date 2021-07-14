@@ -1,4 +1,5 @@
 #include "ledsm.hpp"
+#include "debug.hpp"
 
 extern RGBLed *status_led;
 extern Timer *system_timer;
@@ -16,15 +17,15 @@ void LEDPowerDown::entry() {
 	status_led->flash(RGBLedColor::WHITE, 125);
 }
 
-void LEDPreOperationalError::entry() {
+void LEDIdleError::entry() {
 	status_led->set(RGBLedColor::RED);
 }
 
-void LEDPreOperationalBatteryNominal::entry() {
+void LEDIdleBatteryNominal::entry() {
 	status_led->set(RGBLedColor::GREEN);
 }
 
-void LEDPreOperationalBatteryLow::entry() {
+void LEDIdleBatteryLow::entry() {
 	status_led->set(RGBLedColor::YELLOW);
 }
 
@@ -32,11 +33,11 @@ void LEDError::entry() {
 	status_led->flash(RGBLedColor::RED);
 }
 
-void LEDOperationalBatteryNominal::entry() {
+void LEDPreOperationalBatteryNominal::entry() {
 	status_led->flash(RGBLedColor::GREEN);
 }
 
-void LEDOperationalBatteryLow::entry() {
+void LEDPreOperationalBatteryLow::entry() {
 	status_led->flash(RGBLedColor::YELLOW);
 }
 
@@ -84,13 +85,17 @@ void LEDArgosTXComplete::entry() {
 
 void LEDMenu::entry() {
 	m_last_menu_state = next_menu_state(m_last_menu_state);
-	status_led->set(menu_color(m_last_menu_state));
+	RGBLedColor c;
+	c = menu_color(m_last_menu_state);
+	status_led->set(c);
+	DEBUG_TRACE("entry: LEDMenu: menu_state=%u color=%u", (unsigned int)m_last_menu_state, (unsigned int)c);
 	m_timer_handle = system_timer->add_schedule([this]() {
 		entry();
 	}, system_timer->get_counter() + 3000);
 }
 
 void LEDMenu::exit() {
+	DEBUG_TRACE("exit: LEDMenu");
 	system_timer->cancel_schedule(m_timer_handle);
 	m_last_menu_state = LEDMenuState::INACTIVE;
 }

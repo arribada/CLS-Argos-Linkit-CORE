@@ -6,6 +6,7 @@
 #include "interrupt_lock.hpp"
 #include "bsp.hpp"
 #include "debug.hpp"
+#include <iostream>
 
 // Do not change this value without considering the impact to the macros below
 static constexpr uint16_t RTC_TIMER_PRESCALER = 32;
@@ -88,6 +89,7 @@ static void rtc_time_keeping_event_handler(drv_rtc_t const * const  p_instance)
     else if (drv_rtc_compare_pending(p_instance, 0))
     {
         // Schedule/s must be due, so lets run them
+        //printf("Woken by COMPARE0\n");
 
         auto schedule_itr = g_schedules.begin();
         while (schedule_itr != g_schedules.end())
@@ -97,6 +99,7 @@ static void rtc_time_keeping_event_handler(drv_rtc_t const * const  p_instance)
             {
                 schedule_itr = g_schedules.erase(schedule_itr);
 
+                //printf("Running schedule %u\n", (unsigned int)schedule.m_id.value());
                 if (schedule.m_func)
                     schedule.m_func();
             }
@@ -106,8 +109,6 @@ static void rtc_time_keeping_event_handler(drv_rtc_t const * const  p_instance)
                 break;
             }
         }
-
-        //printf("Woken by COMPARE0\r\n");
     } else if (drv_rtc_compare_pending(p_instance, 1))
     {
         g_stamp64 = current_ticks();
@@ -181,6 +182,8 @@ Timer::TimerHandle NrfTimer::add_schedule(std::function<void()> const &task_func
         // Generate a handle that refers to this new schedule
         handle = g_unique_id;
 
+        //printf("Added schedule with id %u ticks %llu\n", *handle, target_count_ticks);
+
         g_unique_id++;
     }
 
@@ -204,7 +207,7 @@ void NrfTimer::cancel_schedule(TimerHandle &handle)
     {
         if (iter->m_id == *handle)
         {
-            //std::cout << "Cancelling schedule with id: " << *handle << std::endl;
+            //printf("Cancelling schedule with id %u\n", *handle);
             iter = g_schedules.erase(iter);
             // Invalidate the task handle
             handle.reset();

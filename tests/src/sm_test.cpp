@@ -21,6 +21,7 @@
 #include "dte_handler.hpp"
 #include "fake_timer.hpp"
 #include "bsp.hpp"
+#include "reed.hpp"
 
 #define BLOCK_COUNT   (256)
 #define BLOCK_SIZE    (64*1024)
@@ -40,7 +41,7 @@ extern BLEService *ble_service;
 extern OTAFileUpdater *ota_updater;
 extern RGBLed *status_led;
 extern Switch *saltwater_switch;
-extern Switch *reed_switch;
+extern ReedSwitch *reed_switch;
 extern BatteryMonitor *battery_monitor;
 
 // FSM initial state -> BootState
@@ -80,12 +81,11 @@ TEST_GROUP(Sm)
 		fake_saltwater_switch = new FakeSwitch(0, 0);
 		saltwater_switch = fake_saltwater_switch;
 		fake_reed_switch = new FakeSwitch(0, 0);
-		reed_switch = fake_reed_switch;
+		reed_switch = new ReedSwitch(*fake_reed_switch);
 	}
 
 	void teardown() {
 		delete main_filesystem;
-		delete fake_timer;
 		delete system_scheduler;
 		delete location_scheduler;
 		delete comms_scheduler;
@@ -95,8 +95,10 @@ TEST_GROUP(Sm)
 		delete mock_ota_file_updater;
 		delete mock_battery_monitor;
 		delete fake_status_led;
+		delete reed_switch;
 		delete fake_reed_switch;
 		delete fake_saltwater_switch;
+		delete fake_timer;
 	}
 };
 
@@ -193,13 +195,14 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigVal
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	fake_timer->set_counter(16000);
 	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
 
 	// Green LED should go off after 5 seconds
 	fake_timer->set_counter(21000);
 	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 }
 
@@ -225,13 +228,14 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigVal
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
 	fake_timer->set_counter(16000);
 	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::YELLOW, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
 
 	// Green LED should go off after 5 seconds
 	fake_timer->set_counter(21000);
 	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 }
 
@@ -456,19 +460,20 @@ TEST(Sm, CheckSWSEventsDispatchedInOperationalState)
 	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());
 
-	// After 15 seconds, transition to operational with green LED flashing
+	// After 15 seconds, transition to pre-operational with green LED flashing
 	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
 	mock().expectOneCall("start").onObject(comms_scheduler);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	fake_timer->set_counter(16000);
 	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
 
 	// Green LED should go off after 5 seconds
 	fake_timer->set_counter(21000);
 	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 
 	// Notify an SWS event and make sure it is dispatched into the schedulers
