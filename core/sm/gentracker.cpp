@@ -52,28 +52,22 @@ void GenTracker::react(ReedSwitchEvent const &event)
 	DEBUG_TRACE("react: ReedSwitchEvent: %u", (int)event.state);
 
 	// Reed switch event handling:
-	// SWIPE -- start LED menu mode if in IDLE state
-	// DOUBLE SWIPE -- start LED menu mode if in OPERATIONAL state
-	// SHORT_HOLD - configuration state (backwards compatability)
-	// LONG_HOLD -- power off (backwards compatability)
-	if (event.state == ReedSwitchGesture::SINGLE_SWIPE) {
-		if (is_in_state<IdleState>()) {
-			transit<MenuState>();
-		} else if (is_in_state<MenuState>()) {
-			LEDMenuState s = led_handle::get_last_menu_state();
-			if (s == LEDMenuState::POWERDOWN)
-				transit<OffState>();
-			else if (s == LEDMenuState::CONFIG)
-				transit<ConfigurationState>();
-			else if (s == LEDMenuState::OPERATIONAL)
-				transit<PreOperationalState>();
-		}
-	} else if (event.state == ReedSwitchGesture::DOUBLE_SWIPE) {
-		if (!is_in_state<MenuState>())
-			transit<MenuState>();
+	// ENGAGE -- engaged LED state
+	// RELEASE -- disengage LED state
+	// SHORT_HOLD - configuration state
+	// LONG_HOLD -- power off
+	if (event.state == ReedSwitchGesture::ENGAGE) {
+		led_handle::dispatch<SetLEDMagnetEngaged>({});
+	} else if (event.state == ReedSwitchGesture::RELEASE) {
+		led_handle::dispatch<SetLEDMagnetDisengaged>({});
 	} else if (event.state == ReedSwitchGesture::SHORT_HOLD) {
-		transit<ConfigurationState>();
+		led_handle::dispatch<SetLEDMagnetDisengaged>({});
+		if (is_in_state<ConfigurationState>())
+			transit<PreOperationalState>();
+		else
+			transit<ConfigurationState>();
 	} else if (event.state == ReedSwitchGesture::LONG_HOLD) {
+		led_handle::dispatch<SetLEDMagnetDisengaged>({});
 		transit<OffState>();
 	}
 }
@@ -134,9 +128,9 @@ void BootState::entry() {
 		DEBUG_INFO("sensor_log: has %u entries", sensor_log->num_entries());
 		DEBUG_INFO("system_log: has %u entries", system_log->num_entries());
 		DEBUG_INFO("configuration_store: is_valid=%u", configuration_store->is_valid());
-		// Transition to IDLE state after initialisation
+		// Transition to PreOperational state after initialisation
 		system_scheduler->post_task_prio([this](){
-			transit<IdleState>();
+			transit<PreOperationalState>();
 		},
 		"GenTrackerBootStateTransitIdleState",
 		Scheduler::DEFAULT_PRIORITY,
@@ -152,21 +146,6 @@ void BootState::exit() {
 
 	// Turn status LED off to indicate exit from boot state
 	led_handle::dispatch<SetLEDOff>({});
-}
-
-void MenuState::entry() {
-	DEBUG_INFO("enter: MenuState");
-	led_handle::dispatch<SetLEDMenu>({});
-	m_menu_state_task = system_scheduler->post_task_prio([this](){
-		transit<OffState>();
-	},
-	"MenuStateInactivityTimeout",
-	Scheduler::DEFAULT_PRIORITY, MENU_TIMEOUT_PERIOD_MS);
-}
-
-void MenuState::exit() {
-	DEBUG_INFO("exit: MenuState");
-	system_scheduler->cancel_task(m_menu_state_task);
 }
 
 void OffState::entry() {
@@ -188,47 +167,27 @@ void OffState::exit() {
 	led_handle::dispatch<SetLEDOff>({});
 }
 
-void IdleState::entry() {
-	DEBUG_INFO("entry: IdleState");
-	if (configuration_store->is_valid()) {
-		if (configuration_store->is_battery_level_low())
-			led_handle::dispatch<SetLEDIdleBatteryLow>({});
-		else
-			led_handle::dispatch<SetLEDIdleBatteryNominal>({});
-
-		m_idle_state_task = system_scheduler->post_task_prio([this](){
-			transit<PreOperationalState>();
-		},
-		"GenTrackerIdleStateTransitPreOperationalState",
-		Scheduler::DEFAULT_PRIORITY, IDLE_PERIOD_MS);
-	} else {
-		led_handle::dispatch<SetLEDIdleError>({});
-		m_idle_state_task = system_scheduler->post_task_prio([this](){
-			transit<ErrorState>();
-		},
-		"GenTrackerIdleStateTransitErrorState",
-		Scheduler::DEFAULT_PRIORITY, IDLE_PERIOD_MS);
-	}
-}
-
-void IdleState::exit() {
-	DEBUG_INFO("exit: IdleState");
-	system_scheduler->cancel_task(m_idle_state_task);
-	led_handle::dispatch<SetLEDOff>({});
-}
-
 void PreOperationalState::entry() {
 	DEBUG_INFO("entry: PreOperationalState");
-	if (configuration_store->is_battery_level_low())
-		led_handle::dispatch<SetLEDPreOperationalBatteryLow>({});
-	else
-		led_handle::dispatch<SetLEDPreOperationalBatteryNominal>({});
+	if (configuration_store->is_valid()) {
+		if (configuration_store->is_battery_level_low())
+			led_handle::dispatch<SetLEDPreOperationalBatteryLow>({});
+		else
+			led_handle::dispatch<SetLEDPreOperationalBatteryNominal>({});
 
-	m_preop_state_task = system_scheduler->post_task_prio([this](){
-		transit<OperationalState>();
-	},
-	"GenTrackerIdleStateTransitOperationalState",
-	Scheduler::DEFAULT_PRIORITY, TRANSIT_PERIOD_MS);
+		m_preop_state_task = system_scheduler->post_task_prio([this](){
+			transit<OperationalState>();
+		},
+		"GenTrackerPreOperationalStateTransitOperationalState",
+		Scheduler::DEFAULT_PRIORITY, TRANSIT_PERIOD_MS);
+	} else {
+		led_handle::dispatch<SetLEDPreOperationalError>({});
+		m_preop_state_task = system_scheduler->post_task_prio([this](){
+			transit<ErrorState>();
+		},
+		"GenTrackerPreOperationalStateTransitErrorState",
+		Scheduler::DEFAULT_PRIORITY, TRANSIT_PERIOD_MS);
+	}
 }
 
 void PreOperationalState::exit() {

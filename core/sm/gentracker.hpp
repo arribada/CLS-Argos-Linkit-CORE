@@ -43,28 +43,6 @@ public:
 	void exit() override;
 };
 
-class IdleState : public GenTracker
-{
-private:
-	static inline const unsigned int IDLE_PERIOD_MS = 15000;
-	Scheduler::TaskHandle m_idle_state_task;
-
-public:
-	void entry() override;
-	void exit() override;
-};
-
-class MenuState : public GenTracker
-{
-private:
-	static inline const unsigned int MENU_TIMEOUT_PERIOD_MS = 60000;
-	Scheduler::TaskHandle m_menu_state_task;
-
-public:
-	void entry() override;
-	void exit() override;
-};
-
 class PreOperationalState : public GenTracker
 {
 private:

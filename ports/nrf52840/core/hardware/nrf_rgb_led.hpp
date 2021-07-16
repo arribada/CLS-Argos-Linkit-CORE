@@ -6,7 +6,7 @@
 #include "rgb_led.hpp"
 #include "debug.hpp"
 #include "gpio.hpp"
-
+#include "interrupt_lock.hpp"
 
 extern Timer *system_timer;
 
@@ -25,6 +25,7 @@ private:
 	Timer::TimerHandle m_led_timer;
 
 	void toggle_led(void) {
+		InterruptLock lock;
 		if (m_flash_state)
 			set(m_flash_color);
 		else
@@ -32,7 +33,8 @@ private:
 		m_is_flashing = true;
 		m_flash_state = !m_flash_state;
 		m_led_timer = system_timer->add_schedule([this]() {
-			toggle_led();
+			if (m_is_flashing)
+				toggle_led();
 		}, system_timer->get_counter() + m_flash_interval);
 	}
 
@@ -45,6 +47,7 @@ public:
 		set(color);
 	}
 	void set(RGBLedColor color) override {
+		InterruptLock lock;
 		system_timer->cancel_schedule(m_led_timer);
 		m_color = color;
 		m_is_flashing = false;
@@ -95,10 +98,12 @@ public:
 		//DEBUG_TRACE("LED[%s]=%s", m_name, color_to_string(color).c_str());
 	}
 	void off() override {
+		InterruptLock lock;
 		system_timer->cancel_schedule(m_led_timer);
 		set(RGBLedColor::BLACK);
 	}
 	void flash(RGBLedColor color, unsigned int interval_ms = 500) override {
+		InterruptLock lock;
 		system_timer->cancel_schedule(m_led_timer);
 		m_flash_interval = interval_ms;
 		m_flash_color = color;
