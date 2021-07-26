@@ -65,7 +65,7 @@ extern "C" int _write(int file, char *ptr, int len)
 int main()
 {
 	GPIOPins::initialise();
-	GPIOPins::set(BSP::GPIO_POWER_CONTROL);
+	PMU::initialise();
 
 	// Current backfeeds from 3V3 -> i2c pullups -> BMX160 -> GPIO_AG_PWR
 	// Because of this we need to float our GPIO_AG_PWR pin to avoid sinking that current and thus increasing our sleep current
@@ -82,7 +82,25 @@ int main()
 
     nrf_log_redirect_init();
 
-	PMU::initialise();
+	// Check the reed switch is engaged for 3 seconds if this is a power on event
+    DEBUG_TRACE("PMU Reset Cause = %s", PMU::reset_cause().c_str());
+	if (PMU::reset_cause() == "Power On Reset") {
+		unsigned int countdown = 3000;
+		DEBUG_TRACE("Enter Power On Reed Switch Check");
+		while (countdown) {
+			//DEBUG_TRACE("Reed Switch: %u", GPIOPins::value(BSP::GPIO_REED_SW));
+			if (!GPIOPins::value(BSP::GPIO_REED_SW))
+				break;
+			PMU::delay_ms(1);
+			countdown--;
+		}
+
+		if (countdown) {
+			DEBUG_TRACE("Reed Switch Inactive -- Powering Down...");
+			PMU::powerdown();
+		}
+		DEBUG_TRACE("Exiting Power On Reed Switch Check");
+	}
 
 	DEBUG_TRACE("Battery monitor...");
 

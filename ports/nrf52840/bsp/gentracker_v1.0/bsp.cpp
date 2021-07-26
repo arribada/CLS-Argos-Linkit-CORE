@@ -264,4 +264,18 @@ namespace BSP
             }
         }
     };
+
+    ///////////////////////////////// WDT definitions /////////////////////////////////
+    const WDT_InitTypeDefAndInst_t WDT_Inits[WDT_TOTAL_NUMBER] =
+    {
+#if NRFX_WDT_ENABLED
+    	{
+			.config =
+			{
+				.behaviour = NRF_WDT_BEHAVIOUR_RUN_SLEEP_HALT,
+				.reload_value = 24 * 60 * 60 * 1000   // 24 hours
+			}
+    	}
+#endif
+    };
 }

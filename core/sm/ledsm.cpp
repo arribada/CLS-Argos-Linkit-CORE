@@ -15,7 +15,7 @@ void LEDOff::entry() {
 
 void LEDBoot::entry() {
 	DEBUG_TRACE("LEDBoot: entry");
-	status_led->set(RGBLedColor::WHITE);
+	status_led->flash(RGBLedColor::WHITE, 125);
 }
 
 void LEDPowerDown::entry() {
@@ -23,7 +23,7 @@ void LEDPowerDown::entry() {
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else
-		status_led->flash(RGBLedColor::WHITE, 125);
+		status_led->flash(RGBLedColor::WHITE, 50);
 }
 
 void LEDError::entry() {
@@ -32,6 +32,11 @@ void LEDError::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->flash(RGBLedColor::RED);
+}
+
+void LEDPreOperationalPending::entry() {
+	DEBUG_TRACE("LEDPreOperationalPending: entry");
+	status_led->set(RGBLedColor::GREEN);
 }
 
 void LEDPreOperationalError::entry() {
@@ -56,6 +61,11 @@ void LEDPreOperationalBatteryLow::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->flash(RGBLedColor::YELLOW);
+}
+
+void LEDConfigPending::entry() {
+	DEBUG_TRACE("LEDConfigPending: entry");
+	status_led->set(RGBLedColor::BLUE);
 }
 
 void LEDConfigNotConnected::entry() {

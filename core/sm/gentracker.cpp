@@ -60,12 +60,17 @@ void GenTracker::react(ReedSwitchEvent const &event)
 		led_handle::dispatch<SetLEDMagnetEngaged>({});
 	} else if (event.state == ReedSwitchGesture::RELEASE) {
 		led_handle::dispatch<SetLEDMagnetDisengaged>({});
+		if (!is_in_state<OffState>()) {
+			if (led_handle::is_in_state<LEDPreOperationalPending>())
+				transit<PreOperationalState>();
+			else if (led_handle::is_in_state<LEDConfigPending>())
+				transit<ConfigurationState>();
+		}
 	} else if (event.state == ReedSwitchGesture::SHORT_HOLD) {
-		led_handle::dispatch<SetLEDMagnetDisengaged>({});
 		if (is_in_state<ConfigurationState>())
-			transit<PreOperationalState>();
+			led_handle::dispatch<SetLEDPreOperationalPending>({});
 		else
-			transit<ConfigurationState>();
+			led_handle::dispatch<SetLEDConfigPending>({});
 	} else if (event.state == ReedSwitchGesture::LONG_HOLD) {
 		led_handle::dispatch<SetLEDMagnetDisengaged>({});
 		transit<OffState>();

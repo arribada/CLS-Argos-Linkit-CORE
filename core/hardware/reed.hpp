@@ -3,6 +3,7 @@
 #include <functional>
 #include "switch.hpp"
 #include "timer.hpp"
+#include "scheduler.hpp"
 
 enum class ReedSwitchGesture {
 	ENGAGE,
@@ -19,6 +20,7 @@ private:
 	unsigned int m_short_hold_period_ms;
 	unsigned int m_long_hold_period_ms;
 	std::function<void(ReedSwitchGesture)> m_user_callback;
+	Scheduler::TaskHandle m_task;
 
 	void switch_state_handler(bool);
 

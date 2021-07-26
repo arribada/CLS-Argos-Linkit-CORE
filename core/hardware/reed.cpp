@@ -3,7 +3,6 @@
 #include "debug.hpp"
 #include "scheduler.hpp"
 
-extern Timer *system_timer;
 extern Scheduler *system_scheduler;
 
 ReedSwitch::ReedSwitch(
@@ -27,15 +26,10 @@ void ReedSwitch::start(std::function<void(ReedSwitchGesture)> func) {
 
 void ReedSwitch::stop() {
 	m_switch.stop();
+	system_scheduler->cancel_task(m_task);
 }
 
 void ReedSwitch::switch_state_handler(bool state) {
-
-	uint64_t now = system_timer->get_counter();
-	uint64_t delta = now - m_last_trigger_time;
-
-	// Update last trigger time
-	m_last_trigger_time = now;
 
 	if (state) {
 
@@ -47,22 +41,32 @@ void ReedSwitch::switch_state_handler(bool state) {
 			}, "ReedSwitchUserCallback");
 		}
 
+		// Start hold timers
+		m_task = system_scheduler->post_task_prio([this]() {
+			if (m_user_callback) {
+				system_scheduler->post_task_prio([this]() {
+					m_user_callback(ReedSwitchGesture::SHORT_HOLD);
+				}, "ReedSwitchUserCallback");
+			}
+
+			m_task = system_scheduler->post_task_prio([this]() {
+				if (m_user_callback) {
+					system_scheduler->post_task_prio([this]() {
+						m_user_callback(ReedSwitchGesture::LONG_HOLD);
+					}, "ReedSwitchUserCallback");
+				}
+			}, "ShortHoldEventHandler", Scheduler::DEFAULT_PRIORITY, m_short_hold_period_ms);
+		}, "LongHoldEventHandler", Scheduler::DEFAULT_PRIORITY, m_long_hold_period_ms - m_short_hold_period_ms);
+
 	} else {
 
-		ReedSwitchGesture gesture = ReedSwitchGesture::RELEASE;
-		if (delta >= m_long_hold_period_ms) {
-			DEBUG_TRACE("ReedSwitch::switch_state_handler: LONG_HOLD");
-			gesture = ReedSwitchGesture::LONG_HOLD;
-		} else if (delta >= m_short_hold_period_ms) {
-			DEBUG_TRACE("ReedSwitch::switch_state_handler: SHORT_HOLD");
-			gesture = ReedSwitchGesture::SHORT_HOLD;
-		} else {
-			DEBUG_TRACE("ReedSwitch::switch_state_handler: RELEASE");
-		}
+		DEBUG_TRACE("ReedSwitch::switch_state_handler: RELEASE");
+
+		system_scheduler->cancel_task(m_task);
 
 		if (m_user_callback) {
-			system_scheduler->post_task_prio([this, gesture]() {
-				m_user_callback(gesture);
+			system_scheduler->post_task_prio([this]() {
+				m_user_callback(ReedSwitchGesture::RELEASE);
 			}, "ReedSwitchUserCallback");
 		}
 	}

@@ -11,9 +11,11 @@ struct SetLEDMagnetDisengaged : tinyfsm::Event { };
 struct SetLEDBoot : tinyfsm::Event { };
 struct SetLEDPowerDown : tinyfsm::Event { };
 struct SetLEDError : tinyfsm::Event { };
+struct SetLEDPreOperationalPending : tinyfsm::Event { };
 struct SetLEDPreOperationalError : tinyfsm::Event { };
 struct SetLEDPreOperationalBatteryNominal : tinyfsm::Event { };
 struct SetLEDPreOperationalBatteryLow : tinyfsm::Event { };
+struct SetLEDConfigPending : tinyfsm::Event { };
 struct SetLEDConfigNotConnected : tinyfsm::Event { };
 struct SetLEDConfigConnected : tinyfsm::Event { };
 struct SetLEDGNSSOn : tinyfsm::Event { };
@@ -26,9 +28,11 @@ class LEDOff;
 class LEDBoot;
 class LEDPowerDown;
 class LEDError;
+class LEDPreOperationalPending;
 class LEDPreOperationalBatteryNominal;
 class LEDPreOperationalBatteryLow;
 class LEDPreOperationalError;
+class LEDConfigPending;
 class LEDConfigNotConnected;
 class LEDConfigConnected;
 class LEDGNSSOn;
@@ -49,9 +53,11 @@ public:
 	void react(SetLEDBoot const &) { transit<LEDBoot>(); }
 	void react(SetLEDPowerDown const &) { transit<LEDPowerDown>(); }
 	void react(SetLEDError const &) { transit<LEDError>(); }
+	void react(SetLEDPreOperationalPending const &) { transit<LEDPreOperationalPending>(); }
 	void react(SetLEDPreOperationalError const &) { transit<LEDPreOperationalError>(); }
 	void react(SetLEDPreOperationalBatteryNominal const &) { transit<LEDPreOperationalBatteryNominal>(); }
 	void react(SetLEDPreOperationalBatteryLow const &) { transit<LEDPreOperationalBatteryLow>(); }
+	void react(SetLEDConfigPending const &) { transit<LEDConfigPending>(); }
 	void react(SetLEDConfigNotConnected const &) { transit<LEDConfigNotConnected>(); }
 	void react(SetLEDConfigConnected const &) { transit<LEDConfigConnected>(); }
 	void react(SetLEDGNSSOn const &) { transit<LEDGNSSOn>(); }
@@ -94,6 +100,13 @@ public:
 	void exit() override {};
 };
 
+class LEDPreOperationalPending : public LEDState
+{
+public:
+	void entry() override;
+	void exit() override {};
+};
+
 class LEDPreOperationalError : public LEDState
 {
 public:
@@ -109,6 +122,13 @@ public:
 };
 
 class LEDPreOperationalBatteryLow : public LEDState
+{
+public:
+	void entry() override;
+	void exit() override {};
+};
+
+class LEDConfigPending : public LEDState
 {
 public:
 	void entry() override;

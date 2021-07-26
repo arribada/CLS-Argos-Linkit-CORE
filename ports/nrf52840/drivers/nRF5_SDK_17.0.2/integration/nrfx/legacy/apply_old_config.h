@@ -42,6 +42,8 @@
 #ifndef APPLY_OLD_CONFIG_H__
 #define APPLY_OLD_CONFIG_H__
 
+#if 0
+
 //------------------------------------------------------------------------------
 // Peripheral Resource Sharing (PRS)
 
@@ -1387,5 +1389,7 @@
 #endif
 
 #endif // defined(WDT_ENABLED)
+
+#endif
 
 #endif // APPLY_OLD_CONFIG_H__

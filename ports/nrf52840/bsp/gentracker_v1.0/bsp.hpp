@@ -9,6 +9,7 @@
 #include "nrfx_gpiote.h"
 #include "nrfx_saadc.h"
 #include "nrf_gpio.h"
+#include "nrfx_wdt.h"
 
 // Logical device mappings to physical devices
 #define RTC_DATE_TIME  BSP::RTC::RTC_1
@@ -16,6 +17,7 @@
 #define SPI_SATELLITE  BSP::SPI::SPI_2
 #define BATTERY_ADC	   BSP::ADC::ADC_CHANNEL_0
 #define UART_GPS	   BSP::UART::UART_0
+#define POWER_CONTROL_PIN  BSP::GPIO_POWER_CONTROL
 
 namespace BSP
 {
@@ -190,4 +192,20 @@ namespace BSP
     } ADC_InitTypeDefAndInst_t;
 
     extern const ADC_InitTypeDefAndInst_t ADC_Inits;
+
+    ////////////////////////////////// WDT definitions /////////////////////////////////
+    enum WDT
+	{
+#if NRFX_WDT_ENABLED
+    	WDT,
+#endif
+		WDT_TOTAL_NUMBER
+	};
+
+    typedef struct
+    {
+    	nrfx_wdt_config_t config;
+    } WDT_InitTypeDefAndInst_t;
+
+    extern const WDT_InitTypeDefAndInst_t WDT_Inits[WDT_TOTAL_NUMBER];
 }
