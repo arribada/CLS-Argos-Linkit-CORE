@@ -462,6 +462,11 @@ public:
 	}
 
 public:
+	void reset_state() {
+		m_dumpd_NNN = 0;
+		m_dumpd_mmm = 0;
+	}
+
 	DTEAction handle_dte_message(const std::string& req, std::string& resp) {
 		DTECommand command;
 		std::vector<ParamID> params;

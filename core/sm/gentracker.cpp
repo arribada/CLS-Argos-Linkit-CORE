@@ -279,6 +279,7 @@ int ConfigurationState::on_ble_event(BLEServiceEvent& event) {
 	case BLEServiceEventType::CONNECTED:
 		DEBUG_TRACE("ConfigurationState::on_ble_event: CONNECTED");
 		// Indicate DTE connection is made
+		dte_handler->reset_state();
 		led_handle::dispatch<SetLEDConfigConnected>({});
 		restart_inactivity_timeout();
 		break;
@@ -355,8 +356,11 @@ void ConfigurationState::process_received_data() {
 			action = dte_handler->handle_dte_message(req, resp);
 			if (resp.size())
 			{
-				DEBUG_TRACE("responded: %s", resp.c_str());
-				ble_service->write(resp);
+				DEBUG_TRACE("responding: %s", resp.c_str());
+				if (!ble_service->write(resp)) {
+					dte_handler->reset_state();
+					break;
+				}
 			}
 
 			if (action == DTEAction::FACTR)

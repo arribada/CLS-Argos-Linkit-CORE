@@ -16,7 +16,7 @@ public:
 
 	void start(std::function<int(BLEServiceEvent& event)> on_event) override;
 	void stop() override;
-    void write(std::string str) override;
+    bool write(std::string str) override;
     std::string read_line() override;
     void set_device_name(const std::string&) override;
 

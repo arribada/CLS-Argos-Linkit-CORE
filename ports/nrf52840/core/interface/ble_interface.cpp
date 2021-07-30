@@ -12,6 +12,8 @@
 #include "ble_stm_ota.h"
 #include "error.hpp"
 #include "debug.hpp"
+#include "timer.hpp"
+
 
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
@@ -33,6 +35,7 @@
 #define NEXT_CONN_PARAMS_UPDATE_DELAY   APP_TIMER_TICKS(30000)                      /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT    3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
 
+#define TRANSFER_TIMEOUT                10000 /** 10 seconds transfer timeout */
 
 /**< BLE NUS service instance. */
 // These next few lines are equivalent to BLE_NUS_DEF(m_nus, NRF_SDH_BLE_TOTAL_LINK_COUNT) but is necessary for C++ compilation
@@ -59,6 +62,9 @@ static ble_uuid_t m_adv_uuids[]          =                                      
 {
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE},
 };
+
+extern Timer *system_timer;
+
 
 void BleInterface::init()
 {
@@ -96,6 +102,7 @@ void BleInterface::stop()
     // Discard any received data
     m_carriage_return_received = false;
     m_receive_buffer_len = 0;
+    m_is_first_ota_packet = false;
 }
 
 std::string BleInterface::read_line()
@@ -128,7 +135,7 @@ void BleInterface::set_device_name(const std::string& name)
     advertising_start();
 }
 
-void BleInterface::write(std::string str)
+bool BleInterface::write(std::string str)
 {
     uint32_t err_code;
 
@@ -138,18 +145,20 @@ void BleInterface::write(std::string str)
     // By examining the code we can see this is incorrect and at least for SDK v17.0.2 it is safe to cast away the const
     uint8_t * buffer = reinterpret_cast<uint8_t *>(const_cast<char *>(str.c_str()));
 
+    // Record start time of send
+    uint64_t start_t = system_timer->get_counter();
+
     do
     {
         uint16_t transfer_length = std::min(length, static_cast<size_t>(BLE_NUS_MAX_DATA_LEN));
-        
+
         // WARN: Unfortunately the ble_nus_data_send() library incorrectly requires a non-const data pointer
         // By examining the code we can see this is incorrect and at least for SDK v17.0.2 it is safe to cast away the const
         err_code = ble_nus_data_send(&m_nus, buffer, &transfer_length, m_conn_handle);
-        if ((err_code != NRF_ERROR_INVALID_STATE) &&
-            (err_code != NRF_ERROR_RESOURCES) &&
-            (err_code != NRF_ERROR_NOT_FOUND))
+        if (err_code != NRF_ERROR_RESOURCES && err_code != NRF_SUCCESS)
         {
-            APP_ERROR_CHECK(err_code);
+            DEBUG_ERROR("BleInterface::write: error_code=%08x", err_code);
+            return false;
         }
 
         if (err_code == NRF_SUCCESS)
@@ -158,7 +167,15 @@ void BleInterface::write(std::string str)
             buffer += transfer_length;
         }
 
-    } while (length || (err_code == NRF_ERROR_RESOURCES));
+        //DEBUG_TRACE("BleInterface::write: error_code=%08x remaining=%u", err_code, (unsigned int)length);
+
+        // Check for timeout
+        if (length && (system_timer->get_counter() - start_t) >= TRANSFER_TIMEOUT)
+        	return false;
+
+    } while (length);
+
+    return true;
 }
 
 void BleInterface::ble_stack_init()
@@ -306,6 +323,12 @@ void BleInterface::ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context
             NRF_LOG_INFO("Disconnected for reason 0x%02X", p_ble_evt->evt.gap_evt.params.disconnected.reason);
             // LED indication will be changed when advertising starts.
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
+
+            // Discard any received data
+            m_carriage_return_received = false;
+            m_receive_buffer_len = 0;
+            m_is_first_ota_packet = false;
+
             if (m_on_event) {
             	BLEServiceEvent e;
             	e.event_type = BLEServiceEventType::DISCONNECTED;
