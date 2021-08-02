@@ -36,7 +36,7 @@ endif()
 
 if (DEBUG_LEVEL)
 else()
-    set(DEBUG_LEVEL 0)
+    set(DEBUG_LEVEL 3)
 endif()
 
 
@@ -287,8 +287,8 @@ target_compile_options(${TARGET_NAME} PRIVATE
     # Debugging stack corruption
     -fstack-protector-strong
 
-    # Optimise for size for the DEBUG build
-    $<$<CONFIG:DEBUG>:-Os>
+    # Optimise for size always
+    -Os
 )
 
 set_source_files_properties(${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-switch-enum -Wno-switch")

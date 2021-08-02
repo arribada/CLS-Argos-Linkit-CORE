@@ -62,7 +62,7 @@ struct ArgosConfig {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x00;
+	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x01;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
@@ -79,7 +79,7 @@ protected:
 		/* ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
 		/* TR_NOM */ 60U,
 		/* ARGOS_MODE */ BaseArgosMode::LEGACY,
-		/* NTRY_PER_MESSAGE */ 1U,
+		/* NTRY_PER_MESSAGE */ 0U,
 		/* DUTY_CYCLE */ 0U,
 		/* GNSS_EN */ (bool)true,
 		/* DLOC_ARG_NOM */ 10*60U,
@@ -88,7 +88,7 @@ protected:
 		/* GLONASS_CONST_SELECT */ 0U, // Not implemented
 		/* GNSS_HDOPFILT_EN */ (bool)true,
 		/* GNSS_HDOPFILT_THR */ 15U,
-		/* GNSS_ACQ_TIMEOUT */ 120U,
+		/* GNSS_ACQ_TIMEOUT */ 2U,
 		/* GNSS_NTRY */ 0U, // Not implemented
 		/* UNDERWATER_EN */ (bool)false,
 		/* DRY_TIME_BEFORE_TX */ 1U,
@@ -112,13 +112,13 @@ protected:
 		/* PP_LINEAR_MARGIN */ 300U,
 		/* PP_COMP_STEP */ 10U,
 		/* GNSS_COLD_ACQ_TIMEOUT */ 530U,
-		/* GNSS_FIX_MODE */ BaseGNSSFixMode::FIX_2D,
-		/* GNSS_DYN_MODEL */ BaseGNSSDynModel::SEA,
-		/* GNSS_HACCFILT_EN */ (bool)false,
+		/* GNSS_FIX_MODE */ BaseGNSSFixMode::AUTO,
+		/* GNSS_DYN_MODEL */ BaseGNSSDynModel::PORTABLE,
+		/* GNSS_HACCFILT_EN */ (bool)true,
 		/* GNSS_HACCFILT_THR */ 50U,
 		/* GNSS_MIN_NUM_FIXES */ 1U,
 		/* GNSS_COLD_START_RETRY_PERIOD */ 60U,
-		/* ARGOS_TIME_SYNC_BURST_EN */ (bool)false,
+		/* ARGOS_TIME_SYNC_BURST_EN */ (bool)true,
 		/* LED_MODE */ BaseLEDMode::HRS_24,
 	}};
 	static inline const BaseZone default_zone = {
