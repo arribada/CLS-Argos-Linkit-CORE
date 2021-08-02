@@ -54,6 +54,77 @@ FSM_INITIAL_STATE(GenTracker, BootState)
 // Reed switch debouncing time (ms)
 #define REED_SWITCH_DEBOUNCE_TIME_MS    25
 
+
+extern "C" void HardFault_Handler() {
+	for (;;)
+	{
+#if BUILD_TYPE==Release
+		PMU::reset(false);
+#else
+		// Hardfault occurred
+#ifdef GPIO_LED_REG
+		GPIOPins::set(GPIO_LED_REG);
+#endif
+		GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+		nrf_delay_ms(50);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+		nrf_delay_ms(50);
+#endif
+	}
+}
+
+extern "C" void MemoryManagement_Handler(void)
+{
+	for (;;)
+	{
+#if BUILD_TYPE==Release
+		PMU::reset(false);
+#else
+		// Stack overflow detected
+#ifdef GPIO_LED_REG
+		GPIOPins::set(GPIO_LED_REG);
+#endif
+		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+		nrf_delay_ms(50);
+		GPIOPins::clear(BSP::GPIO::GPIO_LED_GREEN);
+		GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+		nrf_delay_ms(50);
+#endif
+	}
+}
+
+extern "C" {
+	void *__stack_check_guard = (void*)0xDEADBEEF;
+	void __wrap___stack_chk_fail(void) {
+#if BUILD_TYPE==Release
+		PMU::reset(false);
+#else
+		for (;;)
+		{
+			// Stack corruption detected
+#ifdef GPIO_LED_REG
+			GPIOPins::set(GPIO_LED_REG);
+#endif
+			GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
+			GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+			GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+			nrf_delay_ms(50);
+			GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
+			GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+			GPIOPins::clear(BSP::GPIO::GPIO_LED_BLUE);
+			nrf_delay_ms(50);
+		}
+#endif
+	}
+}
+
 // Redirect std::cout and printf output to debug UART
 // We have to define this as extern "C" as we are overriding a weak C function
 extern "C" int _write(int file, char *ptr, int len)

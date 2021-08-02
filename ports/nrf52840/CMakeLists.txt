@@ -211,8 +211,10 @@ target_sources(${TARGET_NAME} PRIVATE
 )
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
-    $<$<CONFIG:DEBUG>:DEBUG>
-    $<$<CONFIG:DEBUG>:DEBUG_ENABLE>
+    Release=0
+    Debug=1
+    BUILD_TYPE=${CMAKE_BUILD_TYPE}
+	DEBUG_ENABLE=1
     DEBUG_LEVEL=${DEBUG_LEVEL}
     DEBUG_USING_RTC
     BOARD_PCA10059
@@ -282,6 +284,9 @@ target_compile_options(${TARGET_NAME} PRIVATE
     # Always output coloured text from GCC
     -fdiagnostics-color=always
 
+    # Debugging stack corruption
+    -fstack-protector-strong
+
     # Optimise for size for the DEBUG build
     $<$<CONFIG:DEBUG>:-Os>
 )
@@ -301,6 +306,8 @@ target_link_options(${TARGET_NAME} PRIVATE
     -u_printf_float
     -u_scanf_float
     -Xlinker -Map=${TARGET_NAME}.map
+
+    -Wl,--wrap=__stack_chk_fail    
 )
 
 target_link_libraries(${TARGET_NAME}
