@@ -135,8 +135,9 @@ extern "C" int _write(int file, char *ptr, int len)
 
 int main()
 {
-	GPIOPins::initialise();
 	PMU::initialise();
+	PMU::start_watchdog();
+	GPIOPins::initialise();
 
 	// Current backfeeds from 3V3 -> i2c pullups -> BMX160 -> GPIO_AG_PWR
 	// Because of this we need to float our GPIO_AG_PWR pin to avoid sinking that current and thus increasing our sleep current

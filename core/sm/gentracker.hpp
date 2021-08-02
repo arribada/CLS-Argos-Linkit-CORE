@@ -21,6 +21,7 @@ public:
 	virtual void entry(void);
 	virtual void exit(void);
 
+	static void kick_watchdog();
 	static void notify_bad_filesystem_error();
 };
 

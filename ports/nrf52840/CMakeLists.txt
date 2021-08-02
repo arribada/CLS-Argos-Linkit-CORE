@@ -180,6 +180,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_spim.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_rtc.c
+    ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_wdt.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_gpiote.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_saadc.c
     ${SDK_ROOT}/modules/nrfx/hal/nrf_nvmc.c

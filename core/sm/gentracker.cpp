@@ -93,6 +93,14 @@ void GenTracker::notify_bad_filesystem_error() {
 	dispatch(event);
 }
 
+void GenTracker::kick_watchdog() {
+	DEBUG_TRACE("GenTracker::kick_watchdog: calling PMU::kick_watchdog");
+	PMU::kick_watchdog();
+	system_scheduler->post_task_prio([](){
+		kick_watchdog();
+	}, "KickWatchdog", Scheduler::DEFAULT_PRIORITY, BSP::WDT_Inits[BSP::WDT].config.reload_value * 0.90);
+}
+
 void BootState::entry() {
 
 	DEBUG_INFO("entry: BootState");
@@ -133,11 +141,13 @@ void BootState::entry() {
 		DEBUG_INFO("sensor_log: has %u entries", sensor_log->num_entries());
 		DEBUG_INFO("system_log: has %u entries", system_log->num_entries());
 		DEBUG_INFO("configuration_store: is_valid=%u", configuration_store->is_valid());
+		DEBUG_INFO("reset cause: %s", PMU::reset_cause().c_str());
 		// Transition to PreOperational state after initialisation
 		system_scheduler->post_task_prio([this](){
+			kick_watchdog();
 			transit<PreOperationalState>();
 		},
-		"GenTrackerBootStateTransitIdleState",
+		"GenTrackerBootStateTransitPreOperationalState",
 		Scheduler::DEFAULT_PRIORITY,
 		1000);
 	} catch (...) {
