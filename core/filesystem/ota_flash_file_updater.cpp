@@ -29,7 +29,7 @@ void OTAFlashFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_siz
 		throw ErrorCode::OTA_TRANSFER_ALREADY_IN_PROGRESS;
 	}
 
-	if (length == 0 || length > (m_reserved_blocks * m_flash_if->m_block_size) - FLASH_HEADER_SIZE) {
+	if (length == 0 || length & 3 || length > (m_reserved_blocks * m_flash_if->m_block_size) - FLASH_HEADER_SIZE) {
 		DEBUG_ERROR("OTAFlashFileUpdater::start_file_transfer: bad transfer size %u bytes", length);
 		throw ErrorCode::OTA_TRANSFER_BAD_FILE_SIZE;
 	}
