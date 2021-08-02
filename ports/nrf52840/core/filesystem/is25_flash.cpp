@@ -85,6 +85,10 @@ void Is25Flash::init()
 // The maximum read size is 0x3FFFF, size must be a multiple of 4, buffer must be word aligned
 int Is25Flash::_read(lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size)
 {
+	// Check buffer alignment and size multiple
+	if (((intptr_t)buffer & 3) || (size & 3))
+		return LFS_ERR_INVAL;
+
 	// Ensure no writes/erases are currently on going
 	int ret_sync = _sync();
 	if (ret_sync != LFS_ERR_OK)
@@ -107,6 +111,10 @@ int Is25Flash::_prog(lfs_block_t block, lfs_off_t off, const void *buffer, lfs_s
 	//DEBUG_TRACE("QSPI Flash prog(%lu %lu %lu)", block, off, size);
 
 	int ret_sync;
+
+	// Check buffer alignment and size multiple
+	if (((intptr_t)buffer & 3) || (size & 3))
+		return LFS_ERR_INVAL;
 
 	// Ensure no writes/erases are currently on going
 	ret_sync = _sync();

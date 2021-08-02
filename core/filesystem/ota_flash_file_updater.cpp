@@ -45,20 +45,23 @@ void OTAFlashFileUpdater::start_file_transfer(OTAFileIdentifier file_id, lfs_siz
 		// Erase reserved region of external flash
 		for (unsigned int i = 0; i < m_reserved_blocks; i++) {
 			uint8_t buffer[256];
-			m_flash_if->read(m_reserved_block_offset + i, 0, buffer, 256);
+			if (m_flash_if->read(m_reserved_block_offset + i, 0, buffer, 256))
+				throw ErrorCode::OTA_TRANSFER_FLASH_ERROR;
 			for (unsigned int j = 0; j < 256; j++) {
 				if (buffer[j] != 0xFF) {
-					m_flash_if->erase(i + m_reserved_block_offset);
+					if (m_flash_if->erase(i + m_reserved_block_offset))
+						throw ErrorCode::OTA_TRANSFER_FLASH_ERROR;
 					break;
 				}
 			}
 		}
 
 		// Write the header information into the start of flash
-		m_flash_if->prog(m_reserved_block_offset, 0, &length, sizeof(length));
-		m_flash_if->sync();
-		m_flash_if->prog(m_reserved_block_offset, sizeof(length), &crc32, sizeof(crc32));
-		m_flash_if->sync();
+		if (m_flash_if->prog(m_reserved_block_offset, 0, &length, sizeof(length)) ||
+			m_flash_if->sync() ||
+			m_flash_if->prog(m_reserved_block_offset, sizeof(length), &crc32, sizeof(crc32)) ||
+			m_flash_if->sync())
+			throw ErrorCode::OTA_TRANSFER_FLASH_ERROR;
 		break;
 	case OTAFileIdentifier::GPS_CONFIG:
 		DEBUG_INFO("OTAFlashFileUpdater::start_file_transfer: GPS_CONFIG");
@@ -95,8 +98,9 @@ void OTAFlashFileUpdater::write_file_data(void * const data, lfs_size_t length)
 		std::vector<uint8_t> aligned_buffer;
 		aligned_buffer.resize(length);
 		std::memcpy(&aligned_buffer[0], data, length);
-		m_flash_if->prog(0, (m_reserved_block_offset * m_flash_if->m_block_size) + m_file_bytes_received + FLASH_HEADER_SIZE, &aligned_buffer[0], length);
-		m_flash_if->sync();
+		if (m_flash_if->prog(0, (m_reserved_block_offset * m_flash_if->m_block_size) + m_file_bytes_received + FLASH_HEADER_SIZE, &aligned_buffer[0], length) ||
+			m_flash_if->sync())
+			throw ErrorCode::OTA_TRANSFER_FLASH_ERROR;
 	}
 
 	m_file_bytes_received += length;
@@ -116,7 +120,8 @@ void OTAFlashFileUpdater::abort_file_transfer()
 		else
 		{
 			// Erase the first block to ensure firmware update header is erased
-			m_flash_if->erase(m_reserved_block_offset);
+			if (m_flash_if->erase(m_reserved_block_offset))
+				throw ErrorCode::OTA_TRANSFER_FLASH_ERROR;
 		}
 	}
 	m_file_size = 0;
