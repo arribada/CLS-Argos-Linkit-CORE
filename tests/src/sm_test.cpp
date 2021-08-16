@@ -2,6 +2,7 @@
 #include "debug.hpp"
 
 #include "fake_switch.hpp"
+#include "fake_reed_switch.hpp"
 #include "fake_rgb_led.hpp"
 #include "fake_timer.hpp"
 
@@ -27,6 +28,18 @@
 #define BLOCK_SIZE    (64*1024)
 #define PAGE_SIZE     (256)
 
+// BSP settings
+namespace BSP
+{
+	const WDT_InitTypeDefAndInst_t WDT_Inits[WDT_TOTAL_NUMBER] = {
+		{
+			.config = {
+				.reload_value = 10 * 60 * 1000
+			}
+		}
+	};
+}
+
 // These are defined by main.cpp
 extern FileSystem *main_filesystem ;
 extern Timer *system_timer;
@@ -51,8 +64,9 @@ using fsm_handle = GenTracker;
 
 TEST_GROUP(Sm)
 {
-	FakeSwitch *fake_reed_switch;
+	FakeReedSwitch *fake_reed_switch;
 	FakeSwitch *fake_saltwater_switch;
+	FakeSwitch *dummy_switch;
 	FakeRGBLed *fake_status_led;
 	FakeTimer *fake_timer;
 	MockBatteryMonitor *mock_battery_monitor;
@@ -80,8 +94,9 @@ TEST_GROUP(Sm)
 		status_led = fake_status_led;
 		fake_saltwater_switch = new FakeSwitch(0, 0);
 		saltwater_switch = fake_saltwater_switch;
-		fake_reed_switch = new FakeSwitch(0, 0);
-		reed_switch = new ReedSwitch(*fake_reed_switch);
+		dummy_switch = new FakeSwitch(0, 0);
+		fake_reed_switch = new FakeReedSwitch(*dummy_switch);
+		reed_switch = fake_reed_switch;
 	}
 
 	void teardown() {
@@ -95,8 +110,8 @@ TEST_GROUP(Sm)
 		delete mock_ota_file_updater;
 		delete mock_battery_monitor;
 		delete fake_status_led;
-		delete reed_switch;
 		delete fake_reed_switch;
+		delete dummy_switch;
 		delete fake_saltwater_switch;
 		delete fake_timer;
 	}
@@ -154,7 +169,7 @@ TEST(Sm, CheckBootFileSystemFormatFailAndEnterErrorState)
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
 }
 
-TEST(Sm, CheckBootStateTransitionsToIdleState)
+TEST(Sm, CheckTransitionToPreOperationalState)
 {
 	mock().expectOneCall("create").onObject(sensor_log);
 	mock().expectOneCall("create").onObject(system_log);
@@ -167,14 +182,14 @@ TEST(Sm, CheckBootStateTransitionsToIdleState)
 	fsm_handle::start();
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
+	mock().expectOneCall("kick_watchdog");
 	fake_timer->set_counter(1000);
 	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
-	CHECK_TRUE(fake_reed_switch->is_started());
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 	CHECK_FALSE(fake_saltwater_switch->is_started());
 }
 
-TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigValid)
+TEST(Sm, CheckTransitionToOperationalConfigValid)
 {
 	mock().disable();
 	fsm_handle::start();
@@ -182,32 +197,26 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigVal
 	mock().enable();
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
+	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
-	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
-	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
-	CHECK_FALSE(status_led->is_flashing());
-
-	// After 15 seconds, transition to operational with green LED flashing
-	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
-	mock().expectOneCall("start").onObject(comms_scheduler);
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
-	fake_timer->set_counter(16000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
 
-	// Green LED should go off after 5 seconds
-	fake_timer->set_counter(21000);
+	// After 5 seconds, transition to operational
+	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
+	mock().expectOneCall("start").onObject(comms_scheduler);
+	fake_timer->set_counter(6000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
 }
 
 
-TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigValidBatteryLow)
+TEST(Sm, CheckTransitionToOperationalConfigValidBatteryLow)
 {
 	mock().disable();
 	fsm_handle::start();
@@ -215,32 +224,26 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToOperationalConfigVal
 	mock().enable();
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
-	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
-	CHECK_EQUAL((int)RGBLedColor::YELLOW, (int)status_led->get_state());
-	CHECK_FALSE(status_led->is_flashing());
-
-	// After 15 seconds, transition to operational with yellow LED flashing
-	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
-	mock().expectOneCall("start").onObject(comms_scheduler);
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
-	fake_timer->set_counter(16000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::YELLOW, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
 
-	// Green LED should go off after 5 seconds
-	fake_timer->set_counter(21000);
+	// After 5 seconds, transition to operational with yellow LED flashing
+	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
+	mock().expectOneCall("start").onObject(comms_scheduler);
+	fake_timer->set_counter(6000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
 }
 
 
-TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToErrorConfigInvalid)
+TEST(Sm, CheckTransitionToErrorConfigInvalid)
 {
 	mock().disable();
 
@@ -248,15 +251,16 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToErrorConfigInvalid)
 
 	mock().enable();
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
+	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
 	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
-	CHECK_FALSE(status_led->is_flashing());
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
+	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL((int)RGBLedColor::RED, (int)status_led->get_state());
 
-	// After 15 seconds, transition to error with red LED flashing
-	fake_timer->set_counter(16000);
+	// After 5 seconds, transition to error with red LED flashing
+	fake_timer->set_counter(6000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
 	CHECK_TRUE(status_led->is_flashing());
@@ -264,61 +268,49 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchSwipeAndTransitionToErrorConfigInvalid)
 
 	// Red LED should go off after 5 seconds and then transition to off state with white LED flashing
 	mock().expectOneCall("stop").onObject(mock_battery_monitor).ignoreOtherParameters();
-	fake_timer->set_counter(21000);
+	fake_timer->set_counter(11000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)status_led->get_state());
 }
 
-TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToConfigurationState)
+TEST(Sm, CheckTransitionToConfigurationState)
 {
 	mock().disable();
 
 	fsm_handle::start();
 	fake_timer->set_counter(1000);
 	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 
-	// Swipe gesture and hold for 3 seconds
 	mock().enable();
 	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX 0");
 	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
-	fake_reed_switch->set_state(true);
-	fake_timer->set_counter(4000);
+	fake_reed_switch->invoke_gesture(ReedSwitchGesture::SHORT_HOLD);
+	fake_reed_switch->invoke_gesture(ReedSwitchGesture::RELEASE);
 	system_scheduler->run();
-	fake_reed_switch->set_state(false);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL((int)RGBLedColor::BLUE, (int)status_led->get_state());
 }
 
-TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
+TEST(Sm, CheckTransitionToOffState)
 {
 	mock().disable();
 	fsm_handle::start();
 	fake_timer->set_counter(1000);
 	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 
-	// Swipe gesture and hold for 3 seconds
-	mock().enable();
-	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX 0");
-	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
-	fake_reed_switch->set_state(true);
-	fake_timer->set_counter(4000);
+	fake_reed_switch->invoke_gesture(ReedSwitchGesture::LONG_HOLD);
+	fake_reed_switch->invoke_gesture(ReedSwitchGesture::RELEASE);
 	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 
-	// Continue to hold for 7 more seconds
-	mock().disable();
-	fake_timer->set_counter(11000);
-	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
-	fake_reed_switch->set_state(false);
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
-	CHECK_EQUAL(125, fake_status_led->m_period);
+	CHECK_EQUAL(50, fake_status_led->m_period);
 
 	// Continue to hold for 5 more seconds
 	mock().enable();
@@ -330,39 +322,6 @@ TEST(Sm, CheckWakeupToIdleWithReedSwitchHoldAndTransitionToOffState)
 
 TEST(Sm, CheckOffStateCanBeCancelled)
 {
-	mock().disable();
-	fsm_handle::start();
-	fake_timer->set_counter(1000);
-	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
-
-	// Swipe gesture and hold for 3 seconds
-	mock().enable();
-	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX 0");
-	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
-	fake_reed_switch->set_state(true);
-	fake_timer->set_counter(4000);
-	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
-
-	// Continue to hold for 7 more seconds
-	mock().disable();
-	fake_timer->set_counter(11000);
-	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
-
-	// Release reed switch and apply again for 3 seconds to cancel the off sequence
-	mock().enable();
-	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX 0");
-	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
-	mock().expectOneCall("start").onObject(mock_battery_monitor);
-	fake_reed_switch->set_state(false);
-	fake_reed_switch->set_state(true);
-	fake_timer->set_counter(14000);
-	system_scheduler->run();
-
-	// Ensure ConfigurationState has been entered
-	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 }
 
 TEST(Sm, CheckBLEInactivityTimeout)
@@ -371,16 +330,15 @@ TEST(Sm, CheckBLEInactivityTimeout)
 	fsm_handle::start();
 	fake_timer->set_counter(1000);
 	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 
 	// Swipe gesture and hold for 3 seconds
 	mock().enable();
 	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX 0");
 	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
-	fake_reed_switch->set_state(true);
-	fake_timer->set_counter(4000);
+	fake_reed_switch->invoke_gesture(ReedSwitchGesture::SHORT_HOLD);
+	fake_reed_switch->invoke_gesture(ReedSwitchGesture::RELEASE);
 	system_scheduler->run();
-	fake_reed_switch->set_state(false);
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 	mock().disable();
 
@@ -393,20 +351,23 @@ TEST(Sm, CheckBLEInactivityTimeout)
 
 TEST(Sm, CheckTransitionToConfigurationStateAndVerifyOTAUpdateEvents)
 {
-	// BootState -> IdleState
 	mock().disable();
+
 	fsm_handle::start();
+
+	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
+	mock().expectOneCall("kick_watchdog");
+
 	fake_timer->set_counter(1000);
 	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 
-	// Swipe gesture and hold for 3 seconds -> ConfigurationState
-	mock().enable();
 	mock().expectOneCall("set_device_name").onObject(mock_ble_service).withParameter("name", "SURFACEBOX 0");
 	mock().expectOneCall("start").onObject(mock_ble_service).ignoreOtherParameters();
-	fake_reed_switch->set_state(true);
-	fake_timer->set_counter(4000);
+	fake_reed_switch->invoke_gesture(ReedSwitchGesture::SHORT_HOLD);
+	fake_reed_switch->invoke_gesture(ReedSwitchGesture::RELEASE);
 	system_scheduler->run();
-	fake_reed_switch->set_state(false);
 
 	// Trigger BLE connected event
 	BLEServiceEvent event;
@@ -453,28 +414,22 @@ TEST(Sm, CheckSWSEventsDispatchedInOperationalState)
 	mock().enable();
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
+	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
-	system_scheduler->run();
-	CHECK_TRUE(fsm_handle::is_in_state<IdleState>());
-	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
-	CHECK_FALSE(status_led->is_flashing());
-
-	// After 15 seconds, transition to pre-operational with green LED flashing
-	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
-	mock().expectOneCall("start").onObject(comms_scheduler);
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
-	fake_timer->set_counter(16000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
 
-	// Green LED should go off after 5 seconds
-	fake_timer->set_counter(21000);
+	// After 5 seconds, transition to pre-operational with green LED flashing
+	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
+	mock().expectOneCall("start").onObject(comms_scheduler);
+	fake_timer->set_counter(6000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
 
 	// Notify an SWS event and make sure it is dispatched into the schedulers
 	mock().expectOneCall("notify_saltwater_switch_state").onObject(location_scheduler).withParameter("state", true);

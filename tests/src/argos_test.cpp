@@ -74,6 +74,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = false;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -88,6 +89,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -158,6 +160,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = false;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -172,6 +175,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 
 	// Hour 0 - send
 	fake_rtc->settime(0);
@@ -242,6 +246,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	bool lb_en = false;
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -256,6 +261,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_rtc->settime(7200);
 
@@ -365,6 +371,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	unsigned int dloc_arg_nom = 60*60U;
 	bool lb_en = false;
 	bool underwater_en = false;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -379,6 +386,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 
 	// Sample configuration provided with prepass library V3.4
@@ -473,6 +481,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	unsigned int dloc_arg_nom = 60*60U;
 	bool lb_en = false;
 	bool underwater_en = false;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -487,6 +496,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 
 	// Sample configuration provided with prepass library V3.4
@@ -647,6 +657,7 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = false;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -661,6 +672,7 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 
 	fake_timer->set_counter(0);
 	argos_sched->start();
@@ -716,6 +728,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = true;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -730,6 +743,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 
 	argos_sched->start();
 
@@ -880,6 +894,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = true;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -894,6 +909,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 
 	argos_sched->start();
 
@@ -979,6 +995,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = true;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -993,6 +1010,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 
 	// Sample configuration provided with prepass library V3.4
 	BasePassPredict pass_predict = {
@@ -1133,6 +1151,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = false;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1147,6 +1166,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -1212,6 +1232,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = false;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1226,6 +1247,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -1292,6 +1314,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
 	bool underwater_en = false;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1306,6 +1329,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	fake_config_store->write_param(ParamID::LB_EN, lb_en);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -1370,6 +1394,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 	bool lb_en = false;
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1385,6 +1410,8 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
 
@@ -1511,6 +1538,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	bool lb_en = true;
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1529,6 +1557,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	fake_config_store->write_param(ParamID::LB_ARGOS_DUTY_CYCLE, duty_cycle);
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_rtc->settime(3600);
 
@@ -1638,6 +1667,7 @@ TEST(ArgosScheduler, SchedulingShortPacketLowBatteryFlag)
 	bool lb_en = true;
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1657,6 +1687,7 @@ TEST(ArgosScheduler, SchedulingShortPacketLowBatteryFlag)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 	fake_rtc->settime(3600);
 
 	argos_sched->start();
@@ -1718,6 +1749,7 @@ TEST(ArgosScheduler, SchedulingShortPacketOutOfZoneFlag)
 	bool lb_en = true;
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
+	bool sync_burst_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1737,6 +1769,7 @@ TEST(ArgosScheduler, SchedulingShortPacketOutOfZoneFlag)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 	fake_rtc->settime(3600);
 
 	// Setup zone file
@@ -1828,6 +1861,7 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	unsigned int lb_threshold = 50U;
 	bool lb_en = true;
 	bool underwater_en = false;
+	bool sync_burst_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
@@ -1848,6 +1882,7 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 	fake_rtc->settime(3600);
 
 	// Setup zone file

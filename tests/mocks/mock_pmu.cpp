@@ -18,3 +18,15 @@ void PMU::delay_ms(unsigned ms) {
 void PMU::delay_us(unsigned us) {
 	mock().actualCall("delay_us").withParameter("us", us);
 }
+
+void PMU::start_watchdog() {
+	mock().actualCall("start_watchdog");
+}
+
+void PMU::kick_watchdog() {
+	mock().actualCall("kick_watchdog");
+}
+
+const std::string PMU::reset_cause() {
+	return "UNKNOWN";
+}

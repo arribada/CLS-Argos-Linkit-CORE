@@ -62,7 +62,7 @@ struct ArgosConfig {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x01;
+	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x02;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
@@ -87,8 +87,8 @@ protected:
 		/* GPS_CONST_SELECT */ 0U, // Not implemented
 		/* GLONASS_CONST_SELECT */ 0U, // Not implemented
 		/* GNSS_HDOPFILT_EN */ (bool)true,
-		/* GNSS_HDOPFILT_THR */ 15U,
-		/* GNSS_ACQ_TIMEOUT */ 2U,
+		/* GNSS_HDOPFILT_THR */ 2U,
+		/* GNSS_ACQ_TIMEOUT */ 120U,
 		/* GNSS_NTRY */ 0U, // Not implemented
 		/* UNDERWATER_EN */ (bool)false,
 		/* DRY_TIME_BEFORE_TX */ 1U,

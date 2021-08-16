@@ -54,4 +54,19 @@ namespace BSP
     } ADC_InitTypeDefAndInst_t;
 
     extern const ADC_InitTypeDefAndInst_t ADC_Inits;
+
+    enum WDT
+	{
+    	WDT,
+		WDT_TOTAL_NUMBER
+	};
+
+    typedef struct
+    {
+    	struct {
+    		unsigned int reload_value;
+    	} config;
+    } WDT_InitTypeDefAndInst_t;
+
+    extern const WDT_InitTypeDefAndInst_t WDT_Inits[WDT_TOTAL_NUMBER];
 }

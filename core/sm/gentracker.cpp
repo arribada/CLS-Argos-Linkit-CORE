@@ -108,6 +108,10 @@ void BootState::entry() {
 	// Ensure the system timer is started to allow scheduling to work
 	system_timer->start();
 
+	// Turn status LED white to indicate boot up
+	led_handle::start();
+	led_handle::dispatch<SetLEDBoot>({});
+
 	// If we can't mount the filesystem then try to format it first and retry
 	DEBUG_TRACE("mount filesystem");
 	if (main_filesystem->mount() < 0)
@@ -126,10 +130,6 @@ void BootState::entry() {
 
 	// Start battery monitor
 	battery_monitor->start();
-
-	// Turn status LED white to indicate boot up
-	led_handle::start();
-	led_handle::dispatch<SetLEDBoot>({});
 
 	try {
 		// The underlying classes will create the files on the filesystem if they do not

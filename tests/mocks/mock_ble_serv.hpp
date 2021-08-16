@@ -47,8 +47,8 @@ public:
 	void stop() {
 		mock().actualCall("stop").onObject(this);
 	}
-	void write(std::string str) {
-		mock().actualCall("write").onObject(this).withParameterOfType("std::string", "str", &str);
+	bool write(std::string str) {
+		return mock().actualCall("write").onObject(this).withParameterOfType("std::string", "str", &str).returnBoolValue();
 	}
 	std::string read_line() {
 		return *static_cast<const std::string*>(mock().actualCall("read_line").onObject(this).returnConstPointerValue());
