@@ -747,7 +747,6 @@ void ArgosScheduler::periodic_algorithm() {
 		// Check to see if any GPS entry has a non-zero burst counter
 		for (unsigned int k = 0; k < span; k++) {
 			unsigned int idx = m_num_gps_entries - (span * (index+1)) + k;
-			DEBUG_TRACE("k = %u idx = %u avail = %u count = %u", k, idx, m_gps_entry_burst_counter.count(idx), m_gps_entry_burst_counter.at(idx));
 			if (m_gps_entry_burst_counter.count(idx)) {
 				if (m_gps_entry_burst_counter.at(idx)) {
 					eligible_gps_count++;
