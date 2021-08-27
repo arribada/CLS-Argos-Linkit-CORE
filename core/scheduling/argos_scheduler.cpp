@@ -747,6 +747,7 @@ void ArgosScheduler::periodic_algorithm() {
 		// Check to see if any GPS entry has a non-zero burst counter
 		for (unsigned int k = 0; k < span; k++) {
 			unsigned int idx = m_num_gps_entries - (span * (index+1)) + k;
+			DEBUG_TRACE("k = %u idx = %u avail = %u count = %u", k, idx, m_gps_entry_burst_counter.count(idx), m_gps_entry_burst_counter.at(idx));
 			if (m_gps_entry_burst_counter.count(idx)) {
 				if (m_gps_entry_burst_counter.at(idx)) {
 					eligible_gps_count++;
@@ -780,7 +781,8 @@ void ArgosScheduler::periodic_algorithm() {
 		sensor_log->read(&gps_entry, first_eligible_gps_index);
 
 		// Decrement GPS entry burst counter
-		m_gps_entry_burst_counter.at(first_eligible_gps_index) = std::max((int)0, (int)m_gps_entry_burst_counter.at(first_eligible_gps_index) - 1);
+		if (m_gps_entry_burst_counter.at(first_eligible_gps_index) > 0)
+			m_gps_entry_burst_counter.at(first_eligible_gps_index)--;
 
 		build_short_packet(gps_entry, packet);
 		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
@@ -797,7 +799,8 @@ void ArgosScheduler::periodic_algorithm() {
 			gps_entries.push_back(gps_entry);
 
 			// Decrement GPS entry burst counter
-			m_gps_entry_burst_counter.at(idx2) = std::max((int)0, (int)m_gps_entry_burst_counter.at(idx2) - 1);
+			if (m_gps_entry_burst_counter.at(idx2) > 0)
+				m_gps_entry_burst_counter.at(idx2)--;
 		}
 		build_long_packet(gps_entries, packet);
 		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);

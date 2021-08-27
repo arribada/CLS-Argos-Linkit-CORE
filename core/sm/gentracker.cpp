@@ -371,6 +371,11 @@ void ConfigurationState::process_received_data() {
 					dte_handler->reset_state();
 					break;
 				}
+
+				// Reset inactivity timeout whenever we send a response
+				// This is important during a command sequences that can take
+				// a long time to complete (eg DUMPD)
+				restart_inactivity_timeout();
 			}
 
 			if (action == DTEAction::FACTR)
