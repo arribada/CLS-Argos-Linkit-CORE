@@ -84,7 +84,7 @@ public:
 		std::strftime(d2, sizeof(d2), "%d/%m/%Y %H:%M:%S", tm);
 
 		// Convert to CSV
-		snprintf(entry, sizeof(entry), "%s,%f,%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\r\n",
+		snprintf(entry, sizeof(entry), "%s,%f,%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\r\n",
 				d1,
 				(double)gps->info.batt_voltage/1000,
 				(unsigned int)gps->info.iTOW,
@@ -109,6 +109,7 @@ public:
 				(double)gps->info.gSpeed / 1000,
 				(double)gps->info.headMot,
 				(double)gps->info.sAcc / 1000,
+				(double)gps->info.headAcc,
 				(double)gps->info.pDOP,
 				(double)gps->info.vDOP,
 				(double)gps->info.hDOP,
