@@ -22,6 +22,7 @@ enum class DTECommand {
 	RSTBW_REQ,
 	FACTW_REQ,
 	STATR_REQ,
+	ERASE_REQ,
 	__NUM_REQ,
 	PARML_RESP = RESP_CMD_BASE,
 	PARMR_RESP,
@@ -38,6 +39,7 @@ enum class DTECommand {
 	RSTBW_RESP,
 	FACTW_RESP,
 	STATR_RESP,
+	ERASE_RESP,
 	__NUM_RESP
 };
 
@@ -274,6 +276,23 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 	{
+		.name = "ERASE",
+		.command = DTECommand::ERASE_REQ,
+		.prototype =
+		{
+			{
+				.name = "log_type",
+				.key = "",
+				.encoding = BaseEncoding::UINT,
+				.min_value = 1U,
+				.max_value = 3U,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			}
+		}
+	},
+	{
 		.name = "PARML",
 		.command = DTECommand::PARML_RESP,
 		.prototype = 
@@ -466,6 +485,13 @@ static const DTECommandMap command_map[] = {
 				.is_implemented = false,
 				.is_writable = false
 			}
+		}
+	},
+	{
+		.name = "ERASE",
+		.command = DTECommand::ERASE_RESP,
+		.prototype =
+		{
 		}
 	},
 };

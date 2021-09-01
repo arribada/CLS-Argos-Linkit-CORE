@@ -105,6 +105,12 @@ enum class BaseLogDType {
 	SENSOR
 };
 
+enum class BaseEraseType {
+	SENSOR = 1,
+	SYSTEM,
+	SENSOR_AND_SYSTEM
+};
+
 enum class BaseArgosMode {
 	OFF,
 	LEGACY,

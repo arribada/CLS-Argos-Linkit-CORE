@@ -12,6 +12,10 @@ public:
 		mock().actualCall("create").onObject(this);
 	}
 
+	void truncate() {
+		mock().actualCall("truncate").onObject(this);
+	}
+
 	bool is_ready() {
 		return mock().actualCall("is_ready").onObject(this).returnBoolValue();
 	}

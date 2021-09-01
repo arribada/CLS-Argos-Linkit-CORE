@@ -16,6 +16,10 @@ public:
 		m_index = 0;
 	}
 
+	void truncate() {
+		m_index = 0;
+	}
+
 	bool is_ready() {
 		return true;
 	}

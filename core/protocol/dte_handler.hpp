@@ -462,6 +462,34 @@ public:
 		return msg;
 	}
 
+	static std::string ERASE_REQ(int error_code, std::vector<BaseType>& arg_list) {
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::ERASE_RESP, error_code);
+		}
+
+		Logger *logger;
+
+		DEBUG_TRACE("Processing ERASE");
+
+		// Extract the d_type parameter from arg_list to determine which log file(s) to erase
+		unsigned int d_type = std::get<unsigned int>(arg_list[0]);
+		if ((unsigned int)BaseEraseType::SYSTEM == d_type || (unsigned int)BaseEraseType::SENSOR_AND_SYSTEM == d_type)
+		{
+			DEBUG_TRACE("Truncating system log");
+			logger = system_log;
+			logger->truncate();
+		}
+		if ((unsigned int)BaseEraseType::SENSOR == d_type || (unsigned int)BaseEraseType::SENSOR_AND_SYSTEM == d_type)
+		{
+			DEBUG_TRACE("Truncating sensor log");
+			logger = sensor_log;
+			logger->truncate();
+		}
+
+		return DTEEncoder::encode(DTECommand::ERASE_RESP, error_code);
+	}
+
 public:
 	void reset_state() {
 		m_dumpd_NNN = 0;
@@ -553,6 +581,9 @@ public:
 			break;
 		case DTECommand::DUMPD_REQ:
 			resp = DUMPD_REQ(error_code, arg_list, action);
+			break;
+		case DTECommand::ERASE_REQ:
+			resp = ERASE_REQ(error_code, arg_list);
 			break;
 		default:
 			break;

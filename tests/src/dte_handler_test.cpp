@@ -139,6 +139,30 @@ TEST(DTEHandler, SECUR_REQ)
 	STRCMP_EQUAL("$O;SECUR#000;\r", resp.c_str());
 }
 
+TEST(DTEHandler, ERASE_REQ)
+{
+	std::string resp;
+	std::string req = "$ERASE#001;3\r";
+	mock().expectOneCall("truncate").onObject(mock_system_log).andReturnValue(0);
+	mock().expectOneCall("truncate").onObject(mock_sensor_log).andReturnValue(0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;ERASE#000;\r", resp.c_str());
+
+	req = "$ERASE#001;1\r";
+	mock().expectOneCall("truncate").onObject(mock_sensor_log).andReturnValue(0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;ERASE#000;\r", resp.c_str());
+
+	req = "$ERASE#001;2\r";
+	mock().expectOneCall("truncate").onObject(mock_system_log).andReturnValue(0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;ERASE#000;\r", resp.c_str());
+
+	req = "$ERASE#001;0\r";
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$N;ERASE#001;5\r", resp.c_str());
+}
+
 TEST(DTEHandler, RSTVW_REQ)
 {
 	unsigned int tx_counter;

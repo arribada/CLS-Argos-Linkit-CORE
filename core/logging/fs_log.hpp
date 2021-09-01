@@ -1,5 +1,4 @@
-#ifndef __FS_LOG_HPP_
-#define __FS_LOG_HPP_
+#pragma once
 
 #include <string>
 #include "filesystem.hpp"
@@ -48,6 +47,34 @@ public:
 	}
 
 	bool is_ready() override { return m_is_ready; }
+
+	void truncate() {
+
+		// Reset parameters
+		m_write_offset = 0;
+		m_has_wrapped = 0;
+		m_file_read = nullptr;
+		m_file_write = nullptr;
+		m_last_read_index = (unsigned int)-1;
+		m_is_ready = false;
+
+		// Close any open file handles
+		if (m_file_read) {
+			delete m_file_read;
+			m_file_read = nullptr;
+		}
+
+		if (m_file_write) {
+			delete m_file_write;
+			m_file_write = nullptr;
+		}
+
+		// Remove first file in chain
+		m_filesystem->remove(m_filename);
+
+		// Recreate the file
+		create();
+	}
 
 	void create() {
 		try {
@@ -207,5 +234,3 @@ public:
 		}
 	}
 };
-
-#endif // __FS_LOG_HPP_
