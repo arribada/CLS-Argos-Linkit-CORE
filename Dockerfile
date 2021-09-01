@@ -10,6 +10,7 @@ RUN wget -q https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-
 RUN tar -xjf gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 -C /tools
 RUN rm gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
 ENV PATH="/tools/gcc-arm-none-eabi-10-2020-q4-major/bin:$PATH"
+ENV GNU_INSTALL_ROOT="/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/"
 
 # Install nrfutil
 RUN pip3 install nrfutil
