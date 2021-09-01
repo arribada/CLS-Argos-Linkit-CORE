@@ -6,7 +6,6 @@
 #include "interrupt_lock.hpp"
 #include "bsp.hpp"
 #include "debug.hpp"
-#include <iostream>
 
 // Do not change this value without considering the impact to the macros below
 static constexpr uint16_t RTC_TIMER_PRESCALER = 32;
