@@ -41,15 +41,15 @@ pipeline {
             steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     dir('ports/nrf52840/build/core') {
-                        sh 'cmake --no-cache -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Debug -DMODEL=CORE ..'
+                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Debug -DMODEL=CORE ..'
                         sh 'ninja'
                     }
                     dir('ports/nrf52840/build/UW') {
-                        sh 'cmake --no-cache -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Debug -DMODEL=UW ..'
+                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Debug -DMODEL=UW ..'
                         sh 'ninja'
                     }
                     dir('ports/nrf52840/build/SB') {
-                        sh 'cmake --no-cache -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Debug -DMODEL=SB ..'
+                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Debug -DMODEL=SB ..'
                         sh 'ninja'
                     }
                     // Append the git tag details to the filename names
