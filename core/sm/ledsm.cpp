@@ -137,5 +137,5 @@ void LEDArgosTXComplete::entry() {
 				transit<LEDGNSSOn>();
 			else
 				transit<LEDOff>();
-		}, system_timer->get_counter());
+		}, system_timer->get_counter() + 50); // Add 50ms to avoid race condition on timer tick
 }
