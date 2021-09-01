@@ -663,33 +663,14 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	DEBUG_INFO("ArgosScheduler::handle_packet: battery=%.2lfV freq=%lf power=%s mode=%s",
 			   (double)battery_monitor->get_voltage() / 1000, m_argos_config.frequency, argos_power_to_string(m_argos_config.power), argos_mode_to_string(mode));
 	DEBUG_INFO("ArgosScheduler::handle_packet: data=%s", Binascii::hexlify(packet).c_str());
-	power_on();
-	set_frequency(m_argos_config.frequency);
-	set_tx_power(m_argos_config.power);
-	if (m_data_notification_callback) {
-    	ServiceEvent e;
-    	e.event_type = ServiceEventType::ARGOS_TX_START;
-    	e.event_data = false;
-        m_data_notification_callback(e);
-	}
-	send_packet(packet, total_bits, mode);
-	if (m_data_notification_callback) {
-    	ServiceEvent e;
-    	e.event_type = ServiceEventType::ARGOS_TX_END;
-    	e.event_data = false;
-        m_data_notification_callback(e);
-	}
-	power_off();
 
-	// Update the LAST_TX in the configuration store
-	std::time_t last_tx = rtc->gettime();
-	configuration_store->write_param(ParamID::LAST_TX, last_tx);
+	// Store parameters for deferred processing
+	m_packet = packet;
+	m_total_bits = total_bits;
+	m_mode = mode;
 
-	// Increment TX counter
-	configuration_store->increment_tx_counter();
-
-	// Save configuration params
-	configuration_store->save_params();
+	// Power on and then handle the remainder of the transmission in the async event handler
+	power_on([this](ArgosAsyncEvent& e) { handle_event(e); });
 }
 
 void ArgosScheduler::time_sync_burst_algorithm() {
@@ -854,5 +835,57 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 			deschedule();
 			m_is_deferred = true;
 		}
+	}
+}
+
+void ArgosScheduler::handle_event(ArgosAsyncEvent &event) {
+	switch (event) {
+	case ArgosAsyncEvent::DEVICE_READY:
+		DEBUG_TRACE("ArgosScheduler::handle_event: DEVICE_READY");
+		set_frequency(m_argos_config.frequency);
+		set_tx_power(m_argos_config.power);
+		if (m_data_notification_callback) {
+	    	ServiceEvent e;
+	    	e.event_type = ServiceEventType::ARGOS_TX_START;
+	    	e.event_data = false;
+	        m_data_notification_callback(e);
+		}
+
+		// This will generate TX_DONE event when finished
+		send_packet(m_packet, m_total_bits, m_mode);
+		break;
+
+	case ArgosAsyncEvent::TX_DONE:
+		DEBUG_TRACE("ArgosScheduler::handle_event: TX_DONE");
+		if (m_data_notification_callback) {
+	    	ServiceEvent e;
+	    	e.event_type = ServiceEventType::ARGOS_TX_END;
+	    	e.event_data = false;
+	        m_data_notification_callback(e);
+		}
+
+		// Update the LAST_TX in the configuration store
+		std::time_t last_tx = rtc->gettime();
+		configuration_store->write_param(ParamID::LAST_TX, last_tx);
+
+		// Increment TX counter
+		configuration_store->increment_tx_counter();
+
+		// Save configuration params
+		configuration_store->save_params();
+
+		// TODO: handle RX mode or power off scenario
+		power_off();
+		break;
+
+	case ArgosAsyncEvent::RX_PACKET:
+		DEBUG_TRACE("ArgosScheduler::handle_event: RX_PACKET");
+		// TODO: handle RX packet
+		break;
+
+	case ArgosAsyncEvent::ERROR:
+		DEBUG_ERROR("ArgosScheduler::handle_event: ERROR");
+		power_off();
+		break;
 	}
 }

@@ -5,6 +5,8 @@
 
 #include "argos_scheduler.hpp"
 #include "nrf_spim.hpp"
+#include "nrf_irq.hpp"
+
 
 class ArticTransceiver : public ArgosScheduler {
 
@@ -69,7 +71,9 @@ class ArticTransceiver : public ArgosScheduler {
 	};
 
 private:
+	std::function<void(ArgosAsyncEvent&)> m_notification_callback;
 	NrfSPIM *m_nrf_spim;
+	NrfIRQ  *m_irq_int[2];
 	void configure_burst(mem_id_t mode, bool read, uint32_t start_address);
 	void burst_access(mem_id_t mode, uint32_t start_address, const uint8_t *tx_data, uint8_t *rx_data, size_t size, bool read);
 	void send_burst(const uint8_t *tx_data, uint8_t *rx_data, size_t size, uint8_t length_transfer, bool read);
@@ -77,10 +81,12 @@ private:
 	void get_status_register(uint32_t *status);
 	void print_status(void);
 	void set_tcxo_warmup_time(uint32_t time_s);
-	void program_firmware();
+	void program_firmware(std::function<void()> on_success);
 	void send_fw_files();
 	void hardware_init();
 	void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout_ms);
+	void send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout_ms,
+			std::function<void()> on_success);
 	void wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num);
 	void clear_interrupt(uint8_t interrupt_num);
 	void check_crc(firmware_header_t *firmware_header);
@@ -93,8 +99,11 @@ private:
 public:
 	ArticTransceiver();
 	void power_off() override;
-	void power_on() override;
+	void power_on(std::function<void(ArgosAsyncEvent&)> notification_callback) override;
 	void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) override;
+	void read_packet(ArgosPacket const& packet, unsigned int& size) override;
+	void set_idle() override;
+	void set_rx_mode() override;
 	void set_frequency(const double freq) override;
 	void set_tx_power(const BaseArgosPower power) override;
 };
