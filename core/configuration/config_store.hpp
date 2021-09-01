@@ -58,6 +58,11 @@ struct ArgosConfig {
 	bool time_sync_burst_en;
 };
 
+enum class ConfigMode {
+	NORMAL,
+	LOW_BATTERY,
+	OUT_OF_ZONE
+};
 
 class ConfigurationStore {
 
@@ -154,6 +159,7 @@ protected:
 	uint8_t m_battery_level;
 	uint16_t m_battery_voltage;
 	GPSLogEntry m_last_gps_log_entry;
+	ConfigMode  m_last_config_mode;
 	virtual void serialize_config() = 0;
 	virtual void serialize_zone() = 0;
 	virtual void update_battery_level() = 0;
@@ -193,7 +199,9 @@ public:
 		m_battery_voltage = 0U;
 		m_battery_level = 255U;  // Set battery level to some value that won't trigger LB mode until we get notified of a real battery level
 		m_last_gps_log_entry.info.valid = 0; // Mark last GPS entry as invalid
+		m_last_config_mode = ConfigMode::NORMAL;
 	}
+
 	virtual ~ConfigurationStore() {}
 	virtual void init() = 0;
 	virtual bool is_valid() = 0;
@@ -350,6 +358,12 @@ public:
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
+
+			if (m_last_config_mode != ConfigMode::LOW_BATTERY) {
+				DEBUG_INFO("ConfigurationStore: LOW_BATTERY mode detected");
+				m_last_config_mode = ConfigMode::LOW_BATTERY;
+			}
+
 		} else if (gnss_config.is_out_of_zone) {
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
 			gnss_config.dloc_arg_nom = m_zone.delta_arg_loc_argos_seconds == 0 ? read_param<unsigned int>(ParamID::DLOC_ARG_NOM) : m_zone.delta_arg_loc_argos_seconds;
@@ -369,6 +383,12 @@ public:
 				gnss_config.acquisition_timeout = m_zone.gnss_acquisition_timeout_seconds;
 				gnss_config.hdop_filter_threshold = m_zone.hdop_filter_threshold;
 			}
+
+			if (m_last_config_mode != ConfigMode::OUT_OF_ZONE) {
+				DEBUG_INFO("ConfigurationStore: OUT_OF_ZONE mode detected");
+				m_last_config_mode = ConfigMode::OUT_OF_ZONE;
+			}
+
 		} else {
 			// Use default params
 			gnss_config.enable = read_param<bool>(ParamID::GNSS_EN);
@@ -384,6 +404,11 @@ public:
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
+
+			if (m_last_config_mode != ConfigMode::NORMAL) {
+				DEBUG_INFO("ConfigurationStore: NORMAL mode detected");
+				m_last_config_mode = ConfigMode::NORMAL;
+			}
 		}
 	}
 
@@ -417,6 +442,10 @@ public:
 			argos_config.prepass_comp_step = read_param<unsigned int>(ParamID::PP_COMP_STEP);
 			unsigned int delta_time_loc = read_param<unsigned int>(ParamID::DLOC_ARG_LB);
 			argos_config.delta_time_loc = calc_delta_time_loc(delta_time_loc);
+			if (m_last_config_mode != ConfigMode::LOW_BATTERY) {
+				DEBUG_INFO("ConfigurationStore: LOW_BATTERY mode detected");
+				m_last_config_mode = ConfigMode::LOW_BATTERY;
+			}
 		} else if (argos_config.is_out_of_zone) {
 			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
@@ -446,6 +475,10 @@ public:
 				argos_config.power = m_zone.argos_power;
 				argos_config.tr_nom = m_zone.argos_time_repetition_seconds;
 			}
+			if (m_last_config_mode != ConfigMode::OUT_OF_ZONE) {
+				DEBUG_INFO("ConfigurationStore: OUT_OF_ZONE mode detected");
+				m_last_config_mode = ConfigMode::OUT_OF_ZONE;
+			}
 		} else {
 			// Use default params
 			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
@@ -468,6 +501,10 @@ public:
 			argos_config.prepass_comp_step = read_param<unsigned int>(ParamID::PP_COMP_STEP);
 			unsigned int delta_time_loc = read_param<unsigned int>(ParamID::DLOC_ARG_NOM);
 			argos_config.delta_time_loc = calc_delta_time_loc(delta_time_loc);
+			if (m_last_config_mode != ConfigMode::NORMAL) {
+				DEBUG_INFO("ConfigurationStore: NORMAL mode detected");
+				m_last_config_mode = ConfigMode::NORMAL;
+			}
 		}
 	}
 

@@ -622,8 +622,8 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 
     print_status();
 
-    DEBUG_INFO("ArticTransceiver::send_packet: sending message total_bits=%u tail_bits=%u burst_size=%u",
-    		   total_bits, num_tail_bits, packet_buffer.size());
+    DEBUG_TRACE("ArticTransceiver::send_packet: sending message total_bits=%u tail_bits=%u burst_size=%u",
+    			total_bits, num_tail_bits, packet_buffer.size());
 
     // Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
     send_command_check_clean(ARTIC_CMD_START_TX_1M_SLEEP, 1, TX_FINISHED, true, SAT_ARTIC_TIMEOUT_SEND_TX_MS);

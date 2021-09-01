@@ -14,6 +14,7 @@
 #include "bch.hpp"
 #include "crc8.hpp"
 #include "binascii.hpp"
+#include "battery.hpp"
 
 extern "C" {
 	#include "previpass.h"
@@ -62,7 +63,7 @@ extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
 extern RTC       *rtc;
 extern Logger    *sensor_log;
-
+extern BatteryMonitor *battery_monitor;
 
 ArgosScheduler::ArgosScheduler() {
 	m_is_running = false;
@@ -98,7 +99,7 @@ void ArgosScheduler::reschedule() {
 	}
 
 	if (INVALID_SCHEDULE != schedule) {
-		DEBUG_INFO("ArgosScheduler: schedule in: %llu secs", schedule);
+		DEBUG_TRACE("ArgosScheduler: schedule in: %llu secs", schedule);
 		deschedule();
 		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this),
 				"ArgosSchedulerProcessSchedule",
@@ -134,19 +135,19 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 		m_tr_nom_schedule > m_last_transmission_schedule)
 	{
 		if (m_is_deferred) {
-			DEBUG_INFO("ArgosScheduler::next_duty_cycle: existing schedule deferred: in %llu seconds", m_tr_nom_schedule - now);
+			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: existing schedule deferred: in %llu seconds", m_tr_nom_schedule - now);
 			m_is_deferred = false;
 			return m_tr_nom_schedule - now;
 		}
 
-		DEBUG_INFO("ArgosScheduler::next_duty_cycle: use existing schedule: in %llu seconds", m_tr_nom_schedule - now);
+		DEBUG_TRACE("ArgosScheduler::next_duty_cycle: use existing schedule: in %llu seconds", m_tr_nom_schedule - now);
 		return INVALID_SCHEDULE;
 	}
 
 	// If earliest TX is inside the duty cycle window, then use that since we were deferred by saltwater switch
 	if (m_is_deferred && m_earliest_tx != INVALID_SCHEDULE && m_earliest_tx > now && is_in_duty_cycle(m_earliest_tx, duty_cycle))
 	{
-		DEBUG_INFO("ArgosScheduler::next_duty_cycle: using earliest TX: %llu", m_earliest_tx);
+		DEBUG_TRACE("ArgosScheduler::next_duty_cycle: using earliest TX: %llu", m_earliest_tx);
 		m_is_deferred = false;
 		return m_earliest_tx - now;
 	}
@@ -174,7 +175,7 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 	while (hour_of_day < terminal_hours) {
 		//DEBUG_TRACE("ArgosScheduler::next_duty_cycle: now: %lu candidate schedule: %lu hour_of_day: %u", now, m_tr_nom_schedule, hour_of_day);
 		if ((duty_cycle & (0x800000 >> (hour_of_day % HOURS_PER_DAY))) && m_tr_nom_schedule >= now) {
-			DEBUG_INFO("ArgosScheduler::next_duty_cycle: found schedule: %lu", m_tr_nom_schedule);
+			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: found schedule: %lu", m_tr_nom_schedule);
 			return m_tr_nom_schedule - now;
 		} else {
 			m_tr_nom_schedule += m_argos_config.tr_nom;
@@ -211,7 +212,7 @@ std::time_t ArgosScheduler::next_prepass() {
 		m_earliest_tx >= curr_time &&
 		m_earliest_tx < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS))
 	{
-		DEBUG_INFO("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX=%llu epoch=%llu", m_earliest_tx, m_next_prepass);
+		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX=%llu epoch=%llu", m_earliest_tx, m_next_prepass);
 		m_is_deferred = false;
 		return std::max(m_earliest_tx, m_next_prepass) - curr_time;
 	}
@@ -303,7 +304,7 @@ void ArgosScheduler::process_schedule() {
 			periodic_algorithm();
 		}
 	} else {
-		DEBUG_INFO("ArgosScheduler::process_schedule: sws=%u t=%llu earliest_tx=%llu deferring transmission", m_switch_state, now, m_earliest_tx);
+		DEBUG_TRACE("ArgosScheduler::process_schedule: sws=%u t=%llu earliest_tx=%llu deferring transmission", m_switch_state, now, m_earliest_tx);
 		m_is_deferred = true;
 	}
 
@@ -659,9 +660,9 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 }
 
 void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) {
-	DEBUG_TRACE("ArgosScheduler::handle_packet: bytes=%u total_bits=%u freq=%lf power=%u mode=%u",
-			packet.size(), total_bits, m_argos_config.frequency, m_argos_config.power, (unsigned int)mode);
-	DEBUG_TRACE("ArgosScheduler::handle_packet: data=%s", Binascii::hexlify(packet).c_str());
+	DEBUG_INFO("ArgosScheduler::handle_packet: battery=%.2lfV freq=%lf power=%s mode=%s",
+			   (double)battery_monitor->get_voltage() / 1000, m_argos_config.frequency, argos_power_to_string(m_argos_config.power), argos_mode_to_string(mode));
+	DEBUG_INFO("ArgosScheduler::handle_packet: data=%s", Binascii::hexlify(packet).c_str());
 	power_on();
 	set_frequency(m_argos_config.frequency);
 	set_tx_power(m_argos_config.power);

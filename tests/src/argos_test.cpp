@@ -1,6 +1,7 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+#include "mock_battery_mon.hpp"
 #include "mock_artic.hpp"
 #include "fake_rtc.hpp"
 #include "fake_config_store.hpp"
@@ -17,6 +18,7 @@ extern ServiceScheduler *comms_scheduler;
 extern Scheduler *system_scheduler;
 extern Logger *sensor_log;
 extern RTC *rtc;
+extern BatteryMonitor *battery_monitor;
 
 
 TEST_GROUP(ArgosScheduler)
@@ -24,12 +26,15 @@ TEST_GROUP(ArgosScheduler)
 	FakeConfigurationStore *fake_config_store;
 	ArgosScheduler *argos_sched;
 	MockArtic *mock_artic;
+	MockBatteryMonitor *mock_battery;
 	FakeRTC *fake_rtc;
 	LinuxTimer *linux_timer;
 	FakeTimer *fake_timer;
 	FakeLog *fake_log;
 
 	void setup() {
+		mock_battery = new MockBatteryMonitor;
+		battery_monitor = mock_battery;
 		mock_artic = new MockArtic;
 		argos_sched = mock_artic;
 		comms_scheduler = argos_sched;
@@ -56,6 +61,7 @@ TEST_GROUP(ArgosScheduler)
 		delete fake_log;
 		delete fake_config_store;
 		delete mock_artic;
+		delete mock_battery;
 	}
 };
 
@@ -98,6 +104,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
@@ -130,6 +137,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 
 	fake_log->write(&gps_entry);
@@ -184,6 +192,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
@@ -220,6 +229,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	fake_timer->set_counter(7200000);
 	fake_log->write(&gps_entry);
@@ -342,6 +352,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 304).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 
 	// Should now run with long packet
@@ -441,6 +452,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	t += 8888;
 	fake_rtc->settime(t);
@@ -457,6 +469,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 		mock().expectOneCall("power_off").onObject(argos_sched);
+		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 		t += 33;
 		fake_rtc->settime(t);
@@ -617,6 +630,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 304).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	t += 8888;
 	fake_rtc->settime(t);
@@ -633,6 +647,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 304).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 		mock().expectOneCall("power_off").onObject(argos_sched);
+		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 		t += 33;
 		fake_rtc->settime(t);
@@ -704,6 +719,7 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 			mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 			mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 			mock().expectOneCall("power_off").onObject(argos_sched);
+			mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 		}
 
 		fake_log->write(&gps_entry);
@@ -756,6 +772,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	fake_timer->set_counter((t*1000));
 
 	GPSLogEntry gps_entry;
@@ -801,6 +818,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	t = 45;
 	DEBUG_TRACE("************* rtc: %u", t);
 	fake_rtc->settime(t);
@@ -829,6 +847,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
 	system_scheduler->run();
@@ -841,6 +860,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
 	system_scheduler->run();
@@ -874,6 +894,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
 	system_scheduler->run();
@@ -923,6 +944,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	GPSLogEntry gps_entry;
 	gps_entry.info.batt_voltage = 3960;
@@ -953,6 +975,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	while (!system_scheduler->run());
 	CHECK_TRUE(system_scheduler->is_any_task_scheduled());
 
@@ -966,6 +989,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	while (!system_scheduler->run());
 	CHECK_TRUE(system_scheduler->is_any_task_scheduled());
 
@@ -1056,6 +1080,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
@@ -1094,6 +1119,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	t += 10;
 	DEBUG_TRACE("************* rtc: %u", t);
@@ -1128,6 +1154,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	t += 18;
 	DEBUG_TRACE("************* rtc: %u", t);
@@ -1175,6 +1202,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
@@ -1206,6 +1234,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
@@ -1256,6 +1285,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
@@ -1289,6 +1319,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
@@ -1338,6 +1369,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
@@ -1369,6 +1401,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
@@ -1492,6 +1525,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 304).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	// Should now run with long packet
 	system_scheduler->run();
@@ -1512,6 +1546,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 			mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 			mock().expectOneCall("send_packet").onObject(argos_sched).ignoreOtherParameters();
 			mock().expectOneCall("power_off").onObject(argos_sched);
+			mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 		}
 
 		// Should now run with long packet
@@ -1638,6 +1673,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 304).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	// Should now run with long packet
 	fake_config_store->set_battery_level(40);
@@ -1720,6 +1756,7 @@ TEST(ArgosScheduler, SchedulingShortPacketLowBatteryFlag)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	// Should now run with long packet
 	fake_config_store->set_battery_level(40);
@@ -1834,6 +1871,7 @@ TEST(ArgosScheduler, SchedulingShortPacketOutOfZoneFlag)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)zone.argos_power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	// Should now run with short packet
 	fake_config_store->set_battery_level(100);
@@ -1994,6 +2032,7 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)zone.argos_power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 304).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
 	// Should now run with long packet
 	fake_config_store->set_battery_level(100);
@@ -2045,6 +2084,7 @@ TEST(ArgosScheduler, TimeSyncBurstTransmissionIsSent)
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
@@ -2139,6 +2179,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurst)
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 		mock().expectOneCall("power_off").onObject(argos_sched);
+		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 		while (!system_scheduler->run());
 		STRCMP_EQUAL("FFFE2F61234567343BC63EA7FC011BE000000FC2B06C", Binascii::hexlify(mock_artic->m_last_packet).c_str());
 		t += 60;

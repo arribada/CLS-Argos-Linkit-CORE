@@ -224,9 +224,11 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.info.event_type = GPSEventType::FIX;
     gps_entry.info.valid = true;
 
-    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lat=%lf lon=%lf hDOP=%lf hAcc=%lf", gps_entry.info.lat, gps_entry.info.lon,
+    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lat=%lf lon=%lf hDOP=%lf hAcc=%lf numSV=%u batt=%lfV ", gps_entry.info.lat, gps_entry.info.lon,
     		static_cast<double>(gps_entry.info.hDOP),
-			static_cast<double>(gps_entry.info.hAcc));
+			static_cast<double>(gps_entry.info.hAcc),
+			gps_entry.info.numSV,
+			(double)gps_entry.info.batt_voltage / 1000);
     sensor_log->write(&gps_entry);
 
     power_off();

@@ -125,6 +125,18 @@ enum class BaseArgosPower {
 	POWER_500_MW
 };
 
+static inline const char *argos_power_to_string(BaseArgosPower power) {
+	if (power == BaseArgosPower::POWER_3_MW)
+		return "3 mW";
+	if (power == BaseArgosPower::POWER_40_MW)
+		return "40 mW";
+	if (power == BaseArgosPower::POWER_200_MW)
+		return "200 mW";
+	if (power == BaseArgosPower::POWER_500_MW)
+		return "500 mW";
+	return "UNKNOWN";
+}
+
 enum class BaseArgosDepthPile {
 	DEPTH_PILE_1 = 1,
 	DEPTH_PILE_2,

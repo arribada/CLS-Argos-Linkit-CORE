@@ -23,6 +23,14 @@ enum class ArgosMode {
 	ARGOS_3
 };
 
+static inline const char *argos_mode_to_string(ArgosMode mode) {
+	if (mode == ArgosMode::ARGOS_2)
+		return "ARGOS_2";
+	if (mode == ArgosMode::ARGOS_3)
+		return "ARGOS_3";
+	return "UNKNOWN";
+}
+
 class ArgosScheduler : public ServiceScheduler {
 private:
 	Scheduler::TaskHandle m_argos_task;
