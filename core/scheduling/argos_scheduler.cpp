@@ -735,11 +735,10 @@ void ArgosScheduler::periodic_algorithm() {
 	// Mark last schedule attempt
 	m_last_transmission_schedule = m_tr_nom_schedule;
 
-	// Wait for at least span entries
-	if (m_num_gps_entries < span) {
-		DEBUG_TRACE("ArgosScheduler::periodic_algorithm: insufficient GPS entries %u available", m_num_gps_entries);
-		return;
-	}
+	// If the number of GPS entries received is less than the span then modify span
+	// to reflect number of entries available
+	if (m_num_gps_entries < span)
+		span = m_num_gps_entries;
 
 	// Find first eligible slot for transmission
 	max_msg_index = m_msg_index + max_index;
