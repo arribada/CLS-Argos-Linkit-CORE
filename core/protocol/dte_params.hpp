@@ -64,4 +64,5 @@ static const BaseMap param_map[] = {
 	{ "GNSS_COLD_START_RETRY_PERIOD", "GNP23", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
 	{ "ARGOS_TIME_SYNC_BURST_EN", "ARP30", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "LED_MODE", "LDP01", BaseEncoding::LEDMODE, 0U, 0U, {}, true, true },
+	{ "ARGOS_TX_JITTER_EN", "ARP31", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 };

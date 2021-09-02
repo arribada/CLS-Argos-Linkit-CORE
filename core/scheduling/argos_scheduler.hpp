@@ -47,19 +47,13 @@ private:
 	unsigned int m_msg_index;
 	unsigned int m_prepass_duration;
 	unsigned int m_num_gps_entries;
+	int          m_tx_jitter;
 	double		 m_last_longitude;
 	double 		 m_last_latitude;
 	std::map<unsigned int, unsigned int> m_gps_entry_burst_counter;
 	std::array<unsigned int, MAX_MSG_INDEX> m_msg_burst_counter;
 	std::array<std::vector<GPSLogEntry>, MAX_MSG_INDEX> m_gps_entries;
 	std::function<void(ServiceEvent&)> m_data_notification_callback;
-
-public:
-	ArgosScheduler();
-	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override;
-	void stop() override;
-	void notify_saltwater_switch_state(bool state) override;
-	void notify_sensor_log_update() override;
 
 	void reschedule();
 	void deschedule();
@@ -75,6 +69,14 @@ public:
 	void adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute);
 	std::time_t next_duty_cycle(unsigned int duty_cycle);
 	std::time_t next_prepass();
+
+public:
+	ArgosScheduler();
+	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override;
+	void stop() override;
+	void notify_saltwater_switch_state(bool state) override;
+	void notify_sensor_log_update() override;
+	int get_tx_jitter();
 
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	virtual void power_off() = 0;

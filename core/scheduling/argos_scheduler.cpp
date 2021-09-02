@@ -1,8 +1,9 @@
-
+#include <random>
 #include <algorithm>
 #include <climits>
 #include <iomanip>
 #include <ctime>
+#include <cstdlib>
 
 #include "messages.hpp"
 #include "argos_scheduler.hpp"
@@ -152,13 +153,18 @@ std::time_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 		return m_earliest_tx - now;
 	}
 
-	// Set schedule to be earliest possible next TR_NOM.  If there was no last schedule or
+	// Set schedule to be earliest possible next TR_NOM (plus TX jitter).  If there was no last schedule or
 	// the last schedule was over 24 hours ago, then set our starting point to current time.
 	// Otherwise increment the last schedule by TR_NOM for our starting point.
-	if (m_tr_nom_schedule == INVALID_SCHEDULE || (now - m_tr_nom_schedule) > HOURS_PER_DAY)
+	if (m_tr_nom_schedule == INVALID_SCHEDULE || (now - m_tr_nom_schedule) > HOURS_PER_DAY) {
 		m_tr_nom_schedule = start_of_day;
+		if (m_argos_config.argos_tx_jitter_en)
+			m_tr_nom_schedule += (m_tx_jitter + 5);
+	}
 	else
 		m_tr_nom_schedule += m_argos_config.tr_nom;
+
+	DEBUG_TRACE("ArgosScheduler::next_duty_cycle: starting m_tr_nom_schedule = %lu", m_tr_nom_schedule);
 
 	// Compute the seconds of day and hours of day for candidate m_tr_nom_schedule
 	unsigned int seconds_of_day = (m_tr_nom_schedule % SECONDS_PER_DAY);
@@ -258,6 +264,10 @@ std::time_t ArgosScheduler::next_prepass() {
 			pass_predict.records,
 			pass_predict.num_records,
 			&next_pass)) {
+
+		// Shift the epoch by the TX jitter -- this may lead to some transmissions outside the true window
+		// but it is the simplest way of applying jitter in prepass mode
+		next_pass.epoch += m_tx_jitter;
 
 		// Computed schedule is advanced by ARGOS_TX_MARGIN_SECS so that Artic R2 programming delay is not included in the window
 		std::time_t now = rtc->gettime();
@@ -810,7 +820,6 @@ void ArgosScheduler::periodic_algorithm() {
 }
 
 void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_callback) {
-	DEBUG_INFO("ArgosScheduler::start");
 	m_data_notification_callback = data_notification_callback;
 	m_is_running = true;
 	m_is_deferred = false;
@@ -826,6 +835,17 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 		m_msg_burst_counter[i] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;
 		m_gps_entries[i].clear();
 	}
+
+	// Generate TX jitter value
+	if (m_argos_config.argos_tx_jitter_en) {
+		std::mt19937 rng(m_argos_config.argos_id);
+		std::uniform_int_distribution<int> gen(-5, 5);
+		m_tx_jitter = gen(rng);
+	} else {
+		m_tx_jitter = 0;
+	}
+
+	DEBUG_INFO("ArgosScheduler::start: m_tx_jitter=%d secs", m_tx_jitter);
 }
 
 void ArgosScheduler::stop() {
@@ -854,4 +874,9 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 			m_is_deferred = true;
 		}
 	}
+}
+
+int ArgosScheduler::get_tx_jitter() {
+	// Allow unit tests to access the current TX jitter value
+	return m_tx_jitter;
 }

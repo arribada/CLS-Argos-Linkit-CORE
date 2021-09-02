@@ -56,6 +56,7 @@ struct ArgosConfig {
 	bool is_out_of_zone;
 	bool is_lb;
 	bool time_sync_burst_en;
+	bool argos_tx_jitter_en;
 };
 
 enum class ConfigMode {
@@ -67,7 +68,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x02;
+	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
@@ -125,6 +126,7 @@ protected:
 		/* GNSS_COLD_START_RETRY_PERIOD */ 60U,
 		/* ARGOS_TIME_SYNC_BURST_EN */ (bool)true,
 		/* LED_MODE */ BaseLEDMode::HRS_24,
+		/* ARGOS_TX_JITTER_EN */ (bool)true,
 	}};
 	static inline const BaseZone default_zone = {
 		/* zone_id */ 1,
@@ -422,6 +424,7 @@ public:
 
 		if (lb_en && m_battery_level <= lb_threshold) {
 			argos_config.is_lb = true;
+			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
 			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::LB_ARGOS_MODE);
@@ -447,6 +450,7 @@ public:
 				m_last_config_mode = ConfigMode::LOW_BATTERY;
 			}
 		} else if (argos_config.is_out_of_zone) {
+			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
 			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
@@ -481,6 +485,7 @@ public:
 			}
 		} else {
 			// Use default params
+			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
 			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
 			argos_config.mode = read_param<BaseArgosMode>(ParamID::ARGOS_MODE);
