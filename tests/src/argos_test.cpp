@@ -280,6 +280,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_rtc->settime(7200);
+	fake_timer->set_counter(7200 * 1000);
 
 	argos_sched->start();
 
@@ -2342,7 +2343,10 @@ TEST(ArgosScheduler, SchedulingNonPrepassTxJitter)
 	bool underwater_en = false;
 	bool sync_burst_en = false;
 	bool tx_jitter_en = true;
-	unsigned int t = 0;
+	uint64_t t = 0;
+
+	fake_rtc->settime((t+500)/1000);
+	fake_timer->set_counter(t);
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -2360,8 +2364,6 @@ TEST(ArgosScheduler, SchedulingNonPrepassTxJitter)
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
 	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
-	fake_rtc->settime(t);
-	fake_timer->set_counter(t*1000);
 	argos_sched->start();
 
 	GPSLogEntry gps_entry;
@@ -2382,9 +2384,9 @@ TEST(ArgosScheduler, SchedulingNonPrepassTxJitter)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
-	t = 5 + argos_sched->get_tx_jitter();
-	fake_rtc->settime(t);
-	fake_timer->set_counter(t*1000);
+	t += argos_sched->get_next_schedule();
+	fake_rtc->settime((t + 500)/1000);
+	fake_timer->set_counter(t);
 
 	for (unsigned int i = 0; i < 10; i++) {
 		mock().expectOneCall("power_on").onObject(argos_sched);
@@ -2395,9 +2397,9 @@ TEST(ArgosScheduler, SchedulingNonPrepassTxJitter)
 		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 		while (!system_scheduler->run());
 		STRCMP_EQUAL("FFFE2F61234567343BC63EA7FC011BE000000FC2B06C", Binascii::hexlify(mock_artic->m_last_packet).c_str());
-		t += 60;
-		fake_rtc->settime(t);
-		fake_timer->set_counter(t*1000);
+		t += argos_sched->get_next_schedule();
+		fake_rtc->settime((t + 500)/1000);
+		fake_timer->set_counter(t);
 		tx_counter++;
 	}
 }
@@ -2480,9 +2482,9 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketTXJitter)
 	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 
-	std::time_t t = 1580083200 + argos_sched->get_tx_jitter();
-	fake_rtc->settime(t);
-	fake_timer->set_counter(t*1000);
+	uint64_t t = 1580083200UL * 1000UL;
+	fake_rtc->settime((t + 500)/1000);
+	fake_timer->set_counter(t);
 	argos_sched->notify_sensor_log_update();
 
 	mock().expectOneCall("power_on").onObject(argos_sched);
@@ -2492,9 +2494,9 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketTXJitter)
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
-	t += 8888 + argos_sched->get_tx_jitter();
-	fake_rtc->settime(t);
-	fake_timer->set_counter(t*1000);
+	t += argos_sched->get_next_schedule();
+	fake_rtc->settime((t + 500) / 1000);
+	fake_timer->set_counter(t);
 	while (!system_scheduler->run());
 
 	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
@@ -2509,9 +2511,9 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketTXJitter)
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
-		t += 33;
-		fake_rtc->settime(t);
-		fake_timer->set_counter(t*1000);
+		t += argos_sched->get_next_schedule();
+		fake_rtc->settime((t + 500)/1000);
+		fake_timer->set_counter(t);
 		while (!system_scheduler->run());
 	}
 }
