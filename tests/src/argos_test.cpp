@@ -81,6 +81,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -96,6 +97,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -169,6 +171,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -184,6 +187,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	// Hour 0 - send
 	fake_rtc->settime(0);
@@ -257,6 +261,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -272,8 +277,10 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_rtc->settime(7200);
+	fake_timer->set_counter(7200 * 1000);
 
 	argos_sched->start();
 
@@ -383,6 +390,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -398,6 +406,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 
 	// Sample configuration provided with prepass library V3.4
@@ -495,6 +504,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -510,6 +520,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 
 	// Sample configuration provided with prepass library V3.4
@@ -673,6 +684,7 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -688,6 +700,7 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	fake_timer->set_counter(0);
 	argos_sched->start();
@@ -745,6 +758,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	bool lb_en = false;
 	bool underwater_en = true;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -760,6 +774,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	argos_sched->start();
 
@@ -916,6 +931,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	bool lb_en = false;
 	bool underwater_en = true;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -931,6 +947,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	argos_sched->start();
 
@@ -1020,6 +1037,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	bool lb_en = false;
 	bool underwater_en = true;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1035,6 +1053,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	// Sample configuration provided with prepass library V3.4
 	BasePassPredict pass_predict = {
@@ -1179,6 +1198,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1194,6 +1214,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -1262,6 +1283,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1277,6 +1299,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -1346,6 +1369,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1361,6 +1385,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -1428,6 +1453,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1444,6 +1470,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -1574,6 +1601,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1593,6 +1621,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_rtc->settime(3600);
 
@@ -1704,6 +1733,7 @@ TEST(ArgosScheduler, SchedulingShortPacketLowBatteryFlag)
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1724,6 +1754,7 @@ TEST(ArgosScheduler, SchedulingShortPacketLowBatteryFlag)
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 	fake_rtc->settime(3600);
 
 	argos_sched->start();
@@ -1787,6 +1818,7 @@ TEST(ArgosScheduler, SchedulingShortPacketOutOfZoneFlag)
 	bool underwater_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1807,6 +1839,7 @@ TEST(ArgosScheduler, SchedulingShortPacketOutOfZoneFlag)
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 	fake_rtc->settime(3600);
 
 	// Setup zone file
@@ -1901,6 +1934,7 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	bool underwater_en = false;
 	bool sync_burst_en = false;
 	unsigned int dloc_arg_nom = 60*60U;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -1921,6 +1955,7 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 	fake_rtc->settime(3600);
 
 	// Setup zone file
@@ -2061,6 +2096,7 @@ TEST(ArgosScheduler, TimeSyncBurstTransmissionIsSent)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool time_sync_burst_en = true;
+	bool tx_jitter_en = false;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
 	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
@@ -2076,6 +2112,7 @@ TEST(ArgosScheduler, TimeSyncBurstTransmissionIsSent)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, time_sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	fake_rtc->settime(0);
 	fake_timer->set_counter(0);
@@ -2134,6 +2171,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurst)
 	bool lb_en = false;
 	bool underwater_en = false;
 	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
 	unsigned int t = 0;
 
 	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
@@ -2150,6 +2188,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurst)
 	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
 
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
@@ -2186,5 +2225,295 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurst)
 		fake_rtc->settime(t);
 		fake_timer->set_counter(t*1000);
 		tx_counter++;
+	}
+}
+
+
+TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithTimeSyncro)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_16;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0U;
+	double frequency = 900.11;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	unsigned int ntry_per_message = 0;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	bool underwater_en = false;
+	bool sync_burst_en = true;
+	bool tx_jitter_en = false;
+	unsigned int t = 0;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
+
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	argos_sched->start();
+
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+
+	GPSLogEntry gps_entry;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.hMSL = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+	gps_entry.info.onTime = 0;
+	gps_entry.header.minutes = gps_entry.info.min;
+	gps_entry.header.hours = gps_entry.info.hour;
+	gps_entry.header.day = gps_entry.info.day;
+	gps_entry.header.month = gps_entry.info.month;
+	gps_entry.header.year = gps_entry.info.year;
+
+	for (unsigned int i = 0; i < 10; i++) {
+		printf("i=%u\n", i);
+		fake_log->write(&gps_entry);
+		argos_sched->notify_sensor_log_update();
+
+		mock().expectOneCall("power_on").onObject(argos_sched);
+		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		if (i == 0)
+			mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+		else
+			mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 304).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+		mock().expectOneCall("power_off").onObject(argos_sched);
+		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+		system_scheduler->run();
+		if (i == 0)
+			STRCMP_EQUAL("FFFE2F61234567343BC63EA7FC011BE000000FC2B06C", Binascii::hexlify(mock_artic->m_last_packet).c_str());
+		if (i == 1)
+			STRCMP_EQUAL("FFFE2FF1234567693BC63EA7FC011BE00FC27D4FF80237FFFFFFFFFFFFFFFFFFFFFFA6BB7041", Binascii::hexlify(mock_artic->m_last_packet).c_str());
+		if (i == 2)
+			STRCMP_EQUAL("FFFE2FF1234567C23BC63EA7FC011BE00FC27D4FF80237CFA9FF0046FFFFFFFFFFFFAF97B7D0", Binascii::hexlify(mock_artic->m_last_packet).c_str());
+		if (i >= 3)
+			STRCMP_EQUAL("FFFE2FF1234567393BC63EA7FC011BE00FC27D4FF80237CFA9FF0046F9F53FE008DFFF84080A", Binascii::hexlify(mock_artic->m_last_packet).c_str());
+		t += 60;
+		fake_rtc->settime(t);
+		fake_timer->set_counter(t*1000);
+	}
+}
+
+
+TEST(ArgosScheduler, SchedulingNonPrepassTxJitter)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0U;
+	double frequency = 900.11;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	unsigned int ntry_per_message = 0;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	bool underwater_en = false;
+	bool sync_burst_en = false;
+	bool tx_jitter_en = true;
+	uint64_t t = 0;
+
+	fake_rtc->settime((t+500)/1000);
+	fake_timer->set_counter(t);
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
+
+	argos_sched->start();
+
+	GPSLogEntry gps_entry;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.hMSL = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+
+	fake_log->write(&gps_entry);
+	argos_sched->notify_sensor_log_update();
+
+	t += argos_sched->get_next_schedule();
+	fake_rtc->settime((t + 500)/1000);
+	fake_timer->set_counter(t);
+
+	for (unsigned int i = 0; i < 10; i++) {
+		mock().expectOneCall("power_on").onObject(argos_sched);
+		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+		mock().expectOneCall("power_off").onObject(argos_sched);
+		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+		while (!system_scheduler->run());
+		STRCMP_EQUAL("FFFE2F61234567343BC63EA7FC011BE000000FC2B06C", Binascii::hexlify(mock_artic->m_last_packet).c_str());
+		t += argos_sched->get_next_schedule();
+		fake_rtc->settime((t + 500)/1000);
+		fake_timer->set_counter(t);
+		tx_counter++;
+	}
+}
+
+TEST(ArgosScheduler, PrepassSchedulingShortPacketTXJitter)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0x0U; // Not used
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	unsigned int ntry_per_message = 20;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 45;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 2;
+	unsigned int lb_threshold = 0U;
+	unsigned int dloc_arg_nom = 60*60U;
+	bool lb_en = false;
+	bool underwater_en = false;
+	bool sync_burst_en = false;
+	bool tx_jitter_en = true;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+
+	// Sample configuration provided with prepass library V3.4
+	BasePassPredict pass_predict = {
+		7,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+			{ 0x9, 3, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 33, 39 }, 7195.632f, 98.7141f, 344.177f, -25.340f, 101.3600f, 0.00f },
+			{ 0xB, 7, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 23, 29, 29 }, 7194.917f, 98.7183f, 330.404f, -25.336f, 101.3449f, 0.00f },
+			{ 0x5, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 23, 50, 6 }, 7180.549f, 98.7298f, 289.399f, -25.260f, 101.0419f, -1.78f },
+			{ 0x8, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 22, 12, 6 }, 7226.170f, 99.0661f, 343.180f, -25.499f, 102.0039f, -1.80f },
+			{ 0xC, 6, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 52 }, 7226.509f, 99.1913f, 291.936f, -25.500f, 102.0108f, -1.98f },
+			{ 0xD, 4, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 53 }, 7160.246f, 98.5358f, 118.029f, -25.154f, 100.6148f, 0.00f }
+		}
+	};
+
+	fake_config_store->write_pass_predict(pass_predict);
+
+	// Start the scheduler
+	argos_sched->start();
+
+	// Populate GPS
+	GPSLogEntry gps_entry;
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 14;
+	gps_entry.header.minutes = 1;
+	gps_entry.info.onTime = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 28;
+	gps_entry.info.hour = 14;
+	gps_entry.info.min = 1;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.8768;
+	gps_entry.info.lat = -33.8232;
+	gps_entry.info.hMSL = 0;
+	gps_entry.info.gSpeed = 8056;  // mm/s
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+	fake_log->write(&gps_entry);
+
+	uint64_t t = 1580083200UL * 1000UL;
+	fake_rtc->settime((t + 500)/1000);
+	fake_timer->set_counter(t);
+	argos_sched->notify_sensor_log_update();
+
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+
+	t += argos_sched->get_next_schedule();
+	fake_rtc->settime((t + 500) / 1000);
+	fake_timer->set_counter(t);
+	while (!system_scheduler->run());
+
+	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
+	CHECK_EQUAL(1, tx_counter);
+
+	for (unsigned int i = 0; i < 10; i++) {
+		printf("i=%u\n", i);
+		mock().expectOneCall("power_on").onObject(argos_sched);
+		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
+		mock().expectOneCall("power_off").onObject(argos_sched);
+		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+
+		t += argos_sched->get_next_schedule();
+		fake_rtc->settime((t + 500)/1000);
+		fake_timer->set_counter(t);
+		while (!system_scheduler->run());
 	}
 }

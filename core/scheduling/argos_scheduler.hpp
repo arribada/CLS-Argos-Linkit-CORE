@@ -4,6 +4,7 @@
 #include <variant>
 #include <array>
 #include <functional>
+#include <random>
 
 #include <stdint.h>
 
@@ -39,14 +40,17 @@ private:
 	bool         m_is_running;
 	bool         m_is_deferred;
 	bool         m_time_sync_burst_sent;
-	std::time_t  m_earliest_tx;
-	std::time_t  m_next_prepass;
-	std::time_t  m_tr_nom_schedule;
-	std::time_t  m_last_transmission_schedule;
+	uint64_t     m_earliest_tx;
+	uint64_t     m_next_prepass;
+	uint64_t     m_tr_nom_schedule;
+	uint64_t     m_last_transmission_schedule;
+	uint64_t     m_next_schedule;
 	ArgosMode    m_next_mode;
 	unsigned int m_msg_index;
 	unsigned int m_prepass_duration;
 	unsigned int m_num_gps_entries;
+	int          m_tx_jitter;
+	std::mt19937 *m_rng;
 	double		 m_last_longitude;
 	double 		 m_last_latitude;
 	std::map<unsigned int, unsigned int> m_gps_entry_burst_counter;
@@ -74,6 +78,7 @@ public:
 	void reschedule();
 	void deschedule();
 	void process_schedule();
+	void update_tx_jitter(int min, int max);
 	void time_sync_burst_algorithm();
 	void periodic_algorithm();
 	void pass_prediction_algorithm();
@@ -83,9 +88,17 @@ public:
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
 	void build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet);
 	void adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute);
-	std::time_t next_duty_cycle(unsigned int duty_cycle);
-	std::time_t next_prepass();
 	void handle_event(ArgosAsyncEvent& event);
+	uint64_t next_duty_cycle(unsigned int duty_cycle);
+	uint64_t next_prepass();
+
+public:
+	ArgosScheduler();
+	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override;
+	void stop() override;
+	void notify_saltwater_switch_state(bool state) override;
+	void notify_sensor_log_update() override;
+	uint64_t get_next_schedule();
 
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	virtual void power_off() = 0;

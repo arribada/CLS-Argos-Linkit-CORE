@@ -198,11 +198,11 @@ protected:
 			if (!deserialize_config_entry(f, (unsigned int)ParamID::ARGOS_DECID))
 				DEBUG_WARN("deserialize_config: failed to recover ARGOS_DECID");
 			else
-				DEBUG_INFO("deserialize_config: recovered ARGOS_DECID");
+				DEBUG_TRACE("deserialize_config: recovered ARGOS_DECID");
 			if (!deserialize_config_entry(f, (unsigned int)ParamID::ARGOS_HEXID))
 				DEBUG_WARN("deserialize_config: failed to recover ARGOS_HEXID");
 			else
-				DEBUG_INFO("deserialize_config: recovered ARGOS_HEXID");
+				DEBUG_TRACE("deserialize_config: recovered ARGOS_HEXID");
 
 			m_requires_serialization = true;
 			return;
@@ -262,7 +262,7 @@ protected:
 
 		m_is_config_valid = true;
 
-		DEBUG_INFO("ConfigurationStoreLFS::serialize_config: saved new file config.data");
+		DEBUG_TRACE("ConfigurationStoreLFS::serialize_config: saved new file config.data");
 	}
 
 	void deserialize_zone() {
