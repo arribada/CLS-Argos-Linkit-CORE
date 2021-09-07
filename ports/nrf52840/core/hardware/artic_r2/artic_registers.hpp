@@ -52,8 +52,6 @@
 
 #define SPI_MAX_BYTE_READ  (8192)
 
-#define MAX_BURST  (2048)
-
 #define MAX_TX_SIZE_BYTES  (31)
 
 #define MAX_BUFFER_READ  (256)

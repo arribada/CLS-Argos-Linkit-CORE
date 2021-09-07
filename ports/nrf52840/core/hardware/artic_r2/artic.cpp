@@ -3,7 +3,6 @@
 #include <cmath>
 
 #include "bsp.hpp"
-#include "artic_firmware.hpp"
 #include "artic_registers.hpp"
 #include "error.hpp"
 #include "debug.hpp"
@@ -62,6 +61,19 @@ extern Scheduler *system_scheduler;
 
 
 static_assert(ARRAY_SIZE(status_string) == TOTAL_NUMBER_STATUS_FLAG);
+
+
+static void run_until(bool& stopped, std::function<bool()> func, std::function<void()> on_complete, const char *task_name, unsigned int delay_ms) {
+	system_scheduler->post_task_prio([&stopped, func, on_complete, task_name, delay_ms]() {
+		if (func() == false) {
+			if (!stopped)
+				run_until(stopped, func, on_complete, task_name, delay_ms);
+		}
+		else
+			on_complete();
+	}, task_name, Scheduler::DEFAULT_PRIORITY, delay_ms);
+}
+
 
 inline uint8_t ArticTransceiver::convert_mem_sel(mem_id_t mode)
 {
@@ -207,6 +219,7 @@ void ArticTransceiver::configure_burst(mem_id_t mode, bool read, uint32_t start_
         throw ErrorCode::SPI_COMMS_ERROR;
     }
 
+    // FIXME: do we need this?
     nrf_delay_ms(SAT_ARTIC_DELAY_SET_BURST_MS);
 }
 
@@ -227,6 +240,7 @@ void ArticTransceiver::burst_access(mem_id_t mode, uint32_t start_address, const
     // Deactivate SSN pin
     m_nrf_spim->finish_transfer();
 
+    // FIXME: do we need this?
     nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST_MS);
 }
 
@@ -252,10 +266,12 @@ void ArticTransceiver::send_burst(const uint8_t *tx_data, uint8_t *rx_data, size
             }
 
             delay_count += length_transfer;
+            // FIXME: do we need this?
             nrf_delay_us(SAT_ARTIC_DELAY_TRANSFER_US);
             if (delay_count > NUM_BYTES_BEFORE_WAIT)
             {
                 delay_count = 0;
+                // FIXME: do we need this?
                 nrf_delay_ms(SAT_ARTIC_DELAY_BURST_MS);
             }
 
@@ -274,6 +290,7 @@ void ArticTransceiver::send_burst(const uint8_t *tx_data, uint8_t *rx_data, size
             if (delay_count > NUM_BYTES_BEFORE_WAIT)
             {
                 delay_count = 0;
+                // FIXME: do we need this?
                 nrf_delay_ms(SAT_ARTIC_DELAY_BURST_MS);
             }
         }
@@ -327,7 +344,6 @@ void ArticTransceiver::send_command(uint8_t command)
 
 void ArticTransceiver::wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num)
 {
-    BSP::GPIO gpio_port;
     bool int_status;
 
     uint32_t iterations = timeout_ms / SAT_ARTIC_DELAY_TICK_INTERRUPT_MS;
@@ -369,13 +385,13 @@ void ArticTransceiver::send_command_check_clean_async(uint8_t command, uint8_t i
     clear_interrupt(interrupt_number);
     send_command(command);
 
-    Scheduler::TaskHandle timeout_task = system_scheduler->post_task_prio([interrupt_number]() {
+    Scheduler::TaskHandle timeout_task = system_scheduler->post_task_prio([this, interrupt_number]() {
         m_irq_int[interrupt_number]->disable();
         DEBUG_ERROR("ArticTransceiver::wait_interrupt: Waiting for interrupt_%u timed out", interrupt_number + 1);
         throw ErrorCode::ARTIC_IRQ_TIMEOUT;
     }, "CommandTimeoutTask", Scheduler::DEFAULT_PRIORITY, interrupt_timeout_ms);
 
-    m_irq_int[interrupt_number]->enable([timeout_task, on_success]() {
+    m_irq_int[interrupt_number]->enable([this, &timeout_task, interrupt_number, status_flag_number, value, on_success]() {
     	system_scheduler->cancel_task(timeout_task);
         uint32_t status = 0;
         get_status_register(&status);
@@ -396,140 +412,162 @@ void ArticTransceiver::hardware_init()
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
 }
 
-void ArticTransceiver::send_fw_files(void)
+void ArticTransceiver::send_fw_files(std::function<void()> on_success)
 {
-    uint8_t buffer[MAXIMUM_READ_FIRMWARE_OPERATION];
-    mem_id_t order_mode[NUM_FIRMWARE_FILES_ARTIC] = {XMEM, YMEM, PMEM};
-    firmware_header_t firmware_header;
-    ArticFirmwareFile firmware_file;
+    m_mem_sel = 0;
+    m_bytes_total_read = 0;
 
-    firmware_file.read((unsigned char *)&firmware_header, sizeof(firmware_header));
+    // Reset firmware file read position to start before reading header
+    m_firmware_file.seek(0);
+    m_firmware_file.read((unsigned char *)&m_firmware_header, sizeof(m_firmware_header));
 
-	for (uint8_t mem_sel = 0; mem_sel < NUM_FIRMWARE_FILES_ARTIC; mem_sel++)
-    {
-        uint32_t size = 0;
-        uint8_t length_transfer = 0;
-        uint8_t rx_buffer[4];
-        uint32_t start_address = 0;
-        uint8_t write_buffer[MAX_BURST];
-        uint32_t bytes_written = 0;
-        uint32_t last_address = 0;
-        uint32_t bytes_total_read = 0;
-        uint32_t address;
-        uint32_t data;
-        mem_id_t mode;
+    run_until(m_deferred_task_stopped, [this](){
 
-        mode = order_mode[mem_sel];
+        // First transfer of the section?
+        if (m_bytes_total_read == 0) {
+            static const mem_id_t order_mode[NUM_FIRMWARE_FILES_ARTIC] = {XMEM, YMEM, PMEM};
+            m_mode = order_mode[m_mem_sel];
 
-        // select number of transfer needed and the size of each transfer
-        switch (mode)
-        {
-            case PMEM:
-                size = firmware_header.PMEM_length;
-                length_transfer = SIZE_SPI_REG_PMEM;
-                break;
-            case XMEM:
-                size = firmware_header.XMEM_length;
-                length_transfer = SIZE_SPI_REG_XMEM_YMEM_IOMEM;
-                break;
-            case YMEM:
-                size = firmware_header.YMEM_length;
-                length_transfer = SIZE_SPI_REG_XMEM_YMEM_IOMEM;
-                break;
-            case INVALID_MEM:
-            case IOMEM:
-            default:
-                break;
+            // Reset counters
+            m_bytes_pending = 0;
+            m_last_address = 0;
+            m_start_address = 0;
+
+			// Select number of transfer needed and the size of next section to transfer
+			switch (m_mode)
+			{
+				case PMEM:
+					m_size = m_firmware_header.PMEM_length;
+					m_length_transfer = SIZE_SPI_REG_PMEM;
+					break;
+				case XMEM:
+					m_size = m_firmware_header.XMEM_length;
+					m_length_transfer = SIZE_SPI_REG_XMEM_YMEM_IOMEM;
+					break;
+				case YMEM:
+					m_size = m_firmware_header.YMEM_length;
+					m_length_transfer = SIZE_SPI_REG_XMEM_YMEM_IOMEM;
+					break;
+				case INVALID_MEM:
+				case IOMEM:
+				default:
+					break;
+			}
         }
 
-        while (bytes_total_read < size)
+    	// Prepare next chunk to program
+        while (m_bytes_total_read < m_size)
         {
+            uint32_t address = 0;
+            uint32_t data = 0;
+            uint8_t buffer[MAXIMUM_READ_FIRMWARE_OPERATION];
+
             // Read 3 bytes of address and 3/4 bytes of data
-        	firmware_file.read(buffer, FIRMWARE_ADDRESS_LENGTH + length_transfer);
+            m_firmware_file.read(buffer, FIRMWARE_ADDRESS_LENGTH + m_length_transfer);
 
             // Check next address and next data
-            address = 0;
-            data = 0;
             std::memcpy(&address, buffer, FIRMWARE_ADDRESS_LENGTH);
-            std::memcpy(&data, buffer + FIRMWARE_ADDRESS_LENGTH, length_transfer);
+            std::memcpy(&data, buffer + FIRMWARE_ADDRESS_LENGTH, m_length_transfer);
 
             // Sum bytes read from the file
-            bytes_total_read += FIRMWARE_ADDRESS_LENGTH + length_transfer;
+            m_bytes_total_read += FIRMWARE_ADDRESS_LENGTH + m_length_transfer;
 
-            // If there is a memory discontinuity or the buffer is full send the whole buffer
-            if (last_address + 1 < address || (bytes_written + length_transfer) >= MAX_BURST)
+			//DEBUG_TRACE("ArticTransceiver::send_fw_files: mem_sel=%u pending=%u last_address=%06x address=%06x total_read=%u size=%u", m_mem_sel, m_bytes_pending, m_last_address, address, m_bytes_total_read, m_size);
+
+            // If there is a memory discontinuity or the buffer is full send the buffer
+            if ((m_last_address + 1) < address || (m_bytes_pending + m_length_transfer) >= MAX_BURST)
             {
-                // Configure and send the buffer content
-                burst_access(mode, start_address, write_buffer, rx_buffer, bytes_written, false);
-                start_address = address;
-                bytes_written = 0;
+                // Configure and send the buffer content, clear pending count
+    			DEBUG_TRACE("ArticTransceiver::send_fw_files: burst_access: mode=%u start_address=%06x pending=%u", m_mode, m_start_address, m_bytes_pending);
+                burst_access(m_mode, m_start_address, m_pending_buffer, nullptr, m_bytes_pending, false);
+                m_start_address = address;
+                m_bytes_pending = 0;
+
+                // Copy next data into the pending buffer
+                reverse_memcpy(&(m_pending_buffer[m_bytes_pending]), (uint8_t *) &data, m_length_transfer);
+                m_last_address = address;
+                m_bytes_pending = m_length_transfer;
+
+                return false; // Reschedule
             }
 
-            // Copy next data in the buffer
-            reverse_memcpy(&(write_buffer[bytes_written]), (uint8_t *) &data, length_transfer);
-            last_address = address;
-            bytes_written += length_transfer;
-            data = 0;
+            // Copy next data into the pending buffer
+            reverse_memcpy(&(m_pending_buffer[m_bytes_pending]), (uint8_t *) &data, m_length_transfer);
+            m_last_address = address;
+            m_bytes_pending += m_length_transfer;
         }
 
-        // If there is data to be sent, (it has to be, otherwise the number of data is multiple of MAX_BURST.
-        if (bytes_written > 0)
-        {
-            // Wait few ms to continue the operations 13 ms, just in case we send very small amount of bytes
-            nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST_MS);
-            burst_access(mode, start_address, write_buffer, rx_buffer, bytes_written, false);
+        // If there is data pending to be sent then send it before moving to the next section
+		if (m_bytes_pending > 0)
+		{
+			DEBUG_TRACE("ArticTransceiver::send_fw_files: burst_access: mode=%u start_address=%06x pending=%u", m_mode, m_start_address, m_bytes_pending);
+			// FIXME: do we need this?
+			nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST_MS);
+			burst_access(m_mode, m_start_address, m_pending_buffer, nullptr, m_bytes_pending, false);
+
+			// Select next file
+			m_bytes_total_read = 0;
+			m_mem_sel++;
         }
-    }
 
-	// Bring DSP out of reset
-    DEBUG_TRACE("ArticTransceiver::send_fw_files: Bringing Artic out of reset");
-    send_artic_command(DSP_CONFIG, NULL);
+        // Continue running until we've programmed all files
+        return (m_mem_sel >= NUM_FIRMWARE_FILES_ARTIC);
 
-    DEBUG_TRACE("ArticTransceiver::send_fw_files: Waiting for interrupt 1");
+    },
+	[this, on_success](){
 
-    // Interrupt 1 will be high when start-up is complete
-    wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT_1_PROG_MS, INTERRUPT_1);
+    	// FIXME: make this async
 
-    DEBUG_TRACE("ArticTransceiver::send_fw_files: Artic booted");
+    	// Bring DSP out of reset
+        DEBUG_TRACE("ArticTransceiver::send_fw_files: Bringing Artic out of reset");
+        send_artic_command(DSP_CONFIG, NULL);
 
-    clear_interrupt(INTERRUPT_1);
+        DEBUG_TRACE("ArticTransceiver::send_fw_files: Waiting for interrupt 1");
 
-    DEBUG_TRACE("ArticTransceiver::send_fw_files: Checking CRC values");
-    check_crc(&firmware_header);
+        // Interrupt 1 will be high when start-up is complete
+        wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT_1_PROG_MS, INTERRUPT_1);
+
+        DEBUG_TRACE("ArticTransceiver::send_fw_files: Artic booted");
+
+        clear_interrupt(INTERRUPT_1);
+
+        DEBUG_TRACE("ArticTransceiver::send_fw_files: Checking CRC values");
+        check_crc(&m_firmware_header);
+
+        on_success();
+
+    }, "SendFirmwareChunk", 0);
 }
 
 void ArticTransceiver::program_firmware(std::function<void()> on_success)
 {
     DEBUG_TRACE("ArticTransceiver::program_firmware: WAIT DSP RESET");
 
-    // Wait until the device's status register contains 85
-    // NOTE: This 85 value is undocumentated but can be seen in the supplied Artic_evalboard.py file
+    // Wait until the device's status register contains 0x55
+    // NOTE: This 0x55 value is undocumented but can be seen in the supplied Artic_evalboard.py file
     int retries = 3;
-    do
-    {
-        uint32_t artic_response = 0;
-        nrf_delay_ms(SAT_ARTIC_DELAY_BOOT_MS);
 
-        try {
-        	send_artic_command(DSP_STATUS, &artic_response);
-        } catch (int e) {
-        	// No action
+    run_until(m_deferred_task_stopped, [this, &retries]() -> bool {
+
+    	if (--retries < 0)
+        {
+            DEBUG_ERROR("ArticTransceiver::program_firmware: BOOT ERROR");
+            m_notification_callback(ArgosAsyncEvent::ERROR);
+            return false;
+        } else {
+            uint32_t artic_response = 0;
+			try {
+				send_artic_command(DSP_STATUS, &artic_response);
+			} catch (int e) {
+				// No action
+			}
+			return (artic_response == 0x55);
         }
-
-        DEBUG_TRACE("ArticTransceiver::program_firmware: resp: %lu", artic_response);
-
-        if (artic_response == 85)
-            break;
-    } while (--retries >= 0);
-
-    if (retries < 0)
-    {
-        DEBUG_ERROR("ArticTransceiver::program_firmware: BOOT ERROR");
-        throw ErrorCode::ARTIC_BOOT_TIMEOUT;
-    }
-
-    DEBUG_TRACE("ArticTransceiver::program_firmware: Uploading firmware to ARTIC");
-    send_fw_files();
+    	return false;
+    },
+	[this, on_success]() {
+		send_fw_files(on_success);
+    }, "DspReadyForFirmwareProgramming", SAT_ARTIC_DELAY_BOOT_MS);
 }
 
 void ArticTransceiver::set_tcxo_warmup_time(uint32_t time_s)
@@ -565,6 +603,8 @@ void ArticTransceiver::power_off()
 {
     DEBUG_TRACE("ArticTransceiver::power_off");
 
+    m_deferred_task_stopped = true;
+
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
 
@@ -587,20 +627,29 @@ void ArticTransceiver::power_off()
 
 ArticTransceiver::ArticTransceiver() {
     m_nrf_spim = nullptr;
+    m_irq_int[0] = nullptr;
+    m_irq_int[1] = nullptr;
 	hardware_init();
 }
 
-void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent&)> notification_callback)
+void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent)> notification_callback)
 {
     DEBUG_TRACE("ArticTransceiver::power_on");
 
     m_notification_callback = notification_callback;
+    m_deferred_task_stopped = false;
+
+    DEBUG_TRACE("ArticTransceiver::power_on: NrfSPIM()");
 
     if (!m_nrf_spim)
 	    m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
 
+    DEBUG_TRACE("ArticTransceiver::power_on: NrfIRQ(0)");
+
     if (!m_irq_int[0])
     	m_irq_int[0] = new NrfIRQ(BSP::GPIO::GPIO_INT1_SAT);
+
+    DEBUG_TRACE("ArticTransceiver::power_on: NrfIRQ(1)");
 
     if (!m_irq_int[1])
     	m_irq_int[1] = new NrfIRQ(BSP::GPIO::GPIO_INT2_SAT);
@@ -628,6 +677,8 @@ void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent&)> notificati
 }
 
 void ArticTransceiver::read_packet(ArgosPacket const& packet, unsigned int& size) {
+	(void)packet;
+	(void)size;
 	// TODO
 }
 
@@ -641,7 +692,6 @@ void ArticTransceiver::set_rx_mode() {
 
 void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode)
 {
-	ArgosPacket packet_buffer = packet;
 	unsigned int num_tail_bits = 0;
 	uint8_t cmd;
 
@@ -657,31 +707,34 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 		break;
 	}
 
+	// Copy the requested packet
+	m_packet_buffer = packet;
+
 	// Send asynchronous command to enable TX mode and start packet transfer
-	send_command_check_clean_async(cmd, 1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT_MS,
-		[this, packet_buffer, num_tail_bits, total_bits]() {
+	send_command_check_clean_async(cmd, INTERRUPT_1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT_MS,
+		[this, num_tail_bits, total_bits]() {
 			// Append tail bits to the packet
-			(ArgosPacket)packet_buffer.append((num_tail_bits + 7)/8, 0);
+			m_packet_buffer.append((num_tail_bits + 7)/8, 0);
 
 			// Round-up to the nearest multiple of 3 bytes (which is the XMEM burst size)
-			(ArgosPacket)packet_buffer.append((3 - (packet_buffer.length() % 3)) % 3, 0);
+			m_packet_buffer.append((3 - (m_packet_buffer.length() % 3)) % 3, 0);
 
 			// Overwrite first 24-bit SYNC with the 24-bit total length field (required at the head of the packet data)
 			// this length must exclude the 24-bit header itself
-			uint8_t *buffer = (uint8_t *)packet_buffer.c_str();
+			uint8_t *buffer = (uint8_t *)m_packet_buffer.c_str();
 			buffer[0] = ((total_bits + num_tail_bits - 24) >> 16);
 			buffer[1] = ((total_bits + num_tail_bits - 24) >> 8);
 			buffer[2] = (total_bits + num_tail_bits - 24);
-			burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)buffer, NULL, packet_buffer.length(), false);
+			burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)buffer, nullptr, m_packet_buffer.length(), false);
 
 			print_status();
 
 			DEBUG_TRACE("ArticTransceiver::send_packet: sending message total_bits=%u tail_bits=%u burst_size=%u",
-						total_bits, num_tail_bits, packet_buffer.size());
+						total_bits, num_tail_bits, m_packet_buffer.size());
 
 			// Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
-			send_command_check_clean_async(ARTIC_CMD_START_TX_1M_SLEEP, 1, TX_FINISHED, true, SAT_ARTIC_TIMEOUT_SEND_TX_MS,
-				[]() {
+			send_command_check_clean_async(ARTIC_CMD_START_TX_1M_SLEEP, INTERRUPT_1, TX_FINISHED, true, SAT_ARTIC_TIMEOUT_SEND_TX_MS,
+				[this]() {
 					m_notification_callback(ArgosAsyncEvent::TX_DONE);
 				}
 			);

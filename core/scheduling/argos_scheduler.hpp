@@ -33,6 +33,32 @@ static inline const char *argos_mode_to_string(ArgosMode mode) {
 }
 
 class ArgosScheduler : public ServiceScheduler {
+
+public:
+	enum class ArgosAsyncEvent {
+		DEVICE_READY,
+		TX_DONE,
+		RX_PACKET,
+		ERROR
+	};
+
+	ArgosScheduler();
+	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override;
+	void stop() override;
+	void notify_saltwater_switch_state(bool state) override;
+	void notify_sensor_log_update() override;
+	uint64_t get_next_schedule();
+
+	// These methods are specific to the chipset and should be implemented by device-specific subclass
+	virtual void power_off() = 0;
+	virtual void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) = 0;
+	virtual void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) = 0;
+	virtual void read_packet(ArgosPacket const& packet, unsigned int& size) = 0;
+	virtual void set_idle() = 0;
+	virtual void set_rx_mode() = 0;
+	virtual void set_frequency(const double freq) = 0;
+	virtual void set_tx_power(const BaseArgosPower power) = 0;
+
 private:
 	Scheduler::TaskHandle m_argos_task;
 	ArgosConfig  m_argos_config;
@@ -61,20 +87,6 @@ private:
 	unsigned int m_total_bits;
 	ArgosMode    m_mode;
 
-public:
-	enum class ArgosAsyncEvent {
-		DEVICE_READY,
-		TX_DONE,
-		RX_PACKET,
-		ERROR
-	};
-
-	ArgosScheduler();
-	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override;
-	void stop() override;
-	void notify_saltwater_switch_state(bool state) override;
-	void notify_sensor_log_update() override;
-
 	void reschedule();
 	void deschedule();
 	void process_schedule();
@@ -88,27 +100,9 @@ public:
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
 	void build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet);
 	void adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute);
-	void handle_event(ArgosAsyncEvent& event);
+	void handle_event(ArgosAsyncEvent event);
 	uint64_t next_duty_cycle(unsigned int duty_cycle);
 	uint64_t next_prepass();
-
-public:
-	ArgosScheduler();
-	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override;
-	void stop() override;
-	void notify_saltwater_switch_state(bool state) override;
-	void notify_sensor_log_update() override;
-	uint64_t get_next_schedule();
-
-	// These methods are specific to the chipset and should be implemented by device-specific subclass
-	virtual void power_off() = 0;
-	virtual void power_on(std::function<void(ArgosAsyncEvent&)> notification_callback) = 0;
-	virtual void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) = 0;
-	virtual void read_packet(ArgosPacket const& packet, unsigned int& size);
-	virtual void set_idle() = 0;
-	virtual void set_rx_mode() = 0;
-	virtual void set_frequency(const double freq) = 0;
-	virtual void set_tx_power(const BaseArgosPower power) = 0;
 };
 
 #endif // __ARGOS_SCHEDULER_HPP_

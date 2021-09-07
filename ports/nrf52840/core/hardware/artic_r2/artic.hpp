@@ -6,7 +6,9 @@
 #include "argos_scheduler.hpp"
 #include "nrf_spim.hpp"
 #include "nrf_irq.hpp"
+#include "artic_firmware.hpp"
 
+#define MAX_BURST  (2048)
 
 class ArticTransceiver : public ArgosScheduler {
 
@@ -71,9 +73,27 @@ class ArticTransceiver : public ArgosScheduler {
 	};
 
 private:
-	std::function<void(ArgosAsyncEvent&)> m_notification_callback;
+	std::function<void(ArgosAsyncEvent)> m_notification_callback;
 	NrfSPIM *m_nrf_spim;
 	NrfIRQ  *m_irq_int[2];
+	bool    m_deferred_task_stopped;
+
+	// Argos packet for TX
+	ArgosPacket m_packet_buffer;
+
+	// Firmware update procedure state
+    mem_id_t m_mode;
+    firmware_header_t m_firmware_header;
+    ArticFirmwareFile m_firmware_file;
+    uint32_t m_start_address;
+    uint32_t m_size;
+    uint32_t m_length_transfer;
+    uint32_t m_last_address;
+    uint8_t m_pending_buffer[MAX_BURST];
+    uint32_t m_bytes_pending;
+    uint8_t m_mem_sel;
+    uint32_t m_bytes_total_read;
+
 	void configure_burst(mem_id_t mode, bool read, uint32_t start_address);
 	void burst_access(mem_id_t mode, uint32_t start_address, const uint8_t *tx_data, uint8_t *rx_data, size_t size, bool read);
 	void send_burst(const uint8_t *tx_data, uint8_t *rx_data, size_t size, uint8_t length_transfer, bool read);
@@ -82,7 +102,7 @@ private:
 	void print_status(void);
 	void set_tcxo_warmup_time(uint32_t time_s);
 	void program_firmware(std::function<void()> on_success);
-	void send_fw_files();
+	void send_fw_files(std::function<void()> on_success);
 	void hardware_init();
 	void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout_ms);
 	void send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout_ms,
@@ -99,7 +119,7 @@ private:
 public:
 	ArticTransceiver();
 	void power_off() override;
-	void power_on(std::function<void(ArgosAsyncEvent&)> notification_callback) override;
+	void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) override;
 	void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) override;
 	void read_packet(ArgosPacket const& packet, unsigned int& size) override;
 	void set_idle() override;

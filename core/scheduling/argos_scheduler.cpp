@@ -358,9 +358,6 @@ void ArgosScheduler::process_schedule() {
 		DEBUG_TRACE("ArgosScheduler::process_schedule: sws=%u t=%llu earliest_tx=%llu deferring transmission", m_switch_state, now, m_earliest_tx);
 		m_is_deferred = true;
 	}
-
-	// After each transmission attempt to reschedule
-	reschedule();
 }
 
 void ArgosScheduler::pass_prediction_algorithm() {
@@ -721,13 +718,16 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	m_mode = mode;
 
 	// Power on and then handle the remainder of the transmission in the async event handler
-	power_on([this](ArgosAsyncEvent& e) { handle_event(e); });
+	power_on([this](ArgosAsyncEvent e) { handle_event(e); });
 }
 
 void ArgosScheduler::time_sync_burst_algorithm() {
 	unsigned int num_entries = sensor_log->num_entries();
 
 	DEBUG_TRACE("ArgosScheduler::time_sync_burst_algorithm: num_gps_entries=%u log_size=%u", m_num_gps_entries, num_entries);
+
+	// Mark the time sync burst as sent because otherwise we would enter an infinite rescheduling scenario
+	m_time_sync_burst_sent = true;
 
 	if (m_num_gps_entries && num_entries) {
 		ArgosPacket packet;
@@ -743,9 +743,6 @@ void ArgosScheduler::time_sync_burst_algorithm() {
 	} else {
 		DEBUG_ERROR("ArgosScheduler::time_sync_burst_algorithm: sensor log state is invalid, can't transmit");
 	}
-
-	// Even on an error we mark the time sync burst as sent because otherwise we would enter an infinite rescheduling scenario
-	m_time_sync_burst_sent = true;
 }
 
 void ArgosScheduler::periodic_algorithm() {
@@ -902,7 +899,7 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 	}
 }
 
-void ArgosScheduler::handle_event(ArgosAsyncEvent &event) {
+void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 	switch (event) {
 	case ArgosAsyncEvent::DEVICE_READY:
 		DEBUG_TRACE("ArgosScheduler::handle_event: DEVICE_READY");
@@ -920,6 +917,7 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent &event) {
 		break;
 
 	case ArgosAsyncEvent::TX_DONE:
+	{
 		DEBUG_TRACE("ArgosScheduler::handle_event: TX_DONE");
 		if (m_data_notification_callback) {
 	    	ServiceEvent e;
@@ -940,7 +938,11 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent &event) {
 
 		// TODO: handle RX mode or power off scenario
 		power_off();
+
+		// After each transmission attempt to reschedule
+		reschedule();
 		break;
+	}
 
 	case ArgosAsyncEvent::RX_PACKET:
 		DEBUG_TRACE("ArgosScheduler::handle_event: RX_PACKET");
@@ -950,6 +952,9 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent &event) {
 	case ArgosAsyncEvent::ERROR:
 		DEBUG_ERROR("ArgosScheduler::handle_event: ERROR");
 		power_off();
+		break;
+
+	default:
 		break;
 	}
 }
