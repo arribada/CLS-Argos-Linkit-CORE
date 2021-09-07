@@ -167,7 +167,9 @@ void ArticTransceiver::check_crc(firmware_header_t *firmware_header)
     if (firmware_header->PMEM_CRC != crc)
     {
         DEBUG_ERROR("ArticTransceiver::check_crc: PMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->PMEM_CRC);
-        throw ErrorCode::ARTIC_CRC_FAILURE;
+        m_notification_callback(ArgosAsyncEvent::ERROR);
+        return;
+        //throw ErrorCode::ARTIC_CRC_FAILURE;
     }
 
     // Check CRC Value XMEM
@@ -176,7 +178,9 @@ void ArticTransceiver::check_crc(firmware_header_t *firmware_header)
     if (firmware_header->XMEM_CRC != crc)
     {
         DEBUG_ERROR("ArticTransceiver::check_crc: XMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->XMEM_CRC);
-        throw ErrorCode::ARTIC_CRC_FAILURE;
+        m_notification_callback(ArgosAsyncEvent::ERROR);
+        return;
+        //throw ErrorCode::ARTIC_CRC_FAILURE;
     }
 
     // Check CRC Value YMEM
@@ -185,7 +189,9 @@ void ArticTransceiver::check_crc(firmware_header_t *firmware_header)
     if (firmware_header->YMEM_CRC != crc)
     {
         DEBUG_ERROR("ArticTransceiver::check_crc: YMEM CRC 0x%08lX DOESN'T MATCH EXPECTED 0x%08lX", crc, firmware_header->YMEM_CRC);
-        throw ErrorCode::ARTIC_CRC_FAILURE;
+        m_notification_callback(ArgosAsyncEvent::ERROR);
+        return;
+        //throw ErrorCode::ARTIC_CRC_FAILURE;
     }
 
     DEBUG_TRACE("ArticTransceiver::check_crc: CRC values all match");
@@ -347,7 +353,7 @@ void ArticTransceiver::wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num
     }
 }
 
-void ArticTransceiver::send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout_ms)
+void ArticTransceiver::send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, uint32_t interrupt_timeout_ms)
 {
     uint32_t status = 0;
 
@@ -356,35 +362,41 @@ void ArticTransceiver::send_command_check_clean(uint8_t command, uint8_t interru
     wait_interrupt(interrupt_timeout_ms, interrupt_number);
     get_status_register(&status);
 
-    if ((status & (1 << status_flag_number)) == !value) {
-    	throw ErrorCode::ARTIC_INCORRECT_STATUS;
+    if ((status & (1 << status_flag_number)) == 0) {
+    	m_notification_callback(ArgosAsyncEvent::ERROR);
+    	//throw ErrorCode::ARTIC_INCORRECT_STATUS;
     }
 
     clear_interrupt(interrupt_number);
 }
 
-void ArticTransceiver::send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value,
+void ArticTransceiver::send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number,
 		uint32_t interrupt_timeout_ms,
 		std::function<void()> on_success)
 {
     clear_interrupt(interrupt_number);
     send_command(command);
 
-    Scheduler::TaskHandle timeout_task = system_scheduler->post_task_prio([this, interrupt_number]() {
-        m_irq_int[interrupt_number]->disable();
+    m_timeout_task = system_scheduler->post_task_prio([this, interrupt_number]() {
         DEBUG_ERROR("ArticTransceiver::wait_interrupt: Waiting for interrupt_%u timed out", interrupt_number + 1);
-        throw ErrorCode::ARTIC_IRQ_TIMEOUT;
+        m_irq_int[interrupt_number]->disable();
+        m_notification_callback(ArgosAsyncEvent::ERROR);
+        //throw ErrorCode::ARTIC_IRQ_TIMEOUT;
     }, "CommandTimeoutTask", Scheduler::DEFAULT_PRIORITY, interrupt_timeout_ms);
 
-    m_irq_int[interrupt_number]->enable([this, &timeout_task, interrupt_number, status_flag_number, value, on_success]() {
-    	system_scheduler->cancel_task(timeout_task);
-        uint32_t status = 0;
+    m_irq_int[interrupt_number]->enable([this, interrupt_number, status_flag_number, on_success]() {
+
+    	system_scheduler->cancel_task(m_timeout_task);
+
+    	uint32_t status = 0;
         get_status_register(&status);
         clear_interrupt(interrupt_number);
         m_irq_int[interrupt_number]->disable();
 
-        if ((status & (1 << status_flag_number)) == !value) {
-        	throw ErrorCode::ARTIC_INCORRECT_STATUS;
+        if ((status & (1 << status_flag_number)) == 0) {
+            m_notification_callback(ArgosAsyncEvent::ERROR);
+        	//throw ErrorCode::ARTIC_INCORRECT_STATUS;
+            return;
         }
 
         on_success();
@@ -698,7 +710,7 @@ bool ArticTransceiver::buffer_rx_packet() {
 
 void ArticTransceiver::set_rx_mode() {
 	// Send asynchronous command to configure RX mode and start continuous RX
-	send_command_check_clean_async(ARTIC_CMD_SET_ARGOS_3_RX_MODE, INTERRUPT_1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT_MS,
+	send_command_check_clean_async(ARTIC_CMD_SET_ARGOS_3_RX_MODE, INTERRUPT_1, MCU_COMMAND_ACCEPTED, SAT_ARTIC_DELAY_INTERRUPT_MS,
 	[this]() {
 		// Enable interrupt 1 to inform us whenever a packet is available
 	    m_irq_int[INTERRUPT_1]->enable([this]() {
@@ -740,7 +752,7 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 	m_packet_buffer = packet;
 
 	// Send asynchronous command to enable TX mode and start packet transfer
-	send_command_check_clean_async(cmd, INTERRUPT_1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT_MS,
+	send_command_check_clean_async(cmd, INTERRUPT_1, MCU_COMMAND_ACCEPTED, SAT_ARTIC_DELAY_INTERRUPT_MS,
 		[this, num_tail_bits, total_bits]() {
 			// Append tail bits to the packet
 			m_packet_buffer.append((num_tail_bits + 7)/8, 0);
@@ -762,7 +774,7 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 						total_bits, num_tail_bits, m_packet_buffer.size());
 
 			// Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
-			send_command_check_clean_async(ARTIC_CMD_START_TX_1M_SLEEP, INTERRUPT_1, TX_FINISHED, true, SAT_ARTIC_TIMEOUT_SEND_TX_MS,
+			send_command_check_clean_async(ARTIC_CMD_START_TX_1M_SLEEP, INTERRUPT_1, TX_FINISHED, SAT_ARTIC_TIMEOUT_SEND_TX_MS,
 				[this]() {
 					m_notification_callback(ArgosAsyncEvent::TX_DONE);
 				}

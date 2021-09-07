@@ -77,6 +77,7 @@ private:
 	NrfSPIM *m_nrf_spim;
 	NrfIRQ  *m_irq_int[2];
 	bool    m_deferred_task_stopped;
+	Scheduler::TaskHandle m_timeout_task;
 
 	// Argos packet for TX
 	ArgosPacket m_packet_buffer;
@@ -106,8 +107,8 @@ private:
 	void program_firmware(std::function<void()> on_success);
 	void send_fw_files(std::function<void()> on_success);
 	void hardware_init();
-	void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout_ms);
-	void send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, bool value, uint32_t interrupt_timeout_ms,
+	void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, uint32_t interrupt_timeout_ms);
+	void send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, uint32_t interrupt_timeout_ms,
 			std::function<void()> on_success);
 	void wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num);
 	void clear_interrupt(uint8_t interrupt_num);
