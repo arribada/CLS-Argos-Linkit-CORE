@@ -6,6 +6,9 @@
 #include "nrf_irq.hpp"
 #include "gpio.hpp"
 #include "nrfx_gpiote.h"
+#include "scheduler.hpp"
+
+extern Scheduler *system_scheduler;
 
 // This class maps the pin number to an NrfIRQ object -- this is largely needed because
 // the Nordic GPIOTE driver callback does not have a user-defined context and only passes
@@ -75,7 +78,7 @@ void NrfIRQ::disable() {
 }
 
 void NrfIRQ::process_event() {
-	m_func();
+	system_scheduler->post_task_prio([this]() { m_func(); }, "NrfIRQTask");
 }
 
 bool NrfIRQ::poll() {
