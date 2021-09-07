@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
 RUN apt-get -qq update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get -qq install -y wget unzip build-essential cmake ninja-build git python3 python3-pip unzip
+    DEBIAN_FRONTEND="noninteractive" apt-get -qq install -y wget unzip build-essential cmake ninja-build git python3 python3-pip unzip xxd
 
 RUN mkdir tools
 
