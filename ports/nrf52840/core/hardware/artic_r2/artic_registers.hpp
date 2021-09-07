@@ -18,8 +18,8 @@
 #define SAT_ARTIC_TIMEOUT_SEND_TX_MS         (20000)
 #define SAT_ARTIC_DELAY_RESET_MS             (5)
 #define SAT_ARTIC_DELAY_BURST_MS             (5)
-#define SAT_ARTIC_DELAY_SET_BURST_MS         (22)
-#define SAT_ARTIC_DELAY_FINISH_BURST_MS      (13)
+#define SAT_ARTIC_DELAY_SET_BURST_MS         (5)
+#define SAT_ARTIC_DELAY_FINISH_BURST_MS      (5)
 #define SAT_ARTIC_DELAY_TRANSFER_US          (50)
 #define NUM_FIRMWARE_FILES_ARTIC 3
 

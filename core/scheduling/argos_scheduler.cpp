@@ -59,7 +59,7 @@ extern "C" {
 
 #define PACKET_SYNC					0xFFFE2F
 
-#define ARGOS_TX_MARGIN_SECS        12
+#define ARGOS_TX_MARGIN_SECS        7
 
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;

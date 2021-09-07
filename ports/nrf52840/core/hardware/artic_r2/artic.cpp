@@ -219,7 +219,6 @@ void ArticTransceiver::configure_burst(mem_id_t mode, bool read, uint32_t start_
         throw ErrorCode::SPI_COMMS_ERROR;
     }
 
-    // FIXME: do we need this?
     nrf_delay_ms(SAT_ARTIC_DELAY_SET_BURST_MS);
 }
 
@@ -240,7 +239,6 @@ void ArticTransceiver::burst_access(mem_id_t mode, uint32_t start_address, const
     // Deactivate SSN pin
     m_nrf_spim->finish_transfer();
 
-    // FIXME: do we need this?
     nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST_MS);
 }
 
@@ -249,7 +247,6 @@ void ArticTransceiver::send_burst(const uint8_t *tx_data, uint8_t *rx_data, size
     uint16_t num_transfer = size / length_transfer;
 
     // Write in chunk of 60 bytes and wait 5 ms
-    uint32_t delay_count = 0;
     uint8_t buffer[SIZE_SPI_REG_PMEM];
     int ret;
 
@@ -265,16 +262,9 @@ void ArticTransceiver::send_burst(const uint8_t *tx_data, uint8_t *rx_data, size
                 throw ErrorCode::SPI_COMMS_ERROR;
             }
 
-            delay_count += length_transfer;
-            // FIXME: do we need this?
+            // LW: This delay appears to be necessary -- removing it causes
+            // CRC verification errors during FW upload
             nrf_delay_us(SAT_ARTIC_DELAY_TRANSFER_US);
-            if (delay_count > NUM_BYTES_BEFORE_WAIT)
-            {
-                delay_count = 0;
-                // FIXME: do we need this?
-                nrf_delay_ms(SAT_ARTIC_DELAY_BURST_MS);
-            }
-
         }
     }
     else
@@ -285,14 +275,9 @@ void ArticTransceiver::send_burst(const uint8_t *tx_data, uint8_t *rx_data, size
             if (ret) {
                 throw ErrorCode::SPI_COMMS_ERROR;
             }
-            delay_count += length_transfer;
+            // LW: This delay appears to be necessary -- removing it causes
+            // CRC verification errors during FW upload
             nrf_delay_us(SAT_ARTIC_DELAY_TRANSFER_US);
-            if (delay_count > NUM_BYTES_BEFORE_WAIT)
-            {
-                delay_count = 0;
-                // FIXME: do we need this?
-                nrf_delay_ms(SAT_ARTIC_DELAY_BURST_MS);
-            }
         }
     }
 }
@@ -478,7 +463,7 @@ void ArticTransceiver::send_fw_files(std::function<void()> on_success)
             if ((m_last_address + 1) < address || (m_bytes_pending + m_length_transfer) >= MAX_BURST)
             {
                 // Configure and send the buffer content, clear pending count
-    			DEBUG_TRACE("ArticTransceiver::send_fw_files: burst_access: mode=%u start_address=%06x pending=%u", m_mode, m_start_address, m_bytes_pending);
+    			//DEBUG_TRACE("ArticTransceiver::send_fw_files: burst_access: mode=%u start_address=%06x pending=%u", m_mode, m_start_address, m_bytes_pending);
                 burst_access(m_mode, m_start_address, m_pending_buffer, nullptr, m_bytes_pending, false);
                 m_start_address = address;
                 m_bytes_pending = 0;
@@ -500,9 +485,8 @@ void ArticTransceiver::send_fw_files(std::function<void()> on_success)
         // If there is data pending to be sent then send it before moving to the next section
 		if (m_bytes_pending > 0)
 		{
-			DEBUG_TRACE("ArticTransceiver::send_fw_files: burst_access: mode=%u start_address=%06x pending=%u", m_mode, m_start_address, m_bytes_pending);
-			// FIXME: do we need this?
-			nrf_delay_ms(SAT_ARTIC_DELAY_FINISH_BURST_MS);
+			//DEBUG_TRACE("ArticTransceiver::send_fw_files: burst_access: mode=%u start_address=%06x pending=%u", m_mode, m_start_address, m_bytes_pending);
+
 			burst_access(m_mode, m_start_address, m_pending_buffer, nullptr, m_bytes_pending, false);
 
 			// Select next file
