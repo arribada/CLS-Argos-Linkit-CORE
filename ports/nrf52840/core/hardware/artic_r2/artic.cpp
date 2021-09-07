@@ -660,18 +660,63 @@ void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent)> notificatio
     }, "ArcticPowerOnDelay", Scheduler::DEFAULT_PRIORITY, SAT_ARTIC_DELAY_POWER_ON_MS);
 }
 
-void ArticTransceiver::read_packet(ArgosPacket const& packet, unsigned int& size) {
-	(void)packet;
-	(void)size;
-	// TODO
+void ArticTransceiver::read_packet(ArgosPacket& packet, unsigned int& size) {
+	packet = m_rx_packet;
+	size = m_rx_packet_bits;
 }
 
 void ArticTransceiver::set_idle() {
-	// TODO
+	// Configure idle mode and disable interrupts
+    m_irq_int[INTERRUPT_1]->disable();
+	send_command(ARTIC_CMD_SLEEP);
+}
+
+bool ArticTransceiver::buffer_rx_packet() {
+	uint8_t buffer[MAX_RX_SIZE_BYTES];
+
+	// Read the entire RX payload from X memory
+	burst_access(XMEM, RX_PAYLOAD_ADDRESS, nullptr, buffer, MAX_RX_SIZE_BYTES, true);
+
+	// First 24-bit is the packet size (MSB first)
+	m_rx_packet_bits = buffer[0] << 16 |
+			           buffer[1] << 8 |
+					   buffer[2];
+
+	// Make sure the size is valid and does not exceed the maximum allowed size
+	if (m_rx_packet_bits > 0 && m_rx_packet_bits <= (8 * (MAX_RX_SIZE_BYTES-3))) {
+		// Assign payload to the locally stored RX buffer
+		m_rx_packet.assign((const char *)&buffer[3], (m_rx_packet_bits + 7) / 8);
+		return true;
+	}
+
+	// Invalid contents, clear current packet
+	m_rx_packet_bits = 0;
+	m_rx_packet.clear();
+
+	return false;
 }
 
 void ArticTransceiver::set_rx_mode() {
-	// TODO
+	// Send asynchronous command to configure RX mode and start continuous RX
+	send_command_check_clean_async(ARTIC_CMD_SET_ARGOS_3_RX_MODE, INTERRUPT_1, MCU_COMMAND_ACCEPTED, true, SAT_ARTIC_DELAY_INTERRUPT_MS,
+	[this]() {
+		// Enable interrupt 1 to inform us whenever a packet is available
+	    m_irq_int[INTERRUPT_1]->enable([this]() {
+	    	uint32_t status = 0;
+	        get_status_register(&status);
+	        clear_interrupt(INTERRUPT_1);
+
+	        // Check for valid RX message
+	        if (status & (1 << RX_VALID_MESSAGE)) {
+	        	// Only notify if new RX packet has been stored
+	        	if (buffer_rx_packet())
+	        		m_notification_callback(ArgosAsyncEvent::RX_PACKET);
+	        }
+	    });
+
+		// Configure RX continuous mode
+		send_command(ARTIC_CMD_START_RX_CONT);
+	});
 }
 
 void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode)

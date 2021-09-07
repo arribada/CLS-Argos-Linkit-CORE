@@ -53,7 +53,7 @@ public:
 	virtual void power_off() = 0;
 	virtual void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) = 0;
 	virtual void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) = 0;
-	virtual void read_packet(ArgosPacket const& packet, unsigned int& size) = 0;
+	virtual void read_packet(ArgosPacket& packet, unsigned int& size) = 0;
 	virtual void set_idle() = 0;
 	virtual void set_rx_mode() = 0;
 	virtual void set_frequency(const double freq) = 0;

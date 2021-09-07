@@ -80,6 +80,8 @@ private:
 
 	// Argos packet for TX
 	ArgosPacket m_packet_buffer;
+	ArgosPacket m_rx_packet;
+	unsigned int m_rx_packet_bits;
 
 	// Firmware update procedure state
     mem_id_t m_mode;
@@ -115,13 +117,14 @@ private:
 	inline uint8_t convert_mem_sel(mem_id_t mode);
 	inline mem_id_t convert_mode(uint8_t mem_sel);
 	void print_firmware_version();
+	bool buffer_rx_packet();
 
 public:
 	ArticTransceiver();
 	void power_off() override;
 	void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) override;
 	void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) override;
-	void read_packet(ArgosPacket const& packet, unsigned int& size) override;
+	void read_packet(ArgosPacket& packet, unsigned int& size) override;
 	void set_idle() override;
 	void set_rx_mode() override;
 	void set_frequency(const double freq) override;

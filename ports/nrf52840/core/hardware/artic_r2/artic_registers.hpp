@@ -40,6 +40,7 @@
 #define FIRMWARE_VERSION_ADDRESS (0x0010)
 #define CRC_ADDRESS              (0x0371)
 #define INTERRUPT_ADDRESS        (0x8018)
+#define RX_PAYLOAD_ADDRESS		 (0x0200)
 #define TX_PAYLOAD_ADDRESS       (0x0273)
 #define TCXO_WARMUP_TIME_ADDRESS (0x036F)
 
@@ -53,6 +54,7 @@
 #define SPI_MAX_BYTE_READ  (8192)
 
 #define MAX_TX_SIZE_BYTES  (31)
+#define MAX_RX_SIZE_BYTES  (27)
 
 #define MAX_BUFFER_READ  (256)
 
