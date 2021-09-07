@@ -24,4 +24,4 @@ RUN wget -q https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desk
 ENV PATH="/tools/nRF-Command-Line-Tools_10_13_0_Linux64/mergehex"
 
 # Install nrfutil
-RUN pip3 install nrfutil
+RUN pip install nrfutil
