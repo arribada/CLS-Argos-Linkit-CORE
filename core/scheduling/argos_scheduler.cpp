@@ -238,14 +238,15 @@ uint64_t ArgosScheduler::next_prepass() {
 		m_earliest_tx >= curr_time &&
 		m_earliest_tx < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS))
 	{
-		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX=%llu epoch=%llu", m_earliest_tx, m_next_prepass);
+		uint64_t earliest_tx = (std::max(m_earliest_tx, m_next_prepass) - curr_time) * MS_PER_SEC;
+		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling in %llu secs after SWS cleared", earliest_tx);
 		m_is_deferred = false;
-		return (std::max(m_earliest_tx, m_next_prepass) - curr_time) * MS_PER_SEC;
+		return earliest_tx;
 	}
 
 	if (m_next_prepass != INVALID_SCHEDULE &&
 		curr_time < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS)) {
-		DEBUG_WARN("ArgosScheduler::next_prepass: existing prepass schedule for epoch=%llu is still valid", m_next_prepass - curr_time);
+		DEBUG_WARN("ArgosScheduler::next_prepass: existing prepass schedule in %llu secs is still valid", m_next_prepass - curr_time);
 		return INVALID_SCHEDULE;
 	}
 
@@ -318,8 +319,8 @@ uint64_t ArgosScheduler::next_prepass() {
 			schedule += m_tx_jitter;
 		}
 
-		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x dl=%u ul=%u last=%llu now=%llu s=%u c=%.3f e=%u",
-					next_pass.satHexId, next_pass.downlinkStatus, next_pass.uplinkStatus,
+		DEBUG_INFO("ArgosScheduler::next_prepass: sat=%u dl=%u ul=%u l=%llu t=%llu [%u,%.3f,%u]",
+				(unsigned int)next_pass.satHexId, (unsigned int)next_pass.downlinkStatus, (unsigned int)next_pass.uplinkStatus,
 					(m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
 							m_last_transmission_schedule, curr_time, (unsigned int)next_pass.epoch,
 							(double)schedule / MS_PER_SEC, (unsigned int)next_pass.epoch + next_pass.duration);
@@ -723,16 +724,9 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	m_total_bits = total_bits;
 	m_mode = mode;
 
-	// Check if the transceiver is powered or not
-	if (!is_powered_on()) {
-		// Power on and then handle the remainder of the transmission in the async event handler
-		power_on([this](ArgosAsyncEvent e) { handle_event(e); });
-	} else {
-		// We are already powered on, so just schedule a DEVICE_READY event async
-		system_scheduler->post_task_prio([this]() {
-			handle_event(ArgosAsyncEvent::DEVICE_READY);
-		}, "ScheduleTxDeviceReady");
-	}
+	// Power on and then handle the remainder of the transmission in the async event handler
+	power_off();
+	power_on([this](ArgosAsyncEvent e) { handle_event(e); });
 }
 
 void ArgosScheduler::time_sync_burst_algorithm() {
@@ -958,8 +952,8 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 		// b) If the next schedule is no greater than ARGOS_RX_MAX_WINDOW
 		if (m_downlink_status && m_argos_config.argos_rx_en && m_next_schedule <= (MS_PER_SEC * m_argos_config.argos_rx_max_window)) {
 			// Don't power off, enable RX mode instead
-			set_rx_mode((m_downlink_status == SAT_DNLK_ON_WITH_A3) ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_4);
-		} else {
+			set_rx_mode(ArgosMode::ARGOS_3);
+		} else if (is_powered_on()) {
 			power_off();
 		}
 		break;
