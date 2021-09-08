@@ -65,4 +65,6 @@ static const BaseMap param_map[] = {
 	{ "ARGOS_TIME_SYNC_BURST_EN", "ARP30", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "LED_MODE", "LDP01", BaseEncoding::LEDMODE, 0U, 0U, {}, true, true },
 	{ "ARGOS_TX_JITTER_EN", "ARP31", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "ARGOS_RX_EN", "ARP32", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "ARGOS_RX_MAX_WINDOW", "ARP33", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
 };

@@ -57,6 +57,8 @@ struct ArgosConfig {
 	bool is_lb;
 	bool time_sync_burst_en;
 	bool argos_tx_jitter_en;
+	bool argos_rx_en;
+	unsigned int argos_rx_max_window;
 };
 
 enum class ConfigMode {
@@ -68,7 +70,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x03;
+	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x04;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
@@ -127,6 +129,8 @@ protected:
 		/* ARGOS_TIME_SYNC_BURST_EN */ (bool)true,
 		/* LED_MODE */ BaseLEDMode::HRS_24,
 		/* ARGOS_TX_JITTER_EN */ (bool)true,
+		/* ARGOS_RX_EN */ (bool)true,
+		/* ARGOS_RX_MAX_WINDOW */ 3U*60U,
 	}};
 	static inline const BaseZone default_zone = {
 		/* zone_id */ 1,
@@ -424,6 +428,8 @@ public:
 
 		if (lb_en && m_battery_level <= lb_threshold) {
 			argos_config.is_lb = true;
+			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
+			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
 			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
@@ -450,6 +456,8 @@ public:
 				m_last_config_mode = ConfigMode::LOW_BATTERY;
 			}
 		} else if (argos_config.is_out_of_zone) {
+			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
+			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
 			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);
@@ -485,6 +493,8 @@ public:
 			}
 		} else {
 			// Use default params
+			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
+			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
 			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
 			argos_config.tx_counter = read_param<unsigned int>(ParamID::TX_COUNTER);

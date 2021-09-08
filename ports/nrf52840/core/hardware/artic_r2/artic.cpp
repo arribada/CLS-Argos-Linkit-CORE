@@ -11,6 +11,7 @@
 #include "gpio.hpp"
 #include "scheduler.hpp"
 #include "nrf_irq.hpp"
+#include "binascii.hpp"
 
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
@@ -407,6 +408,7 @@ void ArticTransceiver::hardware_init()
 {
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
+    m_is_powered_on = false;
 }
 
 void ArticTransceiver::send_fw_files(std::function<void()> on_success)
@@ -619,6 +621,9 @@ void ArticTransceiver::power_off()
     nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].config.mosi_pin, NRF_GPIO_PIN_PULLDOWN);
     nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].config.miso_pin, NRF_GPIO_PIN_PULLDOWN);
     nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].config.sck_pin, NRF_GPIO_PIN_PULLDOWN);
+
+    // Mark device as powered off
+    m_is_powered_on = false;
 }
 
 ArticTransceiver::ArticTransceiver() {
@@ -626,6 +631,10 @@ ArticTransceiver::ArticTransceiver() {
     m_irq_int[0] = nullptr;
     m_irq_int[1] = nullptr;
 	hardware_init();
+}
+
+bool ArticTransceiver::is_powered_on() {
+    return m_is_powered_on;
 }
 
 void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent)> notification_callback)
@@ -652,6 +661,9 @@ void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent)> notificatio
 
     GPIOPins::set(BSP::GPIO::GPIO_SAT_EN);
     GPIOPins::set(BSP::GPIO::GPIO_SAT_RESET);
+
+    // Mark the device as powered on
+    m_is_powered_on = true;
 
     system_scheduler->post_task_prio([this](){
         // Reset the Artic device
@@ -698,8 +710,11 @@ bool ArticTransceiver::buffer_rx_packet() {
 	if (m_rx_packet_bits > 0 && m_rx_packet_bits <= (8 * (MAX_RX_SIZE_BYTES-3))) {
 		// Assign payload to the locally stored RX buffer
 		m_rx_packet.assign((const char *)&buffer[3], (m_rx_packet_bits + 7) / 8);
+		DEBUG_INFO("ArticTransceiver::buffer_rx_packet: data=%s", Binascii::hexlify(m_rx_packet).c_str());
 		return true;
 	}
+
+	DEBUG_TRACE("ArticTransceiver::buffer_rx_packet: discarded packet length=%u", m_rx_packet_bits);
 
 	// Invalid contents, clear current packet
 	m_rx_packet_bits = 0;
@@ -708,9 +723,13 @@ bool ArticTransceiver::buffer_rx_packet() {
 	return false;
 }
 
-void ArticTransceiver::set_rx_mode() {
+void ArticTransceiver::set_rx_mode(const ArgosMode mode) {
+
+	DEBUG_TRACE("ArticTransceiver::set_rx_mode(%u)", (unsigned int)mode);
+
 	// Send asynchronous command to configure RX mode and start continuous RX
-	send_command_check_clean_async(ARTIC_CMD_SET_ARGOS_3_RX_MODE, INTERRUPT_1, MCU_COMMAND_ACCEPTED, SAT_ARTIC_DELAY_INTERRUPT_MS,
+	send_command_check_clean_async((mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_ARGOS_3_RX_MODE : ARTIC_CMD_SET_ARGOS_4_RX_MODE,
+			INTERRUPT_1, MCU_COMMAND_ACCEPTED, SAT_ARTIC_DELAY_INTERRUPT_MS,
 	[this]() {
 		// Enable interrupt 1 to inform us whenever a packet is available
 	    m_irq_int[INTERRUPT_1]->enable([this]() {
@@ -738,13 +757,16 @@ void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total
 
     // Number of tails bits is zero for A2 and non-zero for A3
 	switch (mode) {
-	default:
 	case ArgosMode::ARGOS_2:
 		cmd = ARTIC_CMD_SET_PTT_A2_TX_MODE;
 		break;
 	case ArgosMode::ARGOS_3:
 		cmd = ARTIC_CMD_SET_PTT_A3_TX_MODE;
 		num_tail_bits = (total_bits >= ARTIC_PTT_A3_248_MAX_USER_BITS) ? ARTIC_PTT_A3_248_MSG_NUM_TAIL_BITS : ARTIC_PTT_A3_120_MSG_NUM_TAIL_BITS;
+		break;
+	case ArgosMode::ARGOS_4:
+	default:
+		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
 		break;
 	}
 

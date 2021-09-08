@@ -99,6 +99,10 @@ void ArgosScheduler::reschedule() {
 		schedule = next_duty_cycle(m_argos_config.duty_cycle);
 	} else if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
 		schedule = next_prepass();
+		// If the current satellite does not support downlink transmissions
+		// and the unit is powered on, then power off the unit now
+		if (m_downlink_status == SAT_DNLK_OFF && is_powered_on())
+			power_off();
 	}
 
 	if (INVALID_SCHEDULE != schedule) {
@@ -314,8 +318,9 @@ uint64_t ArgosScheduler::next_prepass() {
 			schedule += m_tx_jitter;
 		}
 
-		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x last=%llu now=%llu s=%u c=%.3f e=%u",
-					next_pass.satHexId, (m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
+		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x dl=%u ul=%u last=%llu now=%llu s=%u c=%.3f e=%u",
+					next_pass.satHexId, next_pass.downlinkStatus, next_pass.uplinkStatus,
+					(m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
 							m_last_transmission_schedule, curr_time, (unsigned int)next_pass.epoch,
 							(double)schedule / MS_PER_SEC, (unsigned int)next_pass.epoch + next_pass.duration);
 
@@ -327,6 +332,7 @@ uint64_t ArgosScheduler::next_prepass() {
 			m_next_prepass = (schedule / MS_PER_SEC);
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
 			m_prepass_duration = next_pass.duration;
+			m_downlink_status = next_pass.downlinkStatus;
 			return schedule - (now * MS_PER_SEC);
 		} else {
 			DEBUG_TRACE("ArgosScheduler::next_prepass: computed schedule is too late for this window", next_pass.epoch, next_pass.duration);
@@ -717,8 +723,16 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	m_total_bits = total_bits;
 	m_mode = mode;
 
-	// Power on and then handle the remainder of the transmission in the async event handler
-	power_on([this](ArgosAsyncEvent e) { handle_event(e); });
+	// Check if the transceiver is powered or not
+	if (!is_powered_on()) {
+		// Power on and then handle the remainder of the transmission in the async event handler
+		power_on([this](ArgosAsyncEvent e) { handle_event(e); });
+	} else {
+		// We are already powered on, so just schedule a DEVICE_READY event async
+		system_scheduler->post_task_prio([this]() {
+			handle_event(ArgosAsyncEvent::DEVICE_READY);
+		}, "ScheduleTxDeviceReady");
+	}
 }
 
 void ArgosScheduler::time_sync_burst_algorithm() {
@@ -936,11 +950,18 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 		// Save configuration params
 		configuration_store->save_params();
 
-		// TODO: handle RX mode or power off scenario
-		power_off();
-
-		// After each transmission attempt to reschedule
+		// Update the schedule for the next transmission
 		reschedule();
+
+		// If the satellite has downlink enabled, then check to see if we can turn on RX mode.  This depends on:
+		// a) If ARGOS_RX_EN is set
+		// b) If the next schedule is no greater than ARGOS_RX_MAX_WINDOW
+		if (m_downlink_status && m_argos_config.argos_rx_en && m_next_schedule <= (MS_PER_SEC * m_argos_config.argos_rx_max_window)) {
+			// Don't power off, enable RX mode instead
+			set_rx_mode((m_downlink_status == SAT_DNLK_ON_WITH_A3) ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_4);
+		} else {
+			power_off();
+		}
 		break;
 	}
 
