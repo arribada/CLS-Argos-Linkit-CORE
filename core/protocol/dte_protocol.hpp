@@ -360,14 +360,21 @@ public:
 class PassPredictCodec {
 private:
 
-	static SatDownlinkStatus_t convert_dl_operating_status(uint8_t status) {
-		switch (status) {
-		case 1:
-			return SAT_DNLK_ON_WITH_A4;
-		case 3:
-			return SAT_DNLK_ON_WITH_A3;
-		default:
-			return SAT_DNLK_OFF;
+	static SatDownlinkStatus_t convert_dl_operating_status(uint8_t status, bool type_a) {
+		if (type_a) {
+			switch (status) {
+			case 3:
+				return SAT_DNLK_ON_WITH_A3;
+			default:
+				return SAT_DNLK_OFF;
+			}
+		} else {
+			switch (status) {
+			case 1:
+				return SAT_DNLK_ON_WITH_A3;
+			default:
+				return SAT_DNLK_OFF;
+			}
 		}
 	}
 
@@ -420,7 +427,7 @@ private:
 						hex_id, dl_status, ul_status);
 			aop_entry.satHexId = hex_id;
 			aop_entry.satDcsId = a_dcs;
-			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status);
+			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status, type_a);
 			aop_entry.uplinkStatus = convert_ul_operating_status(ul_status, hex_id);
 
 			uint8_t key = aop_entry.satHexId | (a_dcs << 4);
