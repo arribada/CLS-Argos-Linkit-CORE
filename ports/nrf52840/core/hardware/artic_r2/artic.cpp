@@ -710,7 +710,7 @@ bool ArticTransceiver::buffer_rx_packet() {
 	if (m_rx_packet_bits > 0 && m_rx_packet_bits <= (8 * (MAX_RX_SIZE_BYTES-3))) {
 		// Assign payload to the locally stored RX buffer
 		m_rx_packet.assign((const char *)&buffer[3], (m_rx_packet_bits + 7) / 8);
-		DEBUG_INFO("ArticTransceiver::buffer_rx_packet: data=%s", Binascii::hexlify(m_rx_packet).c_str());
+		DEBUG_TRACE("ArticTransceiver::buffer_rx_packet: data=%s", Binascii::hexlify(m_rx_packet).c_str());
 		return true;
 	}
 
@@ -735,7 +735,8 @@ void ArticTransceiver::set_rx_mode(const ArgosMode mode) {
 	    m_irq_int[INTERRUPT_1]->enable([this]() {
 	    	uint32_t status = 0;
 	        get_status_register(&status);
-	        clear_interrupt(INTERRUPT_1);
+
+	        DEBUG_TRACE("ArticTransceiver::set_rx_mode: IRQ status=%08x", status);
 
 	        // Check for valid RX message
 	        if (status & (1 << RX_VALID_MESSAGE)) {
@@ -743,6 +744,9 @@ void ArticTransceiver::set_rx_mode(const ArgosMode mode) {
 	        	if (buffer_rx_packet())
 	        		m_notification_callback(ArgosAsyncEvent::RX_PACKET);
 	        }
+
+	        // Don't clear the interrupt until X memory has been read
+	        clear_interrupt(INTERRUPT_1);
 	    });
 
 		// Configure RX continuous mode
