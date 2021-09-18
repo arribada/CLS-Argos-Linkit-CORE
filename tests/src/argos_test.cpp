@@ -411,6 +411,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 
 	// Sample configuration provided with prepass library V3.4
 	BasePassPredict pass_predict = {
+		/* version_code */ 0,
 		7,
 		{
 		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
@@ -525,6 +526,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 
 	// Sample configuration provided with prepass library V3.4
 	BasePassPredict pass_predict = {
+		/* version_code */ 0,
 		7,
 		{
 		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
@@ -1057,6 +1059,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 
 	// Sample configuration provided with prepass library V3.4
 	BasePassPredict pass_predict = {
+		/* version_code */ 0,
 		7,
 		{
 		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
@@ -1844,6 +1847,7 @@ TEST(ArgosScheduler, SchedulingShortPacketOutOfZoneFlag)
 
 	// Setup zone file
 	BaseZone zone = {
+		/* version_code */ 0,
 		/* zone_id */ 1,
 		/* zone_type */ BaseZoneType::CIRCLE,
 		/* enable_monitoring */ true,
@@ -1960,6 +1964,7 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 
 	// Setup zone file
 	BaseZone zone = {
+		/* version_code */ 0,
 		/* zone_id */ 1,
 		/* zone_type */ BaseZoneType::CIRCLE,
 		/* enable_monitoring */ true,
@@ -2442,6 +2447,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketTXJitter)
 
 	// Sample configuration provided with prepass library V3.4
 	BasePassPredict pass_predict = {
+		/* version_code */ 0,
 		7,
 		{
 		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
@@ -2539,6 +2545,7 @@ TEST(ArgosScheduler, OutOfZoneModeChange)
 
 	// Sample configuration provided with prepass library V3.4
 	BasePassPredict pass_predict = {
+		/* version_code */ 0,
 		7,
 		{
 		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
@@ -2554,6 +2561,7 @@ TEST(ArgosScheduler, OutOfZoneModeChange)
 	fake_config_store->write_pass_predict(pass_predict);
 
 	BaseZone zone = {
+		/* version_code */ 0,
 		/* zone_id */ 1,
 		/* zone_type */ BaseZoneType::CIRCLE,
 		/* enable_monitoring */ true,

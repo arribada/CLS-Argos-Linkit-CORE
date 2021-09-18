@@ -287,6 +287,7 @@ TEST(ConfigStore, CheckZoneCreationAndPersistence)
 	{
 		BaseZone zone;
 		zone.zone_id = 1;
+		zone.hour = 12;
 		store->write_zone(zone);
 	}
 
@@ -297,6 +298,43 @@ TEST(ConfigStore, CheckZoneCreationAndPersistence)
 		store->init();
 		BaseZone &zone = store->read_zone();
 		CHECK_EQUAL(1, zone.zone_id);
+		CHECK_EQUAL(12, zone.hour);
+	}
+
+	delete store;
+}
+
+TEST(ConfigStore, CheckZoneVersionCodeMismatch)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	{
+		BaseZone zone;
+		zone.zone_id = 1;
+		zone.hour = 12;
+		store->write_zone(zone);
+	}
+
+	delete store;
+
+	// Corrupt the zone file first 4 bytes
+	{
+		// Overwrite first 4 bytes (configuration version)
+		LFSFile f(main_filesystem, "zone.dat", LFS_O_WRONLY);
+		uint8_t clobber[4];
+		f.write(clobber, sizeof(clobber));
+	}
+
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	{
+		store->init();
+		BaseZone &zone = store->read_zone();
+		CHECK_EQUAL(1, zone.zone_id);
+		CHECK_EQUAL(0, zone.hour);  // Should be reset to default zone
 	}
 
 	delete store;
@@ -322,6 +360,39 @@ TEST(ConfigStore, CheckPassPredictCreationAndPersistence)
 		store->init();
 		BasePassPredict &pp = store->read_pass_predict();
 		CHECK_EQUAL(10, pp.num_records);
+	}
+
+	delete store;
+}
+
+TEST(ConfigStore, CheckPassPredictVersionCodeMismatch)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	{
+		BasePassPredict pp;
+		pp.num_records = 10;
+		store->write_pass_predict(pp);
+	}
+
+	delete store;
+
+	// Corrupt the prepass file first 4 bytes
+	{
+		// Overwrite first 4 bytes (configuration version)
+		LFSFile f(main_filesystem, "pass_predict.dat", LFS_O_WRONLY);
+		uint8_t clobber[4];
+		f.write(clobber, sizeof(clobber));
+	}
+
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	{
+		store->init();
+		CHECK_THROWS(ErrorCode, store->read_pass_predict());
 	}
 
 	delete store;

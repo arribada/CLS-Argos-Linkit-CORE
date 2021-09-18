@@ -68,7 +68,9 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x03;
+	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x04;
+	static inline const unsigned int m_config_version_code_zone = 0x1c07e802 | 0x0;
+	static inline const unsigned int m_config_version_code_aop = 0x1c07e803 | 0x0;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
@@ -129,6 +131,7 @@ protected:
 		/* ARGOS_TX_JITTER_EN */ (bool)true,
 	}};
 	static inline const BaseZone default_zone = {
+		/* version_code */ m_config_version_code_zone,
 		/* zone_id */ 1,
 		/* zone_type */ BaseZoneType::CIRCLE,
 		/* enable_monitoring */ false,
