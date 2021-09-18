@@ -54,6 +54,7 @@ private:
 	double		 m_last_longitude;
 	double 		 m_last_latitude;
 	std::map<unsigned int, unsigned int> m_gps_entry_burst_counter;
+	std::map<unsigned int, GPSLogEntry> m_gps_log_entry;
 	std::array<unsigned int, MAX_MSG_INDEX> m_msg_burst_counter;
 	std::array<std::vector<GPSLogEntry>, MAX_MSG_INDEX> m_gps_entries;
 	std::function<void(ServiceEvent&)> m_data_notification_callback;

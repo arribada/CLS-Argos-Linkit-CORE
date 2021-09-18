@@ -2675,3 +2675,87 @@ TEST(ArgosScheduler, OutOfZoneModeChange)
 	while(!system_scheduler->run());
 
 }
+
+
+TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithNonZeroSensorLog)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0U;
+	double frequency = 900.11;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	unsigned int ntry_per_message = 0;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	bool underwater_en = false;
+	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
+	unsigned int t = 0;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
+
+	GPSLogEntry gps_entry;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.hMSL = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+
+	// Create some existing log entries -- these should not be transmitted as they a prior
+	// to the scheduler running and are not notified
+	fake_log->write(&gps_entry);
+	fake_log->write(&gps_entry);
+	fake_log->write(&gps_entry);
+
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	argos_sched->start();
+
+	// Modify GPS coordinates for "new" log entry
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 30.1;
+
+	fake_log->write(&gps_entry);
+	argos_sched->notify_sensor_log_update();
+
+	for (unsigned int i = 0; i < 10; i++) {
+		mock().expectOneCall("power_on").onObject(argos_sched);
+		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+		mock().expectOneCall("power_off").onObject(argos_sched);
+		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+		while (!system_scheduler->run());
+		STRCMP_EQUAL("FFFE2F61234567F43BC624BE44011BE000000FD0D8A6", Binascii::hexlify(mock_artic->m_last_packet).c_str());
+		t += 60;
+		fake_rtc->settime(t);
+		fake_timer->set_counter(t*1000);
+		tx_counter++;
+	}
+}
