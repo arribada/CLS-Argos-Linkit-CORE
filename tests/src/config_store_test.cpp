@@ -1075,6 +1075,27 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
 	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
 
+	// Notify battery level 1% above threshold whilst in LB mode
+	fake_battery_monitor->m_level = 11;
+
+	store->get_gnss_configuration(gnss_config);
+
+	CHECK_EQUAL(lb_acquisition_timeout, gnss_config.acquisition_timeout);
+	CHECK_TRUE(lb_dloc_arg_nom == gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(lb_gnss_en, gnss_config.enable);
+	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
+	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+
+	// Notify battery level 5% above threshold whilst in LB mode
+	fake_battery_monitor->m_level = 15;
+
+	store->get_gnss_configuration(gnss_config);
+
+	CHECK_EQUAL(acquisition_timeout, gnss_config.acquisition_timeout);
+	CHECK_TRUE(dloc_arg_nom == gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(gnss_en, gnss_config.enable);
+	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
+	CHECK_EQUAL(hdop_filter_threshold, gnss_config.hdop_filter_threshold);
 }
 
 TEST(ConfigStore, RetrieveArgosConfigDefaultMode)
@@ -1216,6 +1237,37 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
 	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+
+	// Notify battery level 1% above threshold
+	fake_battery_monitor->m_level = 11;
+
+	store->get_argos_configuration(argos_config);
+
+	CHECK_EQUAL((unsigned int)lb_depth_pile, (unsigned int)argos_config.depth_pile);
+	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
+	CHECK_EQUAL(lb_duty_cycle, argos_config.duty_cycle);
+	CHECK_EQUAL(frequency, argos_config.frequency);
+	CHECK_EQUAL((unsigned int)lb_mode, (unsigned int)argos_config.mode);
+	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
+	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
+	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+
+	// Notify battery level 5% above threshold
+	fake_battery_monitor->m_level = 15;
+
+	store->get_argos_configuration(argos_config);
+
+	CHECK_EQUAL((unsigned int)depth_pile, (unsigned int)argos_config.depth_pile);
+	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
+	CHECK_EQUAL(duty_cycle, argos_config.duty_cycle);
+	CHECK_EQUAL(frequency, argos_config.frequency);
+	CHECK_EQUAL((unsigned int)mode, (unsigned int)argos_config.mode);
+	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL((unsigned int)power, (unsigned int)argos_config.power);
+	CHECK_EQUAL(tr_nom, argos_config.tr_nom);
+	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+
 }
 
 TEST(ConfigStore, ZoneExclusionCriteriaChecking) {

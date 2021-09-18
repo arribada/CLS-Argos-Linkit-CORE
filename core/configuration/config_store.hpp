@@ -12,6 +12,8 @@
 #include "timeutils.hpp"
 
 #define MAX_CONFIG_ITEMS  (unsigned int)ParamID::__PARAM_SIZE
+#define LB_EXIT_DELTA          5
+#define LB_EXIT_THRESHOLD(x)   std::min((uint8_t)100, (uint8_t)(x + LB_EXIT_DELTA))
 
 using namespace std::string_literals;
 
@@ -347,7 +349,8 @@ public:
 		gnss_config.is_out_of_zone = is_zone_exclusion();
 		gnss_config.is_lb = false;
 
-		if (lb_en && m_battery_level <= lb_threshold) {
+		if (lb_en && (m_battery_level <= lb_threshold ||
+				(m_last_config_mode == ConfigMode::LOW_BATTERY && m_battery_level < LB_EXIT_THRESHOLD(lb_threshold)))) {
 			// Use LB mode which takes priority
 			gnss_config.is_lb = true;
 			gnss_config.enable = read_param<bool>(ParamID::LB_GNSS_EN);
@@ -425,7 +428,8 @@ public:
 		argos_config.is_out_of_zone = is_zone_exclusion();
 		argos_config.is_lb = false;
 
-		if (lb_en && m_battery_level <= lb_threshold) {
+		if (lb_en && (m_battery_level <= lb_threshold ||
+				(m_last_config_mode == ConfigMode::LOW_BATTERY && m_battery_level < LB_EXIT_THRESHOLD(lb_threshold)))) {
 			argos_config.is_lb = true;
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
 			argos_config.time_sync_burst_en = read_param<bool>(ParamID::ARGOS_TIME_SYNC_BURST_EN);
