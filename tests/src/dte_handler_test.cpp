@@ -368,6 +368,11 @@ TEST(DTEHandler, PASPW_REQ2)
 	}
 #endif
 
+	// Get last AOP date
+	req = "$PARMR#005;ART03\r";
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;PARMR#019;ART03=01/03/2021 22:39:37\r", resp.c_str());
+
 	// Get PREVIPASS results using every minute of day as start of search
 	std::time_t last_epoch = 0;
 
