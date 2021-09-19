@@ -1,0 +1,197 @@
+{
+  "creationDate" : "2021-09-19_10:54:20.887000000",
+  "satellitesInformation" : [ {
+    "satellite" : "A1",
+    "instrumentGeneration" : "ARGOS-NEO",
+    "aop" : {
+      "date" : "2021-09-18_22:42:57",
+      "semiMajorAxis" : 6890.58,
+      "semiMajorAxisDrift" : -3.3,
+      "inclination" : 97.4672,
+      "ascendantNodeLongitude" : 105.287,
+      "ascendantNodeDrift" : -23.749,
+      "orbitalPeriod" : 94.9964
+    },
+    "broadcastedStatus" : {
+      "allcastIdent" : "6",
+      "operatingStatus" : "ARGOS-Angel payload",
+      "downlinkStatus" : "Downlink transmitter OFF"
+    }
+  }, {
+    "satellite" : "MA",
+    "instrumentGeneration" : "ARGOS-3",
+    "addressADCS" : "5",
+    "aop" : {
+      "date" : "2021-09-18_22:24:00",
+      "semiMajorAxis" : 7195.535,
+      "semiMajorAxisDrift" : 0.0,
+      "inclination" : 98.4645,
+      "ascendantNodeLongitude" : 323.379,
+      "ascendantNodeDrift" : -25.341,
+      "orbitalPeriod" : 101.3586
+    },
+    "broadcastedStatus" : {
+      "allcastIdent" : "A",
+      "operatingStatus" : "ARGOS-3 payload",
+      "downlinkStatus" : "ARGOS-3 TX ON"
+    }
+  }, {
+    "satellite" : "MB",
+    "instrumentGeneration" : "ARGOS-3",
+    "addressADCS" : "3",
+    "aop" : {
+      "date" : "2021-09-18_21:59:08",
+      "semiMajorAxis" : 7195.602,
+      "semiMajorAxisDrift" : 0.0,
+      "inclination" : 98.7072,
+      "ascendantNodeLongitude" : 352.946,
+      "ascendantNodeDrift" : -25.34,
+      "orbitalPeriod" : 101.3594
+    },
+    "broadcastedStatus" : {
+      "allcastIdent" : "9",
+      "operatingStatus" : "ARGOS-3 payload",
+      "downlinkStatus" : "Downlink transmitter OFF"
+    }
+  }, {
+    "satellite" : "MC",
+    "instrumentGeneration" : "ARGOS-3",
+    "addressADCS" : "7",
+    "aop" : {
+      "date" : "2021-09-18_22:51:37",
+      "semiMajorAxis" : 7195.502,
+      "semiMajorAxisDrift" : 0.0,
+      "inclination" : 98.6784,
+      "ascendantNodeLongitude" : 339.811,
+      "ascendantNodeDrift" : -25.339,
+      "orbitalPeriod" : 101.3573
+    },
+    "broadcastedStatus" : {
+      "allcastIdent" : "B",
+      "operatingStatus" : "ARGOS-3 payload",
+      "downlinkStatus" : "ARGOS-3 TX ON"
+    }
+  }, {
+    "satellite" : "NK",
+    "instrumentGeneration" : "ARGOS-2",
+    "aop" : {
+      "date" : "2021-09-18_23:09:10",
+      "semiMajorAxis" : 7180.271,
+      "semiMajorAxisDrift" : -0.19,
+      "inclination" : 98.6755,
+      "ascendantNodeLongitude" : 304.249,
+      "ascendantNodeDrift" : -25.259,
+      "orbitalPeriod" : 101.0362
+    },
+    "broadcastedStatus" : {
+      "allcastIdent" : "5",
+      "operatingStatus" : "ARGOS-3 payload",
+      "downlinkStatus" : "Downlink transmitter OFF"
+    }
+  }, {
+    "satellite" : "NN",
+    "instrumentGeneration" : "ARGOS-2",
+    "aop" : {
+      "date" : "2021-09-18_22:34:48",
+      "semiMajorAxis" : 7225.68,
+      "semiMajorAxisDrift" : -0.89,
+      "inclination" : 98.9881,
+      "ascendantNodeLongitude" : 350.378,
+      "ascendantNodeDrift" : -25.497,
+      "orbitalPeriod" : 101.9938
+    },
+    "broadcastedStatus" : {
+      "allcastIdent" : "8",
+      "operatingStatus" : "ARGOS-3 payload",
+      "downlinkStatus" : "Downlink transmitter OFF"
+    }
+  }, {
+    "satellite" : "NP",
+    "instrumentGeneration" : "ARGOS-3",
+    "addressADCS" : "6",
+    "aop" : {
+      "date" : "2021-09-18_21:54:43",
+      "semiMajorAxis" : 7226.154,
+      "semiMajorAxisDrift" : -0.73,
+      "inclination" : 99.1796,
+      "ascendantNodeLongitude" : 318.201,
+      "ascendantNodeDrift" : -25.498,
+      "orbitalPeriod" : 102.0033
+    },
+    "broadcastedStatus" : {
+      "allcastIdent" : "C",
+      "operatingStatus" : "ARGOS-3 payload",
+      "downlinkStatus" : "Downlink transmitter OFF"
+    }
+  }, {
+    "satellite" : "SR",
+    "instrumentGeneration" : "ARGOS-3",
+    "addressADCS" : "4",
+    "aop" : {
+      "date" : "2021-09-18_22:41:36",
+      "semiMajorAxis" : 7160.137,
+      "semiMajorAxisDrift" : -0.21,
+      "inclination" : 98.5446,
+      "ascendantNodeLongitude" : 108.132,
+      "ascendantNodeDrift" : -25.153,
+      "orbitalPeriod" : 100.6125
+    },
+    "broadcastedStatus" : {
+      "allcastIdent" : "D",
+      "operatingStatus" : "ARGOS-3 payload",
+      "downlinkStatus" : "ARGOS-3 TX ON"
+    }
+  } ],
+  "allcastFormats" : [ {
+    "from" : "MA",
+    "adaptedOrbitParametersBurst" : {
+      "A1" : "00000D4500648498489095CCDA39F73865F5B42160607834",
+      "NN" : "00000BE500848498488D122AC553EEDA8B7190084DA95E85",
+      "NP" : "00000BE500C48498485510E6D7CBECDADB736A075523B992",
+      "MA" : "00000BE500A4849848890027799D26C6B2FBCF003935BD8A",
+      "MB" : "00000BE5009484984856422B159528C6BAFC120042B07A66",
+      "MC" : "00000BE500B4849848944DE97B1D2AC6AAFBAE0041908477",
+      "NK" : "00000BE50054849848C2442523CDCABCA2C02F01417371FB",
+      "SR" : "00000BE500D4849848904D8D33269EAF627189023C5686BA"
+    },
+    "constellationStatusBurst" : {
+      "A" : "00000C75007A5C900B7C500800C00D4CC8E2",
+      "B" : "000005F5006601A58900B78C00D4806E1C"
+    },
+    "timeDiffusionSampleBurst" : "00000E150820212621054208950EAD"
+  }, {
+    "from" : "MC",
+    "adaptedOrbitParametersBurst" : {
+      "A1" : "00000D4700648498489095CCDA39F73865F5B4216060D42B",
+      "NN" : "00000BE700848498488D122AC553EEDA8B7190084DA9F29A",
+      "NP" : "00000BE700C48498485510E6D7CBECDADB736A075523158D",
+      "MA" : "00000BE700A4849848890027799D26C6B2FBCF0039351195",
+      "MB" : "00000BE7009484984856422B159528C6BAFC120042B0D679",
+      "MC" : "00000BE700B4849848944DE97B1D2AC6AAFBAE0041902868",
+      "NK" : "00000BE70054849848C2442523CDCABCA2C02F014173DDE4",
+      "SR" : "00000BE700D4849848904D8D33269EAF627189023C562AA5"
+    },
+    "constellationStatusBurst" : {
+      "A" : "00000C77007A5C900B7C500800C00D4C4224",
+      "B" : "000005F7006601A58900B78C00D48068F6"
+    },
+    "timeDiffusionSampleBurst" : "00000E17082021262105420895D027"
+  }, {
+    "from" : "SR",
+    "adaptedOrbitParametersBurst" : {
+      "A1" : "00000D4400648498489095CCDA39F73865F5B4216060A62B",
+      "NN" : "00000BE400848498488D122AC553EEDA8B7190084DA9809A",
+      "NP" : "00000BE400C48498485510E6D7CBECDADB736A075523678D",
+      "MA" : "00000BE400A4849848890027799D26C6B2FBCF0039356395",
+      "MB" : "00000BE4009484984856422B159528C6BAFC120042B0A479",
+      "MC" : "00000BE400B4849848944DE97B1D2AC6AAFBAE0041905A68",
+      "NK" : "00000BE40054849848C2442523CDCABCA2C02F014173AFE4",
+      "SR" : "00000BE400D4849848904D8D33269EAF627189023C5658A5"
+    },
+    "constellationStatusBurst" : {
+      "A" : "00000C74007A5C900B7C500800C00D4C8D81",
+      "B" : "000005F4006601A58900B78C00D4806D69"
+    },
+    "timeDiffusionSampleBurst" : "00000E1408202126210542089561E8"
+  } ]
+}

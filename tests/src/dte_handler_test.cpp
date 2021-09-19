@@ -1,5 +1,7 @@
 #include <sstream>
 #include <iostream>
+#include <fstream>
+#include <string>
 
 #include "dte_handler.hpp"
 #include "config_store_fs.hpp"
@@ -11,6 +13,8 @@
 
 #include "mock_logger.hpp"
 #include "previpass.h"
+#include "binascii.hpp"
+
 
 #define BLOCK_COUNT   (256)
 #define BLOCK_SIZE    (64*1024)
@@ -68,6 +72,38 @@ TEST_GROUP(DTEHandler)
 		ram_filesystem->umount();
 		delete ram_filesystem;
 	}
+
+	std::string read_file_into_string(std::string path) {
+	    std::ifstream input_file(path);
+	    return std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+	}
+
+	std::string read_paspw_file(std::string paspw_file) {
+		std::string paspw_data = read_file_into_string(paspw_file);
+		std::string buffer;
+
+		// Each packet is of the form "0000..........." so we iteratively
+		// find each packet and concatenate it into a working buffer
+		size_t pos = 0;
+		while (1) {
+			// Find start of packet
+			pos = paspw_data.find("\"0000", pos);
+			if (pos == std::string::npos)
+				break;
+			// Find end of packet
+			pos++;
+			size_t end = paspw_data.find("\"", pos);
+			if (end == std::string::npos)
+				break;
+			std::string s = paspw_data.substr(pos, end - pos);
+			if (s.size() > 30) // Filter out any unsupported packet types
+				buffer += s;
+		}
+
+		// Unhexlify and decode the packet
+		return buffer;
+	}
+
 };
 
 
@@ -289,127 +325,26 @@ TEST(DTEHandler, ZONER_REQ)
 	CHECK_TRUE(zone == zone_resp_decoded);
 }
 
-TEST(DTEHandler, PASPW_REQ)
+TEST(DTEHandler, PASPW_REQ_DecodeDayOfYearWiderThan8Bits)
 {
 	// Supplied by CLS
-	std::string allcast_ref = "00000BE5008480208895C628AFD3EADAD37342125049EDF300000BE500C48020889505625F8BE8DB23750B1355B0FFEA00000BE500A4802088800A69B42D26C6BAFBFA003BEF619A00000BE50094802088C55528BAF528C6CAFC5E0042864CE600000BE500B480208889D26A39B528C6BAFC0D0042CB5A7F00000BE500548020888014E6BB3DCABCCAC1241143642DE100000BE500D480208895960CC7EE9CAF7A720F003C2126DC00000C75008603A5C900B7C500800C00D4CE845000005F5006607A58900B78C00D484741";
+	std::string allcast_ref = read_paspw_file("data/incorrect_aop.json");
 	std::string allcast_binary;
 
 	// Transcode to binary
-	for (unsigned int i = 0; i < allcast_ref.length(); i += 2) {
-		int byte;
-		std::stringstream converter;
-		converter << std::hex << allcast_ref.substr(i, 2);
-		converter >> byte;
-		allcast_binary.append(1, (unsigned char)byte & 0xFF);
-	}
+	allcast_binary = Binascii::unhexlify(allcast_ref);
 
-	BaseRawData paspw_raw = {0,0, allcast_binary };
+	BaseRawData paspw_raw = {0, 0, allcast_binary };
 
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::PASPW_REQ, paspw_raw);
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
 	STRCMP_EQUAL("$O;PASPW#000;\r", resp.c_str());
-
-	BasePassPredict& pass_predict = configuration_store->read_pass_predict();
-
-	std::time_t actual_aop_date = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
-	std::time_t expected_aop_date = convert_epochtime(pass_predict.records[0].bulletin.year, pass_predict.records[0].bulletin.month, pass_predict.records[0].bulletin.day, pass_predict.records[0].bulletin.hour, pass_predict.records[0].bulletin.minute, pass_predict.records[0].bulletin.second);
-	CHECK_EQUAL(expected_aop_date, actual_aop_date);
-
-	// Reload configuration store to confirm the parameter was committed
-	configuration_store->init();
-	actual_aop_date = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
-	CHECK_EQUAL(expected_aop_date, actual_aop_date);
-
-}
-
-TEST(DTEHandler, PASPW_REQ2)
-{
-	// Supplied by CLS
-	std::string allcast_ref = "00000BE500848418088455EB03DBECDAAB7238094E71CF2F00000BE500C48418089189A44D1BEADAFB744404558E604A00000BE500A4841808C90D263F8D26C6BAFBFF003A1337B000000BE5009484180896012944352AC6B2FBD1004228CCA900000BE500B484180884122AC2C528C6BAFC11004271384600000BE500548418088E4DE5E76DCABCBAC0BB02421E062600000BE500D48418088648CDE4469EAF5A7160033C34E25C00000C75008603A5C900B7C500800C00D4CE845000005F5006607A58900B78C00D48474100000BE700848418088455EB03DBECDAAB7238094E71633000000BE700C48418089189A44D1BEADAFB744404558ECC5500000BE700A4841808C90D263F8D26C6BAFBFF003A139BAF00000BE7009484180896012944352AC6B2FBD100422860B600000BE700B484180884122AC2C528C6BAFC11004271945900000BE700548418088E4DE5E76DCABCBAC0BB02421EAA3900000BE700D48418088648CDE4469EAF5A7160033C344E4300000C77008603A5C900B7C500800C00D4C758A000005F7006607A58900B78C00D48ED3B00000BE400848418088455EB03DBECDAAB7238094E71113000000BE400C48418089189A44D1BEADAFB744404558EBE5500000BE400A4841808C90D263F8D26C6BAFBFF003A13E9AF00000BE4009484180896012944352AC6B2FBD100422812B600000BE400B484180884122AC2C528C6BAFC11004271E65900000BE400548418088E4DE5E76DCABCBAC0BB02421ED83900000BE400D48418088648CDE4469EAF5A7160033C343C4300000C74008603A5C900B7C500800C00D4C2EB2000005F4006607A58900B78C00D48127C";
-	std::string allcast_binary;
-
-	// Transcode to binary
-	for (unsigned int i = 0; i < allcast_ref.length(); i += 2) {
-		int byte;
-		std::stringstream converter;
-		converter << std::hex << allcast_ref.substr(i, 2);
-		converter >> byte;
-		allcast_binary.append(1, (unsigned char)byte & 0xFF);
-	}
-
-	BaseRawData paspw_raw = {0,0, allcast_binary };
-
-	std::string resp;
-	std::string req = DTEEncoder::encode(DTECommand::PASPW_REQ, paspw_raw);
-	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PASPW#000;\r", resp.c_str());
-
-	BasePassPredict& stored_pass_predict = configuration_store->read_pass_predict();
-
-#if 0
-	for (unsigned int i = 0; i < stored_pass_predict.num_records; i++) {
-		DEBUG_TRACE("paspw[%u].satDcsId=%01x", i, stored_pass_predict.records[i].satDcsId);
-		DEBUG_TRACE("paspw[%u].satHexId=%01x", i, stored_pass_predict.records[i].satHexId);
-		DEBUG_TRACE("paspw[%u].uplinkStatus=%u", i, stored_pass_predict.records[i].uplinkStatus);
-		DEBUG_TRACE("paspw[%u].year=%u", i, stored_pass_predict.records[i].bulletin.year);
-		DEBUG_TRACE("paspw[%u].month=%u", i, stored_pass_predict.records[i].bulletin.month);
-		DEBUG_TRACE("paspw[%u].day=%u", i, stored_pass_predict.records[i].bulletin.day);
-		DEBUG_TRACE("paspw[%u].hour=%u", i, stored_pass_predict.records[i].bulletin.hour);
-		DEBUG_TRACE("paspw[%u].minute=%u", i, stored_pass_predict.records[i].bulletin.minute);
-		DEBUG_TRACE("paspw[%u].second=%u", i, stored_pass_predict.records[i].bulletin.second);
-		DEBUG_TRACE("paspw[%u].semiMajorAxisKm=%f", i, (double)stored_pass_predict.records[i].semiMajorAxisKm);
-		DEBUG_TRACE("paspw[%u].inclinationDeg=%f", i, (double)stored_pass_predict.records[i].inclinationDeg);
-		DEBUG_TRACE("paspw[%u].ascNodeLongitudeDeg=%f", i, (double)stored_pass_predict.records[i].ascNodeLongitudeDeg);
-		DEBUG_TRACE("paspw[%u].ascNodeDriftDeg=%f", i, (double)stored_pass_predict.records[i].ascNodeDriftDeg);
-		DEBUG_TRACE("paspw[%u].orbitPeriodMin=%f", i, (double)stored_pass_predict.records[i].orbitPeriodMin);
-		DEBUG_TRACE("paspw[%u].semiMajorAxisDriftMeterPerDay=%f", i, (double)stored_pass_predict.records[i].semiMajorAxisDriftMeterPerDay);
-	}
-#endif
 
 	// Get last AOP date
 	req = "$PARMR#005;ART03\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARMR#019;ART03=01/03/2021 22:39:37\r", resp.c_str());
-
-	// Get PREVIPASS results using every minute of day as start of search
-	std::time_t last_epoch = 0;
-
-	for (unsigned int minute_of_day = 0; minute_of_day < 1440; minute_of_day += 1) {
-		struct PredictionPassConfiguration_t prepasConfiguration = {
-
-			51.3764385f,                       //< Geodetic latitude of the beacon (deg.) [-90, 90]
-			-2.1182383f,                       //< Geodetic longitude of the beacon (deg.E)[0, 360]
-			{ 2021, 3, 8, (uint8_t)(minute_of_day/60), (uint8_t)(minute_of_day%60), 0 },  //< Beginning of prediction (Y/M/D, hh:mm:ss)
-			{ 2021, 3, 10, 0, 0, 0 },  //< End of prediction (Y/M/D, hh:mm:ss)
-			60.0f,                         //< Minimum elevation of passes [0, 90](default 5 deg)
-			90.0f,                        //< Maximum elevation of passes  [maxElevation >=
-										  //< minElevation] (default 90 deg)
-			1.0f,                         //< Minimum duration (default 5 minutes)
-			1000,                         //< Maximum number of passes per satellite (default
-										  //< 1000)
-			5,                            //< Linear time margin (in minutes/6months) (default
-										  //< 5 minutes/6months)
-			10                            //< Computation step (default 30s)
-		};
-
-		uint8_t nbSatsInAopTable = stored_pass_predict.num_records;
-		SatelliteNextPassPrediction_t nextPass;
-		if (PREVIPASS_compute_next_pass(
-				&prepasConfiguration,
-				stored_pass_predict.records,
-				nbSatsInAopTable,
-				&nextPass)) {
-			std::time_t t = nextPass.epoch;
-			//std::cout << std::setw(2) << std::setfill('0') << (minute_of_day/60) << ":" << std::setw(2) << std::setfill('0') << (minute_of_day%60) << ", " << std::put_time(std::gmtime(&t), "%c") << std::endl;
-			CHECK_TRUE(last_epoch <= (std::time_t)t);
-			last_epoch = t;
-		} else {
-			std::cout << std::setw(2) << std::setfill('0') << (minute_of_day/60) << ":" << std::setw(2) << std::setfill('0') << (minute_of_day%60) << ", " << "no result" << std::endl;
-			CHECK_TRUE(false);
-		}
-	}
+	STRCMP_EQUAL("$O;PARMR#019;ART03=18/09/2021 23:09:10\r", resp.c_str());
 }
 
 TEST(DTEHandler, DUMPD_REQ_SensorLog)
