@@ -10,6 +10,7 @@
 #include "fake_timer.hpp"
 #include "dte_protocol.hpp"
 #include "binascii.hpp"
+#include "timeutils.hpp"
 
 
 extern Timer *system_timer;
@@ -2765,5 +2766,114 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithNonZeroSens
 		fake_rtc->settime(t);
 		fake_timer->set_counter(t*1000);
 		tx_counter++;
+	}
+}
+
+
+TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstConfirmDepthPile16)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_16;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0U;
+	double frequency = 900.11;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	unsigned int ntry_per_message = 0;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	bool underwater_en = false;
+	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
+	uint16_t year = 2021;
+	uint8_t  month = 9, day = 21, hour = 8, minute = 58, second = 0;
+	std::time_t t;
+
+	t = convert_epochtime(year, month, day, hour, minute, second);
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
+
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	argos_sched->start();
+
+	GPSLogEntry gps_entry;
+	gps_entry.header.year = year;
+	gps_entry.header.month = month;
+	gps_entry.header.day = day;
+	gps_entry.header.hours = hour;
+	gps_entry.header.minutes = minute;
+	gps_entry.header.seconds = second;
+	gps_entry.info.onTime = 0;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = year;
+	gps_entry.info.month = month;
+	gps_entry.info.day = day;
+	gps_entry.info.hour = hour;
+	gps_entry.info.min = minute;
+	gps_entry.info.sec = second;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.hMSL = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+
+	fake_log->write(&gps_entry);
+	argos_sched->notify_sensor_log_update();
+
+	unsigned int k = 0;
+	for (unsigned int i = 0; i < 1000; i++) {
+		mock().expectOneCall("power_on").onObject(argos_sched);
+		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", (k<10) ? 176 : 304).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+		mock().expectOneCall("power_off").onObject(argos_sched);
+		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+		while (!system_scheduler->run());
+
+		t += 60;
+		fake_rtc->settime(t);
+		fake_timer->set_counter(t*1000);
+		tx_counter++;
+		k++;
+
+		if ((k % 10) == 0) {
+			convert_datetime_to_epoch(t, year, month, day, hour, minute, second);
+			printf(">>> Logging: %u/%u/%u %02u:%02u:%02u\n", (unsigned int)year, (unsigned int)month, (unsigned int)day, (unsigned int)hour, (unsigned int)minute, (unsigned int)second);
+			gps_entry.header.year = year;
+			gps_entry.header.day = day;
+			gps_entry.header.month = month;
+			gps_entry.header.hours = hour;
+			gps_entry.header.minutes = minute;
+			gps_entry.header.seconds = second;
+			gps_entry.info.batt_voltage = 3960;
+			gps_entry.info.year = year;
+			gps_entry.info.month = month;
+			gps_entry.info.day = day;
+			gps_entry.info.hour = hour;
+			gps_entry.info.min = minute;
+			gps_entry.info.sec = second;
+			fake_log->write(&gps_entry);
+			argos_sched->notify_sensor_log_update();
+		}
+
 	}
 }

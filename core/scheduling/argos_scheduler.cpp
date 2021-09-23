@@ -195,6 +195,7 @@ uint64_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 		//DEBUG_TRACE("ArgosScheduler::next_duty_cycle: now: %lu candidate schedule: %.3f elapsed: %.3f", now, (double)m_tr_nom_schedule / MS_PER_SEC, (double)elapsed_time / MS_PER_SEC);
 		if (is_in_duty_cycle(m_tr_nom_schedule, duty_cycle) && m_tr_nom_schedule >= (now * MS_PER_SEC)) {
 			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: found schedule in %.3f seconds", (double)(m_tr_nom_schedule - (now * MS_PER_SEC)) / MS_PER_SEC);
+			m_next_mode = ArgosMode::ARGOS_2;
 			return (m_tr_nom_schedule - (now * MS_PER_SEC));
 		} else {
 			uint64_t delta;
@@ -348,11 +349,9 @@ void ArgosScheduler::process_schedule() {
 	uint64_t now = rtc->gettime();
 	if (!m_switch_state && (m_earliest_tx == INVALID_SCHEDULE || m_earliest_tx <= now)) {
 		if (m_argos_config.time_sync_burst_en && !m_time_sync_burst_sent && m_num_gps_entries && rtc->is_set()) {
-			time_sync_burst_algorithm();
-		} else if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
-			pass_prediction_algorithm();
+			prepare_time_sync_burst();
 		} else {
-			periodic_algorithm();
+			prepare_normal_burst();
 		}
 	} else {
 		DEBUG_TRACE("ArgosScheduler::process_schedule: sws=%u t=%llu earliest_tx=%llu deferring transmission", m_switch_state, now, m_earliest_tx);
@@ -363,57 +362,6 @@ void ArgosScheduler::process_schedule() {
 	reschedule();
 }
 
-void ArgosScheduler::pass_prediction_algorithm() {
-	unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
-	unsigned int index = 0;
-	unsigned int max_msg_index;
-	ArgosPacket packet;
-
-	// Get latest configuration
-	configuration_store->get_argos_configuration(m_argos_config);
-
-	DEBUG_INFO("ArgosScheduler::pass_prediction_algorithm: m_msg_index=%u max_index=%u", m_msg_index, max_index);
-
-	// Find first eligible slot for transmission
-	max_msg_index = m_msg_index + max_index;
-	while (m_msg_index < max_msg_index) {
-		index = m_msg_index % max_index;
-		//DEBUG_TRACE("ArgosScheduler::pass_prediction_algorithm: m_msg_index=%u index=%u gps_entries=%u", m_msg_index, index, m_gps_entries[index].size());
-		if (m_gps_entries[index].size())
-		{
-			DEBUG_TRACE("ArgosScheduler::pass_prediction_algorithm: eligible slot=%u", index);
-			break;
-		}
-		m_msg_index++;
-	}
-
-	// No further action if no slot is eligible for transmission
-	if (m_msg_index == max_msg_index) {
-		DEBUG_WARN("ArgosScheduler::pass_prediction_algorithm: no eligible slot found");
-		m_last_transmission_schedule = m_next_prepass;
-		m_next_prepass = INVALID_SCHEDULE;
-		return;
-	}
-
-	if (m_gps_entries[index].size() == 1) {
-		build_short_packet(m_gps_entries[index][0], packet);
-		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
-	} else {
-		build_long_packet(m_gps_entries[index], packet);
-		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
-	}
-
-	m_msg_burst_counter[index]--;
-	m_msg_index++;
-	m_last_transmission_schedule = rtc->gettime();
-	m_next_prepass = INVALID_SCHEDULE;
-
-	// Check if message burst count has reached zero and perform clean-up of this slot
-	if (m_msg_burst_counter[index] == 0) {
-		m_msg_burst_counter[index] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;
-		m_gps_entries[index].clear();
-	}
-}
 
 void ArgosScheduler::notify_sensor_log_update() {
 	DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update");
@@ -425,37 +373,20 @@ void ArgosScheduler::notify_sensor_log_update() {
 		// Read the most recent GPS entry out of the sensor log
 		unsigned int idx = sensor_log->num_entries() - 1;  // Most recent entry in log
 		sensor_log->read(&gps_entry, idx);
+
 		// Update last known position if the GPS entry is valid (otherwise we preserve the last one)
 		if (gps_entry.info.valid) {
-			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: updated last known GPS position; is_rtc_set=%u",
-					rtc->is_set());
+			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: updated last known GPS position; is_rtc_set=%u @ %u/%u/%u %02u:%02u:%02u",
+					rtc->is_set(),
+					(unsigned int)gps_entry.info.year, (unsigned int)gps_entry.info.month, (unsigned int)gps_entry.info.day,
+					(unsigned int)gps_entry.info.hour, (unsigned int)gps_entry.info.min, (unsigned int)gps_entry.info.sec);
 			m_last_longitude = gps_entry.info.lon;
 			m_last_latitude = gps_entry.info.lat;
 		}
 
-		if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
-			unsigned int msg_index;
-			unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
-			unsigned int span = std::min((unsigned int)MAX_GPS_ENTRIES_IN_PACKET, (unsigned int)m_argos_config.depth_pile);
-
-			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: PASS_PREDICTION mode: max_index=%u span=%u", max_index, span);
-
-			// Find the first slot whose vector has less then depth pile entries in it
-			for (msg_index = 0; msg_index < max_index; msg_index++) {
-				if (m_gps_entries[msg_index].size() < span)
-					break;
-			}
-
-			// If a slot is found then append most recent sensor log entry to it
-			if (msg_index < max_index) {
-				m_gps_entries[msg_index].push_back(gps_entry);
-				DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: PASS_PREDICTION mode: appending entry=%u to msg_slot=%u", idx, msg_index);
-			} else {
-				DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: PASS_PREDICTION mode: no free slots");
-			}
-		}
-
-		// Keep a running track of number of GPS entries even if we are not in periodic mode
+		// Keep a running track of number of GPS entries in local cache
+		// Note that the cache is dimensioned to the maximum depth pile size of 24
+		// but only the "last N" are used when preparing a burst based on the argos config
 		{
 			// Update the GPS map based on the most recent entry
 			m_gps_entry_burst_counter[m_num_gps_entries] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;
@@ -466,16 +397,16 @@ void ArgosScheduler::notify_sensor_log_update() {
 			// Update our local count of available GPS entries (also acts as a map key and guaranteed to be unique)
 			m_num_gps_entries++;
 
-			// If the number of GPS entries exceeds the depth pile then delete the oldest entry from the GPS map so it
-			// doesn't keep growing in size
-			if (m_num_gps_entries > (unsigned int)m_argos_config.depth_pile) {
-				unsigned int index = m_num_gps_entries - (unsigned int)m_argos_config.depth_pile - 1;
+			// If the number of GPS entries exceeds the max depth pile then delete the oldest entry from the GPS map so it
+			// doesn't keep growing in size.
+			if (m_num_gps_entries > (unsigned int)BaseArgosDepthPile::DEPTH_PILE_24) {
+				unsigned int index = m_num_gps_entries - (unsigned int)BaseArgosDepthPile::DEPTH_PILE_24 - 1;
 				DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: erasing entry %u from depth pile", index);
 				m_gps_entry_burst_counter.erase(index);
 				m_gps_log_entry.erase(index);
 			}
 
-			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: m_gps_entry_burst_counter has %u/%u entries with total seen %u", m_gps_entry_burst_counter.size(), (unsigned int)m_argos_config.depth_pile, m_num_gps_entries);
+			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: depth pile has %u/24 entries with total %u seen", m_gps_entry_burst_counter.size(), m_num_gps_entries);
 		}
 		reschedule();
 	}
@@ -747,9 +678,9 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	configuration_store->save_params();
 }
 
-void ArgosScheduler::time_sync_burst_algorithm() {
+void ArgosScheduler::prepare_time_sync_burst() {
 
-	DEBUG_TRACE("ArgosScheduler::time_sync_burst_algorithm: num_gps_entries=%u", m_num_gps_entries);
+	DEBUG_TRACE("ArgosScheduler::prepare_time_sync_burst: num_gps_entries=%u", m_num_gps_entries);
 
 	if (m_num_gps_entries) {
 		ArgosPacket packet;
@@ -759,14 +690,14 @@ void ArgosScheduler::time_sync_burst_algorithm() {
 		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
 
 	} else {
-		DEBUG_ERROR("ArgosScheduler::time_sync_burst_algorithm: sensor log state is invalid, can't transmit");
+		DEBUG_ERROR("ArgosScheduler::prepare_time_sync_burst: sensor log state is invalid, can't transmit");
 	}
 
 	// Even on an error we mark the time sync burst as sent because otherwise we would enter an infinite rescheduling scenario
 	m_time_sync_burst_sent = true;
 }
 
-void ArgosScheduler::periodic_algorithm() {
+void ArgosScheduler::prepare_normal_burst() {
 	unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
 	unsigned int index = m_msg_index % max_index;
 	unsigned int span = std::min((unsigned int)MAX_GPS_ENTRIES_IN_PACKET, (unsigned int)m_argos_config.depth_pile);
@@ -778,7 +709,7 @@ void ArgosScheduler::periodic_algorithm() {
 	// Get latest configuration
 	configuration_store->get_argos_configuration(m_argos_config);
 
-	DEBUG_TRACE("ArgosScheduler::periodic_algorithm: msg_index=%u/%u span=%u num_log_entries=%u", m_msg_index % max_index, max_index, span, m_num_gps_entries);
+	DEBUG_TRACE("ArgosScheduler::prepare_normal_burst: msg_index=%u/%u span=%u num_log_entries=%u", m_msg_index % max_index, max_index, span, m_num_gps_entries);
 
 	// Mark last schedule attempt
 	m_last_transmission_schedule = (m_tr_nom_schedule / MS_PER_SEC);
@@ -807,7 +738,7 @@ void ArgosScheduler::periodic_algorithm() {
 
 		// Ensure the entire slot has at least one eligible entry
 		if (eligible_gps_count) {
-			DEBUG_TRACE("ArgosScheduler::periodic_algorithm: found %u eligible GPS entries in slot %u", eligible_gps_count, index);
+			DEBUG_TRACE("ArgosScheduler::prepare_normal_burst: found %u eligible GPS entries in slot %u", eligible_gps_count, index);
 			break;
 		}
 
@@ -816,14 +747,14 @@ void ArgosScheduler::periodic_algorithm() {
 
 	// No further action if no slot is eligible for transmission
 	if (m_msg_index == max_msg_index) {
-		DEBUG_WARN("ArgosScheduler::periodic_algorithm: no eligible slot found");
+		DEBUG_WARN("ArgosScheduler::prepare_normal_burst: no eligible slot found");
 		return;
 	}
 
 	// Handle short packet case
 	if (eligible_gps_count == 1) {
 		// If only a single eligible GPS, then use first_eligible_gps_index
-		DEBUG_TRACE("ArgosScheduler::periodic_algorithm: using short packet for log entry %u bursts remaining %u",
+		DEBUG_TRACE("ArgosScheduler::prepare_normal_burst: using short packet for log entry %u bursts remaining %u",
 				first_eligible_gps_index, m_gps_entry_burst_counter.at(first_eligible_gps_index));
 
 		// Decrement GPS entry burst counter
@@ -831,10 +762,10 @@ void ArgosScheduler::periodic_algorithm() {
 			m_gps_entry_burst_counter.at(first_eligible_gps_index)--;
 
 		build_short_packet(m_gps_log_entry.at(first_eligible_gps_index), packet);
-		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
+		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
 	} else {
 
-		DEBUG_TRACE("ArgosScheduler::periodic_algorithm: using long packet");
+		DEBUG_TRACE("ArgosScheduler::prepare_normal_burst: using long packet");
 
 		std::vector<GPSLogEntry> gps_entries;
 		for (unsigned int k = 0; k < span; k++) {
@@ -847,11 +778,17 @@ void ArgosScheduler::periodic_algorithm() {
 				m_gps_entry_burst_counter.at(idx)--;
 		}
 		build_long_packet(gps_entries, packet);
-		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
+		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
 	}
 
 	// Increment for next message slot index
 	m_msg_index++;
+
+	// Prepass specific cleanup
+	if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
+		m_last_transmission_schedule = rtc->gettime();
+		m_next_prepass = INVALID_SCHEDULE;
+	}
 }
 
 void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_callback) {
@@ -870,10 +807,6 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 	m_gps_entry_burst_counter.clear();
 	m_gps_log_entry.clear();
 	configuration_store->get_argos_configuration(m_argos_config);
-	for (unsigned int i = 0; i < MAX_MSG_INDEX; i++) {
-		m_msg_burst_counter[i] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;
-		m_gps_entries[i].clear();
-	}
 
 	// Generate TX jitter value
 	m_rng = new std::mt19937(m_argos_config.argos_id);
