@@ -42,6 +42,7 @@ public:
 		DEVICE_READY,
 		TX_DONE,
 		RX_PACKET,
+		RX_TIMEOUT,
 		ERROR
 	};
 
@@ -59,7 +60,7 @@ public:
 	virtual void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) = 0;
 	virtual void read_packet(ArgosPacket& packet, unsigned int& size) = 0;
 	virtual void set_idle() = 0;
-	virtual void set_rx_mode(const ArgosMode mode) = 0;
+	virtual void set_rx_mode(const ArgosMode mode, unsigned int timeout_ms) = 0;
 	virtual void set_frequency(const double freq) = 0;
 	virtual void set_tx_power(const BaseArgosPower power) = 0;
 
@@ -89,7 +90,7 @@ private:
 	ArgosPacket  m_packet;
 	unsigned int m_total_bits;
 	ArgosMode    m_mode;
-	unsigned int m_downlink_status;
+	uint64_t     m_downlink_end;
 
 	void reschedule();
 	void deschedule();

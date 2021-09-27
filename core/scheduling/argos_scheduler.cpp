@@ -99,10 +99,6 @@ void ArgosScheduler::reschedule() {
 		schedule = next_duty_cycle(m_argos_config.duty_cycle);
 	} else if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
 		schedule = next_prepass();
-		// If the current satellite does not support downlink transmissions
-		// and the unit is powered on, then power off the unit now
-		if (m_downlink_status == SAT_DNLK_OFF && is_powered_on())
-			power_off();
 	}
 
 	if (INVALID_SCHEDULE != schedule) {
@@ -334,7 +330,13 @@ uint64_t ArgosScheduler::next_prepass() {
 			m_next_prepass = (schedule / MS_PER_SEC);
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
 			m_prepass_duration = next_pass.duration;
-			m_downlink_status = next_pass.downlinkStatus;
+
+			// Do not update downlink status unless the existing prepass window has elapsed which is
+			// signified by m_downlink_end = INVALID_SCHEDULE.
+			if (m_downlink_end == INVALID_SCHEDULE && next_pass.downlinkStatus != SAT_DNLK_OFF) {
+				// Set new downlink window end point
+				m_downlink_end = (uint64_t)next_pass.epoch + next_pass.duration;
+			}
 			return schedule - (now * MS_PER_SEC);
 		} else {
 			DEBUG_TRACE("ArgosScheduler::next_prepass: computed schedule is too late for this window", next_pass.epoch, next_pass.duration);
@@ -788,6 +790,7 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 	m_msg_index = 0;
 	m_num_gps_entries = 0;
 	m_next_prepass = INVALID_SCHEDULE;
+	m_downlink_end = INVALID_SCHEDULE;
 	m_tr_nom_schedule = INVALID_SCHEDULE;
 	m_last_transmission_schedule = INVALID_SCHEDULE;
 	m_gps_entry_burst_counter.clear();
@@ -877,12 +880,24 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 
 		// If the satellite has downlink enabled, then check to see if we can turn on RX mode.  This depends on:
 		// a) If ARGOS_RX_EN is set
-		// b) If the next schedule is no greater than ARGOS_RX_MAX_WINDOW
-		if (m_downlink_status && m_argos_config.argos_rx_en && m_next_schedule <= (MS_PER_SEC * m_argos_config.argos_rx_max_window)) {
-			// Don't power off, enable RX mode instead
-			set_rx_mode(ArgosMode::ARGOS_3);
-		} else if (is_powered_on()) {
-			power_off();
+		// c) If the remaining duration is greater than zero
+		if (m_argos_config.argos_rx_en && m_downlink_end != INVALID_SCHEDULE) {
+			// Make sure the window end has not elapsed
+			if (m_downlink_end > (uint64_t)last_tx) {
+				// Don't power off, enable RX mode with timeout which will trigger RX_TIMEOUT event
+				unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - last_tx), m_argos_config.argos_rx_max_window);
+				set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
+			} else {
+				// Power off as prepass window has elapsed
+				m_downlink_end = INVALID_SCHEDULE;
+				if (is_powered_on())
+					power_off();
+			}
+		} else {
+			// No downlink available or RX mode is disabled
+			m_downlink_end = INVALID_SCHEDULE;
+			if (is_powered_on())
+				power_off();
 		}
 		break;
 	}
@@ -890,6 +905,14 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 	case ArgosAsyncEvent::RX_PACKET:
 		DEBUG_TRACE("ArgosScheduler::handle_event: RX_PACKET");
 		// TODO: handle RX packet
+		break;
+
+	case ArgosAsyncEvent::RX_TIMEOUT:
+		DEBUG_TRACE("ArgosScheduler::handle_event: RX_TIMEOUT");
+		m_downlink_end = INVALID_SCHEDULE;
+		if (is_powered_on()) {
+			power_off();
+		}
 		break;
 
 	case ArgosAsyncEvent::ERROR:

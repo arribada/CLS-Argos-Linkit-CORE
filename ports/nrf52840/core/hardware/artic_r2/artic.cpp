@@ -601,6 +601,8 @@ void ArticTransceiver::power_off()
 {
     DEBUG_TRACE("ArticTransceiver::power_off");
 
+    system_scheduler->cancel_task(m_rx_timeout_task);
+
     m_deferred_task_stopped = true;
 
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
@@ -714,6 +716,8 @@ bool ArticTransceiver::buffer_rx_packet() {
 		return true;
 	}
 
+	// TODO: add CRC check here
+
 	DEBUG_TRACE("ArticTransceiver::buffer_rx_packet: discarded packet length=%u", m_rx_packet_bits);
 
 	// Invalid contents, clear current packet
@@ -723,9 +727,14 @@ bool ArticTransceiver::buffer_rx_packet() {
 	return false;
 }
 
-void ArticTransceiver::set_rx_mode(const ArgosMode mode) {
+void ArticTransceiver::set_rx_mode(const ArgosMode mode, const unsigned int timeout_ms) {
 
-	DEBUG_TRACE("ArticTransceiver::set_rx_mode(%u)", (unsigned int)mode);
+	DEBUG_TRACE("ArticTransceiver::set_rx_mode(%u,%u)", (unsigned int)mode, timeout_ms);
+
+	// Start RX_TIMEOUT in software
+	m_rx_timeout_task = system_scheduler->post_task_prio([this]() {
+		m_notification_callback(ArgosAsyncEvent::RX_TIMEOUT);
+	}, "RXTimeoutTask", Scheduler::DEFAULT_PRIORITY, timeout_ms);
 
 	// Send asynchronous command to configure RX mode and start continuous RX
 	send_command_check_clean_async((mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_ARGOS_3_RX_MODE : ARTIC_CMD_SET_ARGOS_4_RX_MODE,

@@ -78,6 +78,7 @@ private:
 	NrfIRQ  *m_irq_int[2];
 	bool    m_deferred_task_stopped;
 	Scheduler::TaskHandle m_timeout_task;
+	Scheduler::TaskHandle m_rx_timeout_task;
 	bool    m_is_powered_on;
 
 	// Argos packet for TX
@@ -129,7 +130,7 @@ public:
 	void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) override;
 	void read_packet(ArgosPacket& packet, unsigned int& size) override;
 	void set_idle() override;
-	void set_rx_mode(const ArgosMode mode) override;
+	void set_rx_mode(const ArgosMode mode, unsigned int timeout_ms) override;
 	void set_frequency(const double freq) override;
 	void set_tx_power(const BaseArgosPower power) override;
 };
