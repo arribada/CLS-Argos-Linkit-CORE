@@ -741,23 +741,7 @@ protected:
 		encode(output, x);
 	}
 	static inline void encode(std::string& output, const BaseArgosMode& value) {
-		switch (value) {
-		case BaseArgosMode::OFF:
-			encode(output, 0U);
-			break;
-		case BaseArgosMode::PASS_PREDICTION:
-			encode(output, 1U);
-			break;
-		case BaseArgosMode::LEGACY:
-			encode(output, 2U);
-			break;
-		case BaseArgosMode::DUTY_CYCLE:
-			encode(output, 3U);
-			break;
-		default:
-			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
-			break;
-		}
+		encode(output, (unsigned int&)value);
 	}
 	static inline void encode(std::string& output, const BaseArgosPower& value) {
 		encode(output, (unsigned int&)value);

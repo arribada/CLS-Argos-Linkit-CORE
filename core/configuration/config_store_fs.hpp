@@ -268,14 +268,23 @@ protected:
 	void deserialize_zone() {
 		DEBUG_TRACE("ConfigurationStoreLFS::deserialize_zone");
 		LFSFile f(&m_filesystem, "zone.dat", LFS_O_RDWR);
-		if (f.read(&m_zone, sizeof(m_zone)) == sizeof(m_zone))
-			m_is_zone_valid = true;
+		if (f.read(&m_zone, sizeof(m_zone)) == sizeof(m_zone)) {
+			if (m_zone.version_code == m_config_version_code_zone)
+				m_is_zone_valid = true;
+			else
+				DEBUG_WARN("ConfigurationStoreLFS::deserialize_zone: zone file version code mismatch");
+		}
+
+		if (!m_is_zone_valid) {
+			DEBUG_TRACE("ConfigurationStoreLFS::deserialize_zone: using default zone");
+			create_default_zone();
+		}
 	}
 
 	void serialize_zone() override {
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_zone");
 		LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC);
-		m_is_zone_valid = false;
+		m_zone.version_code = m_config_version_code_zone;
 		m_is_zone_valid = f.write(&m_zone, sizeof(m_zone)) == sizeof(m_zone);
 		if (!m_is_zone_valid) {
 			DEBUG_ERROR("serialize_zone: failed to serialize zone");
@@ -286,6 +295,7 @@ protected:
 	void serialize_pass_predict() {
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_pass_predict");
 		LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC);
+		m_pass_predict.version_code = m_config_version_code_aop;
 		m_is_pass_predict_valid = false;
 		m_is_pass_predict_valid = f.write(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict);
 		if (!m_is_pass_predict_valid) {
@@ -373,8 +383,12 @@ public:
 		m_is_pass_predict_valid = false;
 		try {
 			LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_RDWR);
-			if (f.read(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict))
-				m_is_pass_predict_valid = true;
+			if (f.read(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict)) {
+				if (m_pass_predict.version_code == m_config_version_code_aop)
+					m_is_pass_predict_valid = true;
+				else
+					DEBUG_WARN("ConfigurationStoreLFS: pass predict file version code mismatch - requires configuration");
+			}
 		} catch (int e) {
 			DEBUG_WARN("Prepass file does not exist - requires configuration");
 		}

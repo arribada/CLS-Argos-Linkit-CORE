@@ -287,6 +287,7 @@ TEST(ConfigStore, CheckZoneCreationAndPersistence)
 	{
 		BaseZone zone;
 		zone.zone_id = 1;
+		zone.hour = 12;
 		store->write_zone(zone);
 	}
 
@@ -297,6 +298,43 @@ TEST(ConfigStore, CheckZoneCreationAndPersistence)
 		store->init();
 		BaseZone &zone = store->read_zone();
 		CHECK_EQUAL(1, zone.zone_id);
+		CHECK_EQUAL(12, zone.hour);
+	}
+
+	delete store;
+}
+
+TEST(ConfigStore, CheckZoneVersionCodeMismatch)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	{
+		BaseZone zone;
+		zone.zone_id = 1;
+		zone.hour = 12;
+		store->write_zone(zone);
+	}
+
+	delete store;
+
+	// Corrupt the zone file first 4 bytes
+	{
+		// Overwrite first 4 bytes (configuration version)
+		LFSFile f(main_filesystem, "zone.dat", LFS_O_WRONLY);
+		uint8_t clobber[4];
+		f.write(clobber, sizeof(clobber));
+	}
+
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	{
+		store->init();
+		BaseZone &zone = store->read_zone();
+		CHECK_EQUAL(1, zone.zone_id);
+		CHECK_EQUAL(0, zone.hour);  // Should be reset to default zone
 	}
 
 	delete store;
@@ -322,6 +360,39 @@ TEST(ConfigStore, CheckPassPredictCreationAndPersistence)
 		store->init();
 		BasePassPredict &pp = store->read_pass_predict();
 		CHECK_EQUAL(10, pp.num_records);
+	}
+
+	delete store;
+}
+
+TEST(ConfigStore, CheckPassPredictVersionCodeMismatch)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	{
+		BasePassPredict pp;
+		pp.num_records = 10;
+		store->write_pass_predict(pp);
+	}
+
+	delete store;
+
+	// Corrupt the prepass file first 4 bytes
+	{
+		// Overwrite first 4 bytes (configuration version)
+		LFSFile f(main_filesystem, "pass_predict.dat", LFS_O_WRONLY);
+		uint8_t clobber[4];
+		f.write(clobber, sizeof(clobber));
+	}
+
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	{
+		store->init();
+		CHECK_THROWS(ErrorCode, store->read_pass_predict());
 	}
 
 	delete store;
@@ -1004,6 +1075,27 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
 	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
 
+	// Notify battery level 1% above threshold whilst in LB mode
+	fake_battery_monitor->m_level = 11;
+
+	store->get_gnss_configuration(gnss_config);
+
+	CHECK_EQUAL(lb_acquisition_timeout, gnss_config.acquisition_timeout);
+	CHECK_TRUE(lb_dloc_arg_nom == gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(lb_gnss_en, gnss_config.enable);
+	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
+	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+
+	// Notify battery level 5% above threshold whilst in LB mode
+	fake_battery_monitor->m_level = 15;
+
+	store->get_gnss_configuration(gnss_config);
+
+	CHECK_EQUAL(acquisition_timeout, gnss_config.acquisition_timeout);
+	CHECK_TRUE(dloc_arg_nom == gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(gnss_en, gnss_config.enable);
+	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
+	CHECK_EQUAL(hdop_filter_threshold, gnss_config.hdop_filter_threshold);
 }
 
 TEST(ConfigStore, RetrieveArgosConfigDefaultMode)
@@ -1145,6 +1237,37 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
 	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+
+	// Notify battery level 1% above threshold
+	fake_battery_monitor->m_level = 11;
+
+	store->get_argos_configuration(argos_config);
+
+	CHECK_EQUAL((unsigned int)lb_depth_pile, (unsigned int)argos_config.depth_pile);
+	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
+	CHECK_EQUAL(lb_duty_cycle, argos_config.duty_cycle);
+	CHECK_EQUAL(frequency, argos_config.frequency);
+	CHECK_EQUAL((unsigned int)lb_mode, (unsigned int)argos_config.mode);
+	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
+	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
+	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+
+	// Notify battery level 5% above threshold
+	fake_battery_monitor->m_level = 15;
+
+	store->get_argos_configuration(argos_config);
+
+	CHECK_EQUAL((unsigned int)depth_pile, (unsigned int)argos_config.depth_pile);
+	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
+	CHECK_EQUAL(duty_cycle, argos_config.duty_cycle);
+	CHECK_EQUAL(frequency, argos_config.frequency);
+	CHECK_EQUAL((unsigned int)mode, (unsigned int)argos_config.mode);
+	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL((unsigned int)power, (unsigned int)argos_config.power);
+	CHECK_EQUAL(tr_nom, argos_config.tr_nom);
+	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
+
 }
 
 TEST(ConfigStore, ZoneExclusionCriteriaChecking) {

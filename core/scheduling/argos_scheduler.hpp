@@ -84,8 +84,7 @@ private:
 	double		 m_last_longitude;
 	double 		 m_last_latitude;
 	std::map<unsigned int, unsigned int> m_gps_entry_burst_counter;
-	std::array<unsigned int, MAX_MSG_INDEX> m_msg_burst_counter;
-	std::array<std::vector<GPSLogEntry>, MAX_MSG_INDEX> m_gps_entries;
+	std::map<unsigned int, GPSLogEntry> m_gps_log_entry;
 	std::function<void(ServiceEvent&)> m_data_notification_callback;
 	ArgosPacket  m_packet;
 	unsigned int m_total_bits;
@@ -96,9 +95,8 @@ private:
 	void deschedule();
 	void process_schedule();
 	void update_tx_jitter(int min, int max);
-	void time_sync_burst_algorithm();
-	void periodic_algorithm();
-	void pass_prediction_algorithm();
+	void prepare_time_sync_burst();
+	void prepare_normal_burst();
 	void handle_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode);
 	unsigned int convert_latitude(double x);
 	unsigned int convert_longitude(double x);

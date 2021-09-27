@@ -116,8 +116,8 @@ enum class BaseEraseType {
 
 enum class BaseArgosMode {
 	OFF,
-	LEGACY,
 	PASS_PREDICTION,
+	LEGACY,
 	DUTY_CYCLE
 };
 
@@ -201,6 +201,7 @@ enum class BaseCommsVector : uint8_t {
 };
 
 struct BaseZone {
+	unsigned int	   version_code;
 	uint8_t 	       zone_id;
 	BaseZoneType       zone_type;
 	bool               enable_monitoring;
@@ -237,6 +238,7 @@ static bool operator==(const BaseZone& lhs, const BaseZone& rhs)
 #define MAX_AOP_SATELLITE_ENTRIES		40
 
 struct BasePassPredict {
+	unsigned int	   version_code;
 	uint8_t num_records;
 	AopSatelliteEntry_t records[MAX_AOP_SATELLITE_ENTRIES];
 };

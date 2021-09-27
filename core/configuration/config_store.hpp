@@ -12,6 +12,8 @@
 #include "timeutils.hpp"
 
 #define MAX_CONFIG_ITEMS  (unsigned int)ParamID::__PARAM_SIZE
+#define LB_EXIT_DELTA          5
+#define LB_EXIT_THRESHOLD(x)   std::min((uint8_t)100, (uint8_t)(x + LB_EXIT_DELTA))
 
 using namespace std::string_literals;
 
@@ -71,6 +73,8 @@ class ConfigurationStore {
 
 protected:
 	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x04;
+	static inline const unsigned int m_config_version_code_zone = 0x1c07e802 | 0x0;
+	static inline const unsigned int m_config_version_code_aop = 0x1c07e803 | 0x0;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
@@ -133,6 +137,7 @@ protected:
 		/* ARGOS_RX_MAX_WINDOW */ 3U*60U,
 	}};
 	static inline const BaseZone default_zone = {
+		/* version_code */ m_config_version_code_zone,
 		/* zone_id */ 1,
 		/* zone_type */ BaseZoneType::CIRCLE,
 		/* enable_monitoring */ false,
@@ -348,7 +353,8 @@ public:
 		gnss_config.is_out_of_zone = is_zone_exclusion();
 		gnss_config.is_lb = false;
 
-		if (lb_en && m_battery_level <= lb_threshold) {
+		if (lb_en && (m_battery_level <= lb_threshold ||
+				(m_last_config_mode == ConfigMode::LOW_BATTERY && m_battery_level < LB_EXIT_THRESHOLD(lb_threshold)))) {
 			// Use LB mode which takes priority
 			gnss_config.is_lb = true;
 			gnss_config.enable = read_param<bool>(ParamID::LB_GNSS_EN);
@@ -426,7 +432,8 @@ public:
 		argos_config.is_out_of_zone = is_zone_exclusion();
 		argos_config.is_lb = false;
 
-		if (lb_en && m_battery_level <= lb_threshold) {
+		if (lb_en && (m_battery_level <= lb_threshold ||
+				(m_last_config_mode == ConfigMode::LOW_BATTERY && m_battery_level < LB_EXIT_THRESHOLD(lb_threshold)))) {
 			argos_config.is_lb = true;
 			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
 			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);

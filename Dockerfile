@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
 RUN apt-get -qq update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get -qq install -y wget unzip build-essential cmake ninja-build git python3 python3-pip unzip
+    DEBIAN_FRONTEND="noninteractive" apt-get -qq install -y wget unzip build-essential cmake ninja-build git python3 python3-pip unzip xxd
 
 RUN mkdir tools
 
@@ -21,7 +21,7 @@ RUN wget -q https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desk
     rm nRF-Command-Line-Tools_10_13_0_Linux-amd64.tar.gz && \
     tar -xf nRF-Command-Line-Tools_10_13_0.tar && \
     rm nRF-Command-Line-Tools_10_13_0.tar
-ENV PATH="/tools/nRF-Command-Line-Tools_10_13_0_Linux64/mergehex"
+ENV PATH="/tools/nRF-Command-Line-Tools_10_13_0_Linux64/mergehex:$PATH"
 
 # Install nrfutil
 RUN pip3 install nrfutil

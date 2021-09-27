@@ -18,7 +18,7 @@ static std::time_t convert_epochtime(uint16_t year, uint8_t month, uint8_t day, 
 	return et;
 }
 
-static void convert_day_of_year(const uint16_t year, const uint8_t day_of_year, uint8_t& month, uint16_t& day) {
+static void convert_day_of_year(const uint16_t year, const uint16_t day_of_year, uint8_t& month, uint16_t& day) {
 	std::time_t t = convert_epochtime(year, 1, 1, 0, 0, 0); // Epoch time at start of year i.e., 1st January
 	t += (day_of_year - 1) * 24 * 3600;   // Add day of year in seconds, note: we subtract 1 because day of year is 1...365
 	struct tm *tm = std::gmtime(&t); // Convert back to struct tm
