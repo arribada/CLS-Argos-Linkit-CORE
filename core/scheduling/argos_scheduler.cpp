@@ -303,7 +303,7 @@ uint64_t ArgosScheduler::next_prepass() {
 		m_earliest_tx < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS))
 	{
 		uint64_t earliest_tx = (std::max(m_earliest_tx, m_next_prepass) - curr_time) * MS_PER_SEC;
-		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling in %llu secs after SWS cleared", earliest_tx);
+		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling in %llu secs after SWS cleared", earliest_tx / MS_PER_SEC);
 		m_is_deferred = false;
 		return earliest_tx;
 	}
@@ -847,12 +847,6 @@ void ArgosScheduler::prepare_normal_burst() {
 
 	// Increment for next message slot index
 	m_msg_index++;
-
-	// Prepass specific cleanup
-	if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
-		m_last_transmission_schedule = rtc->gettime();
-		m_next_prepass = INVALID_SCHEDULE;
-	}
 }
 
 void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_callback) {
@@ -945,6 +939,13 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 
 		// Update the LAST_TX in the configuration store
 		std::time_t last_tx = rtc->gettime();
+
+		// Prepass specific cleanup
+		if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
+			m_last_transmission_schedule = last_tx;
+			m_next_prepass = INVALID_SCHEDULE;
+		}
+
 		configuration_store->write_param(ParamID::LAST_TX, last_tx);
 
 		// Increment TX counter
