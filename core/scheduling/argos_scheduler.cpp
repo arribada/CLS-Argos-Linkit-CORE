@@ -59,7 +59,12 @@ extern "C" {
 
 #define PACKET_SYNC					0xFFFE2F
 
+// The margin is the time advance supplied when in prepass mode for TX and RX operations
+// It represents the time taken for programming tasks, etc.  We advance the RX task by 3
+// seconds extra relative to the TX task to avoid race conditions when the two might
+// fire at the same time otherwise.
 #define ARGOS_TX_MARGIN_SECS        7
+#define ARGOS_RX_MARGIN_SECS        (ARGOS_TX_MARGIN_SECS + 3)
 
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
@@ -74,6 +79,65 @@ ArgosScheduler::ArgosScheduler() {
 	m_last_longitude = INVALID_GEODESIC;
 	m_last_latitude = INVALID_GEODESIC;
 	m_next_schedule = 0;
+}
+
+void ArgosScheduler::rx_reschedule() {
+
+	if (system_scheduler->is_scheduled(m_rx_task)) {
+		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already scheduled");
+		if (is_powered_on())
+			power_off();
+		return;
+	}
+
+	if (!m_argos_config.argos_rx_en) {
+		DEBUG_TRACE("ArgosScheduler::rx_reschedule: ARGOS_RX_EN is off");
+		if (is_powered_on())
+			power_off();
+		return;
+	}
+
+	if (m_downlink_end == INVALID_SCHEDULE) {
+		DEBUG_TRACE("ArgosScheduler::rx_reschedule: prepass window has no DL");
+		if (is_powered_on())
+			power_off();
+		return;
+	}
+
+	time_t now = rtc->gettime();
+	if ((uint64_t)now >= m_downlink_end) {
+		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX window has elapsed");
+		m_downlink_end = INVALID_SCHEDULE;
+		if (is_powered_on())
+			power_off();
+		return;
+	}
+
+	uint64_t start_delay_sec = ((uint64_t)now >= (m_downlink_start - ARGOS_RX_MARGIN_SECS)) ? 0 : m_downlink_start - ARGOS_RX_MARGIN_SECS - (uint64_t)now;
+
+	DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX scheduled in %llu secs", start_delay_sec);
+	m_rx_task = system_scheduler->post_task_prio([this, now]() {
+		// Check to see if we need to power on
+		if (!is_powered_on()) {
+			power_on([this](ArgosAsyncEvent event) {
+				handle_rx_event(event);
+			});
+		} else {
+			// Already powered on
+			unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - now), m_argos_config.argos_rx_max_window);
+			set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
+		}
+	}, "ScheduleDownlinkReceive", Scheduler::DEFAULT_PRIORITY, start_delay_sec * MS_PER_SEC);
+
+	// Power off if the scheduled RX is in the future
+	if (start_delay_sec > 0) {
+		if (is_powered_on())
+			power_off();
+	}
+}
+
+void ArgosScheduler::rx_deschedule() {
+	system_scheduler->cancel_task(m_rx_task);
 }
 
 void ArgosScheduler::reschedule() {
@@ -102,15 +166,18 @@ void ArgosScheduler::reschedule() {
 	}
 
 	if (INVALID_SCHEDULE != schedule) {
-		DEBUG_TRACE("ArgosScheduler: schedule in: %.3f secs", (double)schedule / MS_PER_SEC);
+		DEBUG_TRACE("ArgosScheduler: TX schedule in: %.3f secs", (double)schedule / MS_PER_SEC);
 		deschedule();
-		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this),
+		m_tx_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this),
 				"ArgosSchedulerProcessSchedule",
 				Scheduler::DEFAULT_PRIORITY, schedule);
 		m_next_schedule = schedule;
 	} else {
 		DEBUG_INFO("ArgosScheduler: not rescheduling");
 	}
+
+	// Perform any required RX scheduling
+	rx_reschedule();
 }
 
 static inline bool is_in_duty_cycle(uint64_t time_ms, unsigned int duty_cycle)
@@ -336,6 +403,8 @@ uint64_t ArgosScheduler::next_prepass() {
 			if (m_downlink_end == INVALID_SCHEDULE && next_pass.downlinkStatus != SAT_DNLK_OFF) {
 				// Set new downlink window end point
 				m_downlink_end = (uint64_t)next_pass.epoch + next_pass.duration;
+				m_downlink_start = (uint64_t)next_pass.epoch;
+				DEBUG_TRACE("next_prepass: new DL RX window = [%llu, %llu]", m_downlink_start, m_downlink_end);
 			}
 			return schedule - (now * MS_PER_SEC);
 		} else {
@@ -661,9 +730,16 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	m_total_bits = total_bits;
 	m_mode = mode;
 
+	// Abort any scheduled RX to avoid race conditions
+	rx_deschedule();
+
+	// NOTE: Always power off before transmitting since the transceiver doesn't seem to like doing
+	// a TX if RX mode has already been activated
+	if (is_powered_on())
+		power_off();
+
 	// Power on and then handle the remainder of the transmission in the async event handler
-	power_off();
-	power_on([this](ArgosAsyncEvent e) { handle_event(e); });
+	power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
 }
 
 void ArgosScheduler::prepare_time_sync_burst() {
@@ -789,6 +865,7 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 	m_time_sync_burst_sent = false;
 	m_msg_index = 0;
 	m_num_gps_entries = 0;
+	m_downlink_start = INVALID_SCHEDULE;
 	m_next_prepass = INVALID_SCHEDULE;
 	m_downlink_end = INVALID_SCHEDULE;
 	m_tr_nom_schedule = INVALID_SCHEDULE;
@@ -805,13 +882,14 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 void ArgosScheduler::stop() {
 	DEBUG_INFO("ArgosScheduler::stop");
 	deschedule();
+	rx_deschedule();
 	m_is_running = false;
 	power_off();
 	delete m_rng;
 }
 
 void ArgosScheduler::deschedule() {
-	system_scheduler->cancel_task(m_argos_task);
+	system_scheduler->cancel_task(m_tx_task);
 }
 
 void ArgosScheduler::update_tx_jitter(int min, int max) {
@@ -838,10 +916,10 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 	}
 }
 
-void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
+void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 	switch (event) {
 	case ArgosAsyncEvent::DEVICE_READY:
-		DEBUG_TRACE("ArgosScheduler::handle_event: DEVICE_READY");
+		DEBUG_TRACE("ArgosScheduler::handle_tx_event: DEVICE_READY");
 		set_frequency(m_argos_config.frequency);
 		set_tx_power(m_argos_config.power);
 		if (m_data_notification_callback) {
@@ -857,7 +935,7 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 
 	case ArgosAsyncEvent::TX_DONE:
 	{
-		DEBUG_TRACE("ArgosScheduler::handle_event: TX_DONE");
+		DEBUG_TRACE("ArgosScheduler::handle_tx_event: TX_DONE");
 		if (m_data_notification_callback) {
 	    	ServiceEvent e;
 	    	e.event_type = ServiceEventType::ARGOS_TX_END;
@@ -875,30 +953,50 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 		// Save configuration params
 		configuration_store->save_params();
 
-		// Update the schedule for the next transmission
+		// Update the schedule for the next transmission and also any pending RX
 		reschedule();
+		break;
+	}
 
-		// If the satellite has downlink enabled, then check to see if we can turn on RX mode.  This depends on:
-		// a) If ARGOS_RX_EN is set
-		// c) If the remaining duration is greater than zero
-		if (m_argos_config.argos_rx_en && m_downlink_end != INVALID_SCHEDULE) {
-			// Make sure the window end has not elapsed
-			if (m_downlink_end > (uint64_t)last_tx) {
-				// Don't power off, enable RX mode with timeout which will trigger RX_TIMEOUT event
-				unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - last_tx), m_argos_config.argos_rx_max_window);
-				set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
-			} else {
-				// Power off as prepass window has elapsed
-				m_downlink_end = INVALID_SCHEDULE;
-				if (is_powered_on())
-					power_off();
-			}
-		} else {
-			// No downlink available or RX mode is disabled
-			m_downlink_end = INVALID_SCHEDULE;
-			if (is_powered_on())
-				power_off();
+	case ArgosAsyncEvent::RX_PACKET:
+		DEBUG_TRACE("ArgosScheduler::handle_tx_event: RX_PACKET");
+		// TODO: handle RX packet
+		break;
+
+	case ArgosAsyncEvent::RX_TIMEOUT:
+		DEBUG_TRACE("ArgosScheduler::handle_tx_event: RX_TIMEOUT");
+		m_downlink_end = INVALID_SCHEDULE;
+		if (is_powered_on()) {
+			power_off();
 		}
+		break;
+
+	case ArgosAsyncEvent::ERROR:
+		DEBUG_ERROR("ArgosScheduler::handle_event: ERROR");
+		power_off();
+		break;
+
+	default:
+		break;
+	}
+}
+
+void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
+	switch (event) {
+	case ArgosAsyncEvent::DEVICE_READY:
+	{
+		DEBUG_TRACE("ArgosScheduler::handle_rx_event: DEVICE_READY");
+		set_frequency(m_argos_config.frequency);
+		std::time_t now = rtc->gettime();
+		// Enable RX mode with timeout which will trigger RX_TIMEOUT event
+		unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - now), m_argos_config.argos_rx_max_window);
+		set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
+		break;
+	}
+
+	case ArgosAsyncEvent::TX_DONE:
+	{
+		DEBUG_TRACE("ArgosScheduler::handle_rx_event: TX_DONE: bad context!!!");
 		break;
 	}
 
@@ -924,7 +1022,6 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 		break;
 	}
 }
-
 uint64_t ArgosScheduler::get_next_schedule() {
 	return m_next_schedule;
 }

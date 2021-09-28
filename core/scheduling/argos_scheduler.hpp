@@ -65,7 +65,8 @@ public:
 	virtual void set_tx_power(const BaseArgosPower power) = 0;
 
 private:
-	Scheduler::TaskHandle m_argos_task;
+	Scheduler::TaskHandle m_tx_task;
+	Scheduler::TaskHandle m_rx_task;
 	ArgosConfig  m_argos_config;
 	bool         m_switch_state;
 	bool         m_is_running;
@@ -90,8 +91,11 @@ private:
 	ArgosPacket  m_packet;
 	unsigned int m_total_bits;
 	ArgosMode    m_mode;
+	uint64_t     m_downlink_start;
 	uint64_t     m_downlink_end;
 
+	void rx_deschedule();
+	void rx_reschedule();
 	void reschedule();
 	void deschedule();
 	void process_schedule();
@@ -104,7 +108,8 @@ private:
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
 	void build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet);
 	void adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute);
-	void handle_event(ArgosAsyncEvent event);
+	void handle_tx_event(ArgosAsyncEvent event);
+	void handle_rx_event(ArgosAsyncEvent event);
 	uint64_t next_duty_cycle(unsigned int duty_cycle);
 	uint64_t next_prepass();
 };
