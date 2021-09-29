@@ -574,13 +574,50 @@ private:
 		(void)fcs;
 		DEBUG_TRACE("allcast_packet_decode: fcs: %04x", fcs);
 	}
+
 public:
+	// This decode variant knows where the packet boundaries exist, since each packet is
+	// and element in the vector, and so can recover from any packet decoding errors
 	static void decode(const std::vector<std::string>& data, BasePassPredict& pass_predict) {
-		std::string concatenated;
-		for (const auto &it : data)
-			concatenated += it;
-		decode(concatenated, pass_predict);
+		unsigned int num_records = 0;
+		pass_predict.num_records = 0;
+		std::map<uint8_t, AopSatelliteEntry_t> orbit_params;
+		std::map<uint8_t, AopSatelliteEntry_t> constellation_status;
+
+		// Build two maps of AopSatelliteEntry_t entries; one containing orbit params
+		// and the other constellation status.  We then merge the two together into BasePassPredict
+		// for entries whose satellite hex ID matches.
+		for (const auto &it : data) {
+			try {
+				unsigned int base_pos = 0;
+				allcast_packet_decode(it, base_pos, orbit_params, constellation_status);
+			} catch (...) {
+				// Ignore any errors decoding the packet and just move onto the next
+			}
+		}
+
+		// Go through orbit_params params and if we find a matching entry (by hex/dcs ID) in the
+		// constellation_status then add it into pass_predict
+		for ( const auto &it : orbit_params ) {
+			if (constellation_status.count(it.first)) {
+				if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
+					DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
+					pass_predict.records[num_records] = it.second;
+					pass_predict.records[num_records].downlinkStatus = constellation_status[it.first].downlinkStatus;
+					pass_predict.records[num_records].uplinkStatus = constellation_status[it.first].uplinkStatus;
+					num_records++;
+				} else {
+					DEBUG_WARN("PassPredictCodec::decode: Discard paspw entry a_dcs = %01x hex_id=%01x as full", it.second.satDcsId, it.second.satHexId);
+				}
+			}
+		}
+
+		// Set the number of records
+		pass_predict.num_records = num_records;
 	}
+
+	// This decode variant does not know where the packet boundaries exist and so can't
+	// recover from any decoding errors
 
 	static void decode(const std::string& data, BasePassPredict& pass_predict) {
 		unsigned int base_pos = 0, num_records = 0;

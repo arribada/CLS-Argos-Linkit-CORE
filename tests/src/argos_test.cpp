@@ -2974,6 +2974,14 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 	x = "00000BE400D4849848904D8D33269EAF627189023C5658A5";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 
+	// Throw a time sync packet into the decoder
+	x = "00000E17082021262105420895D027";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	// Throw a bad packet into the decoder
+	x = "FFFFFFFFFFFF";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
 	// Now check that the records have been updated
 	pass_predict = configuration_store->read_pass_predict();
 	CHECK_EQUAL(8, pass_predict.num_records);
