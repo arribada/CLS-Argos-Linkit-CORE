@@ -55,6 +55,7 @@
 
 #define MAX_TX_SIZE_BYTES  (31)
 #define MAX_RX_SIZE_BYTES  (27)
+#define MIN_RX_SIZE_BYTES  (7)
 
 #define MAX_BUFFER_READ  (256)
 

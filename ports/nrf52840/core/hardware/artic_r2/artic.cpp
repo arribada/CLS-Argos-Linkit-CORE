@@ -12,6 +12,7 @@
 #include "scheduler.hpp"
 #include "nrf_irq.hpp"
 #include "binascii.hpp"
+#include "crc16.hpp"
 
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
@@ -709,16 +710,22 @@ bool ArticTransceiver::buffer_rx_packet() {
 					   buffer[2];
 
 	// Make sure the size is valid and does not exceed the maximum allowed size
-	if (m_rx_packet_bits > 0 && m_rx_packet_bits <= (8 * (MAX_RX_SIZE_BYTES-3))) {
+	if (m_rx_packet_bits >= (8 * MIN_RX_SIZE_BYTES) && m_rx_packet_bits <= (8 * (MAX_RX_SIZE_BYTES-3))) {
 		// Assign payload to the locally stored RX buffer
 		m_rx_packet.assign((const char *)&buffer[3], (m_rx_packet_bits + 7) / 8);
 		DEBUG_TRACE("ArticTransceiver::buffer_rx_packet: data=%s", Binascii::hexlify(m_rx_packet).c_str());
+
+		// Compute CRC16 on the payload
+		unsigned int crc = CRC16::checksum(m_rx_packet, m_rx_packet_bits);
+		if (crc != 0) {
+			DEBUG_TRACE("ArticTransceiver::buffer_rx_packet: discarded packet owing to bad CRC");
+			return false;
+		}
+
 		return true;
 	}
 
-	// TODO: add CRC check here
-
-	DEBUG_TRACE("ArticTransceiver::buffer_rx_packet: discarded packet length=%u", m_rx_packet_bits);
+	DEBUG_TRACE("ArticTransceiver::buffer_rx_packet: discarded owing to illegal size %u bits", m_rx_packet_bits);
 
 	// Invalid contents, clear current packet
 	m_rx_packet_bits = 0;

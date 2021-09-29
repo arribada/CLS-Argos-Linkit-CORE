@@ -136,6 +136,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/argos_test.cpp"
     "src/bch_test.cpp"
     "src/crc8_test.cpp"
+    "src/crc16_test.cpp"
     "src/crc32_test.cpp"
     "src/previpass_test.cpp"
     "src/sws_test.cpp"
