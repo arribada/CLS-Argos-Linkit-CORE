@@ -2985,4 +2985,9 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 	// Now check that the records have been updated
 	pass_predict = configuration_store->read_pass_predict();
 	CHECK_EQUAL(8, pass_predict.num_records);
+
+	// Check last AOP date
+	std::time_t last_aop_update;
+	last_aop_update = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
+	CHECK_EQUAL(1632006550UL, last_aop_update);
 }

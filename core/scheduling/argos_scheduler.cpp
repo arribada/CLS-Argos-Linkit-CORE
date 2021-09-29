@@ -1063,7 +1063,9 @@ void ArgosScheduler::handle_rx_packet() {
 void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 
 	BasePassPredict existing_pass_predict;
-	bool updated_existing = false;
+	bool updated_prepass = false;
+	bool updated_last_aop = false;
+	std::time_t last_aop_update = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
 
 	// Read in the existing pass predict database
 	existing_pass_predict = configuration_store->read_pass_predict();
@@ -1097,7 +1099,12 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 					// Replace existing record
 					DEBUG_TRACE("ArgosScheduler::update_pass_predict: updating existing AOP record #%u", j);
 					existing_pass_predict.records[j] = new_pass_predict.records[i];
-					updated_existing = true;
+					updated_prepass = true;
+					if (new_epoch > last_aop_update)
+					{
+						last_aop_update = new_epoch;
+						updated_last_aop = true;
+					}
 				}
 				break;
 			}
@@ -1109,18 +1116,33 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 				existing_pass_predict.num_records < MAX_AOP_SATELLITE_ENTRIES) {
 			DEBUG_TRACE("ArgosScheduler::update_pass_predict: adding new AOP record #%u", existing_pass_predict.num_records);
 			existing_pass_predict.records[existing_pass_predict.num_records++] = new_pass_predict.records[i];
-			updated_existing = true;
+			updated_prepass = true;
 
-			// Also update the last AOP update time
-			std::time_t now = rtc->gettime();
-			configuration_store->write_param(ParamID::ARGOS_AOP_DATE, now);
-			configuration_store->save_params();
+			std::time_t new_epoch = convert_epochtime(new_pass_predict.records[i].bulletin.year,
+					new_pass_predict.records[i].bulletin.month,
+					new_pass_predict.records[i].bulletin.day,
+					new_pass_predict.records[i].bulletin.hour,
+					new_pass_predict.records[i].bulletin.minute,
+					new_pass_predict.records[i].bulletin.second);
+
+			if (new_epoch > last_aop_update)
+			{
+				last_aop_update = new_epoch;
+				updated_last_aop = true;
+			}
 		}
 	}
 
 	// Now save the new configuration if it has changed
-	if (updated_existing)
+	if (updated_prepass)
 		configuration_store->write_pass_predict(existing_pass_predict);
+
+	// Save the AOP DATE also if this has changed
+	if (updated_last_aop) {
+		configuration_store->write_param(ParamID::ARGOS_AOP_DATE, last_aop_update);
+		configuration_store->save_params();
+	}
+
 }
 
 uint64_t ArgosScheduler::get_next_schedule() {
