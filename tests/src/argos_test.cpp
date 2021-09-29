@@ -2866,3 +2866,115 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstConfirmDepthPil
 
 	}
 }
+
+TEST(ArgosScheduler, TestDownlinkReceive)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0x0U; // Not used
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	unsigned int ntry_per_message = 20;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 300;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	unsigned int dloc_arg_nom = 60*60U;
+	bool lb_en = false;
+	bool underwater_en = false;
+	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+
+	// Sample configuration provided with prepass library V3.4
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		1,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+		}
+	};
+
+	fake_config_store->write_pass_predict(pass_predict);
+
+	// Start the scheduler
+	argos_sched->start();
+
+	// Populate GPS
+	GPSLogEntry gps_entry;
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 14;
+	gps_entry.header.minutes = 1;
+	gps_entry.info.onTime = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 28;
+	gps_entry.info.hour = 14;
+	gps_entry.info.min = 1;
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.8768;
+	gps_entry.info.lat = -33.8232;
+	gps_entry.info.hMSL = 0;
+	gps_entry.info.gSpeed = 8056;  // mm/s
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+	fake_log->write(&gps_entry);
+
+	std::time_t t = 1580083200;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	argos_sched->notify_sensor_log_update();
+
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_rx_mode").onObject(argos_sched);
+
+	t += 24040;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	while (!system_scheduler->run());
+
+	std::string x = "00000C77007A5C900B7C500800C00D4C4224";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "000005F7006601A58900B78C00D48068F6";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000D4400648498489095CCDA39F73865F5B4216060A62B";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE400848498488D122AC553EEDA8B7190084DA9809A";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE400C48498485510E6D7CBECDADB736A075523678D";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE400A4849848890027799D26C6B2FBCF0039356395";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE4009484984856422B159528C6BAFC120042B0A479";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE400B4849848944DE97B1D2AC6AAFBAE0041905A68";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE40054849848C2442523CDCABCA2C02F014173AFE4";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE400D4849848904D8D33269EAF627189023C5658A5";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	// Now check that the records have been updated
+	pass_predict = configuration_store->read_pass_predict();
+	CHECK_EQUAL(8, pass_predict.num_records);
+}

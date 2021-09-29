@@ -731,7 +731,8 @@ void ArticTransceiver::set_rx_mode(const ArgosMode mode, const unsigned int time
 
 	DEBUG_TRACE("ArticTransceiver::set_rx_mode(%u,%u)", (unsigned int)mode, timeout_ms);
 
-	// Start RX_TIMEOUT in software
+	// (Re-)Start RX_TIMEOUT in software
+	system_scheduler->cancel_task(m_rx_timeout_task);
 	m_rx_timeout_task = system_scheduler->post_task_prio([this]() {
 		m_notification_callback(ArgosAsyncEvent::RX_TIMEOUT);
 	}, "RXTimeoutTask", Scheduler::DEFAULT_PRIORITY, timeout_ms);

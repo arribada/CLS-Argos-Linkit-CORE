@@ -430,7 +430,7 @@ private:
 			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status, type_a);
 			aop_entry.uplinkStatus = convert_ul_operating_status(ul_status, hex_id);
 
-			uint8_t key = aop_entry.satHexId | (a_dcs << 4);
+			uint8_t key = aop_entry.satHexId;
 			constellation_params[key] = aop_entry;
 		}
 
@@ -522,7 +522,7 @@ private:
 			aop_entry.inclinationDeg = (working / 10000.f) + 95;
 		}
 
-		uint8_t key = aop_entry.satHexId | (a_dcs << 4);
+		uint8_t key = aop_entry.satHexId;
 		if (orbit_params.count(key))
 			DEBUG_WARN("PassPredictCodec::allcast_sat_orbit_params_decode: overwriting orbit_params key=%02x", key);
 		orbit_params[key] = aop_entry;
@@ -575,8 +575,15 @@ private:
 		DEBUG_TRACE("allcast_packet_decode: fcs: %04x", fcs);
 	}
 public:
+	static void decode(const std::vector<std::string>& data, BasePassPredict& pass_predict) {
+		std::string concatenated;
+		for (const auto &it : data)
+			concatenated += it;
+		decode(concatenated, pass_predict);
+	}
+
 	static void decode(const std::string& data, BasePassPredict& pass_predict) {
-		unsigned int base_pos = 0;
+		unsigned int base_pos = 0, num_records = 0;
 		pass_predict.num_records = 0;
 		std::map<uint8_t, AopSatelliteEntry_t> orbit_params;
 		std::map<uint8_t, AopSatelliteEntry_t> constellation_status;
@@ -592,17 +599,20 @@ public:
 		// constellation_status then add it into pass_predict
 		for ( const auto &it : orbit_params ) {
 			if (constellation_status.count(it.first)) {
-				if (pass_predict.num_records < MAX_AOP_SATELLITE_ENTRIES) {
-					DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", pass_predict.num_records, it.second.satDcsId, it.second.satHexId);
-					pass_predict.records[pass_predict.num_records] = it.second;
-					pass_predict.records[pass_predict.num_records].downlinkStatus = constellation_status[it.first].downlinkStatus;
-					pass_predict.records[pass_predict.num_records].uplinkStatus = constellation_status[it.first].uplinkStatus;
-					pass_predict.num_records++;
+				if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
+					DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
+					pass_predict.records[num_records] = it.second;
+					pass_predict.records[num_records].downlinkStatus = constellation_status[it.first].downlinkStatus;
+					pass_predict.records[num_records].uplinkStatus = constellation_status[it.first].uplinkStatus;
+					num_records++;
 				} else {
 					DEBUG_WARN("PassPredictCodec::decode: Discard paspw entry a_dcs = %01x hex_id=%01x as full", it.second.satDcsId, it.second.satHexId);
 				}
 			}
 		}
+
+		// Set the number of records
+		pass_predict.num_records = num_records;
 	}
 };
 

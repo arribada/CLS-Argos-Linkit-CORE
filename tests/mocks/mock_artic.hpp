@@ -1,6 +1,7 @@
 #pragma once
 
 #include "argos_scheduler.hpp"
+#include "binascii.hpp"
 
 class MockArtic : public ArgosScheduler {
 private:
@@ -42,8 +43,8 @@ public:
 	void set_rx_mode(const ArgosMode, unsigned int) override {
 		mock().actualCall("set_rx_mode").onObject(this);
 	}
-	void inject_rx_packet(ArgosPacket& packet, unsigned int length) {
-		m_rx_packet = packet;
+	void inject_rx_packet(std::string packet, unsigned int length) {
+		m_rx_packet = Binascii::unhexlify(packet);
 		m_rx_packet_length = length;
 		m_notification_callback(ArgosAsyncEvent::RX_PACKET);
 	}

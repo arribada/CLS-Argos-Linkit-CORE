@@ -93,6 +93,7 @@ private:
 	ArgosMode    m_mode;
 	uint64_t     m_downlink_start;
 	uint64_t     m_downlink_end;
+	std::vector<ArgosPacket> m_rx_packets;
 
 	void rx_deschedule();
 	void rx_reschedule();
@@ -112,6 +113,8 @@ private:
 	void handle_rx_event(ArgosAsyncEvent event);
 	uint64_t next_duty_cycle(unsigned int duty_cycle);
 	uint64_t next_prepass();
+	void handle_rx_packet();
+	void update_pass_predict(BasePassPredict& pass_predict);
 };
 
 #endif // __ARGOS_SCHEDULER_HPP_

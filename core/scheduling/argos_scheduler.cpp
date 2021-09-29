@@ -15,6 +15,7 @@
 #include "crc8.hpp"
 #include "binascii.hpp"
 #include "battery.hpp"
+#include "dte_protocol.hpp"
 
 extern "C" {
 	#include "previpass.h"
@@ -65,6 +66,9 @@ extern "C" {
 // fire at the same time otherwise.
 #define ARGOS_TX_MARGIN_SECS        7
 #define ARGOS_RX_MARGIN_SECS        (ARGOS_TX_MARGIN_SECS + 3)
+
+// RX packet queue shall not be allowed to grow bigger than this size
+#define RX_PACKET_QUEUE_MAX_SIZE    64
 
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
@@ -961,7 +965,7 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 
 	case ArgosAsyncEvent::RX_PACKET:
 		DEBUG_TRACE("ArgosScheduler::handle_tx_event: RX_PACKET");
-		// TODO: handle RX packet
+		handle_rx_packet();
 		break;
 
 	case ArgosAsyncEvent::RX_TIMEOUT:
@@ -973,7 +977,7 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 		break;
 
 	case ArgosAsyncEvent::ERROR:
-		DEBUG_ERROR("ArgosScheduler::handle_event: ERROR");
+		DEBUG_ERROR("ArgosScheduler::handle_tx_event: ERROR");
 		power_off();
 		break;
 
@@ -986,12 +990,20 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 	switch (event) {
 	case ArgosAsyncEvent::DEVICE_READY:
 	{
-		DEBUG_TRACE("ArgosScheduler::handle_rx_event: DEVICE_READY");
-		set_frequency(m_argos_config.frequency);
 		std::time_t now = rtc->gettime();
-		// Enable RX mode with timeout which will trigger RX_TIMEOUT event
-		unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - now), m_argos_config.argos_rx_max_window);
-		set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
+
+		if ((uint64_t)now < m_downlink_end) {
+			DEBUG_TRACE("ArgosScheduler::handle_rx_event: DEVICE_READY: start RX mode");
+			// Enable RX mode with timeout which will trigger RX_TIMEOUT event
+			unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - now), m_argos_config.argos_rx_max_window);
+			set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
+		} else {
+			DEBUG_TRACE("ArgosScheduler::handle_rx_event: DEVICE_READY: insufficient time to start RX mode");
+			m_downlink_end = INVALID_SCHEDULE;
+			if (is_powered_on()) {
+				power_off();
+			}
+		}
 		break;
 	}
 
@@ -1002,12 +1014,12 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 	}
 
 	case ArgosAsyncEvent::RX_PACKET:
-		DEBUG_TRACE("ArgosScheduler::handle_event: RX_PACKET");
-		// TODO: handle RX packet
+		DEBUG_TRACE("ArgosScheduler::handle_rx_event: RX_PACKET");
+		handle_rx_packet();
 		break;
 
 	case ArgosAsyncEvent::RX_TIMEOUT:
-		DEBUG_TRACE("ArgosScheduler::handle_event: RX_TIMEOUT");
+		DEBUG_TRACE("ArgosScheduler::handle_rx_event: RX_TIMEOUT");
 		m_downlink_end = INVALID_SCHEDULE;
 		if (is_powered_on()) {
 			power_off();
@@ -1015,7 +1027,7 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 		break;
 
 	case ArgosAsyncEvent::ERROR:
-		DEBUG_ERROR("ArgosScheduler::handle_event: ERROR");
+		DEBUG_ERROR("ArgosScheduler::handle_rx_event: ERROR");
 		power_off();
 		break;
 
@@ -1023,6 +1035,89 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 		break;
 	}
 }
+
+void ArgosScheduler::handle_rx_packet() {
+
+	BasePassPredict pass_predict;
+	ArgosPacket packet;
+	unsigned int length;
+
+	read_packet(packet, length);
+
+	// Append new packet to the existing queue
+	m_rx_packets.push_back(packet);
+	DEBUG_TRACE("ArgosScheduler::handle_rx_packet: packet=%s length=%u queued=%u", Binascii::hexlify(packet).c_str(), length, m_rx_packets.size());
+
+	// If the queue has grown too large, start dropping packets from the front
+	if (m_rx_packets.size() > RX_PACKET_QUEUE_MAX_SIZE)
+		m_rx_packets.erase(m_rx_packets.begin());
+
+	// Attempt to decode the queue of packets
+	PassPredictCodec::decode(m_rx_packets, pass_predict);
+
+	// Checkt to see if any new AOP records were found
+	if (pass_predict.num_records)
+		update_pass_predict(pass_predict);
+}
+
+void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
+
+	BasePassPredict existing_pass_predict;
+	bool updated_existing = false;
+
+	// Read in the existing pass predict database
+	existing_pass_predict = configuration_store->read_pass_predict();
+
+	// The process for updating the pass predict database is as follows:
+	// a) iterate over each new record decoded
+	// b) if hex ID is present then check to replace existing record based on bulletin time
+	//    being later than the current bulletin time
+	// c) if hex ID is not present then add the record to the end of the database and
+	//    increment the record counter
+	for (unsigned int i = 0; i < new_pass_predict.num_records; i++) {
+		unsigned int j = 0;
+
+		for (; j < existing_pass_predict.num_records; j++) {
+			// Check for existing hex ID match
+			if (new_pass_predict.records[i].satHexId == existing_pass_predict.records[j].satHexId) {
+				// Now check bulletin date of new record is older than then existing record
+				std::time_t new_epoch = convert_epochtime(new_pass_predict.records[i].bulletin.year,
+						new_pass_predict.records[i].bulletin.month,
+						new_pass_predict.records[i].bulletin.day,
+						new_pass_predict.records[i].bulletin.hour,
+						new_pass_predict.records[i].bulletin.minute,
+						new_pass_predict.records[i].bulletin.second);
+				std::time_t existing_epoch = convert_epochtime(existing_pass_predict.records[j].bulletin.year,
+						existing_pass_predict.records[j].bulletin.month,
+						existing_pass_predict.records[j].bulletin.day,
+						existing_pass_predict.records[j].bulletin.hour,
+						existing_pass_predict.records[j].bulletin.minute,
+						existing_pass_predict.records[j].bulletin.second);
+				if (new_epoch > existing_epoch) {
+					// Replace existing record
+					DEBUG_TRACE("ArgosScheduler::update_pass_predict: updating existing AOP record #%u", j);
+					existing_pass_predict.records[j] = new_pass_predict.records[i];
+					updated_existing = true;
+				}
+				break;
+			}
+		}
+
+		// If we reached the end of the existing database then this is a new hex ID, so
+		// add it to the end of the existing database
+		if (j == existing_pass_predict.num_records &&
+				existing_pass_predict.num_records < MAX_AOP_SATELLITE_ENTRIES) {
+			DEBUG_TRACE("ArgosScheduler::update_pass_predict: adding new AOP record #%u", existing_pass_predict.num_records);
+			existing_pass_predict.records[existing_pass_predict.num_records++] = new_pass_predict.records[i];
+			updated_existing = true;
+		}
+	}
+
+	// Now save the new configuration if it has changed
+	if (updated_existing)
+		configuration_store->write_pass_predict(existing_pass_predict);
+}
+
 uint64_t ArgosScheduler::get_next_schedule() {
 	return m_next_schedule;
 }
