@@ -61,6 +61,7 @@ struct ArgosConfig {
 	bool argos_tx_jitter_en;
 	bool argos_rx_en;
 	unsigned int argos_rx_max_window;
+	bool gnss_en;
 };
 
 enum class ConfigMode {
@@ -435,6 +436,7 @@ public:
 		if (lb_en && (m_battery_level <= lb_threshold ||
 				(m_last_config_mode == ConfigMode::LOW_BATTERY && m_battery_level < LB_EXIT_THRESHOLD(lb_threshold)))) {
 			argos_config.is_lb = true;
+			argos_config.gnss_en = read_param<bool>(ParamID::GNSS_EN);
 			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
 			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
@@ -463,6 +465,7 @@ public:
 				m_last_config_mode = ConfigMode::LOW_BATTERY;
 			}
 		} else if (argos_config.is_out_of_zone) {
+			argos_config.gnss_en = read_param<bool>(ParamID::GNSS_EN);
 			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
 			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
@@ -500,6 +503,7 @@ public:
 			}
 		} else {
 			// Use default params
+			argos_config.gnss_en = read_param<bool>(ParamID::GNSS_EN);
 			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
 			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);

@@ -87,6 +87,11 @@ ArgosScheduler::ArgosScheduler() {
 
 void ArgosScheduler::rx_reschedule() {
 
+	if (is_rx_enabled()) {
+		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already running");
+		return;
+	}
+
 	if (system_scheduler->is_scheduled(m_rx_task)) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already scheduled");
 		if (is_powered_on())
@@ -153,7 +158,7 @@ void ArgosScheduler::reschedule() {
 	if (m_argos_config.mode == BaseArgosMode::OFF) {
 		DEBUG_WARN("ArgosScheduler: mode is OFF -- not scheduling");
 		return;
-	} else if (!rtc->is_set()) {
+	} else if (m_argos_config.gnss_en && !rtc->is_set()) {
 		DEBUG_WARN("ArgosScheduler: RTC is not yet set -- not scheduling");
 		return;
 	} else if (m_argos_config.time_sync_burst_en && !m_time_sync_burst_sent && m_num_gps_entries) {
@@ -165,8 +170,10 @@ void ArgosScheduler::reschedule() {
 		schedule = next_duty_cycle(0xFFFFFFU);
 	} else if (m_argos_config.mode == BaseArgosMode::DUTY_CYCLE) {
 		schedule = next_duty_cycle(m_argos_config.duty_cycle);
-	} else if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
+	} else if (m_argos_config.gnss_en && m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
 		schedule = next_prepass();
+	} else {
+		DEBUG_WARN("ArgosScheduler: Invalid argos mode configuration");
 	}
 
 	if (INVALID_SCHEDULE != schedule) {
@@ -244,7 +251,8 @@ uint64_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 	if (m_tr_nom_schedule == INVALID_SCHEDULE) {
 		// Use start of day as the initial TR_NOM -- we don't allow
 		// a -ve jitter amount in this case to avoid a potential -ve overflow
-		uint64_t start_of_day = (now / SECONDS_PER_DAY) * SECONDS_PER_DAY * MS_PER_SEC;
+		//uint64_t start_of_day = (now / SECONDS_PER_DAY) * SECONDS_PER_DAY * MS_PER_SEC;
+		uint64_t start_of_day = now * MS_PER_SEC;
 		update_tx_jitter(0, TX_JITTER_MS);
 		m_tr_nom_schedule = start_of_day + m_tx_jitter;
 	}
@@ -432,6 +440,8 @@ void ArgosScheduler::process_schedule() {
 	if (!m_switch_state && (m_earliest_tx == INVALID_SCHEDULE || m_earliest_tx <= now)) {
 		if (m_argos_config.time_sync_burst_en && !m_time_sync_burst_sent && m_num_gps_entries && rtc->is_set()) {
 			prepare_time_sync_burst();
+		} else if (!m_argos_config.gnss_en) {
+			prepare_doppler_burst();
 		} else {
 			prepare_normal_burst();
 		}
@@ -765,6 +775,11 @@ void ArgosScheduler::prepare_time_sync_burst() {
 	}
 }
 
+void ArgosScheduler::prepare_doppler_burst() {
+	DEBUG_TRACE("ArgosScheduler::prepare_doppler_burst");
+	// TODO
+}
+
 void ArgosScheduler::prepare_normal_burst() {
 	unsigned int max_index = (((unsigned int)m_argos_config.depth_pile + MAX_GPS_ENTRIES_IN_PACKET-1) / MAX_GPS_ENTRIES_IN_PACKET);
 	unsigned int index = m_msg_index % max_index;
@@ -875,6 +890,11 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 	// Generate TX jitter value
 	m_rng = new std::mt19937(m_argos_config.argos_id);
 	m_tx_jitter = 0;
+
+	// If GNSS_EN is off then we should schedule now as we won't receive
+	// any sensor log updates
+	if (!m_argos_config.gnss_en)
+		reschedule();
 }
 
 void ArgosScheduler::stop() {

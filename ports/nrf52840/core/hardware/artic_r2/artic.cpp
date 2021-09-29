@@ -410,6 +410,7 @@ void ArticTransceiver::hardware_init()
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
     m_is_powered_on = false;
+    m_is_rx_enabled = false;
 }
 
 void ArticTransceiver::send_fw_files(std::function<void()> on_success)
@@ -627,6 +628,7 @@ void ArticTransceiver::power_off()
 
     // Mark device as powered off
     m_is_powered_on = false;
+    m_is_rx_enabled = false;
 }
 
 ArticTransceiver::ArticTransceiver() {
@@ -638,6 +640,10 @@ ArticTransceiver::ArticTransceiver() {
 
 bool ArticTransceiver::is_powered_on() {
     return m_is_powered_on;
+}
+
+bool ArticTransceiver::is_rx_enabled() {
+    return m_is_rx_enabled;
 }
 
 void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent)> notification_callback)
@@ -737,6 +743,12 @@ bool ArticTransceiver::buffer_rx_packet() {
 void ArticTransceiver::set_rx_mode(const ArgosMode mode, const unsigned int timeout_ms) {
 
 	DEBUG_TRACE("ArticTransceiver::set_rx_mode(%u,%u)", (unsigned int)mode, timeout_ms);
+
+	if (m_is_rx_enabled)
+		return;
+
+	// Mark RX as enabled
+	m_is_rx_enabled = true;
 
 	// (Re-)Start RX_TIMEOUT in software
 	system_scheduler->cancel_task(m_rx_timeout_task);

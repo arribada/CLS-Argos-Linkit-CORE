@@ -57,6 +57,7 @@ public:
 	virtual void power_off() = 0;
 	virtual void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) = 0;
 	virtual bool is_powered_on() = 0;
+	virtual bool is_rx_enabled() = 0;
 	virtual void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) = 0;
 	virtual void read_packet(ArgosPacket& packet, unsigned int& size) = 0;
 	virtual void set_idle() = 0;
@@ -93,6 +94,7 @@ private:
 	ArgosMode    m_mode;
 	uint64_t     m_downlink_start;
 	uint64_t     m_downlink_end;
+	bool         m_is_rx_enabled;
 	std::vector<ArgosPacket> m_rx_packets;
 
 	void rx_deschedule();
@@ -103,6 +105,7 @@ private:
 	void update_tx_jitter(int min, int max);
 	void prepare_time_sync_burst();
 	void prepare_normal_burst();
+	void prepare_doppler_burst();
 	void handle_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode);
 	unsigned int convert_latitude(double x);
 	unsigned int convert_longitude(double x);

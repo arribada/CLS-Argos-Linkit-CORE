@@ -80,6 +80,7 @@ private:
 	Scheduler::TaskHandle m_timeout_task;
 	Scheduler::TaskHandle m_rx_timeout_task;
 	bool    m_is_powered_on;
+	bool    m_is_rx_enabled;
 
 	// Argos packet for TX
 	ArgosPacket m_packet_buffer;
@@ -127,6 +128,7 @@ public:
 	void power_off() override;
 	void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) override;
 	bool is_powered_on() override;
+	bool is_rx_enabled() override;
 	void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) override;
 	void read_packet(ArgosPacket& packet, unsigned int& size) override;
 	void set_idle() override;

@@ -7,6 +7,7 @@ class MockArtic : public ArgosScheduler {
 private:
 	std::function<void(ArgosAsyncEvent)> m_notification_callback;
 	static inline bool m_is_powered_on = false;
+	static inline bool m_is_rx_enabled = false;
 	ArgosPacket m_rx_packet;
 	static inline unsigned int m_rx_packet_length = 0;
 
@@ -15,10 +16,12 @@ public:
 
 	void power_off() override {
 		m_is_powered_on = false;
+		m_is_rx_enabled = false;
 		mock().actualCall("power_off").onObject(this);
 	}
 	void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) override {
 		m_is_powered_on = true;
+		m_is_rx_enabled = false;
 		mock().actualCall("power_on").onObject(this);
 		m_notification_callback = notification_callback;
 		m_notification_callback(ArgosAsyncEvent::DEVICE_READY);
@@ -40,7 +43,11 @@ public:
 	bool is_powered_on() override {
 		return m_is_powered_on;
 	}
+	bool is_rx_enabled() override {
+		return m_is_rx_enabled;
+	}
 	void set_rx_mode(const ArgosMode, unsigned int) override {
+		m_is_rx_enabled = true;
 		mock().actualCall("set_rx_mode").onObject(this);
 	}
 	void inject_rx_packet(std::string packet, unsigned int length) {
