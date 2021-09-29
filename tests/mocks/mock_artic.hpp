@@ -14,6 +14,11 @@ private:
 public:
 	std::string m_last_packet;
 
+	MockArtic() {
+		m_is_powered_on = false;
+		m_is_rx_enabled = false;
+	}
+
 	void power_off() override {
 		m_is_powered_on = false;
 		m_is_rx_enabled = false;
