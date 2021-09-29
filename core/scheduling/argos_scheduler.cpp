@@ -1110,6 +1110,11 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 			DEBUG_TRACE("ArgosScheduler::update_pass_predict: adding new AOP record #%u", existing_pass_predict.num_records);
 			existing_pass_predict.records[existing_pass_predict.num_records++] = new_pass_predict.records[i];
 			updated_existing = true;
+
+			// Also update the last AOP update time
+			std::time_t now = rtc->gettime();
+			configuration_store->write_param(ParamID::ARGOS_AOP_DATE, now);
+			configuration_store->save_params();
 		}
 	}
 
