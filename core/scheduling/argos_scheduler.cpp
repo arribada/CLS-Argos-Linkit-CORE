@@ -120,6 +120,15 @@ void ArgosScheduler::rx_reschedule() {
 		return;
 	}
 
+	if (now < (m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period))) {
+		DEBUG_TRACE("ArgosScheduler::rx_reschedule: AOP update not needed for another %lu secs",
+				(m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period)) - now);
+		m_downlink_end = INVALID_SCHEDULE;
+		if (is_powered_on())
+			power_off();
+		return;
+	}
+
 	uint64_t start_delay_sec = ((uint64_t)now >= (m_downlink_start - ARGOS_RX_MARGIN_SECS)) ? 0 : m_downlink_start - ARGOS_RX_MARGIN_SECS - (uint64_t)now;
 
 	DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX scheduled in %llu secs", start_delay_sec);
@@ -1076,7 +1085,7 @@ void ArgosScheduler::handle_rx_packet() {
 	// Attempt to decode the queue of packets
 	PassPredictCodec::decode(m_rx_packets, pass_predict);
 
-	// Checkt to see if any new AOP records were found
+	// Check to see if any new AOP records were found
 	if (pass_predict.num_records)
 		update_pass_predict(pass_predict);
 }
@@ -1084,48 +1093,28 @@ void ArgosScheduler::handle_rx_packet() {
 void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 
 	BasePassPredict existing_pass_predict;
-	bool updated_prepass = false;
-	bool updated_last_aop = false;
-	std::time_t last_aop_update = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
+	unsigned int num_updated_records = 0;
 
 	// Read in the existing pass predict database
 	existing_pass_predict = configuration_store->read_pass_predict();
 
-	// The process for updating the pass predict database is as follows:
-	// a) iterate over each new record decoded
-	// b) if hex ID is present then check to replace existing record based on bulletin time
-	//    being later than the current bulletin time
-	// c) if hex ID is not present then add the record to the end of the database and
-	//    increment the record counter
+	// Iterate over new candidate records
 	for (unsigned int i = 0; i < new_pass_predict.num_records; i++) {
 		unsigned int j = 0;
 
 		for (; j < existing_pass_predict.num_records; j++) {
 			// Check for existing hex ID match
 			if (new_pass_predict.records[i].satHexId == existing_pass_predict.records[j].satHexId) {
-				// Now check bulletin date of new record is older than then existing record
-				std::time_t new_epoch = convert_epochtime(new_pass_predict.records[i].bulletin.year,
-						new_pass_predict.records[i].bulletin.month,
-						new_pass_predict.records[i].bulletin.day,
-						new_pass_predict.records[i].bulletin.hour,
-						new_pass_predict.records[i].bulletin.minute,
-						new_pass_predict.records[i].bulletin.second);
-				std::time_t existing_epoch = convert_epochtime(existing_pass_predict.records[j].bulletin.year,
-						existing_pass_predict.records[j].bulletin.month,
-						existing_pass_predict.records[j].bulletin.day,
-						existing_pass_predict.records[j].bulletin.hour,
-						existing_pass_predict.records[j].bulletin.minute,
-						existing_pass_predict.records[j].bulletin.second);
-				if (new_epoch > existing_epoch) {
-					// Replace existing record
-					DEBUG_INFO("ArgosScheduler::update_pass_predict: updating existing AOP record #%u", j);
-					existing_pass_predict.records[j] = new_pass_predict.records[i];
-					updated_prepass = true;
-					if (new_epoch > last_aop_update)
-					{
-						last_aop_update = new_epoch;
-						updated_last_aop = true;
+				if ((new_pass_predict.records[i].downlinkStatus || new_pass_predict.records[i].uplinkStatus) &&
+						new_pass_predict.records[i].bulletin.year) {
+					if (new_pass_predict.records[i] != existing_pass_predict.records[j]) {
+						existing_pass_predict.records[j] = new_pass_predict.records[i];
+						num_updated_records++;
 					}
+				} else if (!new_pass_predict.records[i].downlinkStatus && !new_pass_predict.records[i].uplinkStatus) {
+					existing_pass_predict.records[j].downlinkStatus = new_pass_predict.records[i].downlinkStatus;
+					existing_pass_predict.records[j].uplinkStatus = new_pass_predict.records[i].uplinkStatus;
+					num_updated_records++;
 				}
 				break;
 			}
@@ -1134,36 +1123,30 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 		// If we reached the end of the existing database then this is a new hex ID, so
 		// add it to the end of the existing database
 		if (j == existing_pass_predict.num_records &&
-				existing_pass_predict.num_records < MAX_AOP_SATELLITE_ENTRIES) {
-			DEBUG_INFO("ArgosScheduler::update_pass_predict: adding new AOP record #%u", existing_pass_predict.num_records);
-			existing_pass_predict.records[existing_pass_predict.num_records++] = new_pass_predict.records[i];
-			updated_prepass = true;
-
-			std::time_t new_epoch = convert_epochtime(new_pass_predict.records[i].bulletin.year,
-					new_pass_predict.records[i].bulletin.month,
-					new_pass_predict.records[i].bulletin.day,
-					new_pass_predict.records[i].bulletin.hour,
-					new_pass_predict.records[i].bulletin.minute,
-					new_pass_predict.records[i].bulletin.second);
-
-			if (new_epoch > last_aop_update)
-			{
-				last_aop_update = new_epoch;
-				updated_last_aop = true;
+			existing_pass_predict.num_records < MAX_AOP_SATELLITE_ENTRIES) {
+			if ((new_pass_predict.records[i].downlinkStatus || new_pass_predict.records[i].uplinkStatus) &&
+					new_pass_predict.records[i].bulletin.year) {
+				existing_pass_predict.records[j] = new_pass_predict.records[i];
+				existing_pass_predict.num_records++;
+				num_updated_records++;
+			} else if (!new_pass_predict.records[i].downlinkStatus && !new_pass_predict.records[i].uplinkStatus) {
+				existing_pass_predict.records[j].downlinkStatus = new_pass_predict.records[i].downlinkStatus;
+				existing_pass_predict.records[j].uplinkStatus = new_pass_predict.records[i].uplinkStatus;
+				existing_pass_predict.num_records++;
+				num_updated_records++;
 			}
 		}
 	}
 
-	// Now save the new configuration if it has changed
-	if (updated_prepass)
+	// Check if we received a sufficient number of records
+	if (num_updated_records == new_pass_predict.num_records && num_updated_records >= existing_pass_predict.num_records) {
+		DEBUG_INFO("ArgosScheduler::update_pass_predict: committing %u AOP records", num_updated_records);
 		configuration_store->write_pass_predict(existing_pass_predict);
-
-	// Save the AOP DATE also if this has changed
-	if (updated_last_aop) {
-		configuration_store->write_param(ParamID::ARGOS_AOP_DATE, last_aop_update);
+		std::time_t new_aop_time = rtc->gettime();
+		configuration_store->write_param(ParamID::ARGOS_AOP_DATE, new_aop_time);
 		configuration_store->save_params();
+		m_rx_packets.clear();
 	}
-
 }
 
 uint64_t ArgosScheduler::get_next_schedule() {

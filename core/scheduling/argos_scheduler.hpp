@@ -1,5 +1,4 @@
-#ifndef __ARGOS_SCHEDULER_HPP_
-#define __ARGOS_SCHEDULER_HPP_
+#pragma once
 
 #include <variant>
 #include <array>
@@ -120,5 +119,3 @@ private:
 	void handle_rx_packet();
 	void update_pass_predict(BasePassPredict& pass_predict);
 };
-
-#endif // __ARGOS_SCHEDULER_HPP_

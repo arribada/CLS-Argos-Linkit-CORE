@@ -596,19 +596,25 @@ public:
 			}
 		}
 
-		// Go through orbit_params params and if we find a matching entry (by hex/dcs ID) in the
-		// constellation_status then add it into pass_predict
-		for ( const auto &it : orbit_params ) {
-			if (constellation_status.count(it.first)) {
-				if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
-					//DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
-					pass_predict.records[num_records] = it.second;
-					pass_predict.records[num_records].downlinkStatus = constellation_status[it.first].downlinkStatus;
-					pass_predict.records[num_records].uplinkStatus = constellation_status[it.first].uplinkStatus;
-					num_records++;
-				} else {
-					DEBUG_WARN("PassPredictCodec::decode: Discard paspw entry a_dcs = %01x hex_id=%01x as full", it.second.satDcsId, it.second.satHexId);
+		// Go through constellation_status and try to find a matching entry (by hex/dcs ID) in the
+		// orbit_params
+		for ( const auto &it : constellation_status ) {
+			if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
+				//DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
+
+				// Don't expect a AOP unless either downlink or uplink is operational
+				if (it.second.downlinkStatus || it.second.uplinkStatus) {
+					// AOP must be present for this record to be counted
+					if (orbit_params.count(it.first))
+						pass_predict.records[num_records] = orbit_params[it.first];
+					else
+						pass_predict.records[num_records].bulletin.year = 0;
 				}
+				pass_predict.records[num_records].downlinkStatus = it.second.downlinkStatus;
+				pass_predict.records[num_records].uplinkStatus = it.second.uplinkStatus;
+				num_records++;
+			} else {
+				DEBUG_WARN("PassPredictCodec::decode: Discard paspw entry a_dcs = %01x hex_id=%01x as full", it.second.satDcsId, it.second.satHexId);
 			}
 		}
 
@@ -632,19 +638,25 @@ public:
 			allcast_packet_decode(data, base_pos, orbit_params, constellation_status);
 		}
 
-		// Go through orbit_params params and if we find a matching entry (by hex/dcs ID) in the
-		// constellation_status then add it into pass_predict
-		for ( const auto &it : orbit_params ) {
-			if (constellation_status.count(it.first)) {
-				if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
-					//DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
-					pass_predict.records[num_records] = it.second;
-					pass_predict.records[num_records].downlinkStatus = constellation_status[it.first].downlinkStatus;
-					pass_predict.records[num_records].uplinkStatus = constellation_status[it.first].uplinkStatus;
-					num_records++;
-				} else {
-					DEBUG_WARN("PassPredictCodec::decode: Discard paspw entry a_dcs = %01x hex_id=%01x as full", it.second.satDcsId, it.second.satHexId);
+		// Go through constellation_status and try to find a matching entry (by hex/dcs ID) in the
+		// orbit_params
+		for ( const auto &it : constellation_status ) {
+			if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
+				//DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
+
+				// Don't expect a AOP unless either downlink or uplink is operational
+				if (it.second.downlinkStatus || it.second.uplinkStatus) {
+					// AOP must be present for this record to be counted
+					if (orbit_params.count(it.first))
+						pass_predict.records[num_records] = orbit_params[it.first];
+					else
+						pass_predict.records[num_records].bulletin.year = 0;
 				}
+				pass_predict.records[num_records].downlinkStatus = it.second.downlinkStatus;
+				pass_predict.records[num_records].uplinkStatus = it.second.uplinkStatus;
+				num_records++;
+			} else {
+				DEBUG_WARN("PassPredictCodec::decode: Discard paspw entry a_dcs = %01x hex_id=%01x as full", it.second.satDcsId, it.second.satHexId);
 			}
 		}
 

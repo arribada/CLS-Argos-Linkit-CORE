@@ -62,6 +62,8 @@ struct ArgosConfig {
 	bool argos_rx_en;
 	unsigned int argos_rx_max_window;
 	bool gnss_en;
+	unsigned int argos_rx_aop_update_period;
+	std::time_t last_aop_update;
 };
 
 enum class ConfigMode {
@@ -73,7 +75,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x04;
+	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x05;
 	static inline const unsigned int m_config_version_code_zone = 0x1c07e802 | 0x0;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e803 | 0x0;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
@@ -136,6 +138,7 @@ protected:
 		/* ARGOS_TX_JITTER_EN */ (bool)true,
 		/* ARGOS_RX_EN */ (bool)true,
 		/* ARGOS_RX_MAX_WINDOW */ 3U*60U,
+		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 1U,
 	}};
 	static inline const BaseZone default_zone = {
 		/* version_code */ m_config_version_code_zone,
@@ -437,6 +440,8 @@ public:
 				(m_last_config_mode == ConfigMode::LOW_BATTERY && m_battery_level < LB_EXIT_THRESHOLD(lb_threshold)))) {
 			argos_config.is_lb = true;
 			argos_config.gnss_en = read_param<bool>(ParamID::GNSS_EN);
+			argos_config.last_aop_update = read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
+			argos_config.argos_rx_aop_update_period = read_param<unsigned int>(ParamID::ARGOS_RX_AOP_UPDATE_PERIOD);
 			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
 			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
@@ -466,6 +471,8 @@ public:
 			}
 		} else if (argos_config.is_out_of_zone) {
 			argos_config.gnss_en = read_param<bool>(ParamID::GNSS_EN);
+			argos_config.last_aop_update = read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
+			argos_config.argos_rx_aop_update_period = read_param<unsigned int>(ParamID::ARGOS_RX_AOP_UPDATE_PERIOD);
 			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
 			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
@@ -504,6 +511,8 @@ public:
 		} else {
 			// Use default params
 			argos_config.gnss_en = read_param<bool>(ParamID::GNSS_EN);
+			argos_config.last_aop_update = read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
+			argos_config.argos_rx_aop_update_period = read_param<unsigned int>(ParamID::ARGOS_RX_AOP_UPDATE_PERIOD);
 			argos_config.argos_rx_max_window = read_param<unsigned int>(ParamID::ARGOS_RX_MAX_WINDOW);
 			argos_config.argos_rx_en = read_param<bool>(ParamID::ARGOS_RX_EN);
 			argos_config.argos_tx_jitter_en = read_param<bool>(ParamID::ARGOS_TX_JITTER_EN);
