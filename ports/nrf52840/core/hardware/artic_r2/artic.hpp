@@ -129,7 +129,7 @@ public:
 	void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) override;
 	bool is_powered_on() override;
 	bool is_rx_enabled() override;
-	void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) override;
+	void send_packet(ArgosPacket const& user_payload, unsigned int argos_id, unsigned int payload_length, const ArgosMode mode) override;
 	void read_packet(ArgosPacket& packet, unsigned int& size) override;
 	void set_idle() override;
 	void set_rx_mode(const ArgosMode mode, unsigned int timeout_ms) override;

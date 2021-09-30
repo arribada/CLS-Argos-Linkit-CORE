@@ -46,19 +46,17 @@ extern "C" {
 
 #define MAX_GPS_ENTRIES_IN_PACKET	4
 
-#define SHORT_PACKET_HEADER_BYTES   7
+#define SHORT_PACKET_BITS   		120
 #define SHORT_PACKET_PAYLOAD_BITS   99
-#define SHORT_PACKET_BYTES			22
-#define SHORT_PACKET_MSG_LENGTH		6
-#define SHORT_PACKET_BITFIELD       0x11
+#define SHORT_PACKET_BYTES			15
 
-#define LONG_PACKET_HEADER_BYTES    7
-#define LONG_PACKET_PAYLOAD_BITS    216
-#define LONG_PACKET_BYTES			38
-#define LONG_PACKET_MSG_LENGTH		15
-#define LONG_PACKET_BITFIELD        0x8B
+#define LONG_PACKET_BITS   			248
+#define LONG_PACKET_PAYLOAD_BITS   	216
+#define LONG_PACKET_BYTES			31
 
-#define PACKET_SYNC					0xFFFE2F
+#define DOPPLER_PACKET_BITS   		24
+#define DOPPLER_PACKET_PAYLOAD_BITS 24
+#define DOPPLER_PACKET_BYTES		3
 
 // The margin is the time advance supplied when in prepass mode for TX and RX operations
 // It represents the time taken for programming tasks, etc.  We advance the RX task by 3
@@ -514,29 +512,47 @@ unsigned int ArgosScheduler::convert_longitude(double x) {
 		return ((unsigned int)((x - 0.00005) * -LON_LAT_RESOLUTION)) | 1<<21; // -ve: bit 21 is sign
 }
 
+void ArgosScheduler::build_doppler_packet(ArgosPacket& packet) {
+
+	DEBUG_TRACE("ArgosScheduler::build_doppler_packet");
+	unsigned int base_pos = 0;
+
+	// Reserve required number of bytes
+	packet.assign(DOPPLER_PACKET_BYTES, 0);
+
+	// Payload bytes
+	PACK_BITS(0, packet, base_pos, 8);  // Zero CRC field (computed later)
+
+	unsigned int last_known_pos = 0;
+	PACK_BITS(last_known_pos, packet, base_pos, 8);
+	DEBUG_TRACE("ArgosScheduler::build_doppler_packet: last_known_pos=%u", (unsigned int)last_known_pos);
+
+	unsigned int batt_voltage = battery_monitor->get_voltage();
+	unsigned int batt = std::min(127, std::max((int)batt_voltage - 2700, (int)0) / MV_PER_UNIT);
+	PACK_BITS(batt, packet, base_pos, 7);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: voltage=%u (%u)", (unsigned int)batt, (unsigned int)batt_voltage);
+
+	// LOWBATERY_FLAG
+	PACK_BITS(m_argos_config.is_lb, packet, base_pos, 1);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: is_lb=%u", (unsigned int)m_argos_config.is_lb);
+
+	// Calculate CRC8
+	unsigned char crc8 = CRC8::checksum(packet.substr(1), DOPPLER_PACKET_PAYLOAD_BITS - 8);
+	unsigned int crc_offset = 0;
+	PACK_BITS(crc8, packet, crc_offset, 8);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: crc8=%02x", crc8);
+}
+
 void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet) {
 
 	DEBUG_TRACE("ArgosScheduler::build_short_packet");
-
-#ifndef ARGOS_TEST_PACKET
 	unsigned int base_pos = 0;
 
 	// Reserve required number of bytes
 	packet.assign(SHORT_PACKET_BYTES, 0);
 
-	// Header bytes
-	PACK_BITS(PACKET_SYNC, packet, base_pos, 24);
-	PACK_BITS(SHORT_PACKET_MSG_LENGTH, packet, base_pos, 4);
-	PACK_BITS(m_argos_config.argos_id>>8, packet, base_pos, 20);
-	PACK_BITS(m_argos_config.argos_id, packet, base_pos, 8);
-
 	// Payload bytes
-#ifdef ARGOS_USE_CRC8
 	PACK_BITS(0, packet, base_pos, 8);  // Zero CRC field (computed later)
-#else
-	PACK_BITS(SHORT_PACKET_BITFIELD, packet, base_pos, 8);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: bitfield=%u", SHORT_PACKET_BITFIELD);
-#endif
 	PACK_BITS(gps_entry.info.day, packet, base_pos, 5);
 	DEBUG_TRACE("ArgosScheduler::build_short_packet: day=%u", (unsigned int)gps_entry.info.day);
 	PACK_BITS(gps_entry.info.hour, packet, base_pos, 5);
@@ -593,28 +609,20 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 	DEBUG_TRACE("ArgosScheduler::build_short_packet: is_lb=%u", (unsigned int)m_argos_config.is_lb);
 
 	// Calculate CRC8
-#ifdef ARGOS_USE_CRC8
-	unsigned char crc8 = CRC8::checksum(packet.substr(SHORT_PACKET_HEADER_BYTES+1), SHORT_PACKET_PAYLOAD_BITS - 8);
-	unsigned int crc_offset = 8*SHORT_PACKET_HEADER_BYTES;
+	unsigned char crc8 = CRC8::checksum(packet.substr(1), SHORT_PACKET_PAYLOAD_BITS - 8);
+	unsigned int crc_offset = 0;
 	PACK_BITS(crc8, packet, crc_offset, 8);
 	DEBUG_TRACE("ArgosScheduler::build_short_packet: crc8=%02x", crc8);
-#endif
 
 	// BCH code B127_106_3
 	BCHCodeWord code_word = BCHEncoder::encode(
 			BCHEncoder::B127_106_3,
 			sizeof(BCHEncoder::B127_106_3),
-			packet.substr(SHORT_PACKET_HEADER_BYTES), SHORT_PACKET_PAYLOAD_BITS);
+			packet, SHORT_PACKET_PAYLOAD_BITS);
 	DEBUG_TRACE("ArgosScheduler::build_short_packet: bch=%06x", code_word);
 
 	// Append BCH code
 	PACK_BITS(code_word, packet, base_pos, BCHEncoder::B127_106_3_CODE_LEN);
-#else
-
-	// Send a nail-up test packet
-	packet = std::string("\xFF\xFF\xFF\x64\xE7\xB5\x6A\xC1\x47\xCA\x6B\x48\x17\xC7\x65\xDC\x8A\x2A\x9D\xA1\xE2\x18"s);
-
-#endif
 }
 
 void ArgosScheduler::adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute)
@@ -643,19 +651,8 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	// Reserve required number of bytes
 	packet.assign(LONG_PACKET_BYTES, 0);
 
-	// Header bytes
-	PACK_BITS(PACKET_SYNC, packet, base_pos, 24);
-	PACK_BITS(LONG_PACKET_MSG_LENGTH, packet, base_pos, 4);
-	PACK_BITS(m_argos_config.argos_id>>8, packet, base_pos, 20);
-	PACK_BITS(m_argos_config.argos_id, packet, base_pos, 8);
-
 	// Payload bytes
-#ifdef ARGOS_USE_CRC8
 	PACK_BITS(0, packet, base_pos, 8);  // Zero CRC field (computed later)
-#else
-	PACK_BITS(LONG_PACKET_BITFIELD, packet, base_pos, 8);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: bitfield=%u", LONG_PACKET_BITFIELD);
-#endif
 
 	// This will adjust the log time for the GPS on time since we want the time
 	// of when the GPS was scheduled and not the log time
@@ -715,18 +712,16 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	}
 
 	// Calculate CRC8
-#ifdef ARGOS_USE_CRC8
-	unsigned char crc8 = CRC8::checksum(packet.substr(LONG_PACKET_HEADER_BYTES+1), LONG_PACKET_PAYLOAD_BITS - 8);
-	unsigned int crc_offset = 8*LONG_PACKET_HEADER_BYTES;
+	unsigned char crc8 = CRC8::checksum(packet.substr(1), LONG_PACKET_PAYLOAD_BITS - 8);
+	unsigned int crc_offset = 0;
 	PACK_BITS(crc8, packet, crc_offset, 8);
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: crc8=%02x", crc8);
-#endif
 
 	// BCH code B255_223_4
 	BCHCodeWord code_word = BCHEncoder::encode(
 			BCHEncoder::B255_223_4,
 			sizeof(BCHEncoder::B255_223_4),
-			packet.substr(LONG_PACKET_HEADER_BYTES), LONG_PACKET_PAYLOAD_BITS);
+			packet, LONG_PACKET_PAYLOAD_BITS);
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: bch=%08x", code_word);
 
 	// Append BCH code
@@ -736,7 +731,7 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) {
 	DEBUG_INFO("ArgosScheduler::handle_packet: battery=%.2lfV freq=%lf power=%s mode=%s",
 			   (double)battery_monitor->get_voltage() / 1000, m_argos_config.frequency, argos_power_to_string(m_argos_config.power), argos_mode_to_string(mode));
-	DEBUG_INFO("ArgosScheduler::handle_packet: data=%s", Binascii::hexlify(packet).c_str());
+	DEBUG_INFO("ArgosScheduler::handle_packet: argos_id=%07x data=%s", Binascii::hexlify(packet).c_str());
 
 	// Store parameters for deferred processing
 	m_packet = packet;
@@ -767,7 +762,7 @@ void ArgosScheduler::prepare_time_sync_burst() {
 		unsigned int index = m_num_gps_entries - 1;
 
 		build_short_packet(m_gps_log_entry.at(index), packet);
-		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
+		handle_packet(packet, SHORT_PACKET_BITS, ArgosMode::ARGOS_2);
 
 	} else {
 		DEBUG_ERROR("ArgosScheduler::prepare_time_sync_burst: sensor log state is invalid, can't transmit");
@@ -776,7 +771,13 @@ void ArgosScheduler::prepare_time_sync_burst() {
 
 void ArgosScheduler::prepare_doppler_burst() {
 	DEBUG_TRACE("ArgosScheduler::prepare_doppler_burst");
-	// TODO
+
+	// Mark last schedule attempt
+	m_last_transmission_schedule = (m_tr_nom_schedule / MS_PER_SEC);
+
+	ArgosPacket packet;
+	build_doppler_packet(packet);
+	handle_packet(packet, DOPPLER_PACKET_BITS, m_next_mode);
 }
 
 void ArgosScheduler::prepare_normal_burst() {
@@ -844,7 +845,7 @@ void ArgosScheduler::prepare_normal_burst() {
 			m_gps_entry_burst_counter.at(first_eligible_gps_index)--;
 
 		build_short_packet(m_gps_log_entry.at(first_eligible_gps_index), packet);
-		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
+		handle_packet(packet, SHORT_PACKET_BITS, m_next_mode);
 	} else {
 
 		DEBUG_TRACE("ArgosScheduler::prepare_normal_burst: using long packet");
@@ -860,7 +861,7 @@ void ArgosScheduler::prepare_normal_burst() {
 				m_gps_entry_burst_counter.at(idx)--;
 		}
 		build_long_packet(gps_entries, packet);
-		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
+		handle_packet(packet, LONG_PACKET_BITS, m_next_mode);
 	}
 
 	// Increment for next message slot index
@@ -947,7 +948,7 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 		}
 
 		// This will generate TX_DONE event when finished
-		send_packet(m_packet, m_total_bits, m_mode);
+		send_packet(m_packet, m_argos_config.argos_id, m_total_bits, m_mode);
 		break;
 
 	case ArgosAsyncEvent::TX_DONE:

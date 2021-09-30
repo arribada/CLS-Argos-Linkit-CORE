@@ -783,59 +783,94 @@ void ArticTransceiver::set_rx_mode(const ArgosMode mode, const unsigned int time
 	});
 }
 
-void ArticTransceiver::send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode)
+void ArticTransceiver::send_packet(ArgosPacket const& user_payload, unsigned int argos_id, unsigned int payload_length, const ArgosMode mode)
 {
-	unsigned int num_tail_bits = 0;
-	uint8_t cmd;
+	ArgosPacket packet;
+	unsigned int total_bits;
+	unsigned int stuffing_bits = 0;
 
-    // Number of tails bits is zero for A2 and non-zero for A3
-	switch (mode) {
-	case ArgosMode::ARGOS_2:
-		cmd = ARTIC_CMD_SET_PTT_A2_TX_MODE;
-		break;
-	case ArgosMode::ARGOS_3:
-		cmd = ARTIC_CMD_SET_PTT_A3_TX_MODE;
-		num_tail_bits = (total_bits >= ARTIC_PTT_A3_248_MAX_USER_BITS) ? ARTIC_PTT_A3_248_MSG_NUM_TAIL_BITS : ARTIC_PTT_A3_120_MSG_NUM_TAIL_BITS;
-		break;
-	case ArgosMode::ARGOS_4:
-	default:
-		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
-		break;
+	// Only A2/A3 mode is supported
+	if ((payload_length + 8) & 31) {
+		// Stuff zeros at the end to align to nearest boundary
+		stuffing_bits = 32 - ((payload_length + 8) % 32);
+		DEBUG_TRACE("ArticTransceiver::send_packet: adding %u stuffing bits for alignment", stuffing_bits);
 	}
 
-	// Copy the requested packet
-	m_packet_buffer = packet;
+	uint8_t length_encoded[] = { 0x0, 0x3, 0x5, 0x6, 0x9, 0xA, 0xC, 0xF };
+	unsigned int length_idx = (payload_length - 8) / 32;
+	unsigned int length_enc = length_encoded[length_idx];
+
+	unsigned int num_tail_bits = 0; // A2 mode
+	if (mode == ArgosMode::ARGOS_3) {
+		uint8_t tail_bits[] = { 7, 8, 9, 7, 8, 9, 7, 8 };
+		num_tail_bits = tail_bits[length_idx];
+	}
+	unsigned int op_offset = 24;  // Keep first 24 bits spare for length field
+	unsigned int ip_offset = 0;
+
+	// Transmission is:
+	// MSG_LEN (4)
+	// ARGOSID (28)
+	// USER_PAYLOAD (n*32 - 8)
+	// STUFFING_BITS
+	// TAIL_BITS (7,8,9)
+	total_bits = 28 + 4 + payload_length + stuffing_bits + num_tail_bits;
+
+	// Assign the buffer to include 24-bit length indicator and rounded-up to 3 bytes for XMEM alignment
+	packet.assign(((((total_bits + 24) + 23) / 24) * 24) / 8, 0);
+
+	// Set header
+	PACK_BITS(length_enc, packet, op_offset, 4);
+	PACK_BITS(argos_id>>8, packet, op_offset, 20);
+	PACK_BITS(argos_id, packet, op_offset, 8);
+
+	// Append user payload
+	unsigned int payload_bits_remaining = payload_length;
+	uint8_t byte;
+	while (payload_bits_remaining) {
+		unsigned int bits = std::min(8U, payload_bits_remaining);
+		payload_bits_remaining -= bits;
+		EXTRACT_BITS(byte, user_payload, ip_offset, bits);
+		PACK_BITS(byte, packet, op_offset, bits);
+	}
+
+	// Add any stuffing bits
+	payload_bits_remaining = stuffing_bits;
+	while (payload_bits_remaining) {
+		unsigned int bits = std::min(8U, payload_bits_remaining);
+		payload_bits_remaining -= bits;
+		PACK_BITS(0, packet, op_offset, bits);
+	}
+
+	// Add tail bits
+	PACK_BITS(0, packet, op_offset, num_tail_bits);
+
+	// Setup TX mode
+	uint8_t cmd = (mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_PTT_A3_TX_MODE : ARTIC_CMD_SET_PTT_A2_TX_MODE;
 
 	// Send asynchronous command to enable TX mode and start packet transfer
 	send_command_check_clean_async(cmd, INTERRUPT_1, MCU_COMMAND_ACCEPTED, SAT_ARTIC_DELAY_INTERRUPT_MS,
-		[this, num_tail_bits, total_bits]() {
-			// Append tail bits to the packet
-			m_packet_buffer.append((num_tail_bits + 7)/8, 0);
+		[this, total_bits, num_tail_bits, packet]() {
 
-			// Round-up to the nearest multiple of 3 bytes (which is the XMEM burst size)
-			m_packet_buffer.append((3 - (m_packet_buffer.length() % 3)) % 3, 0);
+		// Set 24-bit total length field (required at the head of the packet data)
+		uint8_t *buffer = (uint8_t *)packet.data();
+		buffer[0] = total_bits >> 16;
+		buffer[1] = total_bits >> 8;
+		buffer[2] = total_bits;
+	    burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)buffer, nullptr, packet.length(), false);
 
-			// Overwrite first 24-bit SYNC with the 24-bit total length field (required at the head of the packet data)
-			// this length must exclude the 24-bit header itself
-			uint8_t *buffer = (uint8_t *)m_packet_buffer.c_str();
-			buffer[0] = ((total_bits + num_tail_bits - 24) >> 16);
-			buffer[1] = ((total_bits + num_tail_bits - 24) >> 8);
-			buffer[2] = (total_bits + num_tail_bits - 24);
-			burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)buffer, nullptr, m_packet_buffer.length(), false);
+		print_status();
 
-			print_status();
+		DEBUG_TRACE("ArticTransceiver::send_packet: data[%u]=%s tail=%u",
+				total_bits, Binascii::hexlify(packet).c_str(),
+				num_tail_bits);
 
-			DEBUG_TRACE("ArticTransceiver::send_packet: sending message total_bits=%u tail_bits=%u burst_size=%u",
-						total_bits, num_tail_bits, m_packet_buffer.size());
-
-			// Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
-			send_command_check_clean_async(ARTIC_CMD_START_TX_1M_SLEEP, INTERRUPT_1, TX_FINISHED, SAT_ARTIC_TIMEOUT_SEND_TX_MS,
-				[this]() {
-					m_notification_callback(ArgosAsyncEvent::TX_DONE);
-				}
-			);
-		}
-	);
+		// Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
+		send_command_check_clean_async(ARTIC_CMD_START_TX_1M_SLEEP, INTERRUPT_1, TX_FINISHED, SAT_ARTIC_TIMEOUT_SEND_TX_MS,
+			[this]() {
+				m_notification_callback(ArgosAsyncEvent::TX_DONE);
+		});
+	});
 }
 
 void ArticTransceiver::set_frequency(const double freq) {

@@ -58,7 +58,7 @@ public:
 	virtual void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) = 0;
 	virtual bool is_powered_on() = 0;
 	virtual bool is_rx_enabled() = 0;
-	virtual void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) = 0;
+	virtual void send_packet(ArgosPacket const& user_payload, unsigned int argos_id, unsigned int payload_length, const ArgosMode mode) = 0;
 	virtual void read_packet(ArgosPacket& packet, unsigned int& size) = 0;
 	virtual void set_idle() = 0;
 	virtual void set_rx_mode(const ArgosMode mode, unsigned int timeout_ms) = 0;
@@ -109,6 +109,7 @@ private:
 	void handle_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode);
 	unsigned int convert_latitude(double x);
 	unsigned int convert_longitude(double x);
+	void build_doppler_packet(ArgosPacket& packet);
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
 	void build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet);
 	void adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute);

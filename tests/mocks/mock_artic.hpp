@@ -31,9 +31,9 @@ public:
 		m_notification_callback = notification_callback;
 		m_notification_callback(ArgosAsyncEvent::DEVICE_READY);
 	}
-	void send_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) override {
-		m_last_packet = packet;
-		mock().actualCall("send_packet").onObject(this).withParameter("total_bits", total_bits).withParameter("mode", (unsigned int)mode);
+	void send_packet(ArgosPacket const& user_payload, unsigned int argos_id, unsigned int payload_bits, const ArgosMode mode) override {
+		m_last_packet = user_payload;
+		mock().actualCall("send_packet").onObject(this).withParameter("argos_id", (unsigned int)argos_id).withParameter("payload_bits", payload_bits).withParameter("mode", (unsigned int)mode);
 		m_notification_callback(ArgosAsyncEvent::TX_DONE);
 	}
 	void set_frequency(const double freq) override {
