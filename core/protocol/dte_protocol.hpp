@@ -406,7 +406,7 @@ private:
 		uint8_t num_operational_satellites;
 		AopSatelliteEntry_t aop_entry;
 		EXTRACT_BITS(num_operational_satellites, data, pos, 4);
-		DEBUG_TRACE("allcast_constellation_status_decode: num_operational_satellites: %u", num_operational_satellites);
+		//DEBUG_TRACE("allcast_constellation_status_decode: num_operational_satellites: %u", num_operational_satellites);
 		for (uint8_t i = 0; i < num_operational_satellites; i++) {
 			uint8_t hex_id;
 			uint8_t a_dcs_1;
@@ -423,8 +423,8 @@ private:
 				EXTRACT_BITS(ul_status, data, pos, 3);
 			}
 			(void)a_dcs;
-			DEBUG_TRACE("allcast_constellation_status_decode: sat=%u hex_id=%01x dl_status=%01x ul_status=%01x", i,
-						hex_id, dl_status, ul_status);
+			//DEBUG_TRACE("allcast_constellation_status_decode: sat=%u hex_id=%01x dl_status=%01x ul_status=%01x", i,
+			//			hex_id, dl_status, ul_status);
 			aop_entry.satHexId = hex_id;
 			aop_entry.satDcsId = a_dcs;
 			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status, type_a);
@@ -489,9 +489,9 @@ private:
 		// Compute the actual day of month and month from the day of year
 		convert_day_of_year(aop_entry.bulletin.year, day_of_year, aop_entry.bulletin.month, aop_entry.bulletin.day);
 
-		DEBUG_TRACE("allcast_sat_orbit_params_decode: a_dcs=%01x hex_id=%01x doy=%u dd/mm/yy=%u/%u/%u hh:mm:ss=%u:%u:%u",
-				a_dcs, aop_entry.satHexId, day_of_year, aop_entry.bulletin.day, aop_entry.bulletin.month, aop_entry.bulletin.year,
-				aop_entry.bulletin.hour, aop_entry.bulletin.minute, aop_entry.bulletin.second);
+		//DEBUG_TRACE("allcast_sat_orbit_params_decode: a_dcs=%01x hex_id=%01x doy=%u dd/mm/yy=%u/%u/%u hh:mm:ss=%u:%u:%u",
+		//		a_dcs, aop_entry.satHexId, day_of_year, aop_entry.bulletin.day, aop_entry.bulletin.month, aop_entry.bulletin.year,
+		//		aop_entry.bulletin.hour, aop_entry.bulletin.minute, aop_entry.bulletin.second);
 
 		// 86 bits of bulletin
 		if (type_a) {
@@ -523,8 +523,8 @@ private:
 		}
 
 		uint8_t key = aop_entry.satHexId;
-		if (orbit_params.count(key))
-			DEBUG_WARN("PassPredictCodec::allcast_sat_orbit_params_decode: overwriting orbit_params key=%02x", key);
+		//if (orbit_params.count(key))
+		//	DEBUG_WARN("PassPredictCodec::allcast_sat_orbit_params_decode: overwriting orbit_params key=%02x", key);
 		orbit_params[key] = aop_entry;
 	}
 
@@ -535,18 +535,18 @@ private:
 		uint8_t  a_dcs;
 		uint8_t  service;
 
-		DEBUG_TRACE("allcast_packet_decode: pos: %u", pos);
+		//DEBUG_TRACE("allcast_packet_decode: pos: %u", pos);
 
 		EXTRACT_BITS(addressee_identification, data, pos, 28);
 		EXTRACT_BITS(a_dcs, data, pos, 4);
 		EXTRACT_BITS(service, data, pos, 8);
 
-		DEBUG_TRACE("allcast_packet_decode: addressee_identification: %08x", addressee_identification);
-		DEBUG_TRACE("allcast_packet_decode: a_dcs: %01x", a_dcs);
-		DEBUG_TRACE("allcast_packet_decode: service: %02x", service);
+		//DEBUG_TRACE("allcast_packet_decode: addressee_identification: %08x", addressee_identification);
+		//DEBUG_TRACE("allcast_packet_decode: a_dcs: %01x", a_dcs);
+		//DEBUG_TRACE("allcast_packet_decode: service: %02x", service);
 
 		if (service != 0) {
-			DEBUG_ERROR("allcast_packet_decode: message service is not allcast (0x00)");
+			DEBUG_TRACE("allcast_packet_decode: message service is not allcast (0x00)");
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 
@@ -572,7 +572,7 @@ private:
 		uint16_t fcs;
 		EXTRACT_BITS(fcs, data, pos, 16);
 		(void)fcs;
-		DEBUG_TRACE("allcast_packet_decode: fcs: %04x", fcs);
+		//DEBUG_TRACE("allcast_packet_decode: fcs: %04x", fcs);
 	}
 
 public:
@@ -601,7 +601,7 @@ public:
 		for ( const auto &it : orbit_params ) {
 			if (constellation_status.count(it.first)) {
 				if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
-					DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
+					//DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
 					pass_predict.records[num_records] = it.second;
 					pass_predict.records[num_records].downlinkStatus = constellation_status[it.first].downlinkStatus;
 					pass_predict.records[num_records].uplinkStatus = constellation_status[it.first].uplinkStatus;
@@ -637,7 +637,7 @@ public:
 		for ( const auto &it : orbit_params ) {
 			if (constellation_status.count(it.first)) {
 				if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
-					DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
+					//DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
 					pass_predict.records[num_records] = it.second;
 					pass_predict.records[num_records].downlinkStatus = constellation_status[it.first].downlinkStatus;
 					pass_predict.records[num_records].uplinkStatus = constellation_status[it.first].uplinkStatus;

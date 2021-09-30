@@ -251,7 +251,6 @@ uint64_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 	if (m_tr_nom_schedule == INVALID_SCHEDULE) {
 		// Use start of day as the initial TR_NOM -- we don't allow
 		// a -ve jitter amount in this case to avoid a potential -ve overflow
-		//uint64_t start_of_day = (now / SECONDS_PER_DAY) * SECONDS_PER_DAY * MS_PER_SEC;
 		uint64_t start_of_day = now * MS_PER_SEC;
 		update_tx_jitter(0, TX_JITTER_MS);
 		m_tr_nom_schedule = start_of_day + m_tx_jitter;
@@ -1066,11 +1065,12 @@ void ArgosScheduler::handle_rx_packet() {
 
 	// Append new packet to the existing queue
 	m_rx_packets.push_back(packet);
-	DEBUG_TRACE("ArgosScheduler::handle_rx_packet: packet=%s length=%u queued=%u", Binascii::hexlify(packet).c_str(), length, m_rx_packets.size());
 
 	// If the queue has grown too large, start dropping packets from the front
 	if (m_rx_packets.size() > RX_PACKET_QUEUE_MAX_SIZE)
 		m_rx_packets.erase(m_rx_packets.begin());
+
+	DEBUG_INFO("ArgosScheduler::handle_rx_packet: packet=%s length=%u queued=%u", Binascii::hexlify(packet).c_str(), length, m_rx_packets.size());
 
 	// Attempt to decode the queue of packets
 	PassPredictCodec::decode(m_rx_packets, pass_predict);
@@ -1117,7 +1117,7 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 						existing_pass_predict.records[j].bulletin.second);
 				if (new_epoch > existing_epoch) {
 					// Replace existing record
-					DEBUG_TRACE("ArgosScheduler::update_pass_predict: updating existing AOP record #%u", j);
+					DEBUG_INFO("ArgosScheduler::update_pass_predict: updating existing AOP record #%u", j);
 					existing_pass_predict.records[j] = new_pass_predict.records[i];
 					updated_prepass = true;
 					if (new_epoch > last_aop_update)
@@ -1134,7 +1134,7 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 		// add it to the end of the existing database
 		if (j == existing_pass_predict.num_records &&
 				existing_pass_predict.num_records < MAX_AOP_SATELLITE_ENTRIES) {
-			DEBUG_TRACE("ArgosScheduler::update_pass_predict: adding new AOP record #%u", existing_pass_predict.num_records);
+			DEBUG_INFO("ArgosScheduler::update_pass_predict: adding new AOP record #%u", existing_pass_predict.num_records);
 			existing_pass_predict.records[existing_pass_predict.num_records++] = new_pass_predict.records[i];
 			updated_prepass = true;
 
