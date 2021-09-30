@@ -731,7 +731,7 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total_bits, const ArgosMode mode) {
 	DEBUG_INFO("ArgosScheduler::handle_packet: battery=%.2lfV freq=%lf power=%s mode=%s",
 			   (double)battery_monitor->get_voltage() / 1000, m_argos_config.frequency, argos_power_to_string(m_argos_config.power), argos_mode_to_string(mode));
-	DEBUG_INFO("ArgosScheduler::handle_packet: argos_id=%07x data=%s", Binascii::hexlify(packet).c_str());
+	DEBUG_INFO("ArgosScheduler::handle_packet: data=%s", Binascii::hexlify(packet).c_str());
 
 	// Store parameters for deferred processing
 	m_packet = packet;
