@@ -95,6 +95,7 @@ private:
 	uint64_t     m_downlink_end;
 	bool         m_is_rx_enabled;
 	std::vector<ArgosPacket> m_rx_packets;
+	std::time_t  m_last_rx_time;
 
 	void rx_deschedule();
 	void rx_reschedule(bool allow_power_off);
@@ -118,4 +119,5 @@ private:
 	uint64_t next_prepass();
 	void handle_rx_packet();
 	void update_pass_predict(BasePassPredict& pass_predict);
+	void update_rx_time(void);
 };

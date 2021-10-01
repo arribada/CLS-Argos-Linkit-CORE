@@ -142,6 +142,7 @@ void ArgosScheduler::rx_reschedule(bool allow_power_off) {
 			// Already powered on
 			unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - now), m_argos_config.argos_rx_max_window);
 			set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
+			m_last_rx_time = now;
 		}
 	}, "ScheduleDownlinkReceive", Scheduler::DEFAULT_PRIORITY, start_delay_sec * MS_PER_SEC);
 
@@ -750,8 +751,11 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 
 	// NOTE: Always power off before transmitting since the transceiver doesn't seem to like doing
 	// a TX if RX mode has already been activated
-	if (is_powered_on())
+	if (is_powered_on()) {
+		if (is_rx_enabled())
+			update_rx_time();
 		power_off();
+	}
 
 	// Power on and then handle the remainder of the transmission in the async event handler
 	power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
@@ -999,6 +1003,7 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 	case ArgosAsyncEvent::RX_TIMEOUT:
 		DEBUG_TRACE("ArgosScheduler::handle_tx_event: RX_TIMEOUT");
 		m_downlink_end = INVALID_SCHEDULE;
+		update_rx_time();
 		if (is_powered_on()) {
 			power_off();
 		}
@@ -1025,6 +1030,7 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 			// Enable RX mode with timeout which will trigger RX_TIMEOUT event
 			unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - now), m_argos_config.argos_rx_max_window);
 			set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
+			m_last_rx_time = now;
 		} else {
 			DEBUG_TRACE("ArgosScheduler::handle_rx_event: DEVICE_READY: insufficient time to start RX mode");
 			m_downlink_end = INVALID_SCHEDULE;
@@ -1049,6 +1055,7 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 	case ArgosAsyncEvent::RX_TIMEOUT:
 		DEBUG_TRACE("ArgosScheduler::handle_rx_event: RX_TIMEOUT");
 		m_downlink_end = INVALID_SCHEDULE;
+		update_rx_time();
 		if (is_powered_on()) {
 			power_off();
 		}
@@ -1093,6 +1100,12 @@ void ArgosScheduler::handle_rx_packet() {
 	// Check to see if any new AOP records were found
 	if (pass_predict.num_records)
 		update_pass_predict(pass_predict);
+}
+
+void ArgosScheduler::update_rx_time(void) {
+	std::time_t now = rtc->gettime();
+	configuration_store->increment_rx_time(now - m_last_rx_time);
+	configuration_store->save_params();
 }
 
 void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {

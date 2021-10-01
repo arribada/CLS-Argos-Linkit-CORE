@@ -2983,6 +2983,15 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 	x = "FFFFFFFFFFFF";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 
+	t += 100;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+
+	mock().expectOneCall("power_off").onObject(argos_sched);
+
+	// Inject RX_TIMEOUT
+	mock_artic->inject_rx_timeout();
+
 	// Now check that the records have been updated
 	pass_predict = configuration_store->read_pass_predict();
 	CHECK_EQUAL(8, pass_predict.num_records);
@@ -2990,11 +2999,15 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 	// Check last AOP date
 	std::time_t last_aop_update;
 	last_aop_update = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
-	CHECK_EQUAL(t, last_aop_update);
+	CHECK_EQUAL(t - 100, last_aop_update);
 
 	// Check RX counter
 	unsigned int rx_counter = configuration_store->read_param<unsigned int>(ParamID::ARGOS_RX_COUNTER);
 	CHECK_EQUAL(12, rx_counter);
+
+	// Check RX time
+	unsigned int rx_time = configuration_store->read_param<unsigned int>(ParamID::ARGOS_RX_TIME);
+	CHECK_EQUAL(100, rx_time);
 }
 
 

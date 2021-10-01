@@ -299,6 +299,10 @@ public:
 			// RX_COUNTER
 			configuration_store->write_param(ParamID::ARGOS_RX_COUNTER, zero);
 			configuration_store->save_params();
+		} else if (variable_id == 4) {
+			// RX_TIME
+			configuration_store->write_param(ParamID::ARGOS_RX_TIME, zero);
+			configuration_store->save_params();
 		} else {
 			// Invalid variable ID
 			error_code = (int)DTEError::INCORRECT_DATA;

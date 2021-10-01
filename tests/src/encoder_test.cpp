@@ -235,7 +235,7 @@ TEST(Encoder, RSTVW_REQ_OutOfRangeCheck)
 {
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::RSTVW_REQ, 2U));
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::RSTVW_REQ, 0U));
-	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::RSTVW_REQ, 4U));
+	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::RSTVW_REQ, 5U));
 }
 
 TEST(Encoder, RSTVW_RESP)

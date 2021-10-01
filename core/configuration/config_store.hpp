@@ -140,6 +140,7 @@ protected:
 		/* ARGOS_RX_MAX_WINDOW */ 15U*60U,
 		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 7U,
 		/* ARGOS_RX_COUNTER */ 0U,
+		/* ARGOS_RX_TIME */ 0U,
 	}};
 	static inline const BaseZone default_zone = {
 		/* version_code */ m_config_version_code_zone,
@@ -552,6 +553,11 @@ public:
 	void increment_rx_counter() {
 		unsigned int rx_counter = read_param<unsigned int>(ParamID::ARGOS_RX_COUNTER) + 1;
 		write_param(ParamID::ARGOS_RX_COUNTER, rx_counter);
+	}
+
+	void increment_rx_time(unsigned int inc) {
+		unsigned int rx_time = read_param<unsigned int>(ParamID::ARGOS_RX_TIME) + inc;
+		write_param(ParamID::ARGOS_RX_TIME, rx_time);
 	}
 };
 
