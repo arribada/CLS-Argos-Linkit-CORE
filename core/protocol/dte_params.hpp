@@ -68,4 +68,5 @@ static const BaseMap param_map[] = {
 	{ "ARGOS_RX_EN", "ARP32", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "ARGOS_RX_MAX_WINDOW", "ARP33", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
 	{ "ARGOS_RX_AOP_UPDATE_PERIOD", "ARP34", BaseEncoding::UINT, 0U, 0xFFFFFFFFU, {}, true, true },
+	{ "ARGOS_RX_COUNTER", "ARP35", BaseEncoding::UINT, 0U, 0U, {}, true, false },
 };

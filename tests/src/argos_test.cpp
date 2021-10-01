@@ -2991,6 +2991,10 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 	std::time_t last_aop_update;
 	last_aop_update = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
 	CHECK_EQUAL(t, last_aop_update);
+
+	// Check RX counter
+	unsigned int rx_counter = configuration_store->read_param<unsigned int>(ParamID::ARGOS_RX_COUNTER);
+	CHECK_EQUAL(12, rx_counter);
 }
 
 

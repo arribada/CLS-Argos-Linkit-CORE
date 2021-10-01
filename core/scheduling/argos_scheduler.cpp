@@ -1081,6 +1081,12 @@ void ArgosScheduler::handle_rx_packet() {
 
 	DEBUG_INFO("ArgosScheduler::handle_rx_packet: packet=%s length=%u queued=%u", Binascii::hexlify(packet).c_str(), length, m_rx_packets.size());
 
+	// Increment RX counter
+	configuration_store->increment_rx_counter();
+
+	// Save configuration params
+	configuration_store->save_params();
+
 	// Attempt to decode the queue of packets
 	PassPredictCodec::decode(m_rx_packets, pass_predict);
 

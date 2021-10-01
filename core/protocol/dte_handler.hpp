@@ -284,15 +284,25 @@ public:
 
 	static std::string RSTVW_REQ(int error_code, std::vector<BaseType>& arg_list) {
 
-		(void)arg_list;  // We only support TX_COUNTER reset -- all other options are rejected beforehand
-
 		if (error_code) {
 			return DTEEncoder::encode(DTECommand::RSTVW_RESP, error_code);
 		}
 
-		// Only permitted variable to reset is TX_COUNTER
+		unsigned int variable_id = std::get<unsigned int>(arg_list[0]);
 		unsigned int zero = 0;
-		configuration_store->write_param(ParamID::TX_COUNTER, zero);
+
+		if (variable_id == 1) {
+			// TX_COUNTER
+			configuration_store->write_param(ParamID::TX_COUNTER, zero);
+			configuration_store->save_params();
+		} else if (variable_id == 3) {
+			// RX_COUNTER
+			configuration_store->write_param(ParamID::ARGOS_RX_COUNTER, zero);
+			configuration_store->save_params();
+		} else {
+			// Invalid variable ID
+			error_code = (int)DTEError::INCORRECT_DATA;
+		}
 
 		return DTEEncoder::encode(DTECommand::RSTVW_RESP, error_code);
 	}
