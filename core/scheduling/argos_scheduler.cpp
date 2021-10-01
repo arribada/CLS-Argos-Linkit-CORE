@@ -325,7 +325,7 @@ uint64_t ArgosScheduler::next_prepass() {
 
 	if (m_next_prepass != INVALID_SCHEDULE &&
 		curr_time < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS)) {
-		DEBUG_WARN("ArgosScheduler::next_prepass: current schedule not yet completed");
+		DEBUG_TRACE("ArgosScheduler::next_prepass: schedule @ %lld secs not yet completed", (m_next_prepass - curr_time));
 		return INVALID_SCHEDULE;
 	}
 
