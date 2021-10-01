@@ -75,9 +75,9 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e801 | 0x05;
-	static inline const unsigned int m_config_version_code_zone = 0x1c07e802 | 0x0;
-	static inline const unsigned int m_config_version_code_aop = 0x1c07e803 | 0x0;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x06;
+	static inline const unsigned int m_config_version_code_zone = 0x1c07e800 | 0x02;
+	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
 		/* ARGOS_HEXID */ 0U,
@@ -137,8 +137,8 @@ protected:
 		/* LED_MODE */ BaseLEDMode::HRS_24,
 		/* ARGOS_TX_JITTER_EN */ (bool)true,
 		/* ARGOS_RX_EN */ (bool)true,
-		/* ARGOS_RX_MAX_WINDOW */ 3U*60U,
-		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 1U,
+		/* ARGOS_RX_MAX_WINDOW */ 15U*60U,
+		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 30U,
 	}};
 	static inline const BaseZone default_zone = {
 		/* version_code */ m_config_version_code_zone,
