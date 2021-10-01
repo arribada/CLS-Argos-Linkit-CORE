@@ -97,7 +97,7 @@ private:
 	std::vector<ArgosPacket> m_rx_packets;
 
 	void rx_deschedule();
-	void rx_reschedule();
+	void rx_reschedule(bool allow_power_off);
 	void reschedule();
 	void deschedule();
 	void process_schedule();

@@ -83,7 +83,7 @@ ArgosScheduler::ArgosScheduler() {
 	m_next_schedule = 0;
 }
 
-void ArgosScheduler::rx_reschedule() {
+void ArgosScheduler::rx_reschedule(bool allow_power_off) {
 
 	if (is_rx_enabled()) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already running");
@@ -92,21 +92,21 @@ void ArgosScheduler::rx_reschedule() {
 
 	if (system_scheduler->is_scheduled(m_rx_task)) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already scheduled");
-		if (is_powered_on())
+		if (allow_power_off && is_powered_on())
 			power_off();
 		return;
 	}
 
 	if (!m_argos_config.argos_rx_en) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: ARGOS_RX_EN is off");
-		if (is_powered_on())
+		if (allow_power_off && is_powered_on())
 			power_off();
 		return;
 	}
 
 	if (m_downlink_end == INVALID_SCHEDULE) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: prepass window has no DL");
-		if (is_powered_on())
+		if (allow_power_off && is_powered_on())
 			power_off();
 		return;
 	}
@@ -115,7 +115,7 @@ void ArgosScheduler::rx_reschedule() {
 	if ((uint64_t)now >= m_downlink_end) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX window has elapsed");
 		m_downlink_end = INVALID_SCHEDULE;
-		if (is_powered_on())
+		if (allow_power_off && is_powered_on())
 			power_off();
 		return;
 	}
@@ -124,7 +124,7 @@ void ArgosScheduler::rx_reschedule() {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: AOP update not needed for another %lu secs",
 				(m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period)) - now);
 		m_downlink_end = INVALID_SCHEDULE;
-		if (is_powered_on())
+		if (allow_power_off && is_powered_on())
 			power_off();
 		return;
 	}
@@ -147,7 +147,7 @@ void ArgosScheduler::rx_reschedule() {
 
 	// Power off if the scheduled RX is in the future
 	if (start_delay_sec > 0) {
-		if (is_powered_on())
+		if (allow_power_off && is_powered_on())
 			power_off();
 	}
 }
@@ -193,9 +193,6 @@ void ArgosScheduler::reschedule() {
 	} else {
 		DEBUG_INFO("ArgosScheduler: not rescheduling");
 	}
-
-	// Perform any required RX scheduling
-	rx_reschedule();
 }
 
 static inline bool is_in_duty_cycle(uint64_t time_ms, unsigned int duty_cycle)
@@ -328,7 +325,7 @@ uint64_t ArgosScheduler::next_prepass() {
 
 	if (m_next_prepass != INVALID_SCHEDULE &&
 		curr_time < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS)) {
-		DEBUG_WARN("ArgosScheduler::next_prepass: existing prepass schedule in %llu secs is still valid", m_next_prepass - curr_time);
+		DEBUG_WARN("ArgosScheduler::next_prepass: current schedule not yet completed");
 		return INVALID_SCHEDULE;
 	}
 
@@ -504,6 +501,7 @@ void ArgosScheduler::notify_sensor_log_update() {
 			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: depth pile has %u/24 entries with total %u seen", m_gps_entry_burst_counter.size(), m_num_gps_entries);
 		}
 		reschedule();
+		rx_reschedule(false);
 	}
 }
 
@@ -989,6 +987,7 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 
 		// Update the schedule for the next transmission and also any pending RX
 		reschedule();
+		rx_reschedule(true);
 		break;
 	}
 
