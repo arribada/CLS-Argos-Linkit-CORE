@@ -83,7 +83,12 @@ ArgosScheduler::ArgosScheduler() {
 	m_next_schedule = 0;
 }
 
-void ArgosScheduler::rx_reschedule(bool allow_power_off) {
+void ArgosScheduler::rx_reschedule() {
+
+	if (m_is_tx_enabled) {
+		DEBUG_TRACE("ArgosScheduler::rx_reschedule: TX in progress");
+		return;
+	}
 
 	if (is_rx_enabled()) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already running");
@@ -92,21 +97,21 @@ void ArgosScheduler::rx_reschedule(bool allow_power_off) {
 
 	if (system_scheduler->is_scheduled(m_rx_task)) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already scheduled");
-		if (allow_power_off && is_powered_on())
+		if (is_powered_on())
 			power_off();
 		return;
 	}
 
 	if (!m_argos_config.argos_rx_en) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: ARGOS_RX_EN is off");
-		if (allow_power_off && is_powered_on())
+		if (is_powered_on())
 			power_off();
 		return;
 	}
 
 	if (m_downlink_end == INVALID_SCHEDULE) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: prepass window has no DL");
-		if (allow_power_off && is_powered_on())
+		if (is_powered_on())
 			power_off();
 		return;
 	}
@@ -115,7 +120,7 @@ void ArgosScheduler::rx_reschedule(bool allow_power_off) {
 	if ((uint64_t)now >= m_downlink_end) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX window has elapsed");
 		m_downlink_end = INVALID_SCHEDULE;
-		if (allow_power_off && is_powered_on())
+		if (is_powered_on())
 			power_off();
 		return;
 	}
@@ -124,7 +129,7 @@ void ArgosScheduler::rx_reschedule(bool allow_power_off) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: AOP update not needed for another %lu secs",
 				(m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period)) - now);
 		m_downlink_end = INVALID_SCHEDULE;
-		if (allow_power_off && is_powered_on())
+		if (is_powered_on())
 			power_off();
 		return;
 	}
@@ -148,7 +153,7 @@ void ArgosScheduler::rx_reschedule(bool allow_power_off) {
 
 	// Power off if the scheduled RX is in the future
 	if (start_delay_sec > 0) {
-		if (allow_power_off && is_powered_on())
+		if (is_powered_on())
 			power_off();
 	}
 }
@@ -502,7 +507,7 @@ void ArgosScheduler::notify_sensor_log_update() {
 			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: depth pile has %u/24 entries with total %u seen", m_gps_entry_burst_counter.size(), m_num_gps_entries);
 		}
 		reschedule();
-		rx_reschedule(false);
+		rx_reschedule();
 	}
 }
 
@@ -758,6 +763,7 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	}
 
 	// Power on and then handle the remainder of the transmission in the async event handler
+	m_is_tx_enabled = true;
 	power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
 }
 
@@ -885,6 +891,7 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 
 	m_data_notification_callback = data_notification_callback;
 	m_is_running = true;
+	m_is_tx_enabled = false;
 	m_is_deferred = false;
 	m_time_sync_burst_sent = false;
 	m_msg_index = 0;
@@ -965,6 +972,8 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 	case ArgosAsyncEvent::TX_DONE:
 	{
 		DEBUG_TRACE("ArgosScheduler::handle_tx_event: TX_DONE");
+		m_is_tx_enabled = false;
+
 		if (m_data_notification_callback) {
 	    	ServiceEvent e;
 	    	e.event_type = ServiceEventType::ARGOS_TX_END;
@@ -991,7 +1000,7 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 
 		// Update the schedule for the next transmission and also any pending RX
 		reschedule();
-		rx_reschedule(true);
+		rx_reschedule();
 		break;
 	}
 
@@ -1044,6 +1053,7 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 	case ArgosAsyncEvent::TX_DONE:
 	{
 		DEBUG_TRACE("ArgosScheduler::handle_rx_event: TX_DONE: bad context!!!");
+		m_is_tx_enabled = false;
 		break;
 	}
 
@@ -1079,14 +1089,7 @@ void ArgosScheduler::handle_rx_packet() {
 
 	read_packet(packet, length);
 
-	// Append new packet to the existing queue
-	m_rx_packets.push_back(packet);
-
-	// If the queue has grown too large, start dropping packets from the front
-	if (m_rx_packets.size() > RX_PACKET_QUEUE_MAX_SIZE)
-		m_rx_packets.erase(m_rx_packets.begin());
-
-	DEBUG_INFO("ArgosScheduler::handle_rx_packet: packet=%s length=%u queued=%u", Binascii::hexlify(packet).c_str(), length, m_rx_packets.size());
+	DEBUG_INFO("ArgosScheduler::handle_rx_packet: packet=%s length=%u", Binascii::hexlify(packet).c_str(), length);
 
 	// Increment RX counter
 	configuration_store->increment_rx_counter();
@@ -1095,7 +1098,7 @@ void ArgosScheduler::handle_rx_packet() {
 	configuration_store->save_params();
 
 	// Attempt to decode the queue of packets
-	PassPredictCodec::decode(m_rx_packets, pass_predict);
+	PassPredictCodec::decode(m_orbit_params_map, m_constellation_status_map, packet, pass_predict);
 
 	// Check to see if any new AOP records were found
 	if (pass_predict.num_records)
@@ -1163,7 +1166,8 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 		std::time_t new_aop_time = rtc->gettime();
 		configuration_store->write_param(ParamID::ARGOS_AOP_DATE, new_aop_time);
 		configuration_store->save_params();
-		m_rx_packets.clear();
+		m_orbit_params_map.clear();
+		m_constellation_status_map.clear();
 	}
 }
 

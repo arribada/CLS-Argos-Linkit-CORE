@@ -93,12 +93,13 @@ private:
 	ArgosMode    m_mode;
 	uint64_t     m_downlink_start;
 	uint64_t     m_downlink_end;
-	bool         m_is_rx_enabled;
-	std::vector<ArgosPacket> m_rx_packets;
+	bool         m_is_tx_enabled;
+	std::map<uint8_t, AopSatelliteEntry_t> m_orbit_params_map;
+	std::map<uint8_t, AopSatelliteEntry_t> m_constellation_status_map;
 	std::time_t  m_last_rx_time;
 
 	void rx_deschedule();
-	void rx_reschedule(bool allow_power_off);
+	void rx_reschedule();
 	void reschedule();
 	void deschedule();
 	void process_schedule();

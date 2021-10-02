@@ -576,24 +576,24 @@ private:
 	}
 
 public:
-	// This decode variant knows where the packet boundaries exist, since each packet is
-	// and element in the vector, and so can recover from any packet decoding errors
-	static void decode(const std::vector<std::string>& data, BasePassPredict& pass_predict) {
+	// This decode variant processes a single packet at a time and is supplied a map
+	// of existing orbit params and constellation status
+	static void decode(
+			std::map<uint8_t, AopSatelliteEntry_t>& orbit_params,
+			std::map<uint8_t, AopSatelliteEntry_t>& constellation_status,
+			std::string& data,
+		BasePassPredict& pass_predict) {
 		unsigned int num_records = 0;
 		pass_predict.num_records = 0;
-		std::map<uint8_t, AopSatelliteEntry_t> orbit_params;
-		std::map<uint8_t, AopSatelliteEntry_t> constellation_status;
 
 		// Build two maps of AopSatelliteEntry_t entries; one containing orbit params
 		// and the other constellation status.  We then merge the two together into BasePassPredict
 		// for entries whose satellite hex ID matches.
-		for (const auto &it : data) {
-			try {
-				unsigned int base_pos = 0;
-				allcast_packet_decode(it, base_pos, orbit_params, constellation_status);
-			} catch (...) {
-				// Ignore any errors decoding the packet and just move onto the next
-			}
+		try {
+			unsigned int base_pos = 0;
+			allcast_packet_decode(data, base_pos, orbit_params, constellation_status);
+		} catch (...) {
+			// Ignore any errors decoding the packet and just move onto the next
 		}
 
 		// Go through constellation_status and try to find a matching entry (by hex/dcs ID) in the
