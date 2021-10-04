@@ -122,6 +122,7 @@ private:
 	inline mem_id_t convert_mode(uint8_t mem_sel);
 	void print_firmware_version();
 	bool buffer_rx_packet();
+	void add_rx_packet_filter(const uint32_t address);
 
 public:
 	ArticTransceiver();

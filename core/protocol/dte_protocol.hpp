@@ -406,7 +406,7 @@ private:
 		uint8_t num_operational_satellites;
 		AopSatelliteEntry_t aop_entry;
 		EXTRACT_BITS(num_operational_satellites, data, pos, 4);
-		//DEBUG_TRACE("allcast_constellation_status_decode: num_operational_satellites: %u", num_operational_satellites);
+		DEBUG_TRACE("allcast_constellation_status_decode: type_a=%u num_operational_satellites=%u", type_a, num_operational_satellites);
 		for (uint8_t i = 0; i < num_operational_satellites; i++) {
 			uint8_t hex_id;
 			uint8_t a_dcs_1;
@@ -423,8 +423,8 @@ private:
 				EXTRACT_BITS(ul_status, data, pos, 3);
 			}
 			(void)a_dcs;
-			//DEBUG_TRACE("allcast_constellation_status_decode: sat=%u hex_id=%01x dl_status=%01x ul_status=%01x", i,
-			//			hex_id, dl_status, ul_status);
+			DEBUG_TRACE("allcast_constellation_status_decode: sat=%u hex_id=%01x dl_status=%01x ul_status=%01x", i,
+						hex_id, dl_status, ul_status);
 			aop_entry.satHexId = hex_id;
 			aop_entry.satDcsId = a_dcs;
 			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status, type_a);
@@ -489,9 +489,9 @@ private:
 		// Compute the actual day of month and month from the day of year
 		convert_day_of_year(aop_entry.bulletin.year, day_of_year, aop_entry.bulletin.month, aop_entry.bulletin.day);
 
-		//DEBUG_TRACE("allcast_sat_orbit_params_decode: a_dcs=%01x hex_id=%01x doy=%u dd/mm/yy=%u/%u/%u hh:mm:ss=%u:%u:%u",
-		//		a_dcs, aop_entry.satHexId, day_of_year, aop_entry.bulletin.day, aop_entry.bulletin.month, aop_entry.bulletin.year,
-		//		aop_entry.bulletin.hour, aop_entry.bulletin.minute, aop_entry.bulletin.second);
+		DEBUG_TRACE("allcast_sat_orbit_params_decode: a_dcs=%01x hex_id=%01x doy=%u dd/mm/yy=%u/%u/%u hh:mm:ss=%u:%u:%u",
+				a_dcs, aop_entry.satHexId, day_of_year, aop_entry.bulletin.day, aop_entry.bulletin.month, aop_entry.bulletin.year,
+				aop_entry.bulletin.hour, aop_entry.bulletin.minute, aop_entry.bulletin.second);
 
 		// 86 bits of bulletin
 		if (type_a) {

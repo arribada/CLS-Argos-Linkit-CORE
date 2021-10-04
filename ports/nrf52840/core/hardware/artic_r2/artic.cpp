@@ -631,6 +631,30 @@ void ArticTransceiver::power_off()
     m_is_rx_enabled = false;
 }
 
+void ArticTransceiver::add_rx_packet_filter(const uint32_t address) {
+
+	// Read current filter entry count
+	uint32_t tmp = 0, lut_size = 0, value = 0;
+    burst_access(XMEM, RX_FILTERING_CONFIG + 3, nullptr, (uint8_t *)&tmp, 3, true);
+    reverse_memcpy((uint8_t *)&lut_size, (const uint8_t *)&tmp, 3);
+
+    // Add new LUT entry to end of table (24 LSBs first)
+    value = address & 0xFFFFFF;
+    reverse_memcpy((uint8_t *)&tmp, (const uint8_t *)&value, 3);
+    burst_access(XMEM, RX_FILTERING_CONFIG + 4 + (2*lut_size), (const uint8_t *)&tmp, nullptr, 3, false);
+
+    // Add new LUT entry to end of table (4 MSBs last)
+    value = (address >> 24) & 0xF;
+    reverse_memcpy((uint8_t *)&tmp, (const uint8_t *)&value, 3);
+    burst_access(XMEM, RX_FILTERING_CONFIG + 5 + (2*lut_size), (const uint8_t *)&tmp, nullptr, 3, false);
+
+    // Increment the lut_size by 1 and write back to reflect new size
+    lut_size++;
+    reverse_memcpy((uint8_t *)&tmp, (const uint8_t *)&lut_size, 3);
+    burst_access(XMEM, RX_FILTERING_CONFIG + 3, (const uint8_t *)&tmp, nullptr, 3, false);
+}
+
+
 ArticTransceiver::ArticTransceiver() {
     m_nrf_spim = nullptr;
     m_irq_int[0] = nullptr;
@@ -746,6 +770,11 @@ void ArticTransceiver::set_rx_mode(const ArgosMode mode, const unsigned int time
 
 	if (m_is_rx_enabled)
 		return;
+
+	// Add new entries for filtering on new packet types added since the firmware
+	// image was released
+	add_rx_packet_filter(0x000005F); // Constellation Satellite Status - format B
+	add_rx_packet_filter(0x00000D4); // Satellite Orbit Parameters – format B for ANGELS
 
 	// Mark RX as enabled
 	m_is_rx_enabled = true;

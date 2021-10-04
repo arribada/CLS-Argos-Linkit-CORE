@@ -2956,6 +2956,15 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 
 	std::string x = "00000C77007A5C900B7C500800C00D4C4224";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	// Throw a time sync packet into the decoder
+	x = "00000E17082021262105420895D027";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	// Throw a bad packet into the decoder
+	x = "FFFFFFFFFFFF";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
 	x = "000005F7006601A58900B78C00D48068F6";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 	x = "00000D4400648498489095CCDA39F73865F5B4216060A62B";
@@ -2972,25 +2981,16 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 	x = "00000BE40054849848C2442523CDCABCA2C02F014173AFE4";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
-	x = "00000BE400D4849848904D8D33269EAF627189023C5658A5";
-	mock_artic->inject_rx_packet(x, x.size() * 8);
-
-	// Throw a time sync packet into the decoder
-	x = "00000E17082021262105420895D027";
-	mock_artic->inject_rx_packet(x, x.size() * 8);
-
-	// Throw a bad packet into the decoder
-	x = "FFFFFFFFFFFF";
-	mock_artic->inject_rx_packet(x, x.size() * 8);
 
 	t += 100;
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 
+	// Last required RX packet should trigger power off
 	mock().expectOneCall("power_off").onObject(argos_sched);
 
-	// Inject RX_TIMEOUT
-	mock_artic->inject_rx_timeout();
+	x = "00000BE400D4849848904D8D33269EAF627189023C5658A5";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
 
 	// Now check that the records have been updated
 	pass_predict = configuration_store->read_pass_predict();
@@ -2999,7 +2999,7 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 	// Check last AOP date
 	std::time_t last_aop_update;
 	last_aop_update = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
-	CHECK_EQUAL(t - 100, last_aop_update);
+	CHECK_EQUAL(t, last_aop_update);
 
 	// Check RX counter
 	unsigned int rx_counter = configuration_store->read_param<unsigned int>(ParamID::ARGOS_RX_COUNTER);
@@ -3117,6 +3117,10 @@ TEST(ArgosScheduler, TestDownlinkWithAOPUpdatePeriod)
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 	x = "00000BE40054849848C2442523CDCABCA2C02F014173AFE4";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	// Last required RX packet should trigger power off
+	mock().expectOneCall("power_off").onObject(argos_sched);
+
 	x = "00000BE400D4849848904D8D33269EAF627189023C5658A5";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 
@@ -3194,10 +3198,12 @@ TEST(ArgosScheduler, TestDownlinkWithAOPUpdatePeriod)
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 	x = "00000BE50054849C88CC4E2475C5CCBC92BFE5014179C603";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	mock().expectOneCall("power_off").onObject(argos_sched);
+
 	x = "00000BE500D4849C8855D00E8A369EAF62719C023C5EAE6A";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 
-	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("power_on").onObject(argos_sched);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);

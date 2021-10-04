@@ -41,6 +41,7 @@
 #define CRC_ADDRESS              (0x0371)
 #define INTERRUPT_ADDRESS        (0x8018)
 #define RX_PAYLOAD_ADDRESS		 (0x0200)
+#define RX_FILTERING_CONFIG      (0x0209)
 #define TX_PAYLOAD_ADDRESS       (0x0273)
 #define TCXO_WARMUP_TIME_ADDRESS (0x036F)
 

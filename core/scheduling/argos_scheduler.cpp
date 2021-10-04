@@ -1168,6 +1168,11 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 		configuration_store->save_params();
 		m_orbit_params_map.clear();
 		m_constellation_status_map.clear();
+
+		// Clear down the current RX session to stop new packets arriving
+		m_downlink_end = INVALID_SCHEDULE;
+		update_rx_time();
+		power_off();
 	}
 }
 
