@@ -156,7 +156,6 @@ Timer::TimerHandle NrfTimer::add_schedule(std::function<void()> const &task_func
     Schedule schedule;
     uint64_t target_count_ticks = MS_TO_TICKS(target_count_ms);
 
-    schedule.m_id = g_unique_id;
     schedule.m_func = task_func;
     schedule.m_target_ticks = target_count_ticks;
 
@@ -164,6 +163,9 @@ Timer::TimerHandle NrfTimer::add_schedule(std::function<void()> const &task_func
 
     {
         InterruptLock lock;
+
+        // Assign global ID only when interrupt lock is held
+        schedule.m_id = g_unique_id;
 
         // Add this schedule to our list in time order
         unsigned int index = 0;
