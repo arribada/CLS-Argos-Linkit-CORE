@@ -308,6 +308,11 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 15;
+	gps_entry.header.minutes = 1;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -324,6 +329,11 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 16;
+	gps_entry.header.minutes = 1;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -339,6 +349,11 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 17;
+	gps_entry.header.minutes = 1;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -369,7 +384,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
 	CHECK_EQUAL(1, tx_counter);
 
-	STRCMP_EQUAL("FFFE2FF12345672FE381A949C039FE039FC95293B073F42AD2300E79855A4681CF34812E51F9", Binascii::hexlify(mock_artic->m_last_packet).c_str());
+	STRCMP_EQUAL("FFFE2FF123456732E441AB48D039E6801FC956918073CC2A52760E7E854A4E01CFF0EDD5BE61", Binascii::hexlify(mock_artic->m_last_packet).c_str());
 
 }
 
@@ -1654,6 +1669,11 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 15;
+	gps_entry.header.minutes = 1;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -1670,6 +1690,11 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 16;
+	gps_entry.header.minutes = 1;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -1685,6 +1710,11 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 17;
+	gps_entry.header.minutes = 1;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -1715,7 +1745,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
 	CHECK_EQUAL(1, tx_counter);
 
-	STRCMP_EQUAL("FFFE2FF1234567B9E381A949C039FE0383E95293B073F42AD2300E79855A4681CF347642D764", Binascii::hexlify(mock_artic->m_last_packet).c_str());
+	STRCMP_EQUAL("FFFE2FF1234567A4E441AB48D039E68003E956918073CC2A52760E7E854A4E01CFF01AB938FC", Binascii::hexlify(mock_artic->m_last_packet).c_str());
 
 }
 
@@ -2020,6 +2050,11 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 15;
+	gps_entry.header.minutes = 1;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -2036,6 +2071,11 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 16;
+	gps_entry.header.minutes = 1;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -2051,6 +2091,11 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 17;
+	gps_entry.header.minutes = 1;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -2082,7 +2127,7 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	tx_counter = fake_config_store->read_param<unsigned int>(ParamID::TX_COUNTER);
 	CHECK_EQUAL(1, tx_counter);
 
-	STRCMP_EQUAL("FFFE2FF123456725E381A949C039FE03A3C95293B073F42AD2300E79855A4681CF34EA788803", Binascii::hexlify(mock_artic->m_last_packet).c_str());
+	STRCMP_EQUAL("FFFE2FF123456738E441AB48D039E68023C956918073CC2A52760E7E854A4E01CFF08683679B", Binascii::hexlify(mock_artic->m_last_packet).c_str());
 
 }
 

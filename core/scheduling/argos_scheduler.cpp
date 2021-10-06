@@ -777,6 +777,10 @@ void ArgosScheduler::prepare_normal_burst() {
 			if (m_gps_entry_burst_counter.at(idx) > 0)
 				m_gps_entry_burst_counter.at(idx)--;
 		}
+
+		// GPS entries must be constructed in reverse order (latest -> earliest)
+		std::reverse(gps_entries.begin(), gps_entries.end());
+
 		build_long_packet(gps_entries, packet);
 		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
 	}
