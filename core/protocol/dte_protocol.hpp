@@ -430,7 +430,7 @@ private:
 			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status, type_a);
 			aop_entry.uplinkStatus = convert_ul_operating_status(ul_status, hex_id);
 
-			uint8_t key = aop_entry.satHexId | (a_dcs << 4);
+			uint8_t key = aop_entry.satHexId;
 			constellation_params[key] = aop_entry;
 		}
 
@@ -522,9 +522,7 @@ private:
 			aop_entry.inclinationDeg = (working / 10000.f) + 95;
 		}
 
-		uint8_t key = aop_entry.satHexId | (a_dcs << 4);
-		if (orbit_params.count(key))
-			DEBUG_WARN("PassPredictCodec::allcast_sat_orbit_params_decode: overwriting orbit_params key=%02x", key);
+		uint8_t key = aop_entry.satHexId;
 		orbit_params[key] = aop_entry;
 	}
 
