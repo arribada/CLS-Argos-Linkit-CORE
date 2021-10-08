@@ -281,6 +281,21 @@ protected:
 		}
 	}
 
+	void deserialize_prepass() {
+		DEBUG_TRACE("ConfigurationStoreLFS::deserialize_prepass");
+		LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_RDWR);
+		if (f.read(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict)) {
+			if (m_pass_predict.version_code == m_config_version_code_aop)
+				m_is_pass_predict_valid = true;
+			else
+				DEBUG_WARN("ConfigurationStoreLFS::deserialize_prepass: pass predict file version code mismatch");
+		}
+		if (!m_is_pass_predict_valid) {
+			DEBUG_TRACE("ConfigurationStoreLFS::deserialize_prepass: using default AOP");
+			create_default_prepass();
+		}
+	}
+
 	void serialize_zone() override {
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_zone");
 		LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC);
@@ -307,6 +322,11 @@ protected:
 	void create_default_zone() {
 		DEBUG_TRACE("ConfigurationStoreLFS::create_default_zone");
 		write_zone((BaseZone&)default_zone);
+	}
+
+	void create_default_prepass() {
+		DEBUG_TRACE("ConfigurationStoreLFS::create_default_prepass");
+		write_pass_predict((BasePassPredict&)default_prepass);
 	}
 
 	void update_battery_level() override {
@@ -379,18 +399,12 @@ public:
 			create_default_zone();
 		}
 
-		// Read in pass predict file
-		m_is_pass_predict_valid = false;
+		// Read in prepass file
 		try {
-			LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_RDWR);
-			if (f.read(&m_pass_predict, sizeof(m_pass_predict)) == sizeof(m_pass_predict)) {
-				if (m_pass_predict.version_code == m_config_version_code_aop)
-					m_is_pass_predict_valid = true;
-				else
-					DEBUG_WARN("ConfigurationStoreLFS: pass predict file version code mismatch - requires configuration");
-			}
+			deserialize_prepass();
 		} catch (int e) {
-			DEBUG_WARN("Prepass file does not exist - requires configuration");
+			DEBUG_WARN("AOP file does not exist or is corrupted - resetting AOP file");
+			create_default_prepass();
 		}
 	}
 

@@ -117,7 +117,7 @@ protected:
 		/* SAMPLING_SURF_FREQ */ 1U,
 		/* PP_MIN_ELEVATION */ 5.0,
 		/* PP_MAX_ELEVATION */ 90.0,
-		/* PP_MIN_DURATION */ 300U,
+		/* PP_MIN_DURATION */ 30U,
 		/* PP_MAX_PASSES */ 1000U,
 		/* PP_LINEAR_MARGIN */ 300U,
 		/* PP_COMP_STEP */ 10U,
@@ -161,6 +161,21 @@ protected:
 		/* center_latitude_y */ -48.8752,
 		/* radius_m */ 100
 	};
+	static inline const BasePassPredict default_prepass = {
+		/* version_code */ m_config_version_code_aop,
+		/* num_records */  8,
+		{
+			{ 0x5, 4, (SatDownlinkStatus_t)0, (SatUplinkStatus_t)2, { 2021, 10, 7, 23, 29, 36 }, 7180.188965, 98.673500, 299.226013, -25.257999, 101.033997, -0.200000 },
+			{ 0x6, 4, (SatDownlinkStatus_t)0, (SatUplinkStatus_t)5, { 2021, 10, 7, 22, 41, 14 }, 6890.464844, 97.467300, 105.709999, -23.747999, 94.994003, -3.700000 },
+			{ 0x8, 4, (SatDownlinkStatus_t)0, (SatUplinkStatus_t)2, { 2021, 10, 7, 23, 50, 59 }, 7225.683105, 98.983597, 331.656006, -25.497000, 101.992996, -0.900000 },
+			{ 0x9, 4, (SatDownlinkStatus_t)0, (SatUplinkStatus_t)3, { 2021, 10, 7, 22, 6, 6 }, 7195.641113, 98.703400, 351.213989, -25.340000, 101.360001, -0.000000 },
+			{ 0xa, 4, (SatDownlinkStatus_t)3, (SatUplinkStatus_t)3, { 2021, 10, 7, 22, 30, 43 }, 7195.528809, 98.460403, 321.191010, -25.341000, 101.358002, -0.000000 },
+			{ 0xb, 4, (SatDownlinkStatus_t)3, (SatUplinkStatus_t)3, { 2021, 10, 7, 22, 58, 33 }, 7195.604004, 98.723099, 338.070007, -25.340000, 101.359001, -0.000000 },
+			{ 0xc, 4, (SatDownlinkStatus_t)0, (SatUplinkStatus_t)3, { 2021, 10, 7, 23, 13, 37 }, 7226.172852, 99.176498, 299.210999, -25.497999, 102.002998, -0.600000 },
+			{ 0xd, 4, (SatDownlinkStatus_t)3, (SatUplinkStatus_t)3, { 2021, 10, 7, 22, 48, 2 }, 7160.121094, 98.544098, 106.515999, -25.153000, 100.612000, -0.200000 },
+		}
+	};
+
 	std::array<BaseType, MAX_CONFIG_ITEMS> m_params;
 	BaseZone m_zone;
 	uint8_t m_battery_level;
