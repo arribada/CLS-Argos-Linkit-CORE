@@ -2708,7 +2708,7 @@ TEST(ArgosScheduler, OutOfZoneModeChange)
 	mock().expectOneCall("power_on").onObject(argos_sched);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)zone.argos_power);
-	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 

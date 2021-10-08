@@ -265,14 +265,15 @@ TEST(ConfigStore, CheckDefaultZoneFile)
 	delete store;
 }
 
-TEST(ConfigStore, CheckDefaultPassPredictNotExist)
+TEST(ConfigStore, CheckDefaultPassPredictIsAvailable)
 {
 	LFSConfigurationStore *store;
 	store = new LFSConfigurationStore(*main_filesystem);
 
 	store->init();
 
-	CHECK_THROWS(ErrorCode, store->read_pass_predict());
+	BasePassPredict pp = store->read_pass_predict();
+	CHECK_EQUAL(8, pp.num_records);
 
 	delete store;
 }
@@ -392,7 +393,8 @@ TEST(ConfigStore, CheckPassPredictVersionCodeMismatch)
 
 	{
 		store->init();
-		CHECK_THROWS(ErrorCode, store->read_pass_predict());
+		BasePassPredict pp = store->read_pass_predict();
+		CHECK_EQUAL(8, pp.num_records);
 	}
 
 	delete store;

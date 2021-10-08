@@ -153,7 +153,7 @@ TEST(DTEHandler, PARMR_REQ_CheckEmptyRequest)
 	std::string resp;
 	std::string req = "$PARMR#000;\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARMR#1A0;IDP12=0,IDP11=FACTORY,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=15,LBP08=1,LBP09=120,UNP04=1,PPP01=5,PPP02=90,PPP03=300,PPP04=1000,PPP05=300,PPP06=10,GNP09=530,GNP10=3,GNP11=0,GNP20=1,GNP21=50,GNP22=1,GNP23=60,ARP30=1,LDP01=1,ARP31=1,ARP32=1,ARP33=900,ARP34=7\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARMR#19F;IDP12=0,IDP11=FACTORY,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=15,LBP08=1,LBP09=120,UNP04=1,PPP01=5,PPP02=90,PPP03=30,PPP04=1000,PPP05=300,PPP06=10,GNP09=530,GNP10=3,GNP11=0,GNP20=1,GNP21=50,GNP22=1,GNP23=60,ARP30=1,LDP01=1,ARP31=1,ARP32=1,ARP33=900,ARP34=7\r", resp.c_str());
 }
 
 TEST(DTEHandler, PROFW_PROFR_REQ)
@@ -478,4 +478,45 @@ TEST(DTEHandler, WritingOutOfRangeValue)
 	std::string req = "$PARMW#009;PPP01=-12\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
 	STRCMP_EQUAL("$N;PARMW#001;5\r", resp.c_str());
+}
+
+
+TEST(DTEHandler, GenerateDefaultPassPredictFile)
+{
+	std::string allcast_ref = read_paspw_file("data/default_aop.json");
+	std::string allcast_binary;
+
+	// Transcode to binary
+	allcast_binary = Binascii::unhexlify(allcast_ref);
+
+	BaseRawData paspw_raw = {0, 0, allcast_binary };
+
+	std::string resp;
+	std::string req = DTEEncoder::encode(DTECommand::PASPW_REQ, paspw_raw);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;PASPW#000;\r", resp.c_str());
+
+	// Read out the prepass file
+	BasePassPredict pp;
+	pp = configuration_store->read_pass_predict();
+	for (unsigned int i = 0; i < pp.num_records; i++) {
+		printf("{ 0x%1x, %u, (SatDownlinkStatus_t)%u, (SatUplinkStatus_t)%u, { %u, %u, %u, %u, %u, %u }, %f, %f, %f, %f, %f, %f },\n",
+				pp.records[i].satHexId,
+				pp.records[i].satDcsId,
+				pp.records[i].downlinkStatus,
+				pp.records[i].uplinkStatus,
+				pp.records[i].bulletin.year,
+				pp.records[i].bulletin.month,
+				pp.records[i].bulletin.day,
+				pp.records[i].bulletin.hour,
+				pp.records[i].bulletin.minute,
+				pp.records[i].bulletin.second,
+				(double)pp.records[i].semiMajorAxisKm,
+				(double)pp.records[i].inclinationDeg,
+				(double)pp.records[i].ascNodeLongitudeDeg,
+				(double)pp.records[i].ascNodeDriftDeg,
+				(double)pp.records[i].orbitPeriodMin,
+				(double)pp.records[i].semiMajorAxisDriftMeterPerDay
+				);
+	}
 }
