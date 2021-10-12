@@ -62,6 +62,7 @@
 
 #define INTERRUPT_1  (0)
 #define INTERRUPT_2  (1)
+#define NO_INTERRUPT (2)
 
 #define TOTAL_NUMBER_STATUS_FLAG  (24)
 

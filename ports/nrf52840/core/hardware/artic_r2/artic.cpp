@@ -296,7 +296,7 @@ void ArticTransceiver::spi_read(mem_id_t mode, uint32_t start_address, uint8_t *
     burst_access(mode, start_address, NULL, buffer_read, size, true);
 }
 
-void ArticTransceiver::print_status(void)
+void ArticTransceiver::get_and_print_status(void)
 {
     uint32_t status;
     get_status_register(&status);
@@ -304,7 +304,17 @@ void ArticTransceiver::print_status(void)
     for (uint32_t i = 0; i < TOTAL_NUMBER_STATUS_FLAG; ++i)
     {
         if (status & (1 << i)) {
-            DEBUG_TRACE("ArticTransceiver::print_status: %s", (char *)status_string[i]);
+            DEBUG_TRACE("ArticTransceiver::status_bit=%s", (char *)status_string[i]);
+        }
+    }
+}
+
+void ArticTransceiver::print_status(uint32_t status)
+{
+    for (uint32_t i = 0; i < TOTAL_NUMBER_STATUS_FLAG; ++i)
+    {
+        if (status & (1 << i)) {
+            DEBUG_TRACE("ArticTransceiver::status_bit=%s", (char *)status_string[i]);
         }
     }
 }
@@ -335,48 +345,51 @@ void ArticTransceiver::send_command(uint8_t command)
     }
 }
 
-void ArticTransceiver::wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num)
+void ArticTransceiver::wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num, uint32_t status_flag_bits)
 {
-    bool int_status;
+    uint32_t delay = 0;
+    uint32_t status = 0, old_status = 0;
 
-    uint32_t iterations = timeout_ms / SAT_ARTIC_DELAY_TICK_INTERRUPT_MS;
+    if (interrupt_num != NO_INTERRUPT) {
+        // Disable async interrupts if polling
+        m_irq_int[interrupt_num]->disable();
+    }
 
     do
     {
-        nrf_delay_ms(SAT_ARTIC_DELAY_TICK_INTERRUPT_MS);
-        int_status = m_irq_int[interrupt_num]->poll();
-    }
-    while (iterations-- && !int_status);
+    	nrf_delay_ms(SAT_ARTIC_DELAY_TICK_INTERRUPT_MS);
+    	if (interrupt_num != NO_INTERRUPT && m_irq_int[interrupt_num]->poll()) {
+    		DEBUG_TRACE("ArticTransceiver::wait_interrupt: IRQ set");
+        	get_status_register(&status);
+    		clear_interrupt(interrupt_num);
+    		if (status_flag_bits == 0)
+    			break;
+    	} else
+        	get_status_register(&status);
+    	if (old_status != status) {
+    		print_status(status);
+    		old_status = status;
+    	}
+    	delay += SAT_ARTIC_DELAY_TICK_INTERRUPT_MS;
+    } while ((status & status_flag_bits) != status_flag_bits && delay < timeout_ms);
 
-    if (!int_status)
+    if (delay == timeout_ms && (status & status_flag_bits) != status_flag_bits)
     {
-        DEBUG_TRACE("ArticTransceiver::wait_interrupt: Waiting for interrupt_%u timed out", interrupt_num + 1);
+        DEBUG_TRACE("ArticTransceiver::wait_interrupt: Waiting for interrupt=%u wanted_status=%08x status=%08x", interrupt_num + 1, status_flag_bits, status);
         throw ErrorCode::ARTIC_IRQ_TIMEOUT;
     }
 }
 
-void ArticTransceiver::send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, uint32_t interrupt_timeout_ms)
+void ArticTransceiver::send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint32_t status_flag_bits, uint32_t interrupt_timeout_ms)
 {
-    uint32_t status = 0;
-
-    clear_interrupt(interrupt_number);
     send_command(command);
-    wait_interrupt(interrupt_timeout_ms, interrupt_number);
-    get_status_register(&status);
-
-    if ((status & (1 << status_flag_number)) == 0) {
-    	m_notification_callback(ArgosAsyncEvent::ERROR);
-    	//throw ErrorCode::ARTIC_INCORRECT_STATUS;
-    }
-
-    clear_interrupt(interrupt_number);
+    wait_interrupt(interrupt_timeout_ms, interrupt_number, status_flag_bits);
 }
 
-void ArticTransceiver::send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number,
+void ArticTransceiver::send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint32_t status_flag_bits,
 		uint32_t interrupt_timeout_ms,
 		std::function<void()> on_success)
 {
-    clear_interrupt(interrupt_number);
     send_command(command);
 
     m_timeout_task = system_scheduler->post_task_prio([this, interrupt_number]() {
@@ -386,7 +399,7 @@ void ArticTransceiver::send_command_check_clean_async(uint8_t command, uint8_t i
         //throw ErrorCode::ARTIC_IRQ_TIMEOUT;
     }, "CommandTimeoutTask", Scheduler::DEFAULT_PRIORITY, interrupt_timeout_ms);
 
-    m_irq_int[interrupt_number]->enable([this, interrupt_number, status_flag_number, on_success]() {
+    m_irq_int[interrupt_number]->enable([this, interrupt_number, status_flag_bits, on_success]() {
 
     	system_scheduler->cancel_task(m_timeout_task);
 
@@ -395,7 +408,7 @@ void ArticTransceiver::send_command_check_clean_async(uint8_t command, uint8_t i
         clear_interrupt(interrupt_number);
         m_irq_int[interrupt_number]->disable();
 
-        if ((status & (1 << status_flag_number)) == 0) {
+        if ((status & status_flag_bits) == 0) {
             m_notification_callback(ArgosAsyncEvent::ERROR);
         	//throw ErrorCode::ARTIC_INCORRECT_STATUS;
             return;
@@ -524,8 +537,8 @@ void ArticTransceiver::send_fw_files(std::function<void()> on_success)
 
         DEBUG_TRACE("ArticTransceiver::send_fw_files: Waiting for interrupt 1");
 
-        // Interrupt 1 will be high when start-up is complete
-        wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT_1_PROG_MS, INTERRUPT_1);
+        // Interrupt 1 will be high when start-up is complete and status shall indicate IDLE
+        wait_interrupt(SAT_ARTIC_DELAY_INTERRUPT_1_PROG_MS, INTERRUPT_1, (1<<IDLE));
 
         DEBUG_TRACE("ArticTransceiver::send_fw_files: Artic booted");
 
@@ -709,7 +722,7 @@ void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent)> notificatio
             system_scheduler->post_task_prio([this](){
                 program_firmware([this]() {
 					print_firmware_version();
-					set_tcxo_warmup_time(DEFAULT_TCXO_WARMUP_TIME_SECONDS);
+					m_is_first_tx = true;
 					m_notification_callback(ArgosAsyncEvent::DEVICE_READY);
                 });
             }, "FirmwareProgrammingDelay", Scheduler::DEFAULT_PRIORITY, SAT_ARTIC_DELAY_RESET_MS);
@@ -723,9 +736,9 @@ void ArticTransceiver::read_packet(ArgosPacket& packet, unsigned int& size) {
 }
 
 void ArticTransceiver::set_idle() {
+	DEBUG_TRACE("ArticTransceiver::set_idle");
 	// Configure idle mode and disable interrupts
-    m_irq_int[INTERRUPT_1]->disable();
-	send_command(ARTIC_CMD_SLEEP);
+	send_command_check_clean(ARTIC_CMD_SLEEP, INTERRUPT_1, (1<<IDLE_STATE), SAT_ARTIC_DELAY_INTERRUPT_MS);
 }
 
 bool ArticTransceiver::buffer_rx_packet() {
@@ -787,7 +800,7 @@ void ArticTransceiver::set_rx_mode(const ArgosMode mode, const unsigned int time
 
 	// Send asynchronous command to configure RX mode and start continuous RX
 	send_command_check_clean_async((mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_ARGOS_3_RX_MODE : ARTIC_CMD_SET_ARGOS_4_RX_MODE,
-			INTERRUPT_1, MCU_COMMAND_ACCEPTED, SAT_ARTIC_DELAY_INTERRUPT_MS,
+			INTERRUPT_1, (1<<MCU_COMMAND_ACCEPTED) | (1<<dsp2mcu_int1), SAT_ARTIC_DELAY_INTERRUPT_MS,
 	[this]() {
 		// Enable interrupt 1 to inform us whenever a packet is available
 	    m_irq_int[INTERRUPT_1]->enable([this]() {
@@ -808,7 +821,7 @@ void ArticTransceiver::set_rx_mode(const ArgosMode mode, const unsigned int time
 	    });
 
 		// Configure RX continuous mode
-		send_command(ARTIC_CMD_START_RX_CONT);
+	    send_command_check_clean(ARTIC_CMD_START_RX_CONT, NO_INTERRUPT, (1<<RX_IN_PROGRESS), SAT_ARTIC_DELAY_INTERRUPT_MS);
 	});
 }
 
@@ -878,7 +891,7 @@ void ArticTransceiver::send_packet(ArgosPacket const& user_payload, unsigned int
 	uint8_t cmd = (mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_PTT_A3_TX_MODE : ARTIC_CMD_SET_PTT_A2_TX_MODE;
 
 	// Send asynchronous command to enable TX mode and start packet transfer
-	send_command_check_clean_async(cmd, INTERRUPT_1, MCU_COMMAND_ACCEPTED, SAT_ARTIC_DELAY_INTERRUPT_MS,
+	send_command_check_clean_async(cmd, INTERRUPT_1, (1<<MCU_COMMAND_ACCEPTED), SAT_ARTIC_DELAY_INTERRUPT_MS,
 		[this, total_bits, num_tail_bits, packet]() {
 
 		// Set 24-bit total length field (required at the head of the packet data)
@@ -888,18 +901,104 @@ void ArticTransceiver::send_packet(ArgosPacket const& user_payload, unsigned int
 		buffer[2] = total_bits;
 	    burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)buffer, nullptr, packet.length(), false);
 
-		print_status();
+	    // Set TCXO warm up
+		set_tcxo_warmup_time(m_is_first_tx ? DEFAULT_TCXO_WARMUP_TIME_SECONDS : 0);
+
+		get_and_print_status();
 
 		DEBUG_TRACE("ArticTransceiver::send_packet: data[%u]=%s tail=%u",
 				total_bits, Binascii::hexlify(packet).c_str(),
 				num_tail_bits);
 
 		// Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
-		send_command_check_clean_async(ARTIC_CMD_START_TX_1M_SLEEP, INTERRUPT_1, TX_FINISHED, SAT_ARTIC_TIMEOUT_SEND_TX_MS,
+		send_command_check_clean_async(ARTIC_CMD_START_TX_1M_SLEEP, INTERRUPT_1, (1<<TX_FINISHED), SAT_ARTIC_TIMEOUT_SEND_TX_MS,
 			[this]() {
 				m_notification_callback(ArgosAsyncEvent::TX_DONE);
 		});
 	});
+}
+
+
+void ArticTransceiver::send_ack(const unsigned int argos_id, const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode)
+{
+	ArgosPacket packet, crc_packet;
+	unsigned int total_bits;
+	unsigned int stuffing_bits = 0;
+	unsigned int payload_length = 96;
+	unsigned int length_enc = 0x5;
+	unsigned int service_id = 0x00EBA;
+
+	DEBUG_TRACE("ArticTransceiver::send_ack");
+
+	unsigned int num_tail_bits = 0; // A2 mode
+	if (mode == ArgosMode::ARGOS_3)
+		num_tail_bits = 9;
+
+	unsigned int crc_offset = 0;
+	unsigned int op_offset = 24;  // Keep first 24 bits spare for length field
+
+	// Transmission is:
+	// MSG_LEN (4)
+	// SERVICEID (20)  +
+	// FCS (16)        |
+	// ADCS (4)        | *
+	// PMTID (28)      | *
+	// DLMSGID (16)    | *
+	// EXECRPT(4)      | *
+	// DATA (28)       + *
+	// STUFFING (0)
+	// TAIL_BITS (0,7,8,9)
+	total_bits = 4 + 20 + payload_length + stuffing_bits + num_tail_bits;
+
+	// Assign a temporary buffer for computing the FCS over the required* fields
+	crc_packet.assign(10, 0); // 10 bytes, 80 bits
+	PACK_BITS(a_dcs, crc_packet, crc_offset, 4);
+	PACK_BITS(argos_id>>8, crc_packet, crc_offset, 20);
+	PACK_BITS(argos_id, crc_packet, crc_offset, 8);
+	PACK_BITS(dl_msg_id, crc_packet, crc_offset, 16);
+	PACK_BITS(exec_report, crc_packet, crc_offset, 4);
+	PACK_BITS(0, crc_packet, crc_offset, 28);
+
+	// Compute FCS
+	uint16_t fcs = CRC16::checksum(crc_packet, 80);
+
+	// Assign the buffer to include 24-bit length indicator and rounded-up to 3 bytes for XMEM alignment
+	packet.assign(((((total_bits + 24) + 23) / 24) * 24) / 8, 0);
+
+	PACK_BITS(length_enc, packet, op_offset, 4);
+	PACK_BITS(service_id, packet, op_offset, 20);
+	PACK_BITS(fcs, packet, op_offset, 16);
+	PACK_BITS(a_dcs, packet, op_offset, 4);
+	PACK_BITS(argos_id>>8, packet, op_offset, 20);
+	PACK_BITS(argos_id, packet, op_offset, 8);
+	PACK_BITS(dl_msg_id, packet, op_offset, 16);
+	PACK_BITS(exec_report, packet, op_offset, 4);
+	PACK_BITS(0, packet, op_offset, 28);
+	PACK_BITS(0, packet, op_offset, stuffing_bits);
+	PACK_BITS(0, packet, op_offset, num_tail_bits);
+
+	// Setup TX mode
+	uint8_t cmd = (mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_PTT_A3_TX_MODE : ARTIC_CMD_SET_PTT_A2_TX_MODE;
+	send_command_check_clean(cmd, INTERRUPT_1, (1<<MCU_COMMAND_ACCEPTED), SAT_ARTIC_DELAY_INTERRUPT_MS);
+
+	// Set 24-bit total length field (required at the head of the packet data)
+	uint8_t *buffer = (uint8_t *)packet.data();
+	buffer[0] = total_bits >> 16;
+	buffer[1] = total_bits >> 8;
+	buffer[2] = total_bits;
+	burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)buffer, nullptr, packet.length(), false);
+
+    // Set TCXO warm up
+	set_tcxo_warmup_time(m_is_first_tx ? DEFAULT_TCXO_WARMUP_TIME_SECONDS : 0);
+
+	get_and_print_status();
+
+	DEBUG_TRACE("ArticTransceiver::send_ack: data[%u]=%s tail=%u",
+			total_bits, Binascii::hexlify(packet).c_str(),
+			num_tail_bits);
+
+	// Send to ARTIC the command for sending only one packet and wait for the response TX_FINISHED
+	send_command_check_clean(ARTIC_CMD_START_TX_1M_SLEEP, INTERRUPT_1, (1<<TX_FINISHED), SAT_ARTIC_TIMEOUT_SEND_TX_MS);
 }
 
 void ArticTransceiver::set_frequency(const double freq) {

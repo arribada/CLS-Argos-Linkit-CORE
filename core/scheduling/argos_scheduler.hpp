@@ -63,6 +63,7 @@ public:
 	virtual void set_rx_mode(const ArgosMode mode, unsigned int timeout_ms) = 0;
 	virtual void set_frequency(const double freq) = 0;
 	virtual void set_tx_power(const BaseArgosPower power) = 0;
+	virtual void send_ack(const unsigned int argos_id, const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode) = 0;
 
 private:
 	Scheduler::TaskHandle m_tx_task;

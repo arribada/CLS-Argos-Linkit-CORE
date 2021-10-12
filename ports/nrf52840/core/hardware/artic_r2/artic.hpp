@@ -81,6 +81,7 @@ private:
 	Scheduler::TaskHandle m_rx_timeout_task;
 	bool    m_is_powered_on;
 	bool    m_is_rx_enabled;
+	bool    m_is_first_tx;
 
 	// Argos packet for TX
 	ArgosPacket m_packet_buffer;
@@ -105,15 +106,16 @@ private:
 	void send_burst(const uint8_t *tx_data, uint8_t *rx_data, size_t size, uint8_t length_transfer, bool read);
 	void send_command(uint8_t command);
 	void get_status_register(uint32_t *status);
-	void print_status(void);
+	void print_status(uint32_t status);
+	void get_and_print_status();
 	void set_tcxo_warmup_time(uint32_t time_s);
 	void program_firmware(std::function<void()> on_success);
 	void send_fw_files(std::function<void()> on_success);
 	void hardware_init();
-	void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, uint32_t interrupt_timeout_ms);
-	void send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint8_t status_flag_number, uint32_t interrupt_timeout_ms,
+	void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint32_t status_flag, uint32_t interrupt_timeout_ms);
+	void send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint32_t status_flag, uint32_t interrupt_timeout_ms,
 			std::function<void()> on_success);
-	void wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num);
+	void wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num, uint32_t status_code);
 	void clear_interrupt(uint8_t interrupt_num);
 	void check_crc(firmware_header_t *firmware_header);
 	void send_artic_command(artic_cmd_t cmd, uint32_t *response);
@@ -136,6 +138,7 @@ public:
 	void set_rx_mode(const ArgosMode mode, unsigned int timeout_ms) override;
 	void set_frequency(const double freq) override;
 	void set_tx_power(const BaseArgosPower power) override;
+	void send_ack(const unsigned int argos_id, const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode) override;
 };
 
 #endif // __ARTIC_HPP_

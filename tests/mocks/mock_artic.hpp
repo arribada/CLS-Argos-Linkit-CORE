@@ -64,6 +64,15 @@ public:
 		packet = m_rx_packet;
 		size = m_rx_packet_length;
 	}
+	void send_ack(const unsigned int argos_id, const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode) override {
+		mock().actualCall("send_ack").onObject(this)
+			.withParameter("argos_id", (unsigned int)argos_id)
+			.withParameter("a_dcs", (unsigned int)a_dcs)
+			.withParameter("dl_msg_id", (unsigned int)dl_msg_id)
+			.withParameter("exec_report", (unsigned int)exec_report)
+			.withParameter("mode", (unsigned int)mode);
+	}
+
 	void inject_rx_timeout() {
 		m_notification_callback(ArgosAsyncEvent::RX_TIMEOUT);
 	}
