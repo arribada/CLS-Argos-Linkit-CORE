@@ -63,7 +63,7 @@ private:
 	bool       	 m_is_first_schedule;
 	uint64_t     m_wakeup_time;
 	unsigned int m_num_consecutive_fixes;
-
+	std::time_t  m_next_schedule;
 	struct {
 		GNSSData data;
 		std::atomic<bool> pending_rtc_set;

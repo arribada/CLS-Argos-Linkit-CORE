@@ -291,6 +291,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 14;
 	gps_entry.header.minutes = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.header.year, gps_entry.header.month, gps_entry.header.day, gps_entry.header.hours, gps_entry.header.minutes, gps_entry.header.seconds);
 	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
@@ -313,6 +314,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 15;
 	gps_entry.header.minutes = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.header.year, gps_entry.header.month, gps_entry.header.day, gps_entry.header.hours, gps_entry.header.minutes, gps_entry.header.seconds);
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -334,6 +336,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 16;
 	gps_entry.header.minutes = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.header.year, gps_entry.header.month, gps_entry.header.day, gps_entry.header.hours, gps_entry.header.minutes, gps_entry.header.seconds);
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -354,6 +357,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 17;
 	gps_entry.header.minutes = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.header.year, gps_entry.header.month, gps_entry.header.day, gps_entry.header.hours, gps_entry.header.minutes, gps_entry.header.seconds);
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -452,6 +456,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 14;
 	gps_entry.header.minutes = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.header.year, gps_entry.header.month, gps_entry.header.day, gps_entry.header.hours, gps_entry.header.minutes, gps_entry.header.seconds);
 	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
@@ -567,6 +572,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 14;
 	gps_entry.header.minutes = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.header.year, gps_entry.header.month, gps_entry.header.day, gps_entry.header.hours, gps_entry.header.minutes, gps_entry.header.seconds);
 	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
@@ -593,6 +599,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 15;
 	gps_entry.header.minutes = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.header.year, gps_entry.header.month, gps_entry.header.day, gps_entry.header.hours, gps_entry.header.minutes, gps_entry.header.seconds);
 	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
@@ -615,6 +622,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 16;
 	gps_entry.header.minutes = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.header.year, gps_entry.header.month, gps_entry.header.day, gps_entry.header.hours, gps_entry.header.minutes, gps_entry.header.seconds);
 	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
@@ -637,6 +645,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 17;
 	gps_entry.header.minutes = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.header.year, gps_entry.header.month, gps_entry.header.day, gps_entry.header.hours, gps_entry.header.minutes, gps_entry.header.seconds);
 	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
@@ -730,6 +739,7 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -815,6 +825,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -988,6 +999,7 @@ TEST(ArgosScheduler, RescheduleAfterTransmissionWithoutNewSensorDataNBurstTimes)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -1101,6 +1113,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -1252,6 +1265,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -1337,6 +1351,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -1423,6 +1438,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -1509,6 +1525,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 14;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8768;
 	gps_entry.info.lat = -33.8232;
@@ -1525,6 +1542,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8736;
 	gps_entry.info.lat = -33.8235;
@@ -1541,6 +1559,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 16;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8576;
 	gps_entry.info.lat = -35.4584;
@@ -1556,6 +1575,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCount)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 17;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.858;
 	gps_entry.info.lat = -35.4586;
@@ -1659,6 +1679,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 14;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8768;
 	gps_entry.info.lat = -33.8232;
@@ -1680,6 +1701,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8736;
 	gps_entry.info.lat = -33.8235;
@@ -1701,6 +1723,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 16;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8576;
 	gps_entry.info.lat = -35.4584;
@@ -1718,9 +1741,10 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
-	gps_entry.info.day = 7;
+	gps_entry.info.day = 28;
 	gps_entry.info.hour = 17;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.858;
 	gps_entry.info.lat = -35.4586;
@@ -1806,6 +1830,7 @@ TEST(ArgosScheduler, SchedulingShortPacketLowBatteryFlag)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 14;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8768;
 	gps_entry.info.lat = -33.8232;
@@ -1916,6 +1941,7 @@ TEST(ArgosScheduler, SchedulingShortPacketOutOfZoneFlag)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 14;
 	gps_entry.header.minutes = 1;
+	gps_entry.header.seconds = 0;
 	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
@@ -1923,6 +1949,8 @@ TEST(ArgosScheduler, SchedulingShortPacketOutOfZoneFlag)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 14;
 	gps_entry.info.min = 1;
+	gps_entry.info.sec = 0;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8768;
 	gps_entry.info.lat = -33.8232;
@@ -2033,6 +2061,7 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 14;
 	gps_entry.header.minutes = 1;
+	gps_entry.header.seconds = 0;
 	gps_entry.info.onTime = 0;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
@@ -2040,6 +2069,8 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 14;
 	gps_entry.info.min = 1;
+	gps_entry.info.sec = 0;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8768;
 	gps_entry.info.lat = -33.8232;
@@ -2055,12 +2086,15 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 15;
 	gps_entry.header.minutes = 1;
+	gps_entry.header.seconds = 0;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 1;
+	gps_entry.info.sec = 0;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8736;
 	gps_entry.info.lat = -33.8235;
@@ -2076,12 +2110,15 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 16;
 	gps_entry.header.minutes = 1;
+	gps_entry.header.seconds = 0;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 16;
 	gps_entry.info.min = 1;
+	gps_entry.info.sec = 0;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8576;
 	gps_entry.info.lat = -35.4584;
@@ -2096,12 +2133,15 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	gps_entry.header.day = 28;
 	gps_entry.header.hours = 17;
 	gps_entry.header.minutes = 1;
+	gps_entry.header.seconds = 0;
 	gps_entry.info.batt_voltage = 3000;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
-	gps_entry.info.day = 7;
+	gps_entry.info.day = 28;
 	gps_entry.info.hour = 17;
 	gps_entry.info.min = 1;
+	gps_entry.info.sec = 0;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.858;
 	gps_entry.info.lat = -35.4586;
@@ -2182,6 +2222,7 @@ TEST(ArgosScheduler, TimeSyncBurstTransmissionIsSent)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -2252,6 +2293,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurst)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -2333,6 +2375,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithTimeSyncro)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -2424,6 +2467,7 @@ TEST(ArgosScheduler, SchedulingNonPrepassTxJitter)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -2525,6 +2569,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketTXJitter)
 	gps_entry.info.day = 28;
 	gps_entry.info.hour = 14;
 	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = 11.8768;
 	gps_entry.info.lat = -33.8232;
@@ -2675,6 +2720,7 @@ TEST(ArgosScheduler, OutOfZoneModeChange)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -123.3925;
 	gps_entry.info.lat = -48.8752;
@@ -2700,6 +2746,7 @@ TEST(ArgosScheduler, OutOfZoneModeChange)
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -2773,6 +2820,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithNonZeroSens
 	gps_entry.info.day = 7;
 	gps_entry.info.hour = 15;
 	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;
@@ -2873,6 +2921,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstConfirmDepthPil
 	gps_entry.info.hour = hour;
 	gps_entry.info.min = minute;
 	gps_entry.info.sec = second;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
 	gps_entry.info.valid = 1;
 	gps_entry.info.lon = -0.2271;
 	gps_entry.info.lat = 51.3279;

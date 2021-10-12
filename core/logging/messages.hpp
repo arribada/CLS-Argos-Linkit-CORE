@@ -97,6 +97,7 @@ struct __attribute__((packed)) GPSInfo {
 	float      vDOP;
 	float      hDOP;
 	float      headVeh;   // Degrees
+	std::time_t schedTime;
 };
 
 struct __attribute__((packed)) GPSLogEntry {
@@ -106,7 +107,7 @@ struct __attribute__((packed)) GPSLogEntry {
 		uint8_t data[MAX_LOG_PAYLOAD];
 	};
 };
-static_assert(sizeof(GPSLogEntry) == MAX_LOG_SIZE, "LogEntry wrong size");
+static_assert(sizeof(GPSInfo) <= MAX_LOG_PAYLOAD, "GPSInfo wrong size");
 
 enum class StartupCause : uint8_t { BROWNOUT, WATCHDOG, HARD_RESET, FACTORY_RESET, SOFT_RESET };
 

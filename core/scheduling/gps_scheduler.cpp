@@ -67,10 +67,10 @@ void GPSScheduler::reschedule()
     m_is_first_schedule = false;
 
     // Find the next schedule time aligned to UTC 00:00
-    std::time_t next_schedule = now - (now % aq_period) + aq_period;
+    m_next_schedule = now - (now % aq_period) + aq_period;
 
     // Find the time in milliseconds until this schedule
-    int64_t time_until_next_schedule_ms = (next_schedule - now) * MS_PER_SEC;
+    int64_t time_until_next_schedule_ms = (m_next_schedule - now) * MS_PER_SEC;
 
     DEBUG_INFO("GPSScheduler::schedule_aquisition in %llu seconds", time_until_next_schedule_ms / 1000);
 
@@ -147,6 +147,7 @@ void GPSScheduler::log_invalid_gps_entry()
     gps_entry.info.event_type = GPSEventType::NO_FIX;
     gps_entry.info.valid = false;
     gps_entry.info.onTime = system_timer->get_counter() - m_wakeup_time;
+    gps_entry.info.schedTime = m_next_schedule;
 
     sensor_log->write(&gps_entry);
 }
@@ -220,6 +221,7 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.info.headVeh       = m_gnss_data.data.headVeh;
     gps_entry.info.ttff          = m_gnss_data.data.ttff;
     gps_entry.info.onTime        = system_timer->get_counter() - m_wakeup_time;
+    gps_entry.info.schedTime     = m_next_schedule;
 
     gps_entry.info.event_type = GPSEventType::FIX;
     gps_entry.info.valid = true;

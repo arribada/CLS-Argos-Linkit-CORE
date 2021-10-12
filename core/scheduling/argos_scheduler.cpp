@@ -529,15 +529,12 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 #endif
 }
 
-void ArgosScheduler::adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute)
+void ArgosScheduler::extract_logtime(std::time_t sched_time, uint8_t& day, uint8_t& hour, uint8_t& minute)
 {
 	uint16_t year;
 	uint8_t  month;
 	uint8_t  second;
-	std::time_t t;
-	t = convert_epochtime(a.header.year, a.header.month, a.header.day, a.header.hours, a.header.minutes, a.header.seconds);
-	t -= ((unsigned int)a.info.onTime / 1000);
-	convert_datetime_to_epoch(t, year, month, day, hour, minute, second);
+	convert_datetime_to_epoch(sched_time, year, month, day, hour, minute, second);
 }
 
 void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet)
@@ -569,10 +566,9 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: bitfield=%u", LONG_PACKET_BITFIELD);
 #endif
 
-	// This will adjust the log time for the GPS on time since we want the time
-	// of when the GPS was scheduled and not the log time
+	// This will set the log time for the GPS entry based on when it was scheduled
 	uint8_t day, hour, minute;
-	adjust_logtime_for_gps_ontime(gps_entries[0], day, hour, minute);
+	extract_logtime(gps_entries[0].info.schedTime, day, hour, minute);
 
 	PACK_BITS(day, packet, base_pos, 5);
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: day=%u", (unsigned int)day);
