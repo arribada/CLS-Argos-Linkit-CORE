@@ -26,6 +26,7 @@ void GPSScheduler::start(std::function<void(ServiceEvent&)> data_notification_ca
     m_gnss_data.pending_rtc_set = false;
     m_is_first_fix_found = false;
     m_is_first_schedule = true;
+    m_num_gps_fixes = 0;
 
     reschedule();
 }
@@ -221,7 +222,15 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.info.headVeh       = m_gnss_data.data.headVeh;
     gps_entry.info.ttff          = m_gnss_data.data.ttff;
     gps_entry.info.onTime        = system_timer->get_counter() - m_wakeup_time;
-    gps_entry.info.schedTime     = m_next_schedule;
+
+    if (m_num_gps_fixes == 1) {
+    	// For the very first fix, we need to compute the scheduled GPS time since the RTC
+    	// wasn't set beforehand
+    	std::time_t fix_time = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
+    	gps_entry.info.schedTime     = fix_time - (gps_entry.info.onTime / MS_PER_SEC);
+    } else {
+    	gps_entry.info.schedTime     = m_next_schedule;
+    }
 
     gps_entry.info.event_type = GPSEventType::FIX;
     gps_entry.info.valid = true;
@@ -285,6 +294,7 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
 
     // Mark first fix flag
     m_is_first_fix_found = true;
+    m_num_gps_fixes++;
 
     // All filter criteria is met
     {

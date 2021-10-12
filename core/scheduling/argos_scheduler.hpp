@@ -68,7 +68,6 @@ private:
 	unsigned int convert_longitude(double x);
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
 	void build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet);
-	void extract_logtime(std::time_t sched_time, uint8_t& day, uint8_t& hour, uint8_t& minute);
 	uint64_t next_duty_cycle(unsigned int duty_cycle);
 	uint64_t next_prepass();
 

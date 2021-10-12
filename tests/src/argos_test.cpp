@@ -124,6 +124,8 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
+	gps_entry.info.onTime = 0;
+	gps_entry.info.schedTime = 0;
 
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
@@ -214,6 +216,9 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	gps_entry.info.gSpeed = 0;
 	gps_entry.info.headMot = 0;
 	gps_entry.info.fixType = 3;
+	gps_entry.info.onTime = 0;
+	gps_entry.info.schedTime = 0;
+
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
 	system_scheduler->run();

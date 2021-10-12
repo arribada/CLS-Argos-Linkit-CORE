@@ -69,6 +69,7 @@ private:
 		std::atomic<bool> pending_rtc_set;
 		std::atomic<bool> pending_data_logging;
 	} m_gnss_data;
+	unsigned int m_num_gps_fixes;
 
 	std::function<void(ServiceEvent&)> m_data_notification_callback;
 
