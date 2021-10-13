@@ -523,8 +523,6 @@ private:
 		}
 
 		uint8_t key = aop_entry.satHexId;
-		//if (orbit_params.count(key))
-		//	DEBUG_WARN("PassPredictCodec::allcast_sat_orbit_params_decode: overwriting orbit_params key=%02x", key);
 		orbit_params[key] = aop_entry;
 	}
 

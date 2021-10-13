@@ -566,12 +566,18 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 
 	// Payload bytes
 	PACK_BITS(0, packet, base_pos, 8);  // Zero CRC field (computed later)
+
+	// Use scheduled GPS time as day/hour/min
+	uint16_t year;
+	uint8_t month, day, hour, min, sec;
+	convert_datetime_to_epoch(gps_entry.info.schedTime, year, month, day, hour, min, sec);
 	PACK_BITS(gps_entry.info.day, packet, base_pos, 5);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: day=%u", (unsigned int)gps_entry.info.day);
+
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: day=%u", (unsigned int)day);
 	PACK_BITS(gps_entry.info.hour, packet, base_pos, 5);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: hour=%u", (unsigned int)gps_entry.info.hour);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: hour=%u", (unsigned int)hour);
 	PACK_BITS(gps_entry.info.min, packet, base_pos, 6);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: min=%u", (unsigned int)gps_entry.info.min);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: min=%u", (unsigned int)min);
 
 	if (gps_entry.info.valid) {
 		PACK_BITS(convert_latitude(gps_entry.info.lat), packet, base_pos, 21);
@@ -638,17 +644,6 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 	PACK_BITS(code_word, packet, base_pos, BCHEncoder::B127_106_3_CODE_LEN);
 }
 
-void ArgosScheduler::adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute)
-{
-	uint16_t year;
-	uint8_t  month;
-	uint8_t  second;
-	std::time_t t;
-	t = convert_epochtime(a.header.year, a.header.month, a.header.day, a.header.hours, a.header.minutes, a.header.seconds);
-	t -= ((unsigned int)a.info.onTime / 1000);
-	convert_datetime_to_epoch(t, year, month, day, hour, minute, second);
-}
-
 void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet)
 {
 	unsigned int base_pos = 0;
@@ -667,17 +662,17 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	// Payload bytes
 	PACK_BITS(0, packet, base_pos, 8);  // Zero CRC field (computed later)
 
-	// This will adjust the log time for the GPS on time since we want the time
-	// of when the GPS was scheduled and not the log time
-	uint8_t day, hour, minute;
-	adjust_logtime_for_gps_ontime(gps_entries[0], day, hour, minute);
+	// This will set the log time for the GPS entry based on when it was scheduled
+	uint16_t year;
+	uint8_t month, day, hour, min, sec;
+	convert_datetime_to_epoch(gps_entries[0].info.schedTime, year, month, day, hour, min, sec);
 
 	PACK_BITS(day, packet, base_pos, 5);
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: day=%u", (unsigned int)day);
 	PACK_BITS(hour, packet, base_pos, 5);
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: hour=%u", (unsigned int)hour);
-	PACK_BITS(minute, packet, base_pos, 6);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: min=%u", (unsigned int)minute);
+	PACK_BITS(min, packet, base_pos, 6);
+	DEBUG_TRACE("ArgosScheduler::build_long_packet: min=%u", (unsigned int)min);
 
 	// First GPS entry
 	if (gps_entries[0].info.valid) {

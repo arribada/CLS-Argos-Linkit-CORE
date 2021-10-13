@@ -26,6 +26,7 @@ void GPSScheduler::start(std::function<void(ServiceEvent&)> data_notification_ca
     m_gnss_data.pending_rtc_set = false;
     m_is_first_fix_found = false;
     m_is_first_schedule = true;
+    m_num_gps_fixes = 0;
 
     reschedule();
 }
@@ -67,10 +68,10 @@ void GPSScheduler::reschedule()
     m_is_first_schedule = false;
 
     // Find the next schedule time aligned to UTC 00:00
-    std::time_t next_schedule = now - (now % aq_period) + aq_period;
+    m_next_schedule = now - (now % aq_period) + aq_period;
 
     // Find the time in milliseconds until this schedule
-    int64_t time_until_next_schedule_ms = (next_schedule - now) * MS_PER_SEC;
+    int64_t time_until_next_schedule_ms = (m_next_schedule - now) * MS_PER_SEC;
 
     DEBUG_INFO("GPSScheduler::schedule_aquisition in %llu seconds", time_until_next_schedule_ms / 1000);
 
@@ -147,6 +148,7 @@ void GPSScheduler::log_invalid_gps_entry()
     gps_entry.info.event_type = GPSEventType::NO_FIX;
     gps_entry.info.valid = false;
     gps_entry.info.onTime = system_timer->get_counter() - m_wakeup_time;
+    gps_entry.info.schedTime = m_next_schedule;
 
     sensor_log->write(&gps_entry);
 }
@@ -221,6 +223,15 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.info.ttff          = m_gnss_data.data.ttff;
     gps_entry.info.onTime        = system_timer->get_counter() - m_wakeup_time;
 
+    if (m_num_gps_fixes == 1) {
+    	// For the very first fix, we need to compute the scheduled GPS time since the RTC
+    	// wasn't set beforehand
+    	std::time_t fix_time = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
+    	gps_entry.info.schedTime     = fix_time - (gps_entry.info.onTime / MS_PER_SEC);
+    } else {
+    	gps_entry.info.schedTime     = m_next_schedule;
+    }
+
     gps_entry.info.event_type = GPSEventType::FIX;
     gps_entry.info.valid = true;
 
@@ -283,6 +294,7 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
 
     // Mark first fix flag
     m_is_first_fix_found = true;
+    m_num_gps_fixes++;
 
     // All filter criteria is met
     {

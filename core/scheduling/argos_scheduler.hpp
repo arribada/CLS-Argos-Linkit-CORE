@@ -114,7 +114,6 @@ private:
 	void build_doppler_packet(ArgosPacket& packet);
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
 	void build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet);
-	void adjust_logtime_for_gps_ontime(GPSLogEntry const& a, uint8_t& day, uint8_t& hour, uint8_t& minute);
 	void handle_tx_event(ArgosAsyncEvent event);
 	void handle_rx_event(ArgosAsyncEvent event);
 	uint64_t next_duty_cycle(unsigned int duty_cycle);

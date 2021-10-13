@@ -348,8 +348,9 @@ M8QReceiver::SendReturnCode M8QReceiver::send_navigation_database()
     m_capture_messages = true;
     uint8_t *send_ptr = &m_navigation_database[0];
     int32_t bytes_to_process = m_navigation_database_len;
+    unsigned int retries = 3;
 
-    while (bytes_to_process > 0)
+    while (bytes_to_process > 0 && retries > 0)
     {
         // Fetch the first byte which is the length of the message we are going to send
         uint32_t send_len = *send_ptr++;
@@ -366,7 +367,7 @@ M8QReceiver::SendReturnCode M8QReceiver::send_navigation_database()
 
         // Wait for the ack, this will only be sent if ackAiding is set in NAVX5
         auto start_time = rtc->gettime();
-        const std::time_t timeout = 3;
+        const std::time_t timeout = 1;
         for (;;)
         {
             if (m_rx_buffer.pending)
@@ -376,6 +377,7 @@ M8QReceiver::SendReturnCode M8QReceiver::send_navigation_database()
                 {
                     //UBX::MGA::MSG_ACK *msg_ack_ptr = reinterpret_cast<UBX::MGA::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
                     //DEBUG_TRACE("GPS MGA-ACK <- infoCode: %u", msg_ack_ptr->infoCode);
+                	retries = 3;
                     break;
                 }
 
@@ -384,9 +386,15 @@ M8QReceiver::SendReturnCode M8QReceiver::send_navigation_database()
 
             if (rtc->gettime() - start_time >= timeout)
             {
-                DEBUG_ERROR("M8QReceiver::send_navigation_database: timed out waiting for response");
-                m_navigation_database_len = 0; // Invalidate the data we did receive
-                return SendReturnCode::RESPONSE_TIMEOUT;
+            	if (--retries == 0) {
+					m_navigation_database_len = 0; // Invalidate the data we did receive
+					return SendReturnCode::RESPONSE_TIMEOUT;
+            	} else {
+            		// Reset pointers back to previous message for a retry
+            		bytes_to_process += (send_len + 1);
+            		send_ptr -= (send_len + 1);
+            		break;
+            	}
             }
         }
     }
@@ -431,7 +439,8 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
     ret = setup_simple_navigation_settings(nav_settings); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_expert_navigation_settings(); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = supply_time_assistance();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
-    ret = send_navigation_database();         if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
+    ret = send_navigation_database();         if (ret != SendReturnCode::SUCCESS)
+    	DEBUG_WARN("M8QReceiver::power_on: failed to send navigation database");
     ret = enable_nav_pvt_message();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = enable_nav_status_message();        if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = enable_nav_dop_message();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
