@@ -2366,13 +2366,6 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithTimeSyncro)
 	fake_timer->set_counter(t*1000);
 	argos_sched->start();
 
-	mock().expectOneCall("power_on").onObject(argos_sched);
-	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
-	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
-	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("total_bits", 176).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
-	mock().expectOneCall("power_off").onObject(argos_sched);
-	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
-
 	GPSLogEntry gps_entry;
 	gps_entry.info.batt_voltage = 3960;
 	gps_entry.info.year = 2020;
@@ -2400,6 +2393,9 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithTimeSyncro)
 		fake_log->write(&gps_entry);
 		argos_sched->notify_sensor_log_update();
 
+		fake_rtc->settime(t);
+		fake_timer->set_counter(t*1000);
+
 		mock().expectOneCall("power_on").onObject(argos_sched);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
@@ -2410,6 +2406,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithTimeSyncro)
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 		system_scheduler->run();
+
 		if (i == 0)
 			STRCMP_EQUAL("FFFE2F61234567343BC63EA7FC011BE000000FC2B06C", Binascii::hexlify(mock_artic->m_last_packet).c_str());
 		if (i == 1)
@@ -2419,8 +2416,6 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithTimeSyncro)
 		if (i >= 3)
 			STRCMP_EQUAL("FFFE2FF1234567393BC63EA7FC011BE00FC27D4FF80237CFA9FF0046F9F53FE008DFFF84080A", Binascii::hexlify(mock_artic->m_last_packet).c_str());
 		t += 60;
-		fake_rtc->settime(t);
-		fake_timer->set_counter(t*1000);
 	}
 }
 
