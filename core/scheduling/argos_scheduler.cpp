@@ -666,6 +666,9 @@ void ArgosScheduler::prepare_time_sync_burst() {
 
 	DEBUG_TRACE("ArgosScheduler::prepare_time_sync_burst: num_gps_entries=%u", m_num_gps_entries);
 
+	// Note time of last TX to seed future scheduling
+	m_last_transmission_schedule = rtc->gettime() * MS_PER_SEC;
+
 	if (m_num_gps_entries) {
 		ArgosPacket packet;
 		unsigned int index = m_num_gps_entries - 1;
