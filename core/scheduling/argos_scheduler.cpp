@@ -755,6 +755,7 @@ void ArgosScheduler::prepare_time_sync_burst() {
 
 	// Mark the time sync burst as sent because otherwise we would enter an infinite rescheduling scenario
 	m_time_sync_burst_sent = true;
+	m_last_transmission_schedule = rtc->gettime() * MS_PER_SEC;
 
 	if (m_num_gps_entries) {
 		ArgosPacket packet;
