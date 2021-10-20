@@ -73,14 +73,22 @@ ArgosScheduler::ArgosScheduler() {
 	m_earliest_tx = INVALID_SCHEDULE;
 	m_last_longitude = INVALID_GEODESIC;
 	m_last_latitude = INVALID_GEODESIC;
-	m_next_schedule = 0;
+	m_next_schedule_relative = 0;
 }
 
 void ArgosScheduler::reschedule() {
 	uint64_t schedule = INVALID_SCHEDULE;
 
 	// Obtain fresh copy of configuration as it may have changed
+	BaseArgosMode last_mode = m_argos_config.mode;
 	configuration_store->get_argos_configuration(m_argos_config);
+
+	// Check to see if we are already scheduled and no mode change has arisen
+	if (system_scheduler->is_scheduled(m_argos_task) && last_mode == m_argos_config.mode) {
+		DEBUG_TRACE("ArgosScheduler::reschedule: already scheduled at %.3f secs",
+				(double)m_next_schedule_relative / MS_PER_SEC);
+		return;
+	}
 
 	if (m_argos_config.mode == BaseArgosMode::OFF) {
 		DEBUG_WARN("ArgosScheduler: mode is OFF -- not scheduling");
@@ -107,7 +115,7 @@ void ArgosScheduler::reschedule() {
 		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this),
 				"ArgosSchedulerProcessSchedule",
 				Scheduler::DEFAULT_PRIORITY, schedule);
-		m_next_schedule = schedule;
+		m_next_schedule_relative = schedule;
 	} else {
 		DEBUG_INFO("ArgosScheduler: not rescheduling");
 	}
@@ -129,87 +137,83 @@ uint64_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
 	if (duty_cycle == 0)
 	{
 		DEBUG_INFO("ArgosScheduler::next_duty_cycle: no schedule found as duty cycle is zero!");
-		m_tr_nom_schedule = INVALID_SCHEDULE;
+		m_next_schedule_absolute = INVALID_SCHEDULE;
 		return INVALID_SCHEDULE;
 	}
 
 	// Find epoch time for start of the "current" day
 	uint64_t now = rtc->gettime();
 
-	// If we have already a future schedule then we might not need to recompute
-	if (m_tr_nom_schedule != INVALID_SCHEDULE && m_tr_nom_schedule >= (now * MS_PER_SEC))
-	{
-		// Make sure the TR_NOM is clear of the last transmission time
-		if (m_last_transmission_schedule == INVALID_SCHEDULE ||
-			(m_last_transmission_schedule != INVALID_SCHEDULE &&
-			 (m_tr_nom_schedule / MS_PER_SEC) > m_last_transmission_schedule))
-		{
+	DEBUG_TRACE("ArgosScheduler::next_duty_cycle: now=%llu next=%.3f last=%.3f", now,
+			(double)m_next_schedule_absolute / MS_PER_SEC,
+			(double)m_last_transmission_schedule / MS_PER_SEC);
 
-			// If transmission was deferred than the schedule was cancelled and we need to reschedule using the existing TR_NOM
-			if (m_is_deferred) {
-				DEBUG_TRACE("ArgosScheduler::next_duty_cycle: use existing schedule [deferred]: in %.3f seconds", (double)(m_tr_nom_schedule - (now * MS_PER_SEC)) / MS_PER_SEC);
-				m_is_deferred = false;
-				return m_tr_nom_schedule - (now * MS_PER_SEC);
+	// Handle the case where SWS has set earliest TX time
+	if (m_earliest_tx != INVALID_SCHEDULE)
+	{
+		// If earliest TX is in the future try to schedule it for that point
+		if (m_earliest_tx > now) {
+			// Make sure start_time is sufficiently advanced from the last TX
+			uint64_t start_time = m_earliest_tx * MS_PER_SEC;
+			if (m_last_transmission_schedule != INVALID_SCHEDULE &&
+				start_time < m_last_transmission_schedule)
+				start_time = m_last_transmission_schedule;
+
+			// Check if start_time is in the duty cycle
+			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: earliest TX is in %llu secs", m_earliest_tx - now);
+			if (is_in_duty_cycle(start_time, duty_cycle)) {
+				return start_time - (now * MS_PER_SEC);
+			} else {
+				// Not in duty cycle, so allow a new schedule to be computed
+				m_next_schedule_absolute = start_time;
 			}
-
-			// Existing schedule still pending, don't reschedule
-			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: use existing schedule: in %.3f seconds", (double)(m_tr_nom_schedule - (now * MS_PER_SEC)) / MS_PER_SEC);
-			return INVALID_SCHEDULE;
 		}
-	}
-
-	// Handle the case where we have no existing schedule but the previous schedule was deferred meaning we might need
-	// to transmit immediately owing to SWS going inactive
-	if (m_is_deferred && m_earliest_tx != INVALID_SCHEDULE && m_earliest_tx > now && is_in_duty_cycle(m_earliest_tx * MS_PER_SEC, duty_cycle))
-	{
-		DEBUG_TRACE("ArgosScheduler::next_duty_cycle: using earliest TX in %llu secs", m_earliest_tx - now);
-		m_is_deferred = false;
-		return (m_earliest_tx - now) * MS_PER_SEC;
 	}
 
 	// A new TR_NOM schedule is required
 
 	// Set schedule based on last TR_NOM point (if there is one)
-	if (m_tr_nom_schedule == INVALID_SCHEDULE) {
-		// Use start of day as the initial TR_NOM -- we don't allow
+	if (m_last_transmission_schedule == INVALID_SCHEDULE) {
+		// Use now as the initial TR_NOM -- we don't allow
 		// a -ve jitter amount in this case to avoid a potential -ve overflow
-		uint64_t start_of_day = (now / SECONDS_PER_DAY) * SECONDS_PER_DAY * MS_PER_SEC;
+		uint64_t start_time = now * MS_PER_SEC;
 		update_tx_jitter(0, TX_JITTER_MS);
-		m_tr_nom_schedule = start_of_day + m_tx_jitter;
+		m_next_schedule_absolute = start_time + m_tx_jitter;
 	}
 	else
 	{
 		// Advance by TR_NOM + TX jitter if we have a previous TR_NOM
 		// It should be safe to allow a -ve jitter because TR_NOM is always larger
 		// than the jitter amount
+		m_next_schedule_absolute = m_last_transmission_schedule;
 		update_tx_jitter(-TX_JITTER_MS, TX_JITTER_MS);
-		m_tr_nom_schedule += (m_argos_config.tr_nom * MS_PER_SEC) + m_tx_jitter;
+		m_next_schedule_absolute += (m_argos_config.tr_nom * MS_PER_SEC) + m_tx_jitter;
 	}
 
-	DEBUG_TRACE("ArgosScheduler::next_duty_cycle: starting m_tr_nom_schedule = %.3f", (double)m_tr_nom_schedule / MS_PER_SEC);
+	DEBUG_TRACE("ArgosScheduler::next_duty_cycle: starting m_tr_nom_schedule = %.3f", (double)m_next_schedule_absolute / MS_PER_SEC);
 
 	// We iterate forwards from the candidate m_tr_nom_schedule until we find a TR_NOM that
 	// falls inside a permitted hour of transmission.  The maximum span we search is 24 hours.
 	uint64_t elapsed_time = 0;
 	while (elapsed_time <= (MS_PER_SEC * SECONDS_PER_DAY)) {
 		//DEBUG_TRACE("ArgosScheduler::next_duty_cycle: now: %lu candidate schedule: %.3f elapsed: %.3f", now, (double)m_tr_nom_schedule / MS_PER_SEC, (double)elapsed_time / MS_PER_SEC);
-		if (is_in_duty_cycle(m_tr_nom_schedule, duty_cycle) && m_tr_nom_schedule >= (now * MS_PER_SEC)) {
-			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: found schedule in %.3f seconds", (double)(m_tr_nom_schedule - (now * MS_PER_SEC)) / MS_PER_SEC);
+		if (is_in_duty_cycle(m_next_schedule_absolute, duty_cycle) && m_next_schedule_absolute >= (now * MS_PER_SEC)) {
+			DEBUG_TRACE("ArgosScheduler::next_duty_cycle: found schedule in %.3f seconds", (double)(m_next_schedule_absolute - (now * MS_PER_SEC)) / MS_PER_SEC);
 			m_next_mode = ArgosMode::ARGOS_2;
-			return (m_tr_nom_schedule - (now * MS_PER_SEC));
+			return (m_next_schedule_absolute - (now * MS_PER_SEC));
 		} else {
 			uint64_t delta;
 			update_tx_jitter(-TX_JITTER_MS, TX_JITTER_MS);
 			delta = (m_argos_config.tr_nom * MS_PER_SEC);
 			delta += m_tx_jitter;
-			m_tr_nom_schedule += delta;
+			m_next_schedule_absolute += delta;
 			elapsed_time += delta;
 		}
 	}
 
 	DEBUG_ERROR("ArgosScheduler::next_duty_cycle: no schedule found!");
 
-	m_tr_nom_schedule = INVALID_SCHEDULE;
+	m_next_schedule_absolute = INVALID_SCHEDULE;
 
 	return INVALID_SCHEDULE;
 }
@@ -226,34 +230,21 @@ uint64_t ArgosScheduler::next_prepass() {
 
 	uint64_t curr_time = rtc->gettime();
 
-	// If we have an existing prepass schedule and we were interrupted by saltwater switch, then check
-	// to see if the current prepass schedule is still valid to use.  We allow up to ARGOS_TX_MARGIN_SECS
-	// before the end of the window
-	if (m_next_prepass != INVALID_SCHEDULE &&
-		m_is_deferred &&
-		m_earliest_tx != INVALID_SCHEDULE &&
-		m_earliest_tx >= curr_time &&
-		m_earliest_tx < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS))
-	{
-		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX=%llu epoch=%llu", m_earliest_tx, m_next_prepass);
-		m_is_deferred = false;
-		return (std::max(m_earliest_tx, m_next_prepass) - curr_time) * MS_PER_SEC;
-	}
+	// Assume start window position is current time
+	std::time_t start_time = curr_time;
 
-	if (m_next_prepass != INVALID_SCHEDULE &&
-		curr_time < (m_next_prepass + m_prepass_duration - ARGOS_TX_MARGIN_SECS)) {
-		DEBUG_WARN("ArgosScheduler::next_prepass: existing prepass schedule for epoch=%llu is still valid", m_next_prepass - curr_time);
-		return INVALID_SCHEDULE;
+	// If we were deferred by SWS then recompute using a start window that reflects earliest TX
+	if (m_earliest_tx != INVALID_SCHEDULE &&
+		m_earliest_tx >= curr_time) {
+		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX in %llu secs", curr_time - m_earliest_tx);
+		start_time = m_earliest_tx;
 	}
 
 	// Ensure start window is advanced from the previous transmission by the TR_NOM (repetition period)
-	std::time_t start_time;
 	if (m_last_transmission_schedule != INVALID_SCHEDULE)
-		start_time = std::max(curr_time, (m_last_transmission_schedule + m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS));
-	else
-		start_time = curr_time;
+		start_time = std::max((uint64_t)start_time, ((m_last_transmission_schedule / MS_PER_SEC) + m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS));
 
-	// Compute start and end time of the prepass search - we use a 24 hour window
+	// Set start and end time of the prepass search - we use a 24 hour window
 	std::time_t stop_time = start_time + (std::time_t)(24 * SECONDS_PER_HOUR);
 	struct tm *p_tm = std::gmtime(&start_time);
 	struct tm tm_start = *p_tm;
@@ -293,7 +284,7 @@ uint64_t ArgosScheduler::next_prepass() {
 			if (m_last_transmission_schedule != INVALID_SCHEDULE) {
 				// If there is a previous transmission then advance TR_NOM with +/- jitter
 				update_tx_jitter(-TX_JITTER_MS, TX_JITTER_MS);
-				schedule = std::max(now, (m_last_transmission_schedule + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS))) * MS_PER_SEC;
+				schedule = std::max(now, ((m_last_transmission_schedule / MS_PER_SEC) + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS))) * MS_PER_SEC;
 				schedule += m_tx_jitter;
 			} else {
 				// This is the first transmission and we are inside the prepass window already, so schedule immediately
@@ -307,7 +298,7 @@ uint64_t ArgosScheduler::next_prepass() {
 
 			// But also make sure if there is a previous transmission we advance TR_NOM away from that
 			if (m_last_transmission_schedule != INVALID_SCHEDULE)
-				schedule = std::max(schedule, (m_last_transmission_schedule + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS)));
+				schedule = std::max(schedule, ((m_last_transmission_schedule / MS_PER_SEC) + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS)));
 
 			// Apply +ve jitter
 			update_tx_jitter(0, TX_JITTER_MS);
@@ -315,9 +306,9 @@ uint64_t ArgosScheduler::next_prepass() {
 			schedule += m_tx_jitter;
 		}
 
-		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x last=%llu now=%llu s=%u c=%.3f e=%u",
+		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x last=%.3f now=%llu s=%u c=%.3f e=%u",
 					next_pass.satHexId, (m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
-							m_last_transmission_schedule, curr_time, (unsigned int)next_pass.epoch,
+							(double)m_last_transmission_schedule/MS_PER_SEC, curr_time, (unsigned int)next_pass.epoch,
 							(double)schedule / MS_PER_SEC, (unsigned int)next_pass.epoch + next_pass.duration);
 
 		// Check we don't transmit off the end of the prepass window
@@ -325,9 +316,8 @@ uint64_t ArgosScheduler::next_prepass() {
 			// We're good to go for this schedule, compute relative delay until the epoch arrives
 			// and set the required Argos transmission mode
 			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %.3f seconds from now", (double)(schedule - (now * MS_PER_SEC)) / MS_PER_SEC);
-			m_next_prepass = (schedule / MS_PER_SEC);
+			m_next_schedule_absolute = schedule;
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
-			m_prepass_duration = next_pass.duration;
 			return schedule - (now * MS_PER_SEC);
 		} else {
 			DEBUG_TRACE("ArgosScheduler::next_prepass: computed schedule is too late for this window", next_pass.epoch, next_pass.duration);
@@ -355,7 +345,6 @@ void ArgosScheduler::process_schedule() {
 		}
 	} else {
 		DEBUG_TRACE("ArgosScheduler::process_schedule: sws=%u t=%llu earliest_tx=%llu deferring transmission", m_switch_state, now, m_earliest_tx);
-		m_is_deferred = true;
 	}
 
 	// After each transmission attempt to reschedule
@@ -701,13 +690,18 @@ void ArgosScheduler::prepare_normal_burst() {
 	unsigned int max_msg_index;
 	ArgosPacket packet;
 
-	// Get latest configuration
+	// Obtain fresh copy of configuration as it may have changed
+	BaseArgosMode last_mode = m_argos_config.mode;
 	configuration_store->get_argos_configuration(m_argos_config);
 
 	DEBUG_TRACE("ArgosScheduler::prepare_normal_burst: msg_index=%u/%u span=%u num_log_entries=%u", m_msg_index % max_index, max_index, span, m_num_gps_entries);
 
 	// Mark last schedule attempt
-	m_last_transmission_schedule = (m_tr_nom_schedule / MS_PER_SEC);
+	if (last_mode == BaseArgosMode::PASS_PREDICTION) {
+		m_last_transmission_schedule = rtc->gettime() * MS_PER_SEC;
+	} else {
+		m_last_transmission_schedule = m_next_schedule_absolute;
+	}
 
 	// If the number of GPS entries received is less than the span then modify span
 	// to reflect number of entries available
@@ -782,12 +776,6 @@ void ArgosScheduler::prepare_normal_burst() {
 
 	// Increment for next message slot index
 	m_msg_index++;
-
-	// Prepass specific cleanup
-	if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
-		m_last_transmission_schedule = rtc->gettime();
-		m_next_prepass = INVALID_SCHEDULE;
-	}
 }
 
 void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_callback) {
@@ -796,12 +784,10 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 
 	m_data_notification_callback = data_notification_callback;
 	m_is_running = true;
-	m_is_deferred = false;
 	m_time_sync_burst_sent = false;
 	m_msg_index = 0;
 	m_num_gps_entries = 0;
-	m_next_prepass = INVALID_SCHEDULE;
-	m_tr_nom_schedule = INVALID_SCHEDULE;
+	m_next_schedule_absolute = INVALID_SCHEDULE;
 	m_last_transmission_schedule = INVALID_SCHEDULE;
 	m_gps_entry_burst_counter.clear();
 	m_gps_log_entry.clear();
@@ -843,11 +829,10 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 		} else {
 			DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state: state=1: deferring schedule");
 			deschedule();
-			m_is_deferred = true;
 		}
 	}
 }
 
 uint64_t ArgosScheduler::get_next_schedule() {
-	return m_next_schedule;
+	return m_next_schedule_relative;
 }

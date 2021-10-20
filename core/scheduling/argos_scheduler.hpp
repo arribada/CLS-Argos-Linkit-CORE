@@ -41,13 +41,11 @@ private:
 	bool         m_is_deferred;
 	bool         m_time_sync_burst_sent;
 	uint64_t     m_earliest_tx;
-	uint64_t     m_next_prepass;
-	uint64_t     m_tr_nom_schedule;
+	uint64_t     m_next_schedule_absolute;
 	uint64_t     m_last_transmission_schedule;
-	uint64_t     m_next_schedule;
+	uint64_t     m_next_schedule_relative;
 	ArgosMode    m_next_mode;
 	unsigned int m_msg_index;
-	unsigned int m_prepass_duration;
 	unsigned int m_num_gps_entries;
 	int          m_tx_jitter;
 	std::mt19937 *m_rng;
