@@ -2607,7 +2607,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketTXJitter)
 }
 
 
-TEST(ArgosScheduler, OutOfZoneModeChange)
+TEST(ArgosScheduler, OutOfZoneModeChangeLegacy)
 {
 	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
 	unsigned int dry_time_before_tx = 10;
@@ -2766,6 +2766,166 @@ TEST(ArgosScheduler, OutOfZoneModeChange)
 
 	while(!system_scheduler->run());
 
+}
+
+
+TEST(ArgosScheduler, OutOfZoneModeChangePrepass)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0U;
+	double frequency = 900.11;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	unsigned int ntry_per_message = 1;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 60;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	bool underwater_en = false;
+	bool time_sync_burst_en = false;
+	bool tx_jitter_en = false;
+
+	// Sample configuration provided with prepass library V3.4
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		7,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+			{ 0x9, 3, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 33, 39 }, 7195.632f, 98.7141f, 344.177f, -25.340f, 101.3600f, 0.00f },
+			{ 0xB, 7, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 23, 29, 29 }, 7194.917f, 98.7183f, 330.404f, -25.336f, 101.3449f, 0.00f },
+			{ 0x5, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 23, 50, 6 }, 7180.549f, 98.7298f, 289.399f, -25.260f, 101.0419f, -1.78f },
+			{ 0x8, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 22, 12, 6 }, 7226.170f, 99.0661f, 343.180f, -25.499f, 102.0039f, -1.80f },
+			{ 0xC, 6, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 52 }, 7226.509f, 99.1913f, 291.936f, -25.500f, 102.0108f, -1.98f },
+			{ 0xD, 4, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 53 }, 7160.246f, 98.5358f, 118.029f, -25.154f, 100.6148f, 0.00f }
+		}
+	};
+
+	fake_config_store->write_pass_predict(pass_predict);
+
+	BaseZone zone = {
+		/* version_code */ 0,
+		/* zone_id */ 1,
+		/* zone_type */ BaseZoneType::CIRCLE,
+		/* enable_monitoring */ true,
+		/* enable_entering_leaving_events */ true,
+		/* enable_out_of_zone_detection_mode */ true,
+		/* enable_activation_date */ true,
+		/* year */ 2020,
+		/* month */ 1,
+		/* day */ 1,
+		/* hour */ 0,
+		/* minute */ 0,
+		/* comms_vector */ BaseCommsVector::UNCHANGED,
+		/* delta_arg_loc_argos_seconds */ 3600,
+		/* delta_arg_loc_cellular_seconds */ 65,
+		/* argos_extra_flags_enable */ true,
+		/* argos_depth_pile */ BaseArgosDepthPile::DEPTH_PILE_1,
+		/* argos_power */ BaseArgosPower::POWER_200_MW,
+		/* argos_time_repetition_seconds */ 60,
+		/* argos_mode */ BaseArgosMode::LEGACY,
+		/* argos_duty_cycle */ 0xFFFFFFU,
+		/* gnss_extra_flags_enable */ true,
+		/* hdop_filter_threshold */ 2,
+		/* gnss_acquisition_timeout_seconds */ 240,
+		/* center_longitude_x */ -123.3925,
+		/* center_latitude_y */ -48.8752,
+		/* radius_m */ 500
+	};
+
+	// Configuration zone
+	fake_config_store->write_zone(zone);
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, time_sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
+
+	uint64_t t = 1631195464;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t * 1000);
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+	argos_sched->start();
+
+	// This log entry should be inside the zone
+
+	GPSLogEntry gps_entry;
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -123.3925;
+	gps_entry.info.lat = -48.8752;
+	gps_entry.info.hMSL = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+
+	fake_log->write(&gps_entry);
+	fake_config_store->notify_gps_location(gps_entry);
+	argos_sched->notify_sensor_log_update();
+
+	t += 56;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t * 1000);
+	while(!system_scheduler->run());
+
+	// This log entry should not trigger an OUT_OF_ZONE
+
+	gps_entry.info.batt_voltage = 3960;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 7;
+	gps_entry.info.hour = 15;
+	gps_entry.info.min = 6;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = -0.2271;
+	gps_entry.info.lat = 51.3279;
+	gps_entry.info.hMSL = 0;
+	gps_entry.info.gSpeed = 0;
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+
+	fake_log->write(&gps_entry);
+	fake_config_store->notify_gps_location(gps_entry);
+	argos_sched->notify_sensor_log_update();
+
+	fake_log->write(&gps_entry);
+	fake_config_store->notify_gps_location(gps_entry);
+	argos_sched->notify_sensor_log_update();
+
+	t += 60;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t * 1000);
+	mock().expectOneCall("power_on").onObject(argos_sched);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)zone.argos_power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+	system_scheduler->run();
 }
 
 
@@ -3333,7 +3493,6 @@ TEST(ArgosScheduler, TestDownlinkWithAOPUpdatePeriod)
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 	while (!system_scheduler->run());
-
 }
 
 TEST(ArgosScheduler, GNSSOffLegacySchedulingDopplerPacket)
