@@ -3009,6 +3009,10 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 		}
 	};
 
+	// Write ARGOS_AOP_DATE
+	std::time_t last_aop = 0;
+	fake_config_store->write_param(ParamID::ARGOS_AOP_DATE, last_aop);
+
 	fake_config_store->write_pass_predict(pass_predict);
 
 	// Start the scheduler
@@ -3154,6 +3158,10 @@ TEST(ArgosScheduler, TestDownlinkWithAOPUpdatePeriod)
 		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
 		}
 	};
+
+	// Write ARGOS_AOP_DATE
+	std::time_t last_aop = 0;
+	fake_config_store->write_param(ParamID::ARGOS_AOP_DATE, last_aop);
 
 	fake_config_store->write_pass_predict(pass_predict);
 

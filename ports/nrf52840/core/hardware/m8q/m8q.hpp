@@ -69,6 +69,7 @@ private:
 
 	NrfUARTM8 *m_nrf_uart_m8;
 	bool m_capture_messages;
+	bool m_assistnow_enable;
 	std::function<void(GNSSData data)> m_data_notification_callback;
 
 	UBX::NAV::PVT::MSG_PVT m_last_received_pvt;

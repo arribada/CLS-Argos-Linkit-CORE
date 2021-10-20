@@ -96,7 +96,8 @@ void GPSScheduler::task_acquisition_period() {
 
     	GPSNavSettings nav_settings = {
         	m_gnss_config.fix_mode,
-    		m_gnss_config.dyn_model
+    		m_gnss_config.dyn_model,
+			m_gnss_config.assistnow_enable
     	};
         if (m_data_notification_callback) {
         	ServiceEvent e;
