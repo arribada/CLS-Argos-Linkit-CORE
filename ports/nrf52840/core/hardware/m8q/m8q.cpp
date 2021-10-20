@@ -206,7 +206,9 @@ void M8QReceiver::power_off()
     disable_nav_status_message();
     disable_nav_dop_message();
 
-    fetch_navigation_database();
+    if (m_assistnow_enable) {
+    	fetch_navigation_database();
+    }
 
     delete m_nrf_uart_m8;
     m_nrf_uart_m8 = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
@@ -414,7 +416,8 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
 
     m_data_notification_callback = data_notification_callback;
     m_capture_messages = true;
-    
+    m_assistnow_enable = nav_settings.assistnow_enable;
+
     if (!m_nrf_uart_m8)
         m_nrf_uart_m8 = new NrfUARTM8(UART_GPS, [this](uint8_t *data, size_t len) { reception_callback(data, len); });
 
@@ -439,8 +442,10 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
     ret = setup_simple_navigation_settings(nav_settings); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_expert_navigation_settings(); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = supply_time_assistance();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
-    ret = send_navigation_database();         if (ret != SendReturnCode::SUCCESS)
-    	DEBUG_WARN("M8QReceiver::power_on: failed to send navigation database");
+    if (m_assistnow_enable) {
+		ret = send_navigation_database();         if (ret != SendReturnCode::SUCCESS)
+			DEBUG_WARN("M8QReceiver::power_on: failed to send navigation database");
+    }
     ret = enable_nav_pvt_message();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = enable_nav_status_message();        if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = enable_nav_dop_message();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}

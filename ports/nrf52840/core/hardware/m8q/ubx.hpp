@@ -676,5 +676,4 @@ namespace UBX
             uint32_t tAccNs;
         };
     } // namespace ACK
-
 } // namespace UBX

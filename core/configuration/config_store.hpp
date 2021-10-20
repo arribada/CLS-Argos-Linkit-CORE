@@ -34,6 +34,7 @@ struct GNSSConfig {
 	bool is_lb;
 	unsigned int min_num_fixes;
 	unsigned int cold_start_retry_period;
+	bool assistnow_enable;
 };
 
 struct ArgosConfig {
@@ -84,7 +85,7 @@ protected:
 		/* LAST_FULL_CHARGE_DATE */ static_cast<std::time_t>(0U),
 		/* PROFILE_NAME */ "FACTORY"s,
 		/* AOP_STATUS */ 0U,
-		/* ARGOS_AOP_DATE */ static_cast<std::time_t>(0U),
+		/* ARGOS_AOP_DATE */ static_cast<std::time_t>(1633646474U),
 		/* ARGOS_FREQ */ 401.65,
 		/* ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
 		/* TR_NOM */ 60U,
@@ -131,6 +132,7 @@ protected:
 		/* ARGOS_TIME_SYNC_BURST_EN */ (bool)true,
 		/* LED_MODE */ BaseLEDMode::HRS_24,
 		/* ARGOS_TX_JITTER_EN */ (bool)true,
+		/* GNSS_ASSISTNOW_EN */ (bool)false,
 	}};
 	static inline const BaseZone default_zone = {
 		/* version_code */ m_config_version_code_zone,
@@ -381,6 +383,7 @@ public:
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
+			gnss_config.assistnow_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_EN);
 
 			if (m_last_config_mode != ConfigMode::LOW_BATTERY) {
 				DEBUG_INFO("ConfigurationStore: LOW_BATTERY mode detected");
@@ -401,6 +404,8 @@ public:
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
+			gnss_config.assistnow_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_EN);
+
 			// Apply zone exclusion where applicable
 			if (m_zone.gnss_extra_flags_enable) {
 				gnss_config.acquisition_timeout = m_zone.gnss_acquisition_timeout_seconds;
@@ -427,6 +432,7 @@ public:
 			gnss_config.dyn_model = read_param<BaseGNSSDynModel>(ParamID::GNSS_DYN_MODEL);
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
+			gnss_config.assistnow_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_EN);
 
 			if (m_last_config_mode != ConfigMode::NORMAL) {
 				DEBUG_INFO("ConfigurationStore: NORMAL mode detected");

@@ -10,6 +10,7 @@
 struct GPSNavSettings {
 	BaseGNSSFixMode  fix_mode;
 	BaseGNSSDynModel dyn_model;
+	bool			 assistnow_enable;
 };
 
 class GPSScheduler : public ServiceScheduler {
