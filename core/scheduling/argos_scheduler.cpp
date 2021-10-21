@@ -283,9 +283,10 @@ uint64_t ArgosScheduler::next_prepass() {
 			// Ensure the schedule is at least TR_NOM away from previous transmission
 			if (m_last_transmission_schedule != INVALID_SCHEDULE) {
 				// If there is a previous transmission then advance TR_NOM with +/- jitter
+				// but don't allow a schedule before current RTC time
 				update_tx_jitter(-TX_JITTER_MS, TX_JITTER_MS);
 				schedule = std::max(now, ((m_last_transmission_schedule / MS_PER_SEC) + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS))) * MS_PER_SEC;
-				schedule += m_tx_jitter;
+				schedule = std::max((now * MS_PER_SEC), schedule + m_tx_jitter);
 			} else {
 				// This is the first transmission and we are inside the prepass window already, so schedule immediately
 				schedule = now * MS_PER_SEC;
