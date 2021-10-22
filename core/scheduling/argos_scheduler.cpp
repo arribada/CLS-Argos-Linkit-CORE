@@ -734,10 +734,6 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	m_total_bits = total_bits;
 	m_mode = mode;
 
-	// Update RX time if RX is still enabled since we are about to stop RX
-	if (is_rx_enabled())
-		update_rx_time();
-
 	// Abort any scheduled RX to avoid race conditions
 	rx_deschedule();
 
@@ -746,6 +742,9 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	if (!is_powered_on()) {
 		power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
 	} else {
+		// Update RX time if RX is still enabled since we are about to stop RX
+		if (is_rx_enabled())
+			update_rx_time();
 		// Device already powered
 		// Force the device into idle state before transmitting
 		set_idle();
@@ -944,7 +943,7 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 	switch (event) {
 	case ArgosAsyncEvent::DEVICE_READY:
-		DEBUG_TRACE("ArgosScheduler::handle_tx_event: DEVICE_READY");
+		DEBUG_INFO("ArgosScheduler::handle_tx_event: DEVICE_READY");
 		set_frequency(m_argos_config.frequency);
 		set_tx_power(m_argos_config.power);
 		if (m_data_notification_callback) {
@@ -960,7 +959,7 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 
 	case ArgosAsyncEvent::TX_DONE:
 	{
-		DEBUG_TRACE("ArgosScheduler::handle_tx_event: TX_DONE");
+		DEBUG_INFO("ArgosScheduler::handle_tx_event: TX_DONE");
 		m_is_tx_enabled = false;
 
 		if (m_data_notification_callback) {
@@ -993,29 +992,50 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 	}
 
 	case ArgosAsyncEvent::RX_PACKET:
-		DEBUG_TRACE("ArgosScheduler::handle_tx_event: RX_PACKET");
+		DEBUG_INFO("ArgosScheduler::handle_tx_event: RX_PACKET");
 		handle_rx_packet();
 		break;
 
 	case ArgosAsyncEvent::RX_TIMEOUT:
-		DEBUG_TRACE("ArgosScheduler::handle_tx_event: RX_TIMEOUT");
+		DEBUG_INFO("ArgosScheduler::handle_tx_event: RX_TIMEOUT");
 		m_downlink_end = INVALID_SCHEDULE;
 		update_rx_time();
-		if (is_powered_on()) {
-			power_off();
-		}
+		rx_reschedule();
 		break;
 
 	case ArgosAsyncEvent::ERROR:
+	{
 		DEBUG_ERROR("ArgosScheduler::handle_tx_event: ERROR");
-		power_off();
-		// Check if the TX failed
+		// If an ERROR occurred during TX then just cleanup
 		if (m_is_tx_enabled) {
-			power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
+
+			// Mark any TX as disabled
+			m_is_tx_enabled = false;
+
+			// Update the LAST_TX in the configuration store
+			std::time_t last_tx = rtc->gettime();
+
+			// Prepass specific cleanup
+			if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
+				m_last_transmission_schedule = last_tx * MS_PER_SEC;
+			}
+
+			if (m_data_notification_callback) {
+				ServiceEvent e;
+				e.event_type = ServiceEventType::ARGOS_TX_END;
+				e.event_data = false;
+				m_data_notification_callback(e);
+			}
 		}
-		else
-			rx_reschedule(); // Just try to reschedule RX
+
+		// Invalidate any RX window
+		m_downlink_end = INVALID_SCHEDULE;
+
+		// Update the schedule for the next transmission and also any pending RX
+		reschedule();
+		rx_reschedule();
 		break;
+	}
 
 	default:
 		break;
@@ -1029,24 +1049,22 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 		std::time_t now = rtc->gettime();
 
 		if ((uint64_t)now < m_downlink_end) {
-			DEBUG_TRACE("ArgosScheduler::handle_rx_event: DEVICE_READY: start RX mode");
+			DEBUG_INFO("ArgosScheduler::handle_rx_event: DEVICE_READY: start RX mode");
 			// Enable RX mode with timeout which will trigger RX_TIMEOUT event
 			unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - now), m_argos_config.argos_rx_max_window);
 			set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
 			m_last_rx_time = now;
 		} else {
-			DEBUG_TRACE("ArgosScheduler::handle_rx_event: DEVICE_READY: insufficient time to start RX mode");
+			DEBUG_INFO("ArgosScheduler::handle_rx_event: DEVICE_READY: insufficient time to start RX mode");
 			m_downlink_end = INVALID_SCHEDULE;
-			if (is_powered_on()) {
-				power_off();
-			}
+			rx_reschedule();
 		}
 		break;
 	}
 
 	case ArgosAsyncEvent::TX_DONE:
 	{
-		DEBUG_TRACE("ArgosScheduler::handle_rx_event: TX_DONE");
+		DEBUG_INFO("ArgosScheduler::handle_rx_event: TX_DONE");
 		m_is_tx_enabled = false;
 
 		if (m_data_notification_callback) {
@@ -1079,29 +1097,51 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 	}
 
 	case ArgosAsyncEvent::RX_PACKET:
-		DEBUG_TRACE("ArgosScheduler::handle_rx_event: RX_PACKET");
+		DEBUG_INFO("ArgosScheduler::handle_rx_event: RX_PACKET");
 		handle_rx_packet();
 		break;
 
 	case ArgosAsyncEvent::RX_TIMEOUT:
-		DEBUG_TRACE("ArgosScheduler::handle_rx_event: RX_TIMEOUT");
+		DEBUG_INFO("ArgosScheduler::handle_rx_event: RX_TIMEOUT");
 		m_downlink_end = INVALID_SCHEDULE;
 		update_rx_time();
-		if (is_powered_on()) {
-			power_off();
-		}
+		rx_reschedule();
 		break;
 
 	case ArgosAsyncEvent::ERROR:
+	{
 		DEBUG_ERROR("ArgosScheduler::handle_rx_event: ERROR");
-		power_off();
-		// Check if the TX failed
+
+		// If an ERROR occurred during TX then just cleanup
 		if (m_is_tx_enabled) {
-			power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
+
+			// Mark any TX as disabled
+			m_is_tx_enabled = false;
+
+			// Update the LAST_TX in the configuration store
+			std::time_t last_tx = rtc->gettime();
+
+			// Prepass specific cleanup
+			if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
+				m_last_transmission_schedule = last_tx * MS_PER_SEC;
+			}
+
+			if (m_data_notification_callback) {
+				ServiceEvent e;
+				e.event_type = ServiceEventType::ARGOS_TX_END;
+				e.event_data = false;
+				m_data_notification_callback(e);
+			}
 		}
-		else
-			rx_reschedule(); // Just try to reschedule RX
+
+		// Invalidate any RX window
+		m_downlink_end = INVALID_SCHEDULE;
+
+		// Update the schedule for the next transmission and also any pending RX
+		reschedule();
+		rx_reschedule();
 		break;
+	}
 
 	default:
 		break;
