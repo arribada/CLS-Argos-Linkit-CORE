@@ -62,8 +62,8 @@ extern "C" {
 // It represents the time taken for programming tasks, etc.  We advance the RX task by 3
 // seconds extra relative to the TX task to avoid race conditions when the two might
 // fire at the same time otherwise.
-#define ARGOS_TX_MARGIN_SECS        7
-#define ARGOS_RX_MARGIN_SECS        (ARGOS_TX_MARGIN_SECS + 3)
+#define ARGOS_TX_MARGIN_SECS        0  // Don't try to compensate TX
+#define ARGOS_RX_MARGIN_SECS        0  // RX always follows TX
 
 // RX packet queue shall not be allowed to grow bigger than this size
 #define RX_PACKET_QUEUE_MAX_SIZE    64
@@ -90,18 +90,6 @@ void ArgosScheduler::rx_reschedule() {
 		return;
 	}
 
-	if (is_rx_enabled()) {
-		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already running");
-		return;
-	}
-
-	if (system_scheduler->is_scheduled(m_rx_task)) {
-		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already scheduled");
-		if (is_powered_on())
-			power_off();
-		return;
-	}
-
 	if (!m_argos_config.argos_rx_en) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: ARGOS_RX_EN is off");
 		if (is_powered_on())
@@ -111,8 +99,9 @@ void ArgosScheduler::rx_reschedule() {
 
 	if (m_downlink_end == INVALID_SCHEDULE) {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: prepass window has no DL");
-		if (is_powered_on())
+		if (is_powered_on()) {
 			power_off();
+		}
 		return;
 	}
 
@@ -129,6 +118,18 @@ void ArgosScheduler::rx_reschedule() {
 		DEBUG_TRACE("ArgosScheduler::rx_reschedule: AOP update not needed for another %lu secs",
 				(m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period)) - now);
 		m_downlink_end = INVALID_SCHEDULE;
+		if (is_powered_on())
+			power_off();
+		return;
+	}
+
+	if (is_rx_enabled()) {
+		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already running");
+		return;
+	}
+
+	if (system_scheduler->is_scheduled(m_rx_task)) {
+		DEBUG_TRACE("ArgosScheduler::rx_reschedule: DL RX already scheduled");
 		if (is_powered_on())
 			power_off();
 		return;
@@ -324,7 +325,7 @@ uint64_t ArgosScheduler::next_prepass() {
 	// If we were deferred by SWS then recompute using a start window that reflects earliest TX
 	if (m_earliest_tx != INVALID_SCHEDULE &&
 		m_earliest_tx >= curr_time) {
-		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX in %llu secs", curr_time - m_earliest_tx);
+		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX in %llu secs", m_earliest_tx - curr_time);
 		start_time = m_earliest_tx;
 	}
 
@@ -363,21 +364,21 @@ uint64_t ArgosScheduler::next_prepass() {
 			&next_pass)) {
 
 		// Computed schedule is advanced by ARGOS_TX_MARGIN_SECS so that Artic R2 programming delay is not included in the window
-		uint64_t now = rtc->gettime();
+		curr_time = rtc->gettime();
 		uint64_t schedule;
 
 		// Are we past the start point of the prepass window?
-		if ((uint64_t)(next_pass.epoch - ARGOS_TX_MARGIN_SECS) < now) {
+		if ((uint64_t)(next_pass.epoch - ARGOS_TX_MARGIN_SECS) < curr_time) {
 			// Ensure the schedule is at least TR_NOM away from previous transmission
 			if (m_last_transmission_schedule != INVALID_SCHEDULE) {
 				// If there is a previous transmission then advance TR_NOM with +/- jitter
 				// but don't allow a schedule before current RTC time
 				update_tx_jitter(-TX_JITTER_MS, TX_JITTER_MS);
-				schedule = std::max(now, ((m_last_transmission_schedule / MS_PER_SEC) + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS))) * MS_PER_SEC;
-				schedule = std::max((now * MS_PER_SEC), schedule + m_tx_jitter);
+				schedule = std::max((uint64_t)start_time, ((m_last_transmission_schedule / MS_PER_SEC) + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS))) * MS_PER_SEC;
+				schedule = std::max(((uint64_t)start_time * MS_PER_SEC), schedule + m_tx_jitter);
 			} else {
 				// This is the first transmission and we are inside the prepass window already, so schedule immediately
-				schedule = now * MS_PER_SEC;
+				schedule = std::max(((uint64_t)start_time * MS_PER_SEC), curr_time * MS_PER_SEC);
 			}
 		} else {
 			// Current time is before the prepass window, so set our schedule to the start
@@ -404,7 +405,7 @@ uint64_t ArgosScheduler::next_prepass() {
 		if ((schedule + (ARGOS_TX_MARGIN_SECS * MS_PER_SEC)) < ((uint64_t)next_pass.epoch + next_pass.duration) * MS_PER_SEC) {
 			// We're good to go for this schedule, compute relative delay until the epoch arrives
 			// and set the required Argos transmission mode
-			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %.3f seconds from now", (double)(schedule - (now * MS_PER_SEC)) / MS_PER_SEC);
+			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %.3f seconds from now", (double)(schedule - (curr_time * MS_PER_SEC)) / MS_PER_SEC);
 			m_next_schedule_absolute = schedule;
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
 
@@ -413,10 +414,10 @@ uint64_t ArgosScheduler::next_prepass() {
 			if (m_downlink_end == INVALID_SCHEDULE && next_pass.downlinkStatus != SAT_DNLK_OFF) {
 				// Set new downlink window end point
 				m_downlink_end = (uint64_t)next_pass.epoch + next_pass.duration;
-				m_downlink_start = (uint64_t)next_pass.epoch;
+				m_downlink_start = (uint64_t)schedule / MS_PER_SEC;
 				DEBUG_TRACE("next_prepass: new DL RX window = [%llu, %llu]", m_downlink_start, m_downlink_end);
 			}
-			return schedule - (now * MS_PER_SEC);
+			return schedule - (curr_time * MS_PER_SEC);
 		} else {
 			DEBUG_TRACE("ArgosScheduler::next_prepass: computed schedule is too late for this window", next_pass.epoch, next_pass.duration);
 			start_time = (std::time_t)next_pass.epoch + next_pass.duration;
@@ -495,7 +496,6 @@ void ArgosScheduler::notify_sensor_log_update() {
 			DEBUG_TRACE("ArgosScheduler::notify_sensor_log_update: depth pile has %u/24 entries with total %u seen", m_gps_entry_burst_counter.size(), m_num_gps_entries);
 		}
 		reschedule();
-		rx_reschedule();
 	}
 }
 
@@ -734,20 +734,23 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	m_total_bits = total_bits;
 	m_mode = mode;
 
+	// Update RX time if RX is still enabled since we are about to stop RX
+	if (is_rx_enabled())
+		update_rx_time();
+
 	// Abort any scheduled RX to avoid race conditions
 	rx_deschedule();
 
-	// NOTE: Always power off before transmitting since the transceiver doesn't seem to like doing
-	// a TX if RX mode has already been activated
-	if (is_powered_on()) {
-		if (is_rx_enabled())
-			update_rx_time();
-		power_off();
-	}
-
 	// Power on and then handle the remainder of the transmission in the async event handler
 	m_is_tx_enabled = true;
-	power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
+	if (!is_powered_on()) {
+		power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
+	} else {
+		// Device already powered
+		// Force the device into idle state before transmitting
+		set_idle();
+		handle_tx_event(ArgosAsyncEvent::DEVICE_READY);
+	}
 }
 
 void ArgosScheduler::prepare_time_sync_burst() {
@@ -1006,6 +1009,12 @@ void ArgosScheduler::handle_tx_event(ArgosAsyncEvent event) {
 	case ArgosAsyncEvent::ERROR:
 		DEBUG_ERROR("ArgosScheduler::handle_tx_event: ERROR");
 		power_off();
+		// Check if the TX failed
+		if (m_is_tx_enabled) {
+			power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
+		}
+		else
+			rx_reschedule(); // Just try to reschedule RX
 		break;
 
 	default:
@@ -1037,8 +1046,35 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 
 	case ArgosAsyncEvent::TX_DONE:
 	{
-		DEBUG_TRACE("ArgosScheduler::handle_rx_event: TX_DONE: bad context!!!");
+		DEBUG_TRACE("ArgosScheduler::handle_rx_event: TX_DONE");
 		m_is_tx_enabled = false;
+
+		if (m_data_notification_callback) {
+	    	ServiceEvent e;
+	    	e.event_type = ServiceEventType::ARGOS_TX_END;
+	    	e.event_data = false;
+	        m_data_notification_callback(e);
+		}
+
+		// Update the LAST_TX in the configuration store
+		std::time_t last_tx = rtc->gettime();
+
+		// Prepass specific cleanup
+		if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
+			m_last_transmission_schedule = last_tx * MS_PER_SEC;
+		}
+
+		configuration_store->write_param(ParamID::LAST_TX, last_tx);
+
+		// Increment TX counter
+		configuration_store->increment_tx_counter();
+
+		// Save configuration params
+		configuration_store->save_params();
+
+		// Update the schedule for the next transmission and also any pending RX
+		reschedule();
+		rx_reschedule();
 		break;
 	}
 
@@ -1059,6 +1095,12 @@ void ArgosScheduler::handle_rx_event(ArgosAsyncEvent event) {
 	case ArgosAsyncEvent::ERROR:
 		DEBUG_ERROR("ArgosScheduler::handle_rx_event: ERROR");
 		power_off();
+		// Check if the TX failed
+		if (m_is_tx_enabled) {
+			power_on([this](ArgosAsyncEvent e) { handle_tx_event(e); });
+		}
+		else
+			rx_reschedule(); // Just try to reschedule RX
 		break;
 
 	default:
@@ -1155,9 +1197,10 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 		m_constellation_status_map.clear();
 
 		// Clear down the current RX session to stop new packets arriving
+		DEBUG_TRACE("ArgosScheduler::update_pass_predict: invalidate RX window");
 		m_downlink_end = INVALID_SCHEDULE;
 		update_rx_time();
-		power_off();
+		rx_reschedule();
 	}
 }
 

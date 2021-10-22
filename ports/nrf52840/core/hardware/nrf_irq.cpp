@@ -7,6 +7,7 @@
 #include "gpio.hpp"
 #include "nrfx_gpiote.h"
 #include "scheduler.hpp"
+#include "interrupt_lock.hpp"
 
 extern Scheduler *system_scheduler;
 
@@ -69,16 +70,23 @@ NrfIRQ::~NrfIRQ() {
 }
 
 void NrfIRQ::enable(std::function<void()> func) {
+	InterruptLock lock;
+	system_scheduler->cancel_task(m_task);
 	m_func = func;
 	nrfx_gpiote_in_event_enable(BSP::GPIO_Inits[m_pin].pin_number, true);
 }
 
 void NrfIRQ::disable() {
+	InterruptLock lock;
+	m_func = nullptr;
 	nrfx_gpiote_in_event_disable(BSP::GPIO_Inits[m_pin].pin_number);
+	system_scheduler->cancel_task(m_task);
 }
 
 void NrfIRQ::process_event() {
-	system_scheduler->post_task_prio([this]() { m_func(); }, "NrfIRQTask");
+	if (m_func) {
+		m_task = system_scheduler->post_task_prio([this]() { m_func(); }, "NrfIRQTask");
+	}
 }
 
 bool NrfIRQ::poll() {

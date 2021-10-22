@@ -43,6 +43,7 @@ public:
 		mock().actualCall("set_tx_power").onObject(this).withParameter("power", (unsigned int)power);
 	}
 	void set_idle() override {
+		m_is_rx_enabled = false;
 		mock().actualCall("set_idle").onObject(this);
 	}
 	bool is_powered_on() override {
