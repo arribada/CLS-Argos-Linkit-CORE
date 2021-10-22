@@ -67,7 +67,6 @@ public:
 
 private:
 	Scheduler::TaskHandle m_tx_task;
-	Scheduler::TaskHandle m_rx_task;
 	ArgosConfig  m_argos_config;
 	bool         m_switch_state;
 	bool         m_is_running;
@@ -92,13 +91,12 @@ private:
 	ArgosMode    m_mode;
 	uint64_t     m_downlink_start;
 	uint64_t     m_downlink_end;
-	bool         m_is_tx_enabled;
+	bool         m_is_tx_pending;
 	std::map<uint8_t, AopSatelliteEntry_t> m_orbit_params_map;
 	std::map<uint8_t, AopSatelliteEntry_t> m_constellation_status_map;
 	std::time_t  m_last_rx_time;
 
-	void rx_deschedule();
-	void rx_reschedule();
+	void process_rx();
 	void reschedule();
 	void deschedule();
 	void process_schedule();
@@ -112,8 +110,7 @@ private:
 	void build_doppler_packet(ArgosPacket& packet);
 	void build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet);
 	void build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet);
-	void handle_tx_event(ArgosAsyncEvent event);
-	void handle_rx_event(ArgosAsyncEvent event);
+	void handle_event(ArgosAsyncEvent event);
 	uint64_t next_duty_cycle(unsigned int duty_cycle);
 	uint64_t next_prepass();
 	void handle_rx_packet();

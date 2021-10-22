@@ -326,9 +326,11 @@ void ArticTransceiver::clear_interrupt(uint8_t interrupt_num)
     {
         case INTERRUPT_1:
             send_command(ARTIC_CMD_CLEAR_INT1);
+            PMU::delay_ms(SAT_ARTIC_DELAY_TICK_INTERRUPT_MS); // Wait for IRQ to clear
             break;
         case INTERRUPT_2:
             send_command(ARTIC_CMD_CLEAR_INT2);
+            PMU::delay_ms(SAT_ARTIC_DELAY_TICK_INTERRUPT_MS); // Wait for IRQ to clear
             break;
         default:
         	break;
@@ -384,6 +386,7 @@ void ArticTransceiver::wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num
 
 void ArticTransceiver::send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint32_t status_flag_bits, uint32_t interrupt_timeout_ms)
 {
+	clear_interrupt(interrupt_number);
     send_command(command);
     wait_interrupt(interrupt_timeout_ms, interrupt_number, status_flag_bits);
 }
@@ -393,9 +396,11 @@ void ArticTransceiver::send_command_check_clean_async(uint8_t command, uint8_t i
 		std::function<void()> on_success)
 {
     m_timeout_task = system_scheduler->post_task_prio([this, interrupt_number]() {
-        DEBUG_ERROR("ArticTransceiver::wait_interrupt: Waiting for interrupt_%u timed out", interrupt_number + 1);
-        m_irq_int[interrupt_number]->disable();
-        m_notification_callback(ArgosAsyncEvent::ERROR);
+		DEBUG_TRACE("ArticTransceiver::wait_interrupt: Waiting for interrupt_%u timed out", interrupt_number + 1);
+    	if (m_is_powered_on && m_irq_int[interrupt_number] && m_notification_callback) {
+			m_irq_int[interrupt_number]->disable();
+			m_notification_callback(ArgosAsyncEvent::ERROR);
+    	}
     }, "CommandTimeoutTask", Scheduler::DEFAULT_PRIORITY, interrupt_timeout_ms);
 
     m_irq_int[interrupt_number]->enable([this, interrupt_number, status_flag_bits, on_success]() {
@@ -413,12 +418,13 @@ void ArticTransceiver::send_command_check_clean_async(uint8_t command, uint8_t i
         }
 
         // IRQ complete, cleanup and call success handler
-        m_irq_int[interrupt_number]->disable();
     	system_scheduler->cancel_task(m_timeout_task);
+        m_irq_int[interrupt_number]->disable();
         clear_interrupt(interrupt_number);
         on_success();
     });
 
+    clear_interrupt(interrupt_number);
     send_command(command);
 }
 
@@ -617,9 +623,13 @@ void ArticTransceiver::power_off()
 {
     DEBUG_TRACE("ArticTransceiver::power_off");
 
-	// Disable any RX processing
-    m_irq_int[INTERRUPT_1]->disable();
+    if (!m_is_powered_on)
+    	return;
+
+	// Disable any processing
+    system_scheduler->cancel_task(m_timeout_task);
     system_scheduler->cancel_task(m_rx_timeout_task);
+    m_irq_int[INTERRUPT_1]->disable();
 	m_is_rx_enabled = false;
 
     m_deferred_task_stopped = true;
@@ -709,6 +719,10 @@ void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent)> notificatio
 {
     DEBUG_TRACE("ArticTransceiver::power_on");
 
+    // Device is already powered
+    if (m_is_powered_on)
+    	return;
+
     m_notification_callback = notification_callback;
     m_deferred_task_stopped = false;
 
@@ -722,11 +736,11 @@ void ArticTransceiver::power_on(std::function<void(ArgosAsyncEvent)> notificatio
     if (!m_irq_int[0])
     	m_irq_int[0] = new NrfIRQ(BSP::GPIO::GPIO_INT1_SAT);
 
+    // Mark as powered on
+    m_is_powered_on = true;
+
     GPIOPins::set(BSP::GPIO::GPIO_SAT_EN);
     GPIOPins::set(BSP::GPIO::GPIO_SAT_RESET);
-
-    // Mark the device as powered on
-    m_is_powered_on = true;
 
     system_scheduler->post_task_prio([this](){
         // Reset the Artic device
@@ -756,8 +770,8 @@ void ArticTransceiver::set_idle() {
 	DEBUG_TRACE("ArticTransceiver::set_idle");
 
 	// Disable any RX processing
-    m_irq_int[INTERRUPT_1]->disable();
     system_scheduler->cancel_task(m_rx_timeout_task);
+    m_irq_int[INTERRUPT_1]->disable();
 	m_is_rx_enabled = false;
 
     // Configure idle mode (this will also disable a
@@ -807,13 +821,40 @@ void ArticTransceiver::set_rx_mode(const ArgosMode mode, const unsigned int time
 	if (m_is_rx_enabled)
 		return;
 
+	// Cancel any existing timeout
+	system_scheduler->cancel_task(m_rx_timeout_task);
+
 	// Add new entries for filtering on new packet types added since the firmware
 	// image was released
 	add_rx_packet_filter(0x000005F); // Constellation Satellite Status - format B
 	add_rx_packet_filter(0x00000D4); // Satellite Orbit Parameters – format B for ANGELS
 
-	// Mark RX as enabled
-	m_is_rx_enabled = true;
+	// Send asynchronous command to configure RX mode and start continuous RX
+	send_command_check_clean((mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_ARGOS_3_RX_MODE : ARTIC_CMD_SET_ARGOS_4_RX_MODE,
+			INTERRUPT_1, (1<<MCU_COMMAND_ACCEPTED) | (1<<dsp2mcu_int1), SAT_ARTIC_DELAY_INTERRUPT_MS);
+
+	// Enable IRQ to inform us whenever a packet is available
+    m_irq_int[INTERRUPT_1]->enable([this]() {
+        DEBUG_TRACE("ArticTransceiver::set_rx_mode: IRQ set");
+
+        uint32_t status = 0;
+        get_status_register(&status);
+        print_status(status);
+
+        // Check for valid RX message
+        if (status & (1 << RX_VALID_MESSAGE)) {
+        	// Only notify if new RX packet has been stored
+        	if (buffer_rx_packet())
+	        	m_notification_callback(ArgosAsyncEvent::RX_PACKET);
+        }
+
+        // Don't clear the interrupt until X memory has been read
+        // and the event has been processed to avoid reentry
+        clear_interrupt(INTERRUPT_1);
+    });
+
+	// Configure RX continuous mode
+    send_command_check_clean(ARTIC_CMD_START_RX_CONT, NO_INTERRUPT, (1<<RX_IN_PROGRESS), SAT_ARTIC_DELAY_INTERRUPT_MS);
 
 	// (Re-)Start RX_TIMEOUT in software
 	system_scheduler->cancel_task(m_rx_timeout_task);
@@ -821,33 +862,8 @@ void ArticTransceiver::set_rx_mode(const ArgosMode mode, const unsigned int time
 		m_notification_callback(ArgosAsyncEvent::RX_TIMEOUT);
 	}, "RXTimeoutTask", Scheduler::DEFAULT_PRIORITY, timeout_ms);
 
-	// Send asynchronous command to configure RX mode and start continuous RX
-	send_command_check_clean_async((mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_ARGOS_3_RX_MODE : ARTIC_CMD_SET_ARGOS_4_RX_MODE,
-			INTERRUPT_1, (1<<MCU_COMMAND_ACCEPTED) | (1<<dsp2mcu_int1), SAT_ARTIC_DELAY_INTERRUPT_MS,
-	[this]() {
-		// Enable IRQ to inform us whenever a packet is available
-	    m_irq_int[INTERRUPT_1]->enable([this]() {
-	        DEBUG_TRACE("ArticTransceiver::set_rx_mode: IRQ set");
-
-	        uint32_t status = 0;
-	        get_status_register(&status);
-	        print_status(status);
-
-	        // Check for valid RX message
-	        if (status & (1 << RX_VALID_MESSAGE)) {
-	        	// Only notify if new RX packet has been stored
-	        	if (buffer_rx_packet())
-		        	m_notification_callback(ArgosAsyncEvent::RX_PACKET);
-	        }
-
-	        // Don't clear the interrupt until X memory has been read
-	        // and the event has been processed to avoid reentry
-	        clear_interrupt(INTERRUPT_1);
-	    });
-
-		// Configure RX continuous mode
-	    send_command_check_clean(ARTIC_CMD_START_RX_CONT, NO_INTERRUPT, (1<<RX_IN_PROGRESS), SAT_ARTIC_DELAY_INTERRUPT_MS);
-	});
+	// Mark RX as enabled
+	m_is_rx_enabled = true;
 }
 
 void ArticTransceiver::send_packet(ArgosPacket const& user_payload, unsigned int argos_id, unsigned int payload_length, const ArgosMode mode)

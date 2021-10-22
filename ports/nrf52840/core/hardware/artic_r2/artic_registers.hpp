@@ -13,9 +13,9 @@
 
 #define SAT_ARTIC_DELAY_BOOT_MS              (1000)
 #define SAT_ARTIC_DELAY_POWER_ON_MS          (1000)
-#define SAT_ARTIC_DELAY_INTERRUPT_MS         (10000)
+#define SAT_ARTIC_DELAY_INTERRUPT_MS         (1000)
 #define SAT_ARTIC_DELAY_INTERRUPT_1_PROG_MS  (1000)
-#define SAT_ARTIC_TIMEOUT_SEND_TX_MS         (20000)
+#define SAT_ARTIC_TIMEOUT_SEND_TX_MS         (5000)
 #define SAT_ARTIC_DELAY_RESET_MS             (5)
 #define SAT_ARTIC_DELAY_BURST_MS             (5)
 #define SAT_ARTIC_DELAY_SET_BURST_MS         (5)
