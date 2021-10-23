@@ -4,6 +4,7 @@
 #include <array>
 #include <functional>
 #include <random>
+#include <ctime>
 
 #include <stdint.h>
 
@@ -38,8 +39,11 @@ class ArgosScheduler : public ServiceScheduler {
 
 public:
 	enum class ArgosAsyncEvent {
-		DEVICE_READY,
+		OFF,
+		ON,
+		TX_STARTED,
 		TX_DONE,
+		ACK_DONE,
 		RX_PACKET,
 		RX_TIMEOUT,
 		ERROR
@@ -54,16 +58,14 @@ public:
 
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	virtual void power_off() = 0;
-	virtual void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) = 0;
-	virtual bool is_powered_on() = 0;
-	virtual bool is_rx_enabled() = 0;
-	virtual void send_packet(ArgosPacket const& user_payload, unsigned int argos_id, unsigned int payload_length, const ArgosMode mode) = 0;
+	virtual void power_on(const unsigned int argos_id, std::function<void(ArgosAsyncEvent)> notification_callback) = 0;
+	virtual void send_packet(ArgosPacket const& user_payload, unsigned int payload_length, const ArgosMode mode) = 0;
 	virtual void read_packet(ArgosPacket& packet, unsigned int& size) = 0;
-	virtual void set_idle() = 0;
-	virtual void set_rx_mode(const ArgosMode mode, unsigned int timeout_ms) = 0;
+	virtual void set_rx_mode(const ArgosMode mode, const std::time_t stop_time) = 0;
+	virtual uint64_t get_rx_time_on() = 0;
 	virtual void set_frequency(const double freq) = 0;
 	virtual void set_tx_power(const BaseArgosPower power) = 0;
-	virtual void send_ack(const unsigned int argos_id, const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode) = 0;
+	virtual void send_ack(const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode) = 0;
 
 private:
 	Scheduler::TaskHandle m_tx_task;
@@ -95,6 +97,7 @@ private:
 	std::map<uint8_t, AopSatelliteEntry_t> m_orbit_params_map;
 	std::map<uint8_t, AopSatelliteEntry_t> m_constellation_status_map;
 	std::time_t  m_last_rx_time;
+	bool         m_is_powered;
 
 	void process_rx();
 	void reschedule();

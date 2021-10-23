@@ -1,14 +1,31 @@
-#ifndef __ARTIC_HPP_
-#define __ARTIC_HPP_
+#pragma once
 
 #include <stdint.h>
 
 #include "argos_scheduler.hpp"
 #include "nrf_spim.hpp"
-#include "nrf_irq.hpp"
 #include "artic_firmware.hpp"
 
 #define MAX_BURST  (2048)
+
+
+#define ARTIC_STATE_CHANGE(x, y)                     \
+	do {                                             \
+		DEBUG_TRACE("ARTIC_STATE_CHANGE: " #x " -> " #y ); \
+		m_state = y;                                 \
+		state_ ## x ##_exit();                       \
+		state_ ## y ##_enter();                      \
+	} while (0)
+
+#define ARTIC_STATE_EQUAL(x) \
+	(m_state == x)
+
+#define ARTIC_STATE_CALL(x) \
+	do {                    \
+		DEBUG_TRACE("ARTIC_STATE: " #x); \
+		state_ ## x();      \
+	} while (0)
+
 
 class ArticTransceiver : public ArgosScheduler {
 
@@ -73,20 +90,33 @@ class ArticTransceiver : public ArgosScheduler {
 	};
 
 private:
+	enum ArticTransceiverState {
+		stopped,
+		starting,
+		powering_on,
+		reset_assert,
+		reset_deassert,
+		dsp_reset,
+		send_firmware_image,
+		wait_firmware_ready,
+		check_firmware_crc,
+		idle_pending,
+		idle,
+		receive_pending,
+		receiving,
+		transmit_pending,
+		transmitting,
+		error
+	};
+
+	// Top-level state
+	ArticTransceiverState m_state;
 	std::function<void(ArgosAsyncEvent)> m_notification_callback;
 	NrfSPIM *m_nrf_spim;
-	NrfIRQ  *m_irq_int[2];
-	bool    m_deferred_task_stopped;
-	Scheduler::TaskHandle m_timeout_task;
-	Scheduler::TaskHandle m_rx_timeout_task;
-	bool    m_is_powered_on;
-	bool    m_is_rx_enabled;
-	bool    m_is_first_tx;
-
-	// Argos packet for TX
-	ArgosPacket m_packet_buffer;
-	ArgosPacket m_rx_packet;
-	unsigned int m_rx_packet_bits;
+	unsigned int m_argos_id;
+	unsigned int m_polling_counter;
+	unsigned int m_next_delay;
+	bool m_stopping;
 
 	// Firmware update procedure state
     mem_id_t m_mode;
@@ -101,6 +131,26 @@ private:
     uint8_t m_mem_sel;
     uint32_t m_bytes_total_read;
 
+	// Argos TX state
+	ArgosPacket m_tx_buffer;
+	ArgosPacket m_ack_buffer;
+	ArgosPacket m_packet_buffer;
+	ArgosMode   m_tx_mode;
+	ArgosMode   m_ack_mode;
+	ArgosAsyncEvent m_tx_event;
+	double      m_tx_freq;
+	bool        m_is_first_tx;
+
+	// Argos RX state
+	ArgosMode    m_rx_mode;
+	ArgosPacket  m_rx_packet;
+	unsigned int m_rx_packet_bits;
+	bool         m_rx_pending;
+	uint64_t     m_rx_timer_start;
+	std::time_t  m_rx_stop_time;
+	uint64_t     m_rx_total_time;
+
+	// Support functionality
 	void configure_burst(mem_id_t mode, bool read, uint32_t start_address);
 	void burst_access(mem_id_t mode, uint32_t start_address, const uint8_t *tx_data, uint8_t *rx_data, size_t size, bool read);
 	void send_burst(const uint8_t *tx_data, uint8_t *rx_data, size_t size, uint8_t length_transfer, bool read);
@@ -109,15 +159,8 @@ private:
 	void print_status(uint32_t status);
 	void get_and_print_status();
 	void set_tcxo_warmup_time(uint32_t time_s);
-	void program_firmware(std::function<void()> on_success);
-	void send_fw_files(std::function<void()> on_success);
-	void hardware_init();
-	void send_command_check_clean(uint8_t command, uint8_t interrupt_number, uint32_t status_flag, uint32_t interrupt_timeout_ms);
-	void send_command_check_clean_async(uint8_t command, uint8_t interrupt_number, uint32_t status_flag, uint32_t interrupt_timeout_ms,
-			std::function<void()> on_success);
-	void wait_interrupt(uint32_t timeout_ms, uint8_t interrupt_num, uint32_t status_code);
 	void clear_interrupt(uint8_t interrupt_num);
-	void check_crc(firmware_header_t *firmware_header);
+	bool check_crc(firmware_header_t *firmware_header);
 	void send_artic_command(artic_cmd_t cmd, uint32_t *response);
 	void spi_read(mem_id_t mode, uint32_t start_address, uint8_t *buffer_read, size_t size);
 	inline uint8_t convert_mem_sel(mem_id_t mode);
@@ -125,20 +168,77 @@ private:
 	void print_firmware_version();
 	bool buffer_rx_packet();
 	void add_rx_packet_filter(const uint32_t address);
+	bool is_idle();
+	bool is_idle_state();
+	bool is_tx_finished();
+	bool is_rx_available();
+	bool is_rx_in_progress();
+	bool is_tx_in_progress();
+	bool is_command_accepted();
+	bool is_firmware_ready();
+	void initiate_tx();
+	void initiate_rx();
+
+	// State machine functionality
+	void state_machine();
+	void state_starting();
+	void state_starting_enter();
+	void state_starting_exit();
+	void state_stopped();
+	void state_stopped_enter();
+	void state_stopped_exit();
+	void state_error();
+	void state_error_enter();
+	void state_error_exit();
+	void state_powering_on();
+	void state_powering_on_enter();
+	void state_powering_on_exit();
+	void state_reset_assert();
+	void state_reset_assert_enter();
+	void state_reset_assert_exit();
+	void state_reset_deassert();
+	void state_reset_deassert_enter();
+	void state_reset_deassert_exit();
+	void state_dsp_reset();
+	void state_dsp_reset_enter();
+	void state_dsp_reset_exit();
+	void state_send_firmware_image();
+	void state_send_firmware_image_enter();
+	void state_send_firmware_image_exit();
+	void state_wait_firmware_ready();
+	void state_wait_firmware_ready_enter();
+	void state_wait_firmware_ready_exit();
+	void state_check_firmware_crc();
+	void state_check_firmware_crc_enter();
+	void state_check_firmware_crc_exit();
+	void state_idle_pending();
+	void state_idle_pending_enter();
+	void state_idle_pending_exit();
+	void state_idle();
+	void state_idle_enter();
+	void state_idle_exit();
+	void state_transmit_pending();
+	void state_transmit_pending_enter();
+	void state_transmit_pending_exit();
+	void state_transmitting();
+	void state_transmitting_enter();
+	void state_transmitting_exit();
+	void state_receive_pending();
+	void state_receive_pending_enter();
+	void state_receive_pending_exit();
+	void state_receiving();
+	void state_receiving_enter();
+	void state_receiving_exit();
 
 public:
 	ArticTransceiver();
 	void power_off() override;
-	void power_on(std::function<void(ArgosAsyncEvent)> notification_callback) override;
-	bool is_powered_on() override;
-	bool is_rx_enabled() override;
-	void send_packet(ArgosPacket const& user_payload, unsigned int argos_id, unsigned int payload_length, const ArgosMode mode) override;
+	void power_on(const unsigned int argos_id, std::function<void(ArgosAsyncEvent)> notification_callback) override;
+	void send_packet(ArgosPacket const& user_payload, unsigned int payload_length, const ArgosMode mode) override;
+	void send_ack(const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode) override;
 	void read_packet(ArgosPacket& packet, unsigned int& size) override;
-	void set_idle() override;
-	void set_rx_mode(const ArgosMode mode, unsigned int timeout_ms) override;
+	void set_rx_mode(const ArgosMode mode, const std::time_t stop_time) override;
+	uint64_t get_rx_time_on() override;
 	void set_frequency(const double freq) override;
 	void set_tx_power(const BaseArgosPower power) override;
-	void send_ack(const unsigned int argos_id, const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode) override;
 };
-
-#endif // __ARTIC_HPP_

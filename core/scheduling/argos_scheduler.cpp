@@ -83,11 +83,6 @@ ArgosScheduler::ArgosScheduler() {
 
 void ArgosScheduler::process_rx() {
 
-	if (m_is_tx_pending) {
-		DEBUG_TRACE("ArgosScheduler::process_rx: TX in progress");
-		return;
-	}
-
 	if (!m_argos_config.argos_rx_en) {
 		DEBUG_TRACE("ArgosScheduler::process_rx: ARGOS_RX_EN is off");
 		power_off();
@@ -116,22 +111,9 @@ void ArgosScheduler::process_rx() {
 		return;
 	}
 
-	if (is_rx_enabled()) {
-		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX already running");
-		return;
-	}
-
-	uint64_t start_delay_sec = ((uint64_t)now >= (m_downlink_start - ARGOS_RX_MARGIN_SECS)) ? 0 : m_downlink_start - ARGOS_RX_MARGIN_SECS - (uint64_t)now;
-
-	// Power off if the scheduled RX is in the future
-	if (start_delay_sec > 0) {
-		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX window available in %llu secs", start_delay_sec);
-		power_off();
-	} else {
-		DEBUG_TRACE("ArgosScheduler::process_rx: starting DL RX window now");
-		unsigned int duration_sec = std::min((unsigned int)(m_downlink_end - now), m_argos_config.argos_rx_max_window);
-		set_rx_mode(ArgosMode::ARGOS_3, MS_PER_SEC * duration_sec);
-		m_last_rx_time = now;
+	if ((uint64_t)now >= m_downlink_start) {
+		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX window starting now");
+		set_rx_mode(ArgosMode::ARGOS_3, m_downlink_end);
 	}
 }
 
@@ -369,8 +351,11 @@ uint64_t ArgosScheduler::next_prepass() {
 			schedule += m_tx_jitter;
 		}
 
-		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x last=%.3f now=%llu s=%u c=%.3f e=%u",
-					next_pass.satHexId, (m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
+		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x dl=%u ul=%u last=%.3f now=%llu s=%u c=%.3f e=%u",
+					next_pass.satHexId,
+					(unsigned int)next_pass.downlinkStatus,
+					(unsigned int)next_pass.uplinkStatus,
+					(m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
 							(double)m_last_transmission_schedule/MS_PER_SEC, curr_time, (unsigned int)next_pass.epoch,
 							(double)schedule / MS_PER_SEC, (unsigned int)next_pass.epoch + next_pass.duration);
 
@@ -707,19 +692,12 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	m_total_bits = total_bits;
 	m_mode = mode;
 
-	// Power on and then handle the remainder of the transmission in the async event handler
+	// Ensure the device is powered on and request transmission
 	m_is_tx_pending = true;
-	if (!is_powered_on()) {
-		power_on([this](ArgosAsyncEvent e) { handle_event(e); });
-	} else {
-		// Update RX time if RX is still enabled since we are about to stop RX
-		if (is_rx_enabled())
-			update_rx_time();
-		// Device already powered
-		// Force the device into idle state before transmitting
-		set_idle();
-		handle_event(ArgosAsyncEvent::DEVICE_READY);
-	}
+	power_on(m_argos_config.argos_id, [this](ArgosAsyncEvent e) { handle_event(e); });
+	set_frequency(m_argos_config.frequency);
+	set_tx_power(m_argos_config.power);
+	send_packet(packet, total_bits, mode);
 }
 
 void ArgosScheduler::prepare_time_sync_burst() {
@@ -850,6 +828,7 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 	DEBUG_INFO("ArgosScheduler::start");
 
 	m_data_notification_callback = data_notification_callback;
+	m_is_powered = false;
 	m_is_running = true;
 	m_is_tx_pending = false;
 	m_is_deferred = false;
@@ -876,8 +855,8 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 
 void ArgosScheduler::stop() {
 	DEBUG_INFO("ArgosScheduler::stop");
-	deschedule();
 	m_is_running = false;
+	deschedule();
 	power_off();
 	delete m_rng;
 }
@@ -911,24 +890,29 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 
 void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 	switch (event) {
-	case ArgosAsyncEvent::DEVICE_READY:
-		DEBUG_INFO("ArgosScheduler::handle_event: DEVICE_READY");
-		set_frequency(m_argos_config.frequency);
-		set_tx_power(m_argos_config.power);
+	case ArgosAsyncEvent::ON:
+		DEBUG_INFO("ArgosScheduler::handle_event: DEVICE_ON");
+		break;
+	case ArgosAsyncEvent::OFF:
+		DEBUG_INFO("ArgosScheduler::handle_event: DEVICE_OFF");
+		update_rx_time();
+		break;
+	case ArgosAsyncEvent::TX_STARTED:
+		DEBUG_INFO("ArgosScheduler::handle_event: TX_STARTED");
 		if (m_data_notification_callback) {
 	    	ServiceEvent e;
 	    	e.event_type = ServiceEventType::ARGOS_TX_START;
 	    	e.event_data = false;
 	        m_data_notification_callback(e);
 		}
+		break;
 
-		// This will generate TX_DONE event when finished
-		send_packet(m_packet, m_argos_config.argos_id, m_total_bits, m_mode);
+	case ArgosAsyncEvent::ACK_DONE:
 		break;
 
 	case ArgosAsyncEvent::TX_DONE:
 	{
-		DEBUG_INFO("ArgosScheduler::handle_tx_event: TX_DONE");
+		DEBUG_INFO("ArgosScheduler::handle_event: TX_DONE");
 		m_is_tx_pending = false;
 
 		if (m_data_notification_callback) {
@@ -961,20 +945,19 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 	}
 
 	case ArgosAsyncEvent::RX_PACKET:
-		DEBUG_INFO("ArgosScheduler::handle_tx_event: RX_PACKET");
+		DEBUG_INFO("ArgosScheduler::handle_event: RX_PACKET");
 		handle_rx_packet();
 		break;
 
 	case ArgosAsyncEvent::RX_TIMEOUT:
-		DEBUG_INFO("ArgosScheduler::handle_tx_event: RX_TIMEOUT");
+		DEBUG_INFO("ArgosScheduler::handle_event: RX_TIMEOUT");
 		m_downlink_end = INVALID_SCHEDULE;
-		update_rx_time();
 		process_rx();
 		break;
 
 	case ArgosAsyncEvent::ERROR:
 	{
-		DEBUG_ERROR("ArgosScheduler::handle_tx_event: ERROR");
+		DEBUG_ERROR("ArgosScheduler::handle_event: ERROR");
 		// If an ERROR occurred during TX then just cleanup
 		if (m_is_tx_pending) {
 
@@ -1036,9 +1019,11 @@ void ArgosScheduler::handle_rx_packet() {
 }
 
 void ArgosScheduler::update_rx_time(void) {
-	std::time_t now = rtc->gettime();
-	configuration_store->increment_rx_time(now - m_last_rx_time);
-	configuration_store->save_params();
+	uint64_t t = get_rx_time_on() / MS_PER_SEC;
+	if (t) {
+		configuration_store->increment_rx_time(t);
+		configuration_store->save_params();
+	}
 }
 
 void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
