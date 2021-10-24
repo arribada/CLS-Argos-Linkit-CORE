@@ -83,6 +83,11 @@ ArgosScheduler::ArgosScheduler() {
 
 void ArgosScheduler::process_rx() {
 
+	if (m_is_tx_pending) {
+		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX deferred while TX pending");
+		return;
+	}
+
 	if (!m_argos_config.argos_rx_en) {
 		DEBUG_TRACE("ArgosScheduler::process_rx: ARGOS_RX_EN is off");
 		power_off();
@@ -828,7 +833,6 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 	DEBUG_INFO("ArgosScheduler::start");
 
 	m_data_notification_callback = data_notification_callback;
-	m_is_powered = false;
 	m_is_running = true;
 	m_is_tx_pending = false;
 	m_is_deferred = false;

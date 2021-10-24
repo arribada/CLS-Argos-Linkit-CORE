@@ -22,7 +22,6 @@
 
 #define ARTIC_STATE_CALL(x) \
 	do {                    \
-		DEBUG_TRACE("ARTIC_STATE: " #x); \
 		state_ ## x();      \
 	} while (0)
 

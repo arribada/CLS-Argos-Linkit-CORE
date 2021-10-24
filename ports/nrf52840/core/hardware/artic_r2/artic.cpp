@@ -521,7 +521,7 @@ void ArticTransceiver::state_machine() {
 
 	if (!ARTIC_STATE_EQUAL(stopped)) {
 		// Invoke ourselves again if we are not stopped
-		DEBUG_TRACE("ArticTransceiver::state_machine: reschedule in %u ms", m_next_delay);
+		//DEBUG_TRACE("ArticTransceiver::state_machine: reschedule in %u ms", m_next_delay);
 		system_scheduler->post_task_prio([this]() {
 			state_machine();
 		}, "ArgosTransceiverStateMachine", Scheduler::DEFAULT_PRIORITY, m_next_delay);

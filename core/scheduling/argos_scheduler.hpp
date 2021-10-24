@@ -97,7 +97,6 @@ private:
 	std::map<uint8_t, AopSatelliteEntry_t> m_orbit_params_map;
 	std::map<uint8_t, AopSatelliteEntry_t> m_constellation_status_map;
 	std::time_t  m_last_rx_time;
-	bool         m_is_powered;
 
 	void process_rx();
 	void reschedule();
