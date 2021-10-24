@@ -117,7 +117,7 @@ void ArgosScheduler::process_rx() {
 	}
 
 	if ((uint64_t)now >= m_downlink_start) {
-		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX window starting now");
+		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX window starting now for %.3f secs", (double)m_downlink_end - now);
 		set_rx_mode(ArgosMode::ARGOS_3, m_downlink_end);
 	}
 }
