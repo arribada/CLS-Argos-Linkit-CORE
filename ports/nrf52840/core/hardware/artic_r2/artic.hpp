@@ -109,6 +109,7 @@ private:
 	};
 
 	// Top-level state
+	Scheduler::TaskHandle m_task;
 	ArticTransceiverState m_state;
 	std::function<void(ArgosAsyncEvent)> m_notification_callback;
 	NrfSPIM *m_nrf_spim;
@@ -232,6 +233,7 @@ private:
 public:
 	ArticTransceiver();
 	void power_off() override;
+	void power_off_immediate() override;
 	void power_on(const unsigned int argos_id, std::function<void(ArgosAsyncEvent)> notification_callback) override;
 	void send_packet(ArgosPacket const& user_payload, unsigned int payload_length, const ArgosMode mode) override;
 	void send_ack(const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode) override;

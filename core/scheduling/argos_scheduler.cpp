@@ -132,8 +132,8 @@ void ArgosScheduler::reschedule() {
 
 	// Check to see if we are already scheduled and no mode change has arisen
 	if (system_scheduler->is_scheduled(m_tx_task) && last_mode == m_argos_config.mode) {
-		DEBUG_TRACE("ArgosScheduler::reschedule: already scheduled at %.3f secs",
-				(double)m_next_schedule_relative / MS_PER_SEC);
+		DEBUG_TRACE("ArgosScheduler::reschedule: already scheduled in %.3f secs",
+				((double)m_next_schedule_relative / MS_PER_SEC) - (double)rtc->gettime());
 		return;
 	}
 
@@ -357,7 +357,7 @@ uint64_t ArgosScheduler::next_prepass() {
 		}
 
 		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x dl=%u ul=%u last=%.3f now=%llu s=%u c=%.3f e=%u",
-					next_pass.satHexId,
+					(unsigned int)next_pass.satHexId,
 					(unsigned int)next_pass.downlinkStatus,
 					(unsigned int)next_pass.uplinkStatus,
 					(m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
@@ -751,7 +751,10 @@ void ArgosScheduler::prepare_normal_burst() {
 	DEBUG_TRACE("ArgosScheduler::prepare_normal_burst: msg_index=%u/%u span=%u num_log_entries=%u", m_msg_index % max_index, max_index, span, m_num_gps_entries);
 
 	// Mark last schedule attempt
-	m_last_transmission_schedule = m_next_schedule_absolute;
+	if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
+		m_last_transmission_schedule = rtc->gettime() * MS_PER_SEC;
+	} else
+		m_last_transmission_schedule = m_next_schedule_absolute;
 
 	// If the number of GPS entries received is less than the span then modify span
 	// to reflect number of entries available
@@ -860,8 +863,8 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 void ArgosScheduler::stop() {
 	DEBUG_INFO("ArgosScheduler::stop");
 	m_is_running = false;
+	power_off_immediate();
 	deschedule();
-	power_off();
 	delete m_rng;
 }
 
@@ -929,11 +932,6 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 		// Update the LAST_TX in the configuration store
 		std::time_t last_tx = rtc->gettime();
 
-		// Prepass specific cleanup
-		if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
-			m_last_transmission_schedule = last_tx * MS_PER_SEC;
-		}
-
 		configuration_store->write_param(ParamID::LAST_TX, last_tx);
 
 		// Increment TX counter
@@ -967,14 +965,6 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 
 			// Mark any TX as disabled
 			m_is_tx_pending = false;
-
-			// Update the LAST_TX in the configuration store
-			std::time_t last_tx = rtc->gettime();
-
-			// Prepass specific cleanup
-			if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
-				m_last_transmission_schedule = last_tx * MS_PER_SEC;
-			}
 
 			if (m_data_notification_callback) {
 				ServiceEvent e;

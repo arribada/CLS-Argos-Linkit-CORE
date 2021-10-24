@@ -376,9 +376,22 @@ void ArticTransceiver::power_off()
 {
     DEBUG_TRACE("ArticTransceiver::power_off");
 
-    // We run the state machine until it has entered the STOPPED state
+    // The state machine will safely transition to stopped as soon
+    // as all pending activities have completed
     if (!ARTIC_STATE_EQUAL(stopped)) {
     	m_stopping = true;
+    }
+}
+
+void ArticTransceiver::power_off_immediate()
+{
+    DEBUG_TRACE("ArticTransceiver::power_off_immediate");
+
+    // We force a power off by cancelling the state machine and
+    // forcing a stopped state
+    if (!ARTIC_STATE_EQUAL(stopped)) {
+    	system_scheduler->cancel_task(m_task);
+    	ARTIC_STATE_CHANGE(idle, stopped);
     }
 }
 
@@ -522,7 +535,7 @@ void ArticTransceiver::state_machine() {
 	if (!ARTIC_STATE_EQUAL(stopped)) {
 		// Invoke ourselves again if we are not stopped
 		//DEBUG_TRACE("ArticTransceiver::state_machine: reschedule in %u ms", m_next_delay);
-		system_scheduler->post_task_prio([this]() {
+		m_task = system_scheduler->post_task_prio([this]() {
 			state_machine();
 		}, "ArgosTransceiverStateMachine", Scheduler::DEFAULT_PRIORITY, m_next_delay);
 	}
@@ -537,7 +550,7 @@ void ArticTransceiver::state_starting_exit() {
 void ArticTransceiver::state_starting() {
     m_rx_packet_bits = 0;
     m_rx_total_time = 0;
-    m_is_first_tx = false;
+    m_is_first_tx = true;
 	m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
 	ARTIC_STATE_CHANGE(starting, powering_on);
 }
@@ -959,6 +972,7 @@ void ArticTransceiver::state_transmitting_enter() {
 }
 
 void ArticTransceiver::state_transmitting_exit() {
+	m_is_first_tx = false;
 }
 
 void ArticTransceiver::state_transmitting() {

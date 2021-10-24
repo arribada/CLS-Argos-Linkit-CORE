@@ -58,6 +58,7 @@ public:
 
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	virtual void power_off() = 0;
+	virtual void power_off_immediate() = 0;
 	virtual void power_on(const unsigned int argos_id, std::function<void(ArgosAsyncEvent)> notification_callback) = 0;
 	virtual void send_packet(ArgosPacket const& user_payload, unsigned int payload_length, const ArgosMode mode) = 0;
 	virtual void read_packet(ArgosPacket& packet, unsigned int& size) = 0;
