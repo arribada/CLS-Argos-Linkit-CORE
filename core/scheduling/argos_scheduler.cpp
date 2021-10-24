@@ -361,7 +361,7 @@ uint64_t ArgosScheduler::next_prepass() {
 					(unsigned int)next_pass.downlinkStatus,
 					(unsigned int)next_pass.uplinkStatus,
 					(m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
-							((double)m_last_transmission_schedule/MS_PER_SEC - curr_time), (double)curr_time - (double)next_pass.epoch,
+							((double)m_last_transmission_schedule/MS_PER_SEC - curr_time), (double)next_pass.epoch - (double)curr_time,
 							((double)schedule / MS_PER_SEC) - curr_time, ((double)next_pass.epoch + (double)next_pass.duration) - curr_time);
 
 		// Check we don't transmit off the end of the prepass window
