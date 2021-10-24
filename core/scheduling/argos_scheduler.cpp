@@ -133,7 +133,7 @@ void ArgosScheduler::reschedule() {
 	// Check to see if we are already scheduled and no mode change has arisen
 	if (system_scheduler->is_scheduled(m_tx_task) && last_mode == m_argos_config.mode) {
 		DEBUG_TRACE("ArgosScheduler::reschedule: already scheduled in %.3f secs",
-				((double)m_next_schedule_relative / MS_PER_SEC) - (double)rtc->gettime());
+				((double)m_next_schedule_absolute / MS_PER_SEC) - (double)rtc->gettime());
 		return;
 	}
 
@@ -356,13 +356,13 @@ uint64_t ArgosScheduler::next_prepass() {
 			schedule += m_tx_jitter;
 		}
 
-		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x dl=%u ul=%u last=%.3f now=%llu s=%u c=%.3f e=%u",
+		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x dl=%u ul=%u last=%.3f s=%.3f c=%.3f e=%.3f",
 					(unsigned int)next_pass.satHexId,
 					(unsigned int)next_pass.downlinkStatus,
 					(unsigned int)next_pass.uplinkStatus,
 					(m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
-							(double)m_last_transmission_schedule/MS_PER_SEC, curr_time, (unsigned int)next_pass.epoch,
-							(double)schedule / MS_PER_SEC, (unsigned int)next_pass.epoch + next_pass.duration);
+							((double)m_last_transmission_schedule/MS_PER_SEC - curr_time), (double)curr_time - (double)next_pass.epoch,
+							((double)schedule / MS_PER_SEC) - curr_time, ((double)next_pass.epoch + (double)next_pass.duration) - curr_time);
 
 		// Check we don't transmit off the end of the prepass window
 		if ((schedule + (ARGOS_TX_MARGIN_SECS * MS_PER_SEC)) < ((uint64_t)next_pass.epoch + next_pass.duration) * MS_PER_SEC) {
@@ -378,7 +378,7 @@ uint64_t ArgosScheduler::next_prepass() {
 				// Set new downlink window end point
 				m_downlink_end = (uint64_t)next_pass.epoch + next_pass.duration;
 				m_downlink_start = (uint64_t)next_pass.epoch;
-				DEBUG_TRACE("next_prepass: new DL RX window = [%llu, %llu]", m_downlink_start, m_downlink_end);
+				DEBUG_TRACE("next_prepass: new DL RX window = [%.3f, %.3f]", (double)m_downlink_start - curr_time, (double)m_downlink_end - curr_time);
 			}
 			return schedule - (curr_time * MS_PER_SEC);
 		} else {
@@ -1015,6 +1015,7 @@ void ArgosScheduler::handle_rx_packet() {
 void ArgosScheduler::update_rx_time(void) {
 	uint64_t t = get_rx_time_on() / MS_PER_SEC;
 	if (t) {
+		DEBUG_TRACE("ArgosScheduler::update_rx_time: RX ran for %llu secs", t);
 		configuration_store->increment_rx_time(t);
 		configuration_store->save_params();
 	}
