@@ -1082,7 +1082,6 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 		// Clear down the current RX session to stop new packets arriving
 		DEBUG_TRACE("ArgosScheduler::update_pass_predict: invalidate RX window");
 		m_downlink_end = INVALID_SCHEDULE;
-		update_rx_time();
 		process_rx();
 	}
 }
