@@ -111,7 +111,6 @@ void ArgosScheduler::process_rx() {
 	if (now < (m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period))) {
 		DEBUG_TRACE("ArgosScheduler::process_rx: AOP update not needed for another %lu secs",
 				(m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period)) - now);
-		m_downlink_end = INVALID_SCHEDULE;
 		power_off();
 		return;
 	}
@@ -317,6 +316,22 @@ uint64_t ArgosScheduler::next_prepass() {
 	};
 	SatelliteNextPassPrediction_t next_pass;
 
+	// Check for next RX window if we don't have one yet
+	if (m_downlink_end == INVALID_SCHEDULE && m_argos_config.argos_rx_en) {
+		if (PREVIPASS_compute_next_pass_with_status(
+	    	&config,
+			pass_predict.records,
+			pass_predict.num_records,
+			SAT_DNLK_ON_WITH_A3,
+			SAT_UPLK_OFF,
+			&next_pass)) {
+			// Mark a new downlink RX window
+			m_downlink_end = (uint64_t)next_pass.epoch + next_pass.duration;
+			m_downlink_start = (uint64_t)next_pass.epoch;
+			DEBUG_INFO("next_prepass: new DL RX window = [%llu, %llu]", m_downlink_start, m_downlink_end);
+		}
+	}
+
 	while (PREVIPASS_compute_next_pass(
     		&config,
 			pass_predict.records,
@@ -371,15 +386,6 @@ uint64_t ArgosScheduler::next_prepass() {
 			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %.3f seconds from now", (double)(schedule - (curr_time * MS_PER_SEC)) / MS_PER_SEC);
 			m_next_schedule_absolute = schedule;
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
-
-			// Do not update downlink status unless the existing prepass window has elapsed which is
-			// signified by m_downlink_end = INVALID_SCHEDULE.
-			if (m_downlink_end == INVALID_SCHEDULE && next_pass.downlinkStatus != SAT_DNLK_OFF) {
-				// Set new downlink window end point
-				m_downlink_end = (uint64_t)next_pass.epoch + next_pass.duration;
-				m_downlink_start = (uint64_t)next_pass.epoch;
-				DEBUG_TRACE("next_prepass: new DL RX window = [%.3f, %.3f]", (double)m_downlink_start - curr_time, (double)m_downlink_end - curr_time);
-			}
 			return schedule - (curr_time * MS_PER_SEC);
 		} else {
 			DEBUG_TRACE("ArgosScheduler::next_prepass: computed schedule is too late for this window", next_pass.epoch, next_pass.duration);

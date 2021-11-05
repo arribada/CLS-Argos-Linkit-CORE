@@ -3738,3 +3738,166 @@ TEST(ArgosScheduler, GNSSOffDutyCycleSchedulingDopplerPacket)
 	}
 
 }
+
+
+TEST(ArgosScheduler, TestAOPUpdateWithOutOfServiceSatellite)
+{
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int dry_time_before_tx = 10;
+	unsigned int duty_cycle = 0x0U; // Not used
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	unsigned int ntry_per_message = 20;
+	BaseArgosPower power = BaseArgosPower::POWER_500_MW;
+	unsigned int tr_nom = 300;
+	unsigned int tx_counter = 0;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	unsigned int dloc_arg_nom = 60*60U;
+	bool lb_en = false;
+	bool underwater_en = false;
+	bool sync_burst_en = false;
+	bool tx_jitter_en = false;
+	unsigned int rx_aop_update_period = 0U;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+	fake_config_store->write_param(ParamID::DUTY_CYCLE, duty_cycle);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, ntry_per_message);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::TX_COUNTER, tx_counter);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, sync_burst_en);
+	fake_config_store->write_param(ParamID::ARGOS_TX_JITTER_EN, tx_jitter_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::ARGOS_RX_AOP_UPDATE_PERIOD, rx_aop_update_period);
+
+	// Sample configuration provided with prepass library V3.4
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		7,
+		{
+			{ 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+			{ 0x9, 3, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 33, 39 }, 7195.632f, 98.7141f, 344.177f, -25.340f, 101.3600f, 0.00f },
+			{ 0xB, 7, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 23, 29, 29 }, 7194.917f, 98.7183f, 330.404f, -25.336f, 101.3449f, 0.00f },
+			{ 0x5, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 23, 50, 6 }, 7180.549f, 98.7298f, 289.399f, -25.260f, 101.0419f, -1.78f },
+			{ 0x8, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 22, 12, 6 }, 7226.170f, 99.0661f, 343.180f, -25.499f, 102.0039f, -1.80f },
+			{ 0xC, 6, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 52 }, 7226.509f, 99.1913f, 291.936f, -25.500f, 102.0108f, -1.98f },
+			{ 0xD, 4, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 53 }, 7160.246f, 98.5358f, 118.029f, -25.154f, 100.6148f, 0.00f }
+		}
+	};
+
+	// Write ARGOS_AOP_DATE
+	std::time_t last_aop = 0;
+	fake_config_store->write_param(ParamID::ARGOS_AOP_DATE, last_aop);
+
+	fake_config_store->write_pass_predict(pass_predict);
+
+	// Start the scheduler
+	argos_sched->start();
+
+	// Populate GPS
+	GPSLogEntry gps_entry;
+	gps_entry.header.year = 2020;
+	gps_entry.header.month = 4;
+	gps_entry.header.day = 28;
+	gps_entry.header.hours = 14;
+	gps_entry.header.minutes = 1;
+	gps_entry.info.onTime = 0;
+	gps_entry.info.batt_voltage = 7350;
+	gps_entry.info.year = 2020;
+	gps_entry.info.month = 4;
+	gps_entry.info.day = 28;
+	gps_entry.info.hour = 14;
+	gps_entry.info.min = 1;
+	gps_entry.info.schedTime = convert_epochtime(gps_entry.info.year, gps_entry.info.month, gps_entry.info.day, gps_entry.info.hour, gps_entry.info.min, gps_entry.info.sec);
+	gps_entry.info.valid = 1;
+	gps_entry.info.lon = 11.8768;
+	gps_entry.info.lat = -33.8232;
+	gps_entry.info.hMSL = 0;
+	gps_entry.info.gSpeed = 8056;  // mm/s
+	gps_entry.info.headMot = 0;
+	gps_entry.info.fixType = 3;
+	fake_log->write(&gps_entry);
+
+	std::time_t t = 1580099520;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	argos_sched->notify_sensor_log_update();
+
+	// TX shall be scheduled first
+
+	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
+	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
+	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
+
+	// RX shall be immediately after TX is done
+	mock().expectOneCall("set_rx_mode").onObject(argos_sched).ignoreOtherParameters();
+
+	t += 10;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	while (!system_scheduler->run());
+
+	std::string x;
+	x = "00000BE500D484C1888D4DCD616E9EAF627186023C44A609";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE5005484C1888C88A64955CCBC9ABFF8094138C713";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "000005F7006601A07900B78C00D4800FD0";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000C77007A03900B7C500800C00D4CF219";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE700B484C1C85648AB14D528C6C2FC2F004329885B";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE700D484C1C881044E56FE9EAF5A7157023C3D5579";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000E17082021308215302537CB29";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE7009484C1C89201E9971528C6B2FBF90042691CC8";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "000005F4006601A07900B78C00D4800A4F";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000D44006484C1C8848C8DC791FB3825F433336052F78A";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000BE400C484C1C89591A52A3BECDAD3734F0654E17BE3";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+	x = "00000E14082021309060927978E50A";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	t += 100;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+
+	// Last required RX packet should trigger power off
+	mock().expectOneCall("power_off").onObject(argos_sched);
+	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(100000);
+
+	x = "00000BE4008484C1C8520540573BEEDA837142094D5A0E56";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	// Now check that the records have been updated
+	pass_predict = configuration_store->read_pass_predict();
+	CHECK_EQUAL(8, pass_predict.num_records);
+
+	// Check last AOP date
+	std::time_t last_aop_update;
+	last_aop_update = configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);
+	CHECK_EQUAL(t, last_aop_update);
+
+	// Check RX counter
+	unsigned int rx_counter = configuration_store->read_param<unsigned int>(ParamID::ARGOS_RX_COUNTER);
+	CHECK_EQUAL(13, rx_counter);
+
+	// Check RX time
+	unsigned int rx_time = configuration_store->read_param<unsigned int>(ParamID::ARGOS_RX_TIME);
+	CHECK_EQUAL(100, rx_time);
+}
