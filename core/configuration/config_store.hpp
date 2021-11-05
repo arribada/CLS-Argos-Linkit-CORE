@@ -1,5 +1,4 @@
-#ifndef __CONFIG_STORE_HPP_
-#define __CONFIG_STORE_HPP_
+#pragma once
 
 #include <array>
 #include <type_traits>
@@ -94,11 +93,23 @@ protected:
 		/* ARGOS_FREQ */ 401.65,
 		/* ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
 		/* TR_NOM */ 60U,
+#if MODEL_SB
+		/* ARGOS_MODE */ BaseArgosMode::PASS_PREDICTION,
+#else
 		/* ARGOS_MODE */ BaseArgosMode::LEGACY,
+#endif
+#if MODEL_SB
+		/* NTRY_PER_MESSAGE */ 6U,
+#else
 		/* NTRY_PER_MESSAGE */ 0U,
+#endif
 		/* DUTY_CYCLE */ 0U,
 		/* GNSS_EN */ (bool)true,
+#if MODEL_SB
+		/* DLOC_ARG_NOM */ 60*60U,
+#else
 		/* DLOC_ARG_NOM */ 10*60U,
+#endif
 		/* ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_16,
 		/* GPS_CONST_SELECT */ 0U, // Not implemented
 		/* GLONASS_CONST_SELECT */ 0U, // Not implemented
@@ -162,9 +173,25 @@ protected:
 		/* delta_arg_loc_cellular_seconds */ 65,
 		/* argos_extra_flags_enable */ true,
 		/* argos_depth_pile */ BaseArgosDepthPile::DEPTH_PILE_1,
+
+#if MODEL_SB
+		/* argos_power */ BaseArgosPower::POWER_500_MW,
+#else
 		/* argos_power */ BaseArgosPower::POWER_200_MW,
+#endif
+
+#if MODEL_SB
+		/* argos_time_repetition_seconds */ 60,
+#else
 		/* argos_time_repetition_seconds */ 240,
+#endif
+
+#if MODEL_SB
+		/* argos_mode */ BaseArgosMode::PASS_PREDICTION,
+#else
 		/* argos_mode */ BaseArgosMode::LEGACY,
+#endif
+
 		/* argos_duty_cycle */ 0xFFFFFFU,
 		/* gnss_extra_flags_enable */ true,
 		/* hdop_filter_threshold */ 2,
@@ -581,5 +608,3 @@ public:
 		write_param(ParamID::ARGOS_RX_TIME, rx_time);
 	}
 };
-
-#endif // __CONFIG_STORE_HPP_

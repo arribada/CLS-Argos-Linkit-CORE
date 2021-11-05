@@ -102,7 +102,7 @@ void ArgosScheduler::process_rx() {
 
 	time_t now = rtc->gettime();
 	if ((uint64_t)now >= m_downlink_end) {
-		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX window has elapsed");
+		DEBUG_INFO("ArgosScheduler::process_rx: Setting RX_OFF: window has elapsed");
 		m_downlink_end = INVALID_SCHEDULE;
 		power_off();
 		return;
@@ -117,7 +117,7 @@ void ArgosScheduler::process_rx() {
 	}
 
 	if ((uint64_t)now >= m_downlink_start) {
-		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX window starting now for %.3f secs", (double)m_downlink_end - now);
+		DEBUG_INFO("ArgosScheduler::process_rx: Setting RX_ON for %.3f secs", (double)m_downlink_end - now);
 		set_rx_mode(ArgosMode::ARGOS_3, m_downlink_end);
 	}
 }
@@ -898,14 +898,14 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 	switch (event) {
 	case ArgosAsyncEvent::ON:
-		DEBUG_INFO("ArgosScheduler::handle_event: DEVICE_ON");
+		DEBUG_TRACE("ArgosScheduler::handle_event: DEVICE_ON");
 		break;
 	case ArgosAsyncEvent::OFF:
-		DEBUG_INFO("ArgosScheduler::handle_event: DEVICE_OFF");
+		DEBUG_TRACE("ArgosScheduler::handle_event: DEVICE_OFF");
 		update_rx_time();
 		break;
 	case ArgosAsyncEvent::TX_STARTED:
-		DEBUG_INFO("ArgosScheduler::handle_event: TX_STARTED");
+		DEBUG_TRACE("ArgosScheduler::handle_event: TX_STARTED");
 		if (m_data_notification_callback) {
 	    	ServiceEvent e;
 	    	e.event_type = ServiceEventType::ARGOS_TX_START;
@@ -919,7 +919,7 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 
 	case ArgosAsyncEvent::TX_DONE:
 	{
-		DEBUG_INFO("ArgosScheduler::handle_event: TX_DONE");
+		DEBUG_TRACE("ArgosScheduler::handle_event: TX_DONE");
 		m_is_tx_pending = false;
 
 		if (m_data_notification_callback) {
@@ -947,19 +947,19 @@ void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
 	}
 
 	case ArgosAsyncEvent::RX_PACKET:
-		DEBUG_INFO("ArgosScheduler::handle_event: RX_PACKET");
+		DEBUG_TRACE("ArgosScheduler::handle_event: RX_PACKET");
 		handle_rx_packet();
 		break;
 
 	case ArgosAsyncEvent::RX_TIMEOUT:
-		DEBUG_INFO("ArgosScheduler::handle_event: RX_TIMEOUT");
+		DEBUG_INFO("ArgosScheduler::handle_event: Setting RX_OFF: timeout");
 		m_downlink_end = INVALID_SCHEDULE;
 		process_rx();
 		break;
 
 	case ArgosAsyncEvent::ERROR:
 	{
-		DEBUG_ERROR("ArgosScheduler::handle_event: ERROR");
+		DEBUG_TRACE("ArgosScheduler::handle_event: ERROR");
 		// If an ERROR occurred during TX then just cleanup
 		if (m_is_tx_pending) {
 

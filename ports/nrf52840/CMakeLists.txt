@@ -18,7 +18,17 @@ set(LIB_DIR       ../../libraries)
 option(BOARD "Board to compile for" NONE)
 
 if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE)
+    MODEL_SB=0
+    MODEL_UW=0
+    MODEL_CORE=0
     set(DEVICE_MODEL "Linkit ${MODEL}")
+    if(${MODEL} MATCHES SB)
+    	MODEL_SB=1
+    elseif(${MODEL} MATCHES UW)
+    	MODEL_UW=1
+    elseif(${MODEL} MATCHES CORE)
+    	MODEL_CORE=1
+    endif()
 else()
     message(FATAL_ERROR "MODEL must be one of {SB, CORE, UW}")
 endif()
@@ -215,6 +225,9 @@ target_sources(${TARGET_NAME} PRIVATE
 target_compile_definitions(${TARGET_NAME} PRIVATE
     Release=0
     Debug=1
+    MODEL_SB=${MODEL_SB}
+    MODEL_UW=${MODEL_UW}
+    MODEL_CORE=${MODEL_CORE}
     BUILD_TYPE=${CMAKE_BUILD_TYPE}
 	DEBUG_ENABLE=1
     DEBUG_LEVEL=${DEBUG_LEVEL}
