@@ -1036,16 +1036,20 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 		for (; j < existing_pass_predict.num_records; j++) {
 			// Check for existing hex ID match
 			if (new_pass_predict.records[i].satHexId == existing_pass_predict.records[j].satHexId) {
+				DEBUG_TRACE("ArgosScheduler::update_pass_predict: hexid=%01x dl=%u ul=%u aop=%u",
+						(unsigned int)new_pass_predict.records[i].satHexId,
+						(unsigned int)new_pass_predict.records[i].downlinkStatus,
+						(unsigned int)new_pass_predict.records[i].uplinkStatus,
+						(unsigned int)new_pass_predict.records[i].bulletin.year ? 1: 0
+						);
 				if ((new_pass_predict.records[i].downlinkStatus || new_pass_predict.records[i].uplinkStatus) &&
 						new_pass_predict.records[i].bulletin.year) {
-					if (new_pass_predict.records[i] != existing_pass_predict.records[j]) {
-						existing_pass_predict.records[j] = new_pass_predict.records[i];
-						num_updated_records++;
-					}
+					num_updated_records++;
+					existing_pass_predict.records[j] = new_pass_predict.records[i];
 				} else if (!new_pass_predict.records[i].downlinkStatus && !new_pass_predict.records[i].uplinkStatus) {
+					num_updated_records++;
 					existing_pass_predict.records[j].downlinkStatus = new_pass_predict.records[i].downlinkStatus;
 					existing_pass_predict.records[j].uplinkStatus = new_pass_predict.records[i].uplinkStatus;
-					num_updated_records++;
 				}
 				break;
 			}
@@ -1069,9 +1073,11 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 		}
 	}
 
+	DEBUG_TRACE("ArgosScheduler::update_pass_predict: received=%u required=%u", num_updated_records, existing_pass_predict.num_records);
+
 	// Check if we received a sufficient number of records
 	if (num_updated_records == new_pass_predict.num_records && num_updated_records >= existing_pass_predict.num_records) {
-		DEBUG_INFO("ArgosScheduler::update_pass_predict: committing %u AOP records", num_updated_records);
+		DEBUG_INFO("ArgosScheduler::update_pass_predict: RX_OFF: committing %u AOP records", num_updated_records);
 		configuration_store->write_pass_predict(existing_pass_predict);
 		std::time_t new_aop_time = rtc->gettime();
 		configuration_store->write_param(ParamID::ARGOS_AOP_DATE, new_aop_time);
@@ -1080,7 +1086,6 @@ void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
 		m_constellation_status_map.clear();
 
 		// Clear down the current RX session to stop new packets arriving
-		DEBUG_TRACE("ArgosScheduler::update_pass_predict: invalidate RX window");
 		m_downlink_end = INVALID_SCHEDULE;
 		process_rx();
 	}
