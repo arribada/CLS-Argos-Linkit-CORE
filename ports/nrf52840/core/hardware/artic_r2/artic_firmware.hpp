@@ -5059,7 +5059,8 @@ private:
 	unsigned int m_read_offset;
 
 public:
-	ArticFirmwareFile() { m_read_offset = 0; }
+	ArticFirmwareFile() { seek(0); }
+	void seek(unsigned int offset) { m_read_offset = offset; }
 	void read(unsigned char *buffer, unsigned int length) {
 		std::memcpy(buffer, &m_default_artic_r2_firmware[m_read_offset], length);
 		m_read_offset += length;

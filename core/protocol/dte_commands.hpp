@@ -238,7 +238,7 @@ static const DTECommandMap command_map[] = {
 					.encoding = BaseEncoding::HEXADECIMAL,
 					.min_value = 0U,
 					.max_value = 0U,
-					.permitted_values = { 1U },
+					.permitted_values = { 1U, 3U, 4U },
 					.is_implemented = false,
 					.is_writable = false
 				},

@@ -15,6 +15,7 @@
 #include "crc8.hpp"
 #include "binascii.hpp"
 #include "battery.hpp"
+#include "dte_protocol.hpp"
 
 extern "C" {
 	#include "previpass.h"
@@ -45,21 +46,25 @@ extern "C" {
 
 #define MAX_GPS_ENTRIES_IN_PACKET	4
 
-#define SHORT_PACKET_HEADER_BYTES   7
+#define SHORT_PACKET_BITS   		120
 #define SHORT_PACKET_PAYLOAD_BITS   99
-#define SHORT_PACKET_BYTES			22
-#define SHORT_PACKET_MSG_LENGTH		6
-#define SHORT_PACKET_BITFIELD       0x11
+#define SHORT_PACKET_BYTES			15
 
-#define LONG_PACKET_HEADER_BYTES    7
-#define LONG_PACKET_PAYLOAD_BITS    216
-#define LONG_PACKET_BYTES			38
-#define LONG_PACKET_MSG_LENGTH		15
-#define LONG_PACKET_BITFIELD        0x8B
+#define LONG_PACKET_BITS   			248
+#define LONG_PACKET_PAYLOAD_BITS   	216
+#define LONG_PACKET_BYTES			31
 
-#define PACKET_SYNC					0xFFFE2F
+#define DOPPLER_PACKET_BITS   		24
+#define DOPPLER_PACKET_PAYLOAD_BITS 24
+#define DOPPLER_PACKET_BYTES		3
 
-#define ARGOS_TX_MARGIN_SECS        12
+// The margin is the time advance supplied when in prepass mode for TX and RX operations
+// It represents the time taken for programming tasks, etc.  We advance the RX task by 3
+// seconds extra relative to the TX task to avoid race conditions when the two might
+// fire at the same time otherwise.
+#define ARGOS_TX_MARGIN_SECS        0  // Don't try to compensate TX
+#define ARGOS_RX_MARGIN_SECS        0  // RX always follows TX
+
 
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
@@ -76,6 +81,48 @@ ArgosScheduler::ArgosScheduler() {
 	m_next_schedule_relative = 0;
 }
 
+void ArgosScheduler::process_rx() {
+
+	if (m_is_tx_pending) {
+		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX deferred while TX pending");
+		return;
+	}
+
+	if (!m_argos_config.argos_rx_en) {
+		DEBUG_TRACE("ArgosScheduler::process_rx: ARGOS_RX_EN is off");
+		power_off();
+		return;
+	}
+
+	if (m_downlink_end == INVALID_SCHEDULE) {
+		DEBUG_TRACE("ArgosScheduler::process_rx: prepass window has no DL");
+		power_off();
+		return;
+	}
+
+	time_t now = rtc->gettime();
+	if ((uint64_t)now >= m_downlink_end) {
+		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX window has elapsed");
+		m_downlink_end = INVALID_SCHEDULE;
+		power_off();
+		return;
+	}
+
+	if (now < (m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period))) {
+		DEBUG_TRACE("ArgosScheduler::process_rx: AOP update not needed for another %lu secs",
+				(m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period)) - now);
+		m_downlink_end = INVALID_SCHEDULE;
+		power_off();
+		return;
+	}
+
+	if ((uint64_t)now >= m_downlink_start) {
+		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX window starting now for %.3f secs", (double)m_downlink_end - now);
+		set_rx_mode(ArgosMode::ARGOS_3, m_downlink_end);
+	}
+}
+
+
 void ArgosScheduler::reschedule() {
 	uint64_t schedule = INVALID_SCHEDULE;
 
@@ -84,16 +131,16 @@ void ArgosScheduler::reschedule() {
 	configuration_store->get_argos_configuration(m_argos_config);
 
 	// Check to see if we are already scheduled and no mode change has arisen
-	if (system_scheduler->is_scheduled(m_argos_task) && last_mode == m_argos_config.mode) {
-		DEBUG_TRACE("ArgosScheduler::reschedule: already scheduled at %.3f secs",
-				(double)m_next_schedule_relative / MS_PER_SEC);
+	if (system_scheduler->is_scheduled(m_tx_task) && last_mode == m_argos_config.mode) {
+		DEBUG_TRACE("ArgosScheduler::reschedule: already scheduled in %.3f secs",
+				((double)m_next_schedule_absolute / MS_PER_SEC) - (double)rtc->gettime());
 		return;
 	}
 
 	if (m_argos_config.mode == BaseArgosMode::OFF) {
 		DEBUG_WARN("ArgosScheduler: mode is OFF -- not scheduling");
 		return;
-	} else if (!rtc->is_set()) {
+	} else if (m_argos_config.gnss_en && !rtc->is_set()) {
 		DEBUG_WARN("ArgosScheduler: RTC is not yet set -- not scheduling");
 		return;
 	} else if (m_argos_config.time_sync_burst_en && !m_time_sync_burst_sent && m_num_gps_entries) {
@@ -105,14 +152,16 @@ void ArgosScheduler::reschedule() {
 		schedule = next_duty_cycle(0xFFFFFFU);
 	} else if (m_argos_config.mode == BaseArgosMode::DUTY_CYCLE) {
 		schedule = next_duty_cycle(m_argos_config.duty_cycle);
-	} else if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
+	} else if (m_argos_config.gnss_en && m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
 		schedule = next_prepass();
+	} else {
+		DEBUG_WARN("ArgosScheduler: Invalid argos mode configuration");
 	}
 
 	if (INVALID_SCHEDULE != schedule) {
-		DEBUG_TRACE("ArgosScheduler: schedule in: %.3f secs", (double)schedule / MS_PER_SEC);
+		DEBUG_TRACE("ArgosScheduler: TX schedule in: %.3f secs", (double)schedule / MS_PER_SEC);
 		deschedule();
-		m_argos_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this),
+		m_tx_task = system_scheduler->post_task_prio(std::bind(&ArgosScheduler::process_schedule, this),
 				"ArgosSchedulerProcessSchedule",
 				Scheduler::DEFAULT_PRIORITY, schedule);
 		m_next_schedule_relative = schedule;
@@ -236,7 +285,7 @@ uint64_t ArgosScheduler::next_prepass() {
 	// If we were deferred by SWS then recompute using a start window that reflects earliest TX
 	if (m_earliest_tx != INVALID_SCHEDULE &&
 		m_earliest_tx >= curr_time) {
-		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX in %llu secs", curr_time - m_earliest_tx);
+		DEBUG_TRACE("ArgosScheduler::next_prepass: rescheduling after SWS interruption earliest TX in %llu secs", m_earliest_tx - curr_time);
 		start_time = m_earliest_tx;
 	}
 
@@ -275,21 +324,21 @@ uint64_t ArgosScheduler::next_prepass() {
 			&next_pass)) {
 
 		// Computed schedule is advanced by ARGOS_TX_MARGIN_SECS so that Artic R2 programming delay is not included in the window
-		uint64_t now = rtc->gettime();
+		curr_time = rtc->gettime();
 		uint64_t schedule;
 
 		// Are we past the start point of the prepass window?
-		if ((uint64_t)(next_pass.epoch - ARGOS_TX_MARGIN_SECS) < now) {
+		if ((uint64_t)(next_pass.epoch - ARGOS_TX_MARGIN_SECS) < curr_time) {
 			// Ensure the schedule is at least TR_NOM away from previous transmission
 			if (m_last_transmission_schedule != INVALID_SCHEDULE) {
 				// If there is a previous transmission then advance TR_NOM with +/- jitter
 				// but don't allow a schedule before current RTC time
 				update_tx_jitter(-TX_JITTER_MS, TX_JITTER_MS);
-				schedule = std::max(now, ((m_last_transmission_schedule / MS_PER_SEC) + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS))) * MS_PER_SEC;
-				schedule = std::max((now * MS_PER_SEC), schedule + m_tx_jitter);
+				schedule = std::max((uint64_t)start_time, ((m_last_transmission_schedule / MS_PER_SEC) + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS))) * MS_PER_SEC;
+				schedule = std::max(((uint64_t)start_time * MS_PER_SEC), schedule + m_tx_jitter);
 			} else {
 				// This is the first transmission and we are inside the prepass window already, so schedule immediately
-				schedule = now * MS_PER_SEC;
+				schedule = std::max(((uint64_t)start_time * MS_PER_SEC), curr_time * MS_PER_SEC);
 			}
 		} else {
 			// Current time is before the prepass window, so set our schedule to the start
@@ -307,19 +356,31 @@ uint64_t ArgosScheduler::next_prepass() {
 			schedule += m_tx_jitter;
 		}
 
-		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x last=%.3f now=%llu s=%u c=%.3f e=%u",
-					next_pass.satHexId, (m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
-							(double)m_last_transmission_schedule/MS_PER_SEC, curr_time, (unsigned int)next_pass.epoch,
-							(double)schedule / MS_PER_SEC, (unsigned int)next_pass.epoch + next_pass.duration);
+		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x dl=%u ul=%u last=%.3f s=%.3f c=%.3f e=%.3f",
+					(unsigned int)next_pass.satHexId,
+					(unsigned int)next_pass.downlinkStatus,
+					(unsigned int)next_pass.uplinkStatus,
+					(m_last_transmission_schedule == INVALID_SCHEDULE) ? 0 :
+							((double)m_last_transmission_schedule/MS_PER_SEC - curr_time), (double)next_pass.epoch - (double)curr_time,
+							((double)schedule / MS_PER_SEC) - curr_time, ((double)next_pass.epoch + (double)next_pass.duration) - curr_time);
 
 		// Check we don't transmit off the end of the prepass window
 		if ((schedule + (ARGOS_TX_MARGIN_SECS * MS_PER_SEC)) < ((uint64_t)next_pass.epoch + next_pass.duration) * MS_PER_SEC) {
 			// We're good to go for this schedule, compute relative delay until the epoch arrives
 			// and set the required Argos transmission mode
-			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %.3f seconds from now", (double)(schedule - (now * MS_PER_SEC)) / MS_PER_SEC);
+			DEBUG_INFO("ArgosScheduler::next_prepass: scheduled for %.3f seconds from now", (double)(schedule - (curr_time * MS_PER_SEC)) / MS_PER_SEC);
 			m_next_schedule_absolute = schedule;
 			m_next_mode = next_pass.uplinkStatus >= SAT_UPLK_ON_WITH_A3 ? ArgosMode::ARGOS_3 : ArgosMode::ARGOS_2;
-			return schedule - (now * MS_PER_SEC);
+
+			// Do not update downlink status unless the existing prepass window has elapsed which is
+			// signified by m_downlink_end = INVALID_SCHEDULE.
+			if (m_downlink_end == INVALID_SCHEDULE && next_pass.downlinkStatus != SAT_DNLK_OFF) {
+				// Set new downlink window end point
+				m_downlink_end = (uint64_t)next_pass.epoch + next_pass.duration;
+				m_downlink_start = (uint64_t)next_pass.epoch;
+				DEBUG_TRACE("next_prepass: new DL RX window = [%.3f, %.3f]", (double)m_downlink_start - curr_time, (double)m_downlink_end - curr_time);
+			}
+			return schedule - (curr_time * MS_PER_SEC);
 		} else {
 			DEBUG_TRACE("ArgosScheduler::next_prepass: computed schedule is too late for this window", next_pass.epoch, next_pass.duration);
 			start_time = (std::time_t)next_pass.epoch + next_pass.duration;
@@ -341,15 +402,14 @@ void ArgosScheduler::process_schedule() {
 	if (!m_switch_state && (m_earliest_tx == INVALID_SCHEDULE || m_earliest_tx <= now)) {
 		if (m_argos_config.time_sync_burst_en && !m_time_sync_burst_sent && m_num_gps_entries && rtc->is_set()) {
 			prepare_time_sync_burst();
+		} else if (!m_argos_config.gnss_en) {
+			prepare_doppler_burst();
 		} else {
 			prepare_normal_burst();
 		}
 	} else {
 		DEBUG_TRACE("ArgosScheduler::process_schedule: sws=%u t=%llu earliest_tx=%llu deferring transmission", m_switch_state, now, m_earliest_tx);
 	}
-
-	// After each transmission attempt to reschedule
-	reschedule();
 }
 
 
@@ -416,29 +476,47 @@ unsigned int ArgosScheduler::convert_longitude(double x) {
 		return ((unsigned int)((x - 0.00005) * -LON_LAT_RESOLUTION)) | 1<<21; // -ve: bit 21 is sign
 }
 
+void ArgosScheduler::build_doppler_packet(ArgosPacket& packet) {
+
+	DEBUG_TRACE("ArgosScheduler::build_doppler_packet");
+	unsigned int base_pos = 0;
+
+	// Reserve required number of bytes
+	packet.assign(DOPPLER_PACKET_BYTES, 0);
+
+	// Payload bytes
+	PACK_BITS(0, packet, base_pos, 8);  // Zero CRC field (computed later)
+
+	unsigned int last_known_pos = 0;
+	PACK_BITS(last_known_pos, packet, base_pos, 8);
+	DEBUG_TRACE("ArgosScheduler::build_doppler_packet: last_known_pos=%u", (unsigned int)last_known_pos);
+
+	unsigned int batt_voltage = battery_monitor->get_voltage();
+	unsigned int batt = std::min(127, std::max((int)batt_voltage - 2700, (int)0) / MV_PER_UNIT);
+	PACK_BITS(batt, packet, base_pos, 7);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: voltage=%u (%u)", (unsigned int)batt, (unsigned int)batt_voltage);
+
+	// LOWBATERY_FLAG
+	PACK_BITS(m_argos_config.is_lb, packet, base_pos, 1);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: is_lb=%u", (unsigned int)m_argos_config.is_lb);
+
+	// Calculate CRC8
+	unsigned char crc8 = CRC8::checksum(packet.substr(1), DOPPLER_PACKET_PAYLOAD_BITS - 8);
+	unsigned int crc_offset = 0;
+	PACK_BITS(crc8, packet, crc_offset, 8);
+	DEBUG_TRACE("ArgosScheduler::build_short_packet: crc8=%02x", crc8);
+}
+
 void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacket& packet) {
 
 	DEBUG_TRACE("ArgosScheduler::build_short_packet");
-
-#ifndef ARGOS_TEST_PACKET
 	unsigned int base_pos = 0;
 
 	// Reserve required number of bytes
 	packet.assign(SHORT_PACKET_BYTES, 0);
 
-	// Header bytes
-	PACK_BITS(PACKET_SYNC, packet, base_pos, 24);
-	PACK_BITS(SHORT_PACKET_MSG_LENGTH, packet, base_pos, 4);
-	PACK_BITS(m_argos_config.argos_id>>8, packet, base_pos, 20);
-	PACK_BITS(m_argos_config.argos_id, packet, base_pos, 8);
-
 	// Payload bytes
-#ifdef ARGOS_USE_CRC8
 	PACK_BITS(0, packet, base_pos, 8);  // Zero CRC field (computed later)
-#else
-	PACK_BITS(SHORT_PACKET_BITFIELD, packet, base_pos, 8);
-	DEBUG_TRACE("ArgosScheduler::build_short_packet: bitfield=%u", SHORT_PACKET_BITFIELD);
-#endif
 
 	// Use scheduled GPS time as day/hour/min
 	uint16_t year;
@@ -501,28 +579,20 @@ void ArgosScheduler::build_short_packet(GPSLogEntry const& gps_entry, ArgosPacke
 	DEBUG_TRACE("ArgosScheduler::build_short_packet: is_lb=%u", (unsigned int)m_argos_config.is_lb);
 
 	// Calculate CRC8
-#ifdef ARGOS_USE_CRC8
-	unsigned char crc8 = CRC8::checksum(packet.substr(SHORT_PACKET_HEADER_BYTES+1), SHORT_PACKET_PAYLOAD_BITS - 8);
-	unsigned int crc_offset = 8*SHORT_PACKET_HEADER_BYTES;
+	unsigned char crc8 = CRC8::checksum(packet.substr(1), SHORT_PACKET_PAYLOAD_BITS - 8);
+	unsigned int crc_offset = 0;
 	PACK_BITS(crc8, packet, crc_offset, 8);
 	DEBUG_TRACE("ArgosScheduler::build_short_packet: crc8=%02x", crc8);
-#endif
 
 	// BCH code B127_106_3
 	BCHCodeWord code_word = BCHEncoder::encode(
 			BCHEncoder::B127_106_3,
 			sizeof(BCHEncoder::B127_106_3),
-			packet.substr(SHORT_PACKET_HEADER_BYTES), SHORT_PACKET_PAYLOAD_BITS);
+			packet, SHORT_PACKET_PAYLOAD_BITS);
 	DEBUG_TRACE("ArgosScheduler::build_short_packet: bch=%06x", code_word);
 
 	// Append BCH code
 	PACK_BITS(code_word, packet, base_pos, BCHEncoder::B127_106_3_CODE_LEN);
-#else
-
-	// Send a nail-up test packet
-	packet = std::string("\xFF\xFF\xFF\x64\xE7\xB5\x6A\xC1\x47\xCA\x6B\x48\x17\xC7\x65\xDC\x8A\x2A\x9D\xA1\xE2\x18"s);
-
-#endif
 }
 
 void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entries, ArgosPacket& packet)
@@ -540,19 +610,8 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	// Reserve required number of bytes
 	packet.assign(LONG_PACKET_BYTES, 0);
 
-	// Header bytes
-	PACK_BITS(PACKET_SYNC, packet, base_pos, 24);
-	PACK_BITS(LONG_PACKET_MSG_LENGTH, packet, base_pos, 4);
-	PACK_BITS(m_argos_config.argos_id>>8, packet, base_pos, 20);
-	PACK_BITS(m_argos_config.argos_id, packet, base_pos, 8);
-
 	// Payload bytes
-#ifdef ARGOS_USE_CRC8
 	PACK_BITS(0, packet, base_pos, 8);  // Zero CRC field (computed later)
-#else
-	PACK_BITS(LONG_PACKET_BITFIELD, packet, base_pos, 8);
-	DEBUG_TRACE("ArgosScheduler::build_long_packet: bitfield=%u", LONG_PACKET_BITFIELD);
-#endif
 
 	// This will set the log time for the GPS entry based on when it was scheduled
 	uint16_t year;
@@ -612,18 +671,16 @@ void ArgosScheduler::build_long_packet(std::vector<GPSLogEntry> const& gps_entri
 	}
 
 	// Calculate CRC8
-#ifdef ARGOS_USE_CRC8
-	unsigned char crc8 = CRC8::checksum(packet.substr(LONG_PACKET_HEADER_BYTES+1), LONG_PACKET_PAYLOAD_BITS - 8);
-	unsigned int crc_offset = 8*LONG_PACKET_HEADER_BYTES;
+	unsigned char crc8 = CRC8::checksum(packet.substr(1), LONG_PACKET_PAYLOAD_BITS - 8);
+	unsigned int crc_offset = 0;
 	PACK_BITS(crc8, packet, crc_offset, 8);
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: crc8=%02x", crc8);
-#endif
 
 	// BCH code B255_223_4
 	BCHCodeWord code_word = BCHEncoder::encode(
 			BCHEncoder::B255_223_4,
 			sizeof(BCHEncoder::B255_223_4),
-			packet.substr(LONG_PACKET_HEADER_BYTES), LONG_PACKET_PAYLOAD_BITS);
+			packet, LONG_PACKET_PAYLOAD_BITS);
 	DEBUG_TRACE("ArgosScheduler::build_long_packet: bch=%08x", code_word);
 
 	// Append BCH code
@@ -634,40 +691,26 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	DEBUG_INFO("ArgosScheduler::handle_packet: battery=%.2lfV freq=%lf power=%s mode=%s",
 			   (double)battery_monitor->get_voltage() / 1000, m_argos_config.frequency, argos_power_to_string(m_argos_config.power), argos_mode_to_string(mode));
 	DEBUG_INFO("ArgosScheduler::handle_packet: data=%s", Binascii::hexlify(packet).c_str());
-	power_on();
+
+	// Store parameters for deferred processing
+	m_packet = packet;
+	m_total_bits = total_bits;
+	m_mode = mode;
+
+	// Ensure the device is powered on and request transmission
+	m_is_tx_pending = true;
+	power_on(m_argos_config.argos_id, [this](ArgosAsyncEvent e) { handle_event(e); });
 	set_frequency(m_argos_config.frequency);
 	set_tx_power(m_argos_config.power);
-	if (m_data_notification_callback) {
-    	ServiceEvent e;
-    	e.event_type = ServiceEventType::ARGOS_TX_START;
-    	e.event_data = false;
-        m_data_notification_callback(e);
-	}
 	send_packet(packet, total_bits, mode);
-	if (m_data_notification_callback) {
-    	ServiceEvent e;
-    	e.event_type = ServiceEventType::ARGOS_TX_END;
-    	e.event_data = false;
-        m_data_notification_callback(e);
-	}
-	power_off();
-
-	// Update the LAST_TX in the configuration store
-	std::time_t last_tx = rtc->gettime();
-	configuration_store->write_param(ParamID::LAST_TX, last_tx);
-
-	// Increment TX counter
-	configuration_store->increment_tx_counter();
-
-	// Save configuration params
-	configuration_store->save_params();
 }
 
 void ArgosScheduler::prepare_time_sync_burst() {
 
 	DEBUG_TRACE("ArgosScheduler::prepare_time_sync_burst: num_gps_entries=%u", m_num_gps_entries);
 
-	// Note time of last TX to seed future scheduling
+	// Mark the time sync burst as sent because otherwise we would enter an infinite rescheduling scenario
+	m_time_sync_burst_sent = true;
 	m_last_transmission_schedule = rtc->gettime() * MS_PER_SEC;
 
 	if (m_num_gps_entries) {
@@ -675,14 +718,22 @@ void ArgosScheduler::prepare_time_sync_burst() {
 		unsigned int index = m_num_gps_entries - 1;
 
 		build_short_packet(m_gps_log_entry.at(index), packet);
-		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, ArgosMode::ARGOS_2);
+		handle_packet(packet, SHORT_PACKET_BITS, ArgosMode::ARGOS_2);
 
 	} else {
 		DEBUG_ERROR("ArgosScheduler::prepare_time_sync_burst: sensor log state is invalid, can't transmit");
 	}
+}
 
-	// Even on an error we mark the time sync burst as sent because otherwise we would enter an infinite rescheduling scenario
-	m_time_sync_burst_sent = true;
+void ArgosScheduler::prepare_doppler_burst() {
+	DEBUG_TRACE("ArgosScheduler::prepare_doppler_burst");
+
+	// Mark last schedule attempt
+	m_last_transmission_schedule = m_next_schedule_absolute;
+
+	ArgosPacket packet;
+	build_doppler_packet(packet);
+	handle_packet(packet, DOPPLER_PACKET_BITS, m_next_mode);
 }
 
 void ArgosScheduler::prepare_normal_burst() {
@@ -695,17 +746,15 @@ void ArgosScheduler::prepare_normal_burst() {
 	ArgosPacket packet;
 
 	// Obtain fresh copy of configuration as it may have changed
-	BaseArgosMode last_mode = m_argos_config.mode;
 	configuration_store->get_argos_configuration(m_argos_config);
 
 	DEBUG_TRACE("ArgosScheduler::prepare_normal_burst: msg_index=%u/%u span=%u num_log_entries=%u", m_msg_index % max_index, max_index, span, m_num_gps_entries);
 
 	// Mark last schedule attempt
-	if (last_mode == BaseArgosMode::PASS_PREDICTION) {
+	if (m_argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
 		m_last_transmission_schedule = rtc->gettime() * MS_PER_SEC;
-	} else {
+	} else
 		m_last_transmission_schedule = m_next_schedule_absolute;
-	}
 
 	// If the number of GPS entries received is less than the span then modify span
 	// to reflect number of entries available
@@ -755,7 +804,7 @@ void ArgosScheduler::prepare_normal_burst() {
 			m_gps_entry_burst_counter.at(first_eligible_gps_index)--;
 
 		build_short_packet(m_gps_log_entry.at(first_eligible_gps_index), packet);
-		handle_packet(packet, SHORT_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
+		handle_packet(packet, SHORT_PACKET_BITS, m_next_mode);
 	} else {
 
 		DEBUG_TRACE("ArgosScheduler::prepare_normal_burst: using long packet");
@@ -775,7 +824,7 @@ void ArgosScheduler::prepare_normal_burst() {
 		std::reverse(gps_entries.begin(), gps_entries.end());
 
 		build_long_packet(gps_entries, packet);
-		handle_packet(packet, LONG_PACKET_BYTES * BITS_PER_BYTE, m_next_mode);
+		handle_packet(packet, LONG_PACKET_BITS, m_next_mode);
 	}
 
 	// Increment for next message slot index
@@ -788,9 +837,13 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 
 	m_data_notification_callback = data_notification_callback;
 	m_is_running = true;
+	m_is_tx_pending = false;
+	m_is_deferred = false;
 	m_time_sync_burst_sent = false;
 	m_msg_index = 0;
 	m_num_gps_entries = 0;
+	m_downlink_start = INVALID_SCHEDULE;
+	m_downlink_end = INVALID_SCHEDULE;
 	m_next_schedule_absolute = INVALID_SCHEDULE;
 	m_last_transmission_schedule = INVALID_SCHEDULE;
 	m_gps_entry_burst_counter.clear();
@@ -800,18 +853,23 @@ void ArgosScheduler::start(std::function<void(ServiceEvent&)> data_notification_
 	// Generate TX jitter value
 	m_rng = new std::mt19937(m_argos_config.argos_id);
 	m_tx_jitter = 0;
+
+	// If GNSS_EN is off then we should schedule now as we won't receive
+	// any sensor log updates
+	if (!m_argos_config.gnss_en)
+		reschedule();
 }
 
 void ArgosScheduler::stop() {
 	DEBUG_INFO("ArgosScheduler::stop");
-	deschedule();
 	m_is_running = false;
-	power_off();
+	power_off_immediate();
+	deschedule();
 	delete m_rng;
 }
 
 void ArgosScheduler::deschedule() {
-	system_scheduler->cancel_task(m_argos_task);
+	system_scheduler->cancel_task(m_tx_task);
 }
 
 void ArgosScheduler::update_tx_jitter(int min, int max) {
@@ -834,6 +892,197 @@ void ArgosScheduler::notify_saltwater_switch_state(bool state) {
 			DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state: state=1: deferring schedule");
 			deschedule();
 		}
+	}
+}
+
+void ArgosScheduler::handle_event(ArgosAsyncEvent event) {
+	switch (event) {
+	case ArgosAsyncEvent::ON:
+		DEBUG_INFO("ArgosScheduler::handle_event: DEVICE_ON");
+		break;
+	case ArgosAsyncEvent::OFF:
+		DEBUG_INFO("ArgosScheduler::handle_event: DEVICE_OFF");
+		update_rx_time();
+		break;
+	case ArgosAsyncEvent::TX_STARTED:
+		DEBUG_INFO("ArgosScheduler::handle_event: TX_STARTED");
+		if (m_data_notification_callback) {
+	    	ServiceEvent e;
+	    	e.event_type = ServiceEventType::ARGOS_TX_START;
+	    	e.event_data = false;
+	        m_data_notification_callback(e);
+		}
+		break;
+
+	case ArgosAsyncEvent::ACK_DONE:
+		break;
+
+	case ArgosAsyncEvent::TX_DONE:
+	{
+		DEBUG_INFO("ArgosScheduler::handle_event: TX_DONE");
+		m_is_tx_pending = false;
+
+		if (m_data_notification_callback) {
+	    	ServiceEvent e;
+	    	e.event_type = ServiceEventType::ARGOS_TX_END;
+	    	e.event_data = false;
+	        m_data_notification_callback(e);
+		}
+
+		// Update the LAST_TX in the configuration store
+		std::time_t last_tx = rtc->gettime();
+
+		configuration_store->write_param(ParamID::LAST_TX, last_tx);
+
+		// Increment TX counter
+		configuration_store->increment_tx_counter();
+
+		// Save configuration params
+		configuration_store->save_params();
+
+		// Update the schedule for the next transmission and also any pending RX
+		process_rx();
+		reschedule();
+		break;
+	}
+
+	case ArgosAsyncEvent::RX_PACKET:
+		DEBUG_INFO("ArgosScheduler::handle_event: RX_PACKET");
+		handle_rx_packet();
+		break;
+
+	case ArgosAsyncEvent::RX_TIMEOUT:
+		DEBUG_INFO("ArgosScheduler::handle_event: RX_TIMEOUT");
+		m_downlink_end = INVALID_SCHEDULE;
+		process_rx();
+		break;
+
+	case ArgosAsyncEvent::ERROR:
+	{
+		DEBUG_ERROR("ArgosScheduler::handle_event: ERROR");
+		// If an ERROR occurred during TX then just cleanup
+		if (m_is_tx_pending) {
+
+			// Mark any TX as disabled
+			m_is_tx_pending = false;
+
+			if (m_data_notification_callback) {
+				ServiceEvent e;
+				e.event_type = ServiceEventType::ARGOS_TX_END;
+				e.event_data = false;
+				m_data_notification_callback(e);
+			}
+		}
+
+		// Invalidate any RX window
+		m_downlink_end = INVALID_SCHEDULE;
+
+		// Update the schedule for the next transmission and also any pending RX
+		process_rx();
+		reschedule();
+		break;
+	}
+
+	default:
+		break;
+	}
+}
+
+void ArgosScheduler::handle_rx_packet() {
+
+	BasePassPredict pass_predict;
+	ArgosPacket packet;
+	unsigned int length;
+
+	read_packet(packet, length);
+
+	DEBUG_INFO("ArgosScheduler::handle_rx_packet: packet=%s length=%u", Binascii::hexlify(packet).c_str(), length);
+
+	// Increment RX counter
+	configuration_store->increment_rx_counter();
+
+	// Save configuration params
+	configuration_store->save_params();
+
+	// Attempt to decode the queue of packets
+	PassPredictCodec::decode(m_orbit_params_map, m_constellation_status_map, packet, pass_predict);
+
+	// Check to see if any new AOP records were found
+	if (pass_predict.num_records)
+		update_pass_predict(pass_predict);
+}
+
+void ArgosScheduler::update_rx_time(void) {
+	uint64_t t = get_rx_time_on() / MS_PER_SEC;
+	if (t) {
+		DEBUG_TRACE("ArgosScheduler::update_rx_time: RX ran for %llu secs", t);
+		configuration_store->increment_rx_time(t);
+		configuration_store->save_params();
+	}
+}
+
+void ArgosScheduler::update_pass_predict(BasePassPredict& new_pass_predict) {
+
+	BasePassPredict existing_pass_predict;
+	unsigned int num_updated_records = 0;
+
+	// Read in the existing pass predict database
+	existing_pass_predict = configuration_store->read_pass_predict();
+
+	// Iterate over new candidate records
+	for (unsigned int i = 0; i < new_pass_predict.num_records; i++) {
+		unsigned int j = 0;
+
+		for (; j < existing_pass_predict.num_records; j++) {
+			// Check for existing hex ID match
+			if (new_pass_predict.records[i].satHexId == existing_pass_predict.records[j].satHexId) {
+				if ((new_pass_predict.records[i].downlinkStatus || new_pass_predict.records[i].uplinkStatus) &&
+						new_pass_predict.records[i].bulletin.year) {
+					if (new_pass_predict.records[i] != existing_pass_predict.records[j]) {
+						existing_pass_predict.records[j] = new_pass_predict.records[i];
+						num_updated_records++;
+					}
+				} else if (!new_pass_predict.records[i].downlinkStatus && !new_pass_predict.records[i].uplinkStatus) {
+					existing_pass_predict.records[j].downlinkStatus = new_pass_predict.records[i].downlinkStatus;
+					existing_pass_predict.records[j].uplinkStatus = new_pass_predict.records[i].uplinkStatus;
+					num_updated_records++;
+				}
+				break;
+			}
+		}
+
+		// If we reached the end of the existing database then this is a new hex ID, so
+		// add it to the end of the existing database
+		if (j == existing_pass_predict.num_records &&
+			existing_pass_predict.num_records < MAX_AOP_SATELLITE_ENTRIES) {
+			if ((new_pass_predict.records[i].downlinkStatus || new_pass_predict.records[i].uplinkStatus) &&
+					new_pass_predict.records[i].bulletin.year) {
+				existing_pass_predict.records[j] = new_pass_predict.records[i];
+				existing_pass_predict.num_records++;
+				num_updated_records++;
+			} else if (!new_pass_predict.records[i].downlinkStatus && !new_pass_predict.records[i].uplinkStatus) {
+				existing_pass_predict.records[j].downlinkStatus = new_pass_predict.records[i].downlinkStatus;
+				existing_pass_predict.records[j].uplinkStatus = new_pass_predict.records[i].uplinkStatus;
+				existing_pass_predict.num_records++;
+				num_updated_records++;
+			}
+		}
+	}
+
+	// Check if we received a sufficient number of records
+	if (num_updated_records == new_pass_predict.num_records && num_updated_records >= existing_pass_predict.num_records) {
+		DEBUG_INFO("ArgosScheduler::update_pass_predict: committing %u AOP records", num_updated_records);
+		configuration_store->write_pass_predict(existing_pass_predict);
+		std::time_t new_aop_time = rtc->gettime();
+		configuration_store->write_param(ParamID::ARGOS_AOP_DATE, new_aop_time);
+		configuration_store->save_params();
+		m_orbit_params_map.clear();
+		m_constellation_status_map.clear();
+
+		// Clear down the current RX session to stop new packets arriving
+		DEBUG_TRACE("ArgosScheduler::update_pass_predict: invalidate RX window");
+		m_downlink_end = INVALID_SCHEDULE;
+		process_rx();
 	}
 }
 

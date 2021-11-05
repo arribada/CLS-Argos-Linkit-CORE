@@ -13,13 +13,13 @@
 
 #define SAT_ARTIC_DELAY_BOOT_MS              (1000)
 #define SAT_ARTIC_DELAY_POWER_ON_MS          (1000)
-#define SAT_ARTIC_DELAY_INTERRUPT_MS         (10000)
+#define SAT_ARTIC_DELAY_INTERRUPT_MS         (1000)
 #define SAT_ARTIC_DELAY_INTERRUPT_1_PROG_MS  (1000)
-#define SAT_ARTIC_TIMEOUT_SEND_TX_MS         (20000)
+#define SAT_ARTIC_TIMEOUT_SEND_TX_MS         (5000)
 #define SAT_ARTIC_DELAY_RESET_MS             (5)
 #define SAT_ARTIC_DELAY_BURST_MS             (5)
-#define SAT_ARTIC_DELAY_SET_BURST_MS         (22)
-#define SAT_ARTIC_DELAY_FINISH_BURST_MS      (13)
+#define SAT_ARTIC_DELAY_SET_BURST_MS         (5)
+#define SAT_ARTIC_DELAY_FINISH_BURST_MS      (5)
 #define SAT_ARTIC_DELAY_TRANSFER_US          (50)
 #define NUM_FIRMWARE_FILES_ARTIC 3
 
@@ -40,6 +40,8 @@
 #define FIRMWARE_VERSION_ADDRESS (0x0010)
 #define CRC_ADDRESS              (0x0371)
 #define INTERRUPT_ADDRESS        (0x8018)
+#define RX_PAYLOAD_ADDRESS		 (0x0200)
+#define RX_FILTERING_CONFIG      (0x0209)
 #define TX_PAYLOAD_ADDRESS       (0x0273)
 #define TCXO_WARMUP_TIME_ADDRESS (0x036F)
 
@@ -52,14 +54,15 @@
 
 #define SPI_MAX_BYTE_READ  (8192)
 
-#define MAX_BURST  (2048)
-
 #define MAX_TX_SIZE_BYTES  (31)
+#define MAX_RX_SIZE_BYTES  (27)
+#define MIN_RX_SIZE_BYTES  (7)
 
 #define MAX_BUFFER_READ  (256)
 
-#define INTERRUPT_1  (1)
-#define INTERRUPT_2  (2)
+#define INTERRUPT_1  (0)
+#define INTERRUPT_2  (1)
+#define NO_INTERRUPT (2)
 
 #define TOTAL_NUMBER_STATUS_FLAG  (24)
 

@@ -76,6 +76,11 @@ enum class ParamID {
 	ARGOS_TIME_SYNC_BURST_EN,
 	LED_MODE,
 	ARGOS_TX_JITTER_EN,
+	ARGOS_RX_EN,
+	ARGOS_RX_MAX_WINDOW,
+	ARGOS_RX_AOP_UPDATE_PERIOD,
+	ARGOS_RX_COUNTER,
+	ARGOS_RX_TIME,
 	GNSS_ASSISTNOW_EN,
 	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
@@ -245,6 +250,30 @@ struct BasePassPredict {
 static bool operator==(const BasePassPredict& lhs, const BasePassPredict& rhs)
 {
     return std::memcmp( &lhs, &rhs, sizeof(BasePassPredict) );
+}
+
+static bool operator==(const AopSatelliteEntry_t& lhs, const AopSatelliteEntry_t& rhs)
+{
+	return lhs.ascNodeDriftDeg == rhs.ascNodeDriftDeg &&
+			lhs.ascNodeLongitudeDeg == rhs.ascNodeLongitudeDeg &&
+			lhs.bulletin.day == rhs.bulletin.day &&
+			lhs.bulletin.hour == rhs.bulletin.hour &&
+			lhs.bulletin.minute == rhs.bulletin.minute &&
+			lhs.bulletin.second == rhs.bulletin.second &&
+			lhs.bulletin.month == rhs.bulletin.month &&
+			lhs.bulletin.year == rhs.bulletin.year &&
+			lhs.downlinkStatus == rhs.downlinkStatus &&
+			lhs.inclinationDeg == rhs.inclinationDeg &&
+			lhs.orbitPeriodMin == rhs.orbitPeriodMin &&
+			lhs.satHexId == rhs.satHexId &&
+			lhs.semiMajorAxisDriftMeterPerDay == rhs.semiMajorAxisDriftMeterPerDay &&
+			lhs.semiMajorAxisKm == rhs.semiMajorAxisKm &&
+			lhs.uplinkStatus == rhs.uplinkStatus;
+}
+
+static bool operator!=(const AopSatelliteEntry_t& lhs, const AopSatelliteEntry_t& rhs)
+{
+    return !(lhs == rhs);
 }
 
 struct BaseRawData {
