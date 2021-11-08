@@ -288,10 +288,6 @@ uint64_t ArgosScheduler::next_prepass() {
 		start_time = m_earliest_tx;
 	}
 
-	// Ensure start window is advanced from the previous transmission by the TR_NOM (repetition period)
-	if (m_last_transmission_schedule != INVALID_SCHEDULE)
-		start_time = std::max((uint64_t)start_time, ((m_last_transmission_schedule / MS_PER_SEC) + m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS));
-
 	// Set start and end time of the prepass search - we use a 24 hour window
 	std::time_t stop_time = start_time + (std::time_t)(24 * SECONDS_PER_HOUR);
 	struct tm *p_tm = std::gmtime(&start_time);
@@ -338,38 +334,27 @@ uint64_t ArgosScheduler::next_prepass() {
 			pass_predict.num_records,
 			&next_pass)) {
 
-		// Computed schedule is advanced by ARGOS_TX_MARGIN_SECS so that Artic R2 programming delay is not included in the window
-		curr_time = rtc->gettime();
-		uint64_t schedule;
+		// No schedule
+		uint64_t schedule = 0;
 
-		// Are we past the start point of the prepass window?
-		if ((uint64_t)(next_pass.epoch - ARGOS_TX_MARGIN_SECS) < curr_time) {
-			// Ensure the schedule is at least TR_NOM away from previous transmission
-			if (m_last_transmission_schedule != INVALID_SCHEDULE) {
-				// If there is a previous transmission then advance TR_NOM with +/- jitter
-				// but don't allow a schedule before current RTC time
-				update_tx_jitter(-TX_JITTER_MS, TX_JITTER_MS);
-				schedule = std::max((uint64_t)start_time, ((m_last_transmission_schedule / MS_PER_SEC) + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS))) * MS_PER_SEC;
-				schedule = std::max(((uint64_t)start_time * MS_PER_SEC), schedule + m_tx_jitter);
-			} else {
-				// This is the first transmission and we are inside the prepass window already, so schedule immediately
-				schedule = std::max(((uint64_t)start_time * MS_PER_SEC), curr_time * MS_PER_SEC);
-			}
-		} else {
-			// Current time is before the prepass window, so set our schedule to the start
-			// of the window plus some +ve jitter amount only to avoid transmitting before
-			// the window starts
-			schedule = ((std::time_t)next_pass.epoch - ARGOS_TX_MARGIN_SECS);
+		// If there is a previous transmission then make sure schedule is at least advance TR_NOM
+		if (m_last_transmission_schedule != INVALID_SCHEDULE)
+			schedule = std::max((uint64_t)schedule, m_last_transmission_schedule + (m_argos_config.tr_nom * MS_PER_SEC));
 
-			// But also make sure if there is a previous transmission we advance TR_NOM away from that
-			if (m_last_transmission_schedule != INVALID_SCHEDULE)
-				schedule = std::max(schedule, ((m_last_transmission_schedule / MS_PER_SEC) + (m_argos_config.tr_nom - ARGOS_TX_MARGIN_SECS)));
+		// Advance to at least the prepass epoch position
+		schedule = std::max(((uint64_t)next_pass.epoch * MS_PER_SEC), schedule);
 
-			// Apply +ve jitter
-			update_tx_jitter(0, TX_JITTER_MS);
-			schedule *= MS_PER_SEC;
-			schedule += m_tx_jitter;
-		}
+		// Apply nominal jitter to schedule
+		// NOTE: Because of the possibility of -ve jitter resulting in an edge case we have to make
+		// sure the schedule is advanced passed at least start_time and curr_time
+		update_tx_jitter(-TX_JITTER_MS, TX_JITTER_MS);
+		schedule += m_tx_jitter;
+
+		// Make sure computed schedule is at least start_time (which could have been set by SWS)
+		schedule = std::max(((uint64_t)start_time * MS_PER_SEC), schedule);
+
+		// Make sure computed schedule is at least current RTC time to avoid a -ve schedule
+		schedule = std::max(((uint64_t)curr_time * MS_PER_SEC), schedule);
 
 		DEBUG_INFO("ArgosScheduler::next_prepass: hex_id=%01x dl=%u ul=%u last=%.3f s=%.3f c=%.3f e=%.3f",
 					(unsigned int)next_pass.satHexId,
@@ -389,6 +374,7 @@ uint64_t ArgosScheduler::next_prepass() {
 			return schedule - (curr_time * MS_PER_SEC);
 		} else {
 			DEBUG_TRACE("ArgosScheduler::next_prepass: computed schedule is too late for this window", next_pass.epoch, next_pass.duration);
+			curr_time = rtc->gettime();
 			start_time = (std::time_t)next_pass.epoch + next_pass.duration;
 			p_tm = std::gmtime(&start_time);
 			tm_start = *p_tm;
