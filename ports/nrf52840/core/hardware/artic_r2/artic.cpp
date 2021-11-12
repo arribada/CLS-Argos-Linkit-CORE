@@ -456,7 +456,7 @@ void ArticTransceiver::power_on(
 
     // Device is already powered
     if (m_state != ArticTransceiverState::stopped) {
-    	DEBUG_ERROR("ArticTransceiver::power_on: not disabled: state=%u", (unsigned int)m_state);
+    	DEBUG_TRACE("ArticTransceiver::power_on: not disabled: state=%u", (unsigned int)m_state);
     	return;
     }
 
@@ -552,6 +552,7 @@ void ArticTransceiver::state_starting() {
     m_rx_total_time = 0;
     m_is_first_tx = true;
 	m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
+	m_rx_pending = false;
 	ARTIC_STATE_CHANGE(starting, powering_on);
 }
 
