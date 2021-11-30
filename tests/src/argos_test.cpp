@@ -52,6 +52,10 @@ TEST_GROUP(ArgosScheduler)
 		system_timer = fake_timer; // linux_timer;
 		system_scheduler = new Scheduler(system_timer);
 		fake_timer->start();
+
+		// Setup PP_MIN_ELEVATION for 5.0
+		double min_elevation = 5.0;
+		fake_config_store->write_param(ParamID::PP_MIN_ELEVATION, min_elevation);
 	}
 
 	void teardown() {
