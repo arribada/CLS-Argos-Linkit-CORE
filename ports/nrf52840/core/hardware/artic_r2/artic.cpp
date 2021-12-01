@@ -456,6 +456,7 @@ void ArticTransceiver::power_on(
 
     // Device is already powered
     if (m_state != ArticTransceiverState::stopped) {
+    	m_stopping = false;  // Clear any pending stopping flag
     	DEBUG_TRACE("ArticTransceiver::power_on: not disabled: state=%u", (unsigned int)m_state);
     	return;
     }
@@ -849,9 +850,7 @@ void ArticTransceiver::state_idle_exit() {
 
 void ArticTransceiver::state_idle() {
 	// Check for any new commands
-	if (m_stopping) {
-		ARTIC_STATE_CHANGE(idle, stopped);
-	} else if (m_packet_buffer.length()) {
+	if (m_packet_buffer.length()) {
 		m_tx_event = ArgosAsyncEvent::TX_DONE;
 		m_tx_buffer = m_packet_buffer;
 		m_packet_buffer.clear();
@@ -863,6 +862,8 @@ void ArticTransceiver::state_idle() {
 		ARTIC_STATE_CHANGE(idle, transmit_pending);
 	} else if (m_rx_pending) {
 		ARTIC_STATE_CHANGE(idle, receive_pending);
+	} else if (m_stopping) {
+		ARTIC_STATE_CHANGE(idle, stopped);
 	}
 }
 
@@ -904,11 +905,11 @@ void ArticTransceiver::state_receiving_exit() {
 void ArticTransceiver::state_receiving() {
 
 	// Check for any other commands that take priority over RX
-	if (m_stopping) {
-		ARTIC_STATE_CHANGE(idle, stopped);
-		return;
-	} else if (m_packet_buffer.length() || m_ack_buffer.length()) {
+	if (m_packet_buffer.length() || m_ack_buffer.length()) {
 		ARTIC_STATE_CHANGE(receiving, idle); // Transition to IDLE for commands to be run
+		return;
+	} else if (m_stopping) {
+		ARTIC_STATE_CHANGE(idle, stopped);
 		return;
 	}
 
