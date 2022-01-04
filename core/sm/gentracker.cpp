@@ -223,12 +223,13 @@ void OperationalState::entry() {
 	led_handle::dispatch<SetLEDOff>({});
 	saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
 	comms_scheduler->start([](ServiceEvent& e) {
-		LED_MODE_GUARD {
-			if (e.event_type == ServiceEventType::ARGOS_TX_START)
+		if (e.event_type == ServiceEventType::ARGOS_TX_START) {
+			LED_MODE_GUARD {
 				led_handle::dispatch<SetLEDArgosTX>({});
-			else if (e.event_type == ServiceEventType::ARGOS_TX_END)
-				led_handle::dispatch<SetLEDArgosTXComplete>({});
+			}
 		}
+		else if (e.event_type == ServiceEventType::ARGOS_TX_END)
+			led_handle::dispatch<SetLEDArgosTXComplete>({});
 	});
 	location_scheduler->start([](ServiceEvent& e) {
 		if (e.event_type == ServiceEventType::GNSS_ON) {
@@ -236,12 +237,10 @@ void OperationalState::entry() {
 				led_handle::dispatch<SetLEDGNSSOn>({});
 			}
 		} else {
-			LED_MODE_GUARD {
-				if (std::get<bool>(e.event_data))
-					led_handle::dispatch<SetLEDGNSSOffWithFix>({});
-				else
-					led_handle::dispatch<SetLEDGNSSOffWithoutFix>({});
-			}
+			if (std::get<bool>(e.event_data))
+				led_handle::dispatch<SetLEDGNSSOffWithFix>({});
+			else
+				led_handle::dispatch<SetLEDGNSSOffWithoutFix>({});
 			comms_scheduler->notify_sensor_log_update();
 		}
 	});
