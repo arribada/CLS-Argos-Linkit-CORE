@@ -95,7 +95,7 @@ void ArgosScheduler::process_rx() {
 	}
 
 	if (m_downlink_end == INVALID_SCHEDULE) {
-		DEBUG_TRACE("ArgosScheduler::process_rx: prepass window has no DL");
+		DEBUG_TRACE("ArgosScheduler::process_rx: prepass window DL not configured");
 		power_off();
 		return;
 	}
@@ -313,7 +313,9 @@ uint64_t ArgosScheduler::next_prepass() {
 	SatelliteNextPassPrediction_t next_pass;
 
 	// Check for next RX window if we don't have one yet
-	if (m_downlink_end == INVALID_SCHEDULE && m_argos_config.argos_rx_en) {
+	if (m_downlink_end == INVALID_SCHEDULE && m_argos_config.argos_rx_en &&
+        curr_time >= (uint64_t)(m_argos_config.last_aop_update + (SECONDS_PER_DAY * m_argos_config.argos_rx_aop_update_period)))
+	{
 		if (PREVIPASS_compute_next_pass_with_status(
 	    	&config,
 			pass_predict.records,
@@ -431,7 +433,9 @@ void ArgosScheduler::notify_sensor_log_update() {
 		// but only the "last N" are used when preparing a burst based on the argos config
 		{
 			// Update the GPS map based on the most recent entry
-			m_gps_entry_burst_counter[m_num_gps_entries] = (m_argos_config.ntry_per_message == 0) ? UINT_MAX : m_argos_config.ntry_per_message;
+
+			// If mode is duty cycle or legacy then also force ntry per message to infinite
+			m_gps_entry_burst_counter[m_num_gps_entries] = (m_argos_config.ntry_per_message == 0 || m_argos_config.mode == BaseArgosMode::DUTY_CYCLE || m_argos_config.mode == BaseArgosMode::LEGACY) ? UINT_MAX : m_argos_config.ntry_per_message;
 
 			// Copy the entry into local map
 			m_gps_log_entry[m_num_gps_entries] = gps_entry;
