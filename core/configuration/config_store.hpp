@@ -75,7 +75,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x08;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x09;
 	static inline const unsigned int m_config_version_code_zone = 0x1c07e800 | 0x02;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
@@ -119,7 +119,7 @@ protected:
 		/* GNSS_NTRY */ 0U, // Not implemented
 		/* UNDERWATER_EN */ (bool)false,
 		/* DRY_TIME_BEFORE_TX */ 1U,
-		/* SAMPLING_UNDER_FREQ */ 1U,
+		/* SAMPLING_UNDER_FREQ */ 60U,
 		/* LB_EN */ (bool)false,
 		/* LB_TRESHOLD */ 10U,
 		/* LB_ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
@@ -131,7 +131,7 @@ protected:
 		/* LB_GNSS_HDOPFILT_THR */ 15U,
 		/* LB_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 		/* LB_GNSS_ACQ_TIMEOUT */ 120U,
-		/* SAMPLING_SURF_FREQ */ 1U,
+		/* SAMPLING_SURF_FREQ */ 60U,
 		/* PP_MIN_ELEVATION */ 15.0,
 		/* PP_MAX_ELEVATION */ 90.0,
 		/* PP_MIN_DURATION */ 30U,
