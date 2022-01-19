@@ -112,7 +112,7 @@ TEST(DTEHandler, PARML_REQ)
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::PARML_REQ);
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARML#161;IDP12,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09,UNP04,PPP01,PPP02,PPP03,PPP04,PPP05,PPP06,GNP09,GNP10,GNP11,GNP20,GNP21,GNP22,GNP23,ARP30,LDP01,ARP31,ARP32,ARP33,ARP34,ART10,ART11,GNP24\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARML#1D3;IDP12,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09,UNP04,PPP01,PPP02,PPP03,PPP04,PPP05,PPP06,GNP09,GNP10,GNP11,GNP20,GNP21,GNP22,GNP23,ARP30,LDP01,ARP31,ARP32,ARP33,ARP34,ART10,ART11,GNP24,LBP10,LBP11,ZOP01,ZOP04,ZOP05,ZOP06,ZOP08,ZOP09,ZOP10,ZOP11,ZOP12,ZOP13,ZOP14,ZOP15,ZOP16,ZOP17,ZOP18,ZOP19,ZOP20\r", resp.c_str());
 }
 
 TEST(DTEHandler, PARMW_REQ)
@@ -129,7 +129,7 @@ TEST(DTEHandler, PARMR_REQ)
 	std::string resp;
 	std::string req = "$PARMR#0D7;IDT06,IDP12,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARMR#173;IDT06=0,IDP12=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,IDP11=FACTORY,ART03=07/10/2021 22:41:14,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=15,LBP08=1,LBP09=120\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARMR#174;IDT06=0,IDP12=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,IDP11=FACTORY,ART03=07/10/2021 22:41:14,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=60,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=15,LBP08=1,LBP09=120\r", resp.c_str());
 }
 
 TEST(DTEHandler, STATR_REQ)
@@ -137,7 +137,7 @@ TEST(DTEHandler, STATR_REQ)
 	std::string resp;
 	std::string req = "$STATR#0D7;IDT06,IDP12,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;STATR#173;IDT06=0,IDP12=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,IDP11=FACTORY,ART03=07/10/2021 22:41:14,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=15,LBP08=1,LBP09=120\r", resp.c_str());
+	STRCMP_EQUAL("$O;STATR#174;IDT06=0,IDP12=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,IDP11=FACTORY,ART03=07/10/2021 22:41:14,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=60,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=15,LBP08=1,LBP09=120\r", resp.c_str());
 }
 
 TEST(DTEHandler, STATR_REQ_CheckEmptyRequest)
@@ -153,7 +153,7 @@ TEST(DTEHandler, PARMR_REQ_CheckEmptyRequest)
 	std::string resp;
 	std::string req = "$PARMR#000;\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARMR#1A8;IDP12=0,IDP11=FACTORY,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=1,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=15,LBP08=1,LBP09=120,UNP04=1,PPP01=15,PPP02=90,PPP03=30,PPP04=1000,PPP05=300,PPP06=10,GNP09=530,GNP10=3,GNP11=0,GNP20=1,GNP21=50,GNP22=1,GNP23=60,ARP30=1,LDP01=1,ARP31=1,ARP32=1,ARP33=900,ARP34=7,GNP24=1\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARMR#27D;IDP12=0,IDP11=FACTORY,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=60,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=15,LBP08=1,LBP09=120,UNP04=60,PPP01=15,PPP02=90,PPP03=30,PPP04=1000,PPP05=300,PPP06=10,GNP09=530,GNP10=3,GNP11=0,GNP20=1,GNP21=50,GNP22=1,GNP23=60,ARP30=1,LDP01=1,ARP31=1,ARP32=1,ARP33=900,ARP34=7,GNP24=1,LBP10=50,LBP11=4,ZOP01=758198785,ZOP04=0,ZOP05=1,ZOP06=01/01/2020 00:50:00,ZOP08=1,ZOP09=3,ZOP10=240,ZOP11=2,ZOP12=16777215,ZOP13=0,ZOP14=3600,ZOP15=2,ZOP16=50,ZOP17=240,ZOP18=-123.392,ZOP19=-48.8752,ZOP20=1000\r", resp.c_str());
 }
 
 TEST(DTEHandler, PROFW_PROFR_REQ)
@@ -265,89 +265,6 @@ TEST(DTEHandler, DUMPM_REQ)
 	std::string req = "$DUMPM#007;100,200\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
 	STRCMP_EQUAL("$O;DUMPM#2AC;AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8=\r", resp.c_str());
-}
-
-TEST(DTEHandler, ZONEW_REQ)
-{
-	BaseRawData zone_raw = {0,0, ""};
-	BaseZone zone;
-	zone.zone_id = 1;
-	zone.zone_type = BaseZoneType::CIRCLE;
-	zone.enable_monitoring = true;
-	zone.enable_entering_leaving_events = true;
-	zone.enable_out_of_zone_detection_mode = true;
-	zone.enable_activation_date = true;
-	zone.year = 2020;
-	zone.month = 1;
-	zone.day = 1;
-	zone.hour = 0;
-	zone.minute = 0;
-	zone.comms_vector = BaseCommsVector::ARGOS_PREFERRED;
-	zone.delta_arg_loc_argos_seconds = 7*60U;
-	zone.delta_arg_loc_cellular_seconds = 0;
-	zone.argos_extra_flags_enable = true;
-	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
-	zone.argos_power = BaseArgosPower::POWER_500_MW;
-	zone.argos_time_repetition_seconds = 60U;
-	zone.argos_mode = BaseArgosMode::DUTY_CYCLE;
-	zone.argos_duty_cycle = 0b101010101010101010101010;
-	zone.gnss_extra_flags_enable = true;
-	zone.hdop_filter_threshold = 2U;
-	zone.gnss_acquisition_timeout_seconds = 60U;
-	zone.center_latitude_y = -48.8752;
-	zone.center_longitude_x = -123.3925;
-	zone.radius_m = 0;
-	ZoneCodec::encode(zone, zone_raw.str);
-
-	std::string resp;
-	std::string req = DTEEncoder::encode(DTECommand::ZONEW_REQ, zone_raw);
-	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;ZONEW#000;\r", resp.c_str());
-
-	BaseZone& stored_zone = configuration_store->read_zone();
-	CHECK_TRUE(stored_zone == zone);
-}
-
-TEST(DTEHandler, ZONER_REQ)
-{
-	BaseZone zone;
-	zone.zone_id = 1;
-	zone.zone_type = BaseZoneType::CIRCLE;
-	zone.enable_monitoring = true;
-	zone.enable_entering_leaving_events = true;
-	zone.enable_out_of_zone_detection_mode = true;
-	zone.enable_activation_date = true;
-	zone.year = 2020;
-	zone.month = 1;
-	zone.day = 1;
-	zone.hour = 0;
-	zone.minute = 0;
-	zone.comms_vector = BaseCommsVector::ARGOS_PREFERRED;
-	zone.delta_arg_loc_argos_seconds = 7*60U;
-	zone.delta_arg_loc_cellular_seconds = 0;
-	zone.argos_extra_flags_enable = true;
-	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
-	zone.argos_power = BaseArgosPower::POWER_500_MW;
-	zone.argos_time_repetition_seconds = 60U;
-	zone.argos_mode = BaseArgosMode::DUTY_CYCLE;
-	zone.argos_duty_cycle = 0b101010101010101010101010;
-	zone.gnss_extra_flags_enable = true;
-	zone.hdop_filter_threshold = 2U;
-	zone.gnss_acquisition_timeout_seconds = 60U;
-	zone.center_latitude_y = -48.8752;
-	zone.center_longitude_x = -123.3925;
-	zone.radius_m = 0;
-	configuration_store->write_zone(zone);
-
-	std::string resp;
-	std::string req = DTEEncoder::encode(DTECommand::ZONER_REQ, 1);
-
-	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	CHECK_EQUAL("$O;ZONER#01C;A/AIQAIgI4bqqqqkeSDT2MjOAAA=\r"s, resp);
-	std::string zone_resp_bits = websocketpp::base64_decode("A/AIQAIgI4bqqqqkeSDT2MjOAAA="s);
-	BaseZone zone_resp_decoded;
-	ZoneCodec::decode(zone_resp_bits, zone_resp_decoded);
-	CHECK_TRUE(zone == zone_resp_decoded);
 }
 
 TEST(DTEHandler, PASPW_REQ_DecodeDayOfYearWiderThan8Bits)

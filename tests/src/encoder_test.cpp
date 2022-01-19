@@ -71,40 +71,6 @@ TEST(Encoder, PARMW_REQ)
 	STRCMP_EQUAL("$PARMW#016;IDT06=DEAD,IDP12=57005\r", s.c_str());
 }
 
-TEST(Encoder, ZONER_REQ)
-{
-	std::string s;
-	s = DTEEncoder::encode(DTECommand::ZONER_REQ, 0x1);
-	STRCMP_EQUAL("$ZONER#001;1\r", s.c_str());
-}
-
-TEST(Encoder, ZONER_RESP)
-{
-	std::string s;
-	BaseRawData raw_data;
-	raw_data.str = "\x00\x01\x02\x03\x04\x05\x06\x07\x09\x0A\x0B\x0C\x0D\x0E\x0F"s;
-	raw_data.length = 0;
-	s = DTEEncoder::encode(DTECommand::ZONER_RESP, 0, raw_data);
-	STRCMP_EQUAL("$O;ZONER#014;AAECAwQFBgcJCgsMDQ4P\r", s.c_str());
-}
-
-TEST(Encoder, ZONER_REQ_OutOfRangeCheck)
-{
-	std::string s;
-	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::ZONER_REQ, 0xA));  // Only 1 zone supported with ID=0x01
-}
-
-TEST(Encoder, ZONEW_REQ)
-{
-	std::string s;
-	// Convert a buffer to base64
-	BaseRawData raw_data;
-	raw_data.str = "\x00\x01\x02\x03\x04\x05\x06\x07\x09\x0A\x0B\x0C\x0D\x0E\x0F"s;
-	raw_data.length = 0;
-	s = DTEEncoder::encode(DTECommand::ZONEW_REQ, raw_data);
-	STRCMP_EQUAL("$ZONEW#014;AAECAwQFBgcJCgsMDQ4P\r", s.c_str());
-}
-
 TEST(Encoder, PROFR_REQ)
 {
 	std::string s;
@@ -677,9 +643,6 @@ TEST(Encoder, PARAM_DRY_TIME_BEFORE_TX_OutOfRangeCheck)
 	ParamValue p = { ParamID::DRY_TIME_BEFORE_TX, 0U };
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
-	p = { ParamID::DRY_TIME_BEFORE_TX, 1441U};
-	v = { p };
-	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
 }
 
 TEST(Encoder, PARAM_SAMPLING_UNDER_FREQ)
@@ -695,9 +658,6 @@ TEST(Encoder, PARAM_SAMPLING_UNDER_FREQ_OutOfRangeCheck)
 {
 	ParamValue p = { ParamID::SAMPLING_UNDER_FREQ, 0U };
 	std::vector<ParamValue> v = { p };
-	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
-	p = { ParamID::SAMPLING_UNDER_FREQ, 1441U};
-	v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
 }
 

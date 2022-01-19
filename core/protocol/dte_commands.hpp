@@ -1,5 +1,4 @@
-#ifndef __DTE_COMMANDS_HPP_
-#define __DTE_COMMANDS_HPP_
+#pragma once
 
 #include "base_types.hpp"
 
@@ -10,8 +9,6 @@ enum class DTECommand {
 	PARML_REQ,
 	PARMR_REQ,
 	PARMW_REQ,
-	ZONER_REQ,
-	ZONEW_REQ,
 	PROFR_REQ,
 	PROFW_REQ,
 	PASPW_REQ,
@@ -27,8 +24,6 @@ enum class DTECommand {
 	PARML_RESP = RESP_CMD_BASE,
 	PARMR_RESP,
 	PARMW_RESP,
-	ZONER_RESP,
-	ZONEW_RESP,
 	PROFR_RESP,
 	PROFW_RESP,
 	PASPW_RESP,
@@ -83,40 +78,6 @@ static const DTECommandMap command_map[] = {
 				.name = "key_values",
 				.key = "",
 				.encoding = BaseEncoding::KEY_VALUE_LIST,
-				.min_value = 0,
-				.max_value = 0,
-				.permitted_values = {},
-				.is_implemented = false,
-				.is_writable = false
-			}
-		}
-	},
-	{
-		.name = "ZONER",
-		.command = DTECommand::ZONER_REQ,
-		.prototype = 
-		{
-			{
-				.name = "zone_id",
-				.key = "",
-				.encoding = BaseEncoding::HEXADECIMAL,
-				.min_value = 1U,
-				.max_value = 1U,
-				.permitted_values = {},
-				.is_implemented = false,
-				.is_writable = false
-			}
-		}
-	},
-	{
-		.name = "ZONEW",
-		.command = DTECommand::ZONEW_REQ,
-		.prototype = 
-		{
-			{
-				.name = "zone_file",
-				.key = "",
-				.encoding = BaseEncoding::BASE64,
 				.min_value = 0,
 				.max_value = 0,
 				.permitted_values = {},
@@ -334,30 +295,6 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 	{
-		.name = "ZONER",
-		.command = DTECommand::ZONER_RESP,
-		.prototype = 
-		{
-			{
-				.name = "zone_file",
-				.key = "",
-				.encoding = BaseEncoding::BASE64,
-				.min_value = 0,
-				.max_value = 0,
-				.permitted_values = {},
-				.is_implemented = false,
-				.is_writable = false
-			}
-		}
-	},
-	{
-		.name = "ZONEW",
-		.command = DTECommand::ZONEW_RESP,
-		.prototype = 
-		{
-		}
-	},
-	{
 		.name = "PROFR",
 		.command = DTECommand::PROFR_RESP,
 		.prototype = 
@@ -495,5 +432,3 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 };
-
-#endif // __DTE_COMMANDS_HPP_

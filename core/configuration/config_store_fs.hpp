@@ -1,5 +1,4 @@
-#ifndef __CONFIG_STORE_FS_HPP_
-#define __CONFIG_STORE_FS_HPP_
+#pragma once
 
 #include <cstring>
 #include "config_store.hpp"
@@ -15,7 +14,6 @@ class LFSConfigurationStore : public ConfigurationStore {
 
 protected:
 	bool m_is_pass_predict_valid;
-	bool m_is_zone_valid;
 	bool m_is_config_valid;
 	BasePassPredict m_pass_predict;
 
@@ -69,6 +67,9 @@ protected:
 				std::memcpy(entry_buffer, &s, sizeof(s));
 			};
 			void operator()(BaseLEDMode &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(BaseZoneType &s) {
 				std::memcpy(entry_buffer, &s, sizeof(s));
 			};
 			void operator()(BaseRawData &) {
@@ -172,6 +173,12 @@ protected:
 			m_params.at(index) = value;
 			break;
 		}
+		case BaseEncoding::ZONETYPE:
+		{
+			BaseZoneType value = *(BaseZoneType *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
 		case BaseEncoding::KEY_LIST:
 		case BaseEncoding::KEY_VALUE_LIST:
 		case BaseEncoding::BASE64:
@@ -265,22 +272,6 @@ protected:
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_config: saved new file config.data");
 	}
 
-	void deserialize_zone() {
-		DEBUG_TRACE("ConfigurationStoreLFS::deserialize_zone");
-		LFSFile f(&m_filesystem, "zone.dat", LFS_O_RDWR);
-		if (f.read(&m_zone, sizeof(m_zone)) == sizeof(m_zone)) {
-			if (m_zone.version_code == m_config_version_code_zone)
-				m_is_zone_valid = true;
-			else
-				DEBUG_WARN("ConfigurationStoreLFS::deserialize_zone: zone file version code mismatch");
-		}
-
-		if (!m_is_zone_valid) {
-			DEBUG_TRACE("ConfigurationStoreLFS::deserialize_zone: using default zone");
-			create_default_zone();
-		}
-	}
-
 	void deserialize_prepass() {
 		DEBUG_TRACE("ConfigurationStoreLFS::deserialize_prepass");
 		LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_RDWR);
@@ -296,17 +287,6 @@ protected:
 		}
 	}
 
-	void serialize_zone() override {
-		DEBUG_TRACE("ConfigurationStoreLFS::serialize_zone");
-		LFSFile f(&m_filesystem, "zone.dat", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC);
-		m_zone.version_code = m_config_version_code_zone;
-		m_is_zone_valid = f.write(&m_zone, sizeof(m_zone)) == sizeof(m_zone);
-		if (!m_is_zone_valid) {
-			DEBUG_ERROR("serialize_zone: failed to serialize zone");
-			throw CONFIG_STORE_CORRUPTED;
-		}
-	}
-
 	void serialize_pass_predict() {
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_pass_predict");
 		LFSFile f(&m_filesystem, "pass_predict.dat", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC);
@@ -317,11 +297,6 @@ protected:
 			DEBUG_ERROR("serialize_pass_predict: failed to serialize pass predict");
 			throw CONFIG_STORE_CORRUPTED;
 		}
-	}
-
-	void create_default_zone() {
-		DEBUG_TRACE("ConfigurationStoreLFS::create_default_zone");
-		write_zone((BaseZone&)default_zone);
 	}
 
 	void create_default_prepass() {
@@ -366,11 +341,10 @@ private:
 	}
 
 public:
-	LFSConfigurationStore(FileSystem &filesystem) : m_is_pass_predict_valid(false), m_is_zone_valid(false), m_is_config_valid(false), m_filesystem(filesystem) {}
+	LFSConfigurationStore(FileSystem &filesystem) : m_is_pass_predict_valid(false), m_is_config_valid(false), m_filesystem(filesystem) {}
 
 	void init() override {
 		m_requires_serialization = false;
-		m_is_zone_valid = false;
 		m_is_pass_predict_valid = false;
 		m_is_config_valid = false;
 
@@ -391,14 +365,6 @@ public:
 		if (!m_is_config_valid)
 			throw CONFIG_STORE_CORRUPTED; // This is a non-recoverable error
 
-		// Read in zone file
-		try {
-			deserialize_zone();
-		} catch (int e) {
-			DEBUG_WARN("Zone file does not exist or is corrupted - resetting zone file");
-			create_default_zone();
-		}
-
 		// Read in prepass file
 		try {
 			deserialize_prepass();
@@ -412,10 +378,6 @@ public:
 		return m_is_config_valid;
 	}
 
-	bool is_zone_valid() override {
-		return m_is_zone_valid;
-	}
-
 	void factory_reset() override {
 		m_filesystem.umount();
 		m_filesystem.format();
@@ -423,7 +385,6 @@ public:
 		serialize_protected_config(); // Recover "protected" parameters
 		m_is_config_valid = false;
 		m_is_pass_predict_valid = false;
-		m_is_zone_valid = false;
 	}
 
 	BasePassPredict& read_pass_predict() override {
@@ -446,5 +407,3 @@ public:
 	}
 
 };
-
-#endif // __CONFIG_STORE_FS_HPP_

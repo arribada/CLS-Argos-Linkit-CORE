@@ -82,6 +82,25 @@ enum class ParamID {
 	ARGOS_RX_COUNTER,
 	ARGOS_RX_TIME,
 	GNSS_ASSISTNOW_EN,
+	LB_GNSS_HACCFILT_THR,
+	LB_NTRY_PER_MESSAGE,
+	ZONE_TYPE,
+	ZONE_ENABLE_OUT_OF_ZONE_DETECTION_MODE,
+	ZONE_ENABLE_ACTIVATION_DATE,
+	ZONE_ACTIVATION_DATE,
+	ZONE_ARGOS_DEPTH_PILE,
+	ZONE_ARGOS_POWER,
+	ZONE_ARGOS_REPETITION_SECONDS,
+	ZONE_ARGOS_MODE,
+	ZONE_ARGOS_DUTY_CYCLE,
+	ZONE_ARGOS_NTRY_PER_MESSAGE,
+	ZONE_GNSS_DELTA_ARG_LOC_ARGOS_SECONDS,
+	ZONE_GNSS_HDOPFILT_THR,
+	ZONE_GNSS_HACCFILT_THR,
+	ZONE_GNSS_ACQ_TIMEOUT,
+	ZONE_CENTER_LONGITUDE,
+	ZONE_CENTER_LATITUDE,
+	ZONE_RADIUS,
 	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
 };
@@ -103,6 +122,7 @@ enum class BaseEncoding {
 	GNSSFIXMODE,
 	GNSSDYNMODEL,
 	LEDMODE,
+	ZONETYPE,
 	KEY_LIST,
 	KEY_VALUE_LIST
 };
@@ -198,47 +218,6 @@ enum class BaseZoneType : uint8_t {
 	CIRCLE = 1
 };
 
-enum class BaseCommsVector : uint8_t {
-	UNCHANGED,
-	ARGOS_PREFERRED,
-	CELLULAR_PREFERRED
-};
-
-struct BaseZone {
-	unsigned int	   version_code;
-	uint8_t 	       zone_id;
-	BaseZoneType       zone_type;
-	bool               enable_monitoring;
-	bool               enable_entering_leaving_events;
-	bool			   enable_out_of_zone_detection_mode;
-	bool               enable_activation_date;
-	uint16_t           year;
-	uint8_t            month;
-	uint8_t            day;
-	uint8_t            hour;
-	uint8_t            minute;
-	BaseCommsVector    comms_vector;
-	uint32_t           delta_arg_loc_argos_seconds;
-	uint32_t           delta_arg_loc_cellular_seconds;
-	bool	           argos_extra_flags_enable;
-	BaseArgosDepthPile argos_depth_pile;
-	BaseArgosPower     argos_power;
-	uint32_t           argos_time_repetition_seconds;
-	BaseArgosMode      argos_mode;
-	uint32_t           argos_duty_cycle;
-	bool               gnss_extra_flags_enable;
-	uint8_t            hdop_filter_threshold;
-	uint8_t            gnss_acquisition_timeout_seconds;
-	double             center_longitude_x;
-	double             center_latitude_y;
-	uint32_t           radius_m;
-};
-
-static bool operator==(const BaseZone& lhs, const BaseZone& rhs)
-{
-    return std::memcmp( &lhs, &rhs, sizeof(BaseZone) );
-}
-
 #define MAX_AOP_SATELLITE_ENTRIES		40
 
 struct BasePassPredict {
@@ -290,7 +269,7 @@ using BaseName = std::string;
 using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
 
 // !!! Do not change the ordering of variants and also make sure std::string is the first entry !!!
-using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode>;
+using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType>;
 
 struct BaseMap {
 	BaseName 	   name;

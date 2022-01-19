@@ -355,63 +355,6 @@ TEST(Decoder, PARMW_REQ)
 	CHECK_EQUAL(123456, std::get<unsigned int>(param_values[0].value));
 }
 
-TEST(Decoder, ZONER_REQ)
-{
-	std::string s;
-	s = "$ZONER#002;01\r";
-	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::ZONER_REQ == command);
-	CHECK_EQUAL(0x01, std::get<unsigned int>(arg_list[0]));
-}
-
-TEST(Decoder, ZONEW_REQ)
-{
-	std::string dummy_zone_file = "Dummy Data For A Zone File";
-	std::string s;
-	s = "$ZONEW#024;" + websocketpp::base64_encode(dummy_zone_file) + "\r";
-	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::ZONEW_REQ == command);
-	CHECK_EQUAL(dummy_zone_file, std::get<std::string>(arg_list[0]).c_str());
-}
-
-#if 0
-TEST(Decoder, ZoneDataFromMobileApp)
-{
-	BaseZone zone;
-	std::string zone_data = websocketpp::base64_decode("A/AIQABwbJgqqqqkKDa48a0Vw+g=");
-	for (unsigned int i = 0; i < zone_data.size(); i++)
-		std::cout << std::setfill('0') << std::setw(2) << std::hex << (((int)zone_data[i]) & 0xFF) << " ";
-	std::cout << std::endl;
-	ZoneCodec::decode(zone_data, zone);
-	std::cout << "zone_id=" << zone.zone_id << std::endl;
-	std::cout << "zone_type=" << (int)zone.zone_type << std::endl;
-	std::cout << "enable_monitoring=" << zone.enable_monitoring << std::endl;
-	std::cout << "enable_entering_leaving_events=" << zone.enable_entering_leaving_events << std::endl;
-	std::cout << "enable_out_of_zone_detection_mode=" << zone.enable_out_of_zone_detection_mode << std::endl;
-	std::cout << "enable_activation_date=" << zone.enable_activation_date << std::endl;
-	std::cout << "year=" << zone.year << std::endl;
-	std::cout << "month=" << zone.month << std::endl;
-	std::cout << "day=" << zone.day << std::endl;
-	std::cout << "hour=" << zone.hour << std::endl;
-	std::cout << "minute=" << zone.minute << std::endl;
-	std::cout << "comms_vector=" << (int)zone.comms_vector << std::endl;
-	std::cout << "delta_arg_loc_argos_seconds=" << zone.delta_arg_loc_argos_seconds << std::endl;
-	std::cout << "delta_arg_loc_cellular_seconds=" << zone.delta_arg_loc_cellular_seconds << std::endl;
-	std::cout << "argos_extra_flags_enable=" << zone.argos_extra_flags_enable << std::endl;
-	std::cout << "argos_depth_pile=" << (int)zone.argos_depth_pile << std::endl;
-	std::cout << "argos_power=" << (int)zone.argos_power << std::endl;
-	std::cout << "argos_time_repetition_seconds=" << zone.argos_time_repetition_seconds << std::endl;
-	std::cout << "argos_mode=" << (int)zone.argos_mode << std::endl;
-	std::cout << "argos_duty_cycle=" << zone.argos_duty_cycle << std::endl;
-	std::cout << "gnss_extra_flags_enable=" << zone.gnss_extra_flags_enable << std::endl;
-	std::cout << "hdop_filter_threshold=" << zone.hdop_filter_threshold << std::endl;
-	std::cout << "gnss_acquisition_timeout_seconds=" << zone.gnss_acquisition_timeout_seconds << std::endl;
-	std::cout << "center_longitude_x=" << zone.center_longitude_x << std::endl;
-	std::cout << "center_latitude_y=" << zone.center_latitude_y << std::endl;
-	std::cout << "radius_m=" << zone.radius_m << std::endl;
-}
-#endif
-
 TEST(Decoder, PROFR_REQ)
 {
 	std::string s;
@@ -537,24 +480,6 @@ TEST(Decoder, PARMW_RESP)
 	s = "$O;PARMW#000;\r";
 	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
 	CHECK_TRUE(DTECommand::PARMW_RESP == command);
-}
-
-TEST(Decoder, ZONER_RESP)
-{
-	std::string dummy_file = "Dummy Data For A Zone File";
-	std::string s;
-	s = "$O;ZONER#024;" + websocketpp::base64_encode(dummy_file) + "\r";
-	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::ZONER_RESP == command);
-	CHECK_EQUAL(dummy_file, std::get<std::string>(arg_list[0]).c_str());
-}
-
-TEST(Decoder, ZONEW_RESP)
-{
-	std::string s;
-	s = "$O;ZONEW#000;\r";
-	CHECK_TRUE(DTEDecoder::decode(s, command, error_code, arg_list, params, param_values));
-	CHECK_TRUE(DTECommand::ZONEW_RESP == command);
 }
 
 TEST(Decoder, PROFR_RESP)

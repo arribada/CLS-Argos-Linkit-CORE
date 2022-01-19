@@ -228,40 +228,30 @@ TEST(ConfigStore, CheckFactoryResetRetainsProtectedParams)
 	delete store;
 }
 
-TEST(ConfigStore, CheckDefaultZoneFile)
+TEST(ConfigStore, CheckDefaultZoneSettings)
 {
 	LFSConfigurationStore *store;
 	store = new LFSConfigurationStore(*main_filesystem);
 
 	store->init();
 
-	BaseZone& default_zone = store->read_zone();
-	CHECK_EQUAL(1, default_zone.zone_id);
-	CHECK_FALSE(default_zone.enable_monitoring);
-	CHECK_TRUE(default_zone.argos_depth_pile == BaseArgosDepthPile::DEPTH_PILE_1);
-	CHECK_TRUE(default_zone.argos_duty_cycle == 0xFFFFFF);
-	CHECK_TRUE(default_zone.argos_extra_flags_enable);
-	CHECK_TRUE(default_zone.argos_mode == BaseArgosMode::LEGACY);
-	CHECK_TRUE(default_zone.argos_power == BaseArgosPower::POWER_200_MW);
-	CHECK_TRUE(default_zone.argos_time_repetition_seconds == 240);
-	CHECK_TRUE(default_zone.center_latitude_y == -48.8752);
-	CHECK_TRUE(default_zone.center_longitude_x == -123.3925);
-	CHECK_TRUE(default_zone.comms_vector == BaseCommsVector::UNCHANGED);
-	CHECK_TRUE(default_zone.day == 1);
-	CHECK_TRUE(default_zone.delta_arg_loc_argos_seconds == 3600);
-	CHECK_TRUE(default_zone.delta_arg_loc_cellular_seconds == 65);
-	CHECK_TRUE(default_zone.enable_activation_date);
-	CHECK_TRUE(default_zone.enable_entering_leaving_events);
-	CHECK_FALSE(default_zone.enable_out_of_zone_detection_mode);
-	CHECK_TRUE(default_zone.gnss_acquisition_timeout_seconds == 240);
-	CHECK_TRUE(default_zone.gnss_extra_flags_enable);
-	CHECK_TRUE(default_zone.hdop_filter_threshold == 2);
-	CHECK_TRUE(default_zone.hour == 0);
-	CHECK_TRUE(default_zone.minute == 0);
-	CHECK_TRUE(default_zone.month == 1);
-	CHECK_TRUE(default_zone.radius_m == 100);
-	CHECK_TRUE(default_zone.year == 2020);
-	CHECK_TRUE(default_zone.zone_type == BaseZoneType::CIRCLE);
+	CHECK_TRUE(store->read_param<BaseZoneType>(ParamID::ZONE_TYPE) == BaseZoneType::CIRCLE);
+	CHECK_FALSE(store->read_param<bool>(ParamID::ZONE_ENABLE_OUT_OF_ZONE_DETECTION_MODE));
+	CHECK_TRUE(store->read_param<bool>(ParamID::ZONE_ENABLE_ACTIVATION_DATE));
+	CHECK_TRUE(store->read_param<std::time_t>(ParamID::ZONE_ACTIVATION_DATE) == (std::time_t)1577839800);
+	CHECK_TRUE(store->read_param<BaseArgosDepthPile>(ParamID::ZONE_ARGOS_DEPTH_PILE) == BaseArgosDepthPile::DEPTH_PILE_1);
+	CHECK_TRUE(store->read_param<BaseArgosPower>(ParamID::ZONE_ARGOS_POWER) == BaseArgosPower::POWER_200_MW);
+	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_ARGOS_REPETITION_SECONDS) == 240);
+	CHECK_TRUE(store->read_param<BaseArgosMode>(ParamID::ZONE_ARGOS_MODE) == BaseArgosMode::LEGACY);
+	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_ARGOS_DUTY_CYCLE) == 0xFFFFFFU);
+	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_ARGOS_NTRY_PER_MESSAGE) == 0U);
+	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_GNSS_DELTA_ARG_LOC_ARGOS_SECONDS) == 3600U);
+	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_GNSS_HDOPFILT_THR) == 2U);
+	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_GNSS_HACCFILT_THR) == 50U);
+	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_GNSS_ACQ_TIMEOUT) == 240U);
+	CHECK_TRUE(store->read_param<double>(ParamID::ZONE_CENTER_LONGITUDE) == -123.3925);
+	CHECK_TRUE(store->read_param<double>(ParamID::ZONE_CENTER_LATITUDE) == -48.8752);
+	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_RADIUS) == 1000U);
 	delete store;
 }
 
@@ -274,69 +264,6 @@ TEST(ConfigStore, CheckDefaultPassPredictIsAvailable)
 
 	BasePassPredict pp = store->read_pass_predict();
 	CHECK_EQUAL(8, pp.num_records);
-
-	delete store;
-}
-
-TEST(ConfigStore, CheckZoneCreationAndPersistence)
-{
-	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore(*main_filesystem);
-
-	store->init();
-
-	{
-		BaseZone zone;
-		zone.zone_id = 1;
-		zone.hour = 12;
-		store->write_zone(zone);
-	}
-
-	delete store;
-	store = new LFSConfigurationStore(*main_filesystem);
-
-	{
-		store->init();
-		BaseZone &zone = store->read_zone();
-		CHECK_EQUAL(1, zone.zone_id);
-		CHECK_EQUAL(12, zone.hour);
-	}
-
-	delete store;
-}
-
-TEST(ConfigStore, CheckZoneVersionCodeMismatch)
-{
-	LFSConfigurationStore *store;
-	store = new LFSConfigurationStore(*main_filesystem);
-
-	store->init();
-
-	{
-		BaseZone zone;
-		zone.zone_id = 1;
-		zone.hour = 12;
-		store->write_zone(zone);
-	}
-
-	delete store;
-
-	// Corrupt the zone file first 4 bytes
-	{
-		// Overwrite first 4 bytes (configuration version)
-		LFSFile f(main_filesystem, "zone.dat", LFS_O_WRONLY);
-		uint8_t clobber[4];
-		f.write(clobber, sizeof(clobber));
-	}
-
-	store = new LFSConfigurationStore(*main_filesystem);
-
-	{
-		store->init();
-		BaseZone &zone = store->read_zone();
-		CHECK_EQUAL(1, zone.zone_id);
-		CHECK_EQUAL(0, zone.hour);  // Should be reset to default zone
-	}
 
 	delete store;
 }
@@ -1021,11 +948,14 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	// Set default params and LB params
 	unsigned int hdop_filter_threshold = 10;
 	bool hdop_filter_enable = true;
+	unsigned int hacc_filter_threshold = 50;
+	bool hacc_filter_enable = true;
 	bool gnss_en = true;
 	unsigned int dloc_arg_nom = 1440*60U;
 	unsigned int acquisition_timeout = 10;
 	bool lb_en = true;
 	unsigned int lb_hdop_filter_threshold = 5;
+	unsigned int lb_hacc_filter_threshold = 100;
 	bool lb_gnss_en = false;
 	unsigned int lb_dloc_arg_nom = 720*60U;
 	unsigned int lb_acquisition_timeout = 30;
@@ -1033,11 +963,14 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 
 	store->write_param(ParamID::GNSS_HDOPFILT_THR, hdop_filter_threshold);
 	store->write_param(ParamID::GNSS_HDOPFILT_EN, hdop_filter_enable);
+	store->write_param(ParamID::GNSS_HACCFILT_THR, hacc_filter_threshold);
+	store->write_param(ParamID::GNSS_HACCFILT_EN, hacc_filter_enable);
 	store->write_param(ParamID::GNSS_EN, gnss_en);
 	store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
 	store->write_param(ParamID::GNSS_ACQ_TIMEOUT, acquisition_timeout);
 	store->write_param(ParamID::LB_EN, lb_en);
 	store->write_param(ParamID::LB_GNSS_HDOPFILT_THR, lb_hdop_filter_threshold);
+	store->write_param(ParamID::LB_GNSS_HACCFILT_THR, lb_hacc_filter_threshold);
 	store->write_param(ParamID::LB_GNSS_EN, lb_gnss_en);
 	store->write_param(ParamID::DLOC_ARG_LB, lb_dloc_arg_nom);
 	store->write_param(ParamID::LB_GNSS_ACQ_TIMEOUT, lb_acquisition_timeout);
@@ -1054,6 +987,8 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(gnss_en, gnss_config.enable);
 	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
 	CHECK_EQUAL(hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+	CHECK_EQUAL(hacc_filter_enable, gnss_config.hacc_filter_enable);
+	CHECK_EQUAL(hacc_filter_threshold, gnss_config.hacc_filter_threshold);
 
 	// Notify battery level equal threshold
 	fake_battery_monitor->m_level = 10;
@@ -1065,6 +1000,8 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(lb_gnss_en, gnss_config.enable);
 	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
 	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+	CHECK_EQUAL(hacc_filter_enable, gnss_config.hacc_filter_enable);
+	CHECK_EQUAL(lb_hacc_filter_threshold, gnss_config.hacc_filter_threshold);
 
 	// Notify battery level below threshold
 	fake_battery_monitor->m_level = 1;
@@ -1076,6 +1013,8 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(lb_gnss_en, gnss_config.enable);
 	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
 	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+	CHECK_EQUAL(hacc_filter_enable, gnss_config.hacc_filter_enable);
+	CHECK_EQUAL(lb_hacc_filter_threshold, gnss_config.hacc_filter_threshold);
 
 	// Notify battery level 1% above threshold whilst in LB mode
 	fake_battery_monitor->m_level = 11;
@@ -1087,6 +1026,8 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(lb_gnss_en, gnss_config.enable);
 	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
 	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+	CHECK_EQUAL(hacc_filter_enable, gnss_config.hacc_filter_enable);
+	CHECK_EQUAL(lb_hacc_filter_threshold, gnss_config.hacc_filter_threshold);
 
 	// Notify battery level 5% above threshold whilst in LB mode
 	fake_battery_monitor->m_level = 15;
@@ -1098,6 +1039,8 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(gnss_en, gnss_config.enable);
 	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
 	CHECK_EQUAL(hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+	CHECK_EQUAL(hacc_filter_enable, gnss_config.hacc_filter_enable);
+	CHECK_EQUAL(hacc_filter_threshold, gnss_config.hacc_filter_threshold);
 }
 
 TEST(ConfigStore, RetrieveArgosConfigDefaultMode)
@@ -1172,6 +1115,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	bool lb_en = true;
 	BaseArgosDepthPile lb_depth_pile = BaseArgosDepthPile::DEPTH_PILE_4;
 	unsigned int lb_duty_cycle = 0xAAAAAAU;
+	unsigned int lb_ntry_per_message = 5U;
 	BaseArgosMode lb_mode = BaseArgosMode::LEGACY;
 	BaseArgosPower lb_power = BaseArgosPower::POWER_40_MW;
 	unsigned int lb_tr_nom = 120;
@@ -1187,6 +1131,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	store->write_param(ParamID::TR_NOM, tr_nom);
 	store->write_param(ParamID::TX_COUNTER, tx_counter);
 	store->write_param(ParamID::LB_EN, lb_en);
+	store->write_param(ParamID::LB_NTRY_PER_MESSAGE, lb_ntry_per_message);
 	store->write_param(ParamID::LB_ARGOS_DEPTH_PILE, lb_depth_pile);
 	store->write_param(ParamID::LB_ARGOS_DUTY_CYCLE, lb_duty_cycle);
 	store->write_param(ParamID::LB_ARGOS_MODE, lb_mode);
@@ -1220,7 +1165,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL(lb_duty_cycle, argos_config.duty_cycle);
 	CHECK_EQUAL(frequency, argos_config.frequency);
 	CHECK_EQUAL((unsigned int)lb_mode, (unsigned int)argos_config.mode);
-	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL(lb_ntry_per_message, argos_config.ntry_per_message);
 	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
 	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
@@ -1235,7 +1180,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL(lb_duty_cycle, argos_config.duty_cycle);
 	CHECK_EQUAL(frequency, argos_config.frequency);
 	CHECK_EQUAL((unsigned int)lb_mode, (unsigned int)argos_config.mode);
-	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL(lb_ntry_per_message, argos_config.ntry_per_message);
 	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
 	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
@@ -1250,7 +1195,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL(lb_duty_cycle, argos_config.duty_cycle);
 	CHECK_EQUAL(frequency, argos_config.frequency);
 	CHECK_EQUAL((unsigned int)lb_mode, (unsigned int)argos_config.mode);
-	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL(lb_ntry_per_message, argos_config.ntry_per_message);
 	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
 	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
@@ -1294,57 +1239,59 @@ TEST(ConfigStore, ZoneExclusionCriteriaChecking) {
 	store->notify_gps_location(gps_location);
 
 	// Set up exclusion zone
-	BaseZone zone;
-	zone.zone_id = 0;
-	zone.zone_type = BaseZoneType::CIRCLE;
-	zone.center_longitude_x = -2.118413;
-	zone.center_latitude_y = 51.3765242;
-	zone.radius_m = 100000;  // 100 km
-	zone.enable_activation_date = false;
-	zone.enable_monitoring = true;
-	zone.enable_out_of_zone_detection_mode = true;
-	store->write_zone(zone);
+	BaseZoneType zone_type = BaseZoneType::CIRCLE;
+	store->write_param(ParamID::ZONE_TYPE, zone_type);
+	double zone_center_longitude_x = -2.118413;
+	store->write_param(ParamID::ZONE_CENTER_LONGITUDE, zone_center_longitude_x);
+	double zone_center_latitude_y = 51.3765242;
+	store->write_param(ParamID::ZONE_CENTER_LATITUDE, zone_center_latitude_y);
+	unsigned int zone_delta_arg_loc_argos_seconds = 100;
+	store->write_param(ParamID::ZONE_GNSS_DELTA_ARG_LOC_ARGOS_SECONDS, zone_delta_arg_loc_argos_seconds);
+	unsigned int zone_radius_m = 100000;  // 100 km
+	store->write_param(ParamID::ZONE_RADIUS, zone_radius_m);
+	bool zone_enable_out_of_zone_detection_mode = true;
+	store->write_param(ParamID::ZONE_ENABLE_OUT_OF_ZONE_DETECTION_MODE, zone_enable_out_of_zone_detection_mode);
+	unsigned int zone_gnss_acquisition_timeout_seconds = 30;
+	store->write_param(ParamID::ZONE_GNSS_ACQ_TIMEOUT, zone_gnss_acquisition_timeout_seconds);
+	unsigned int zone_hdop_filter_threshold = 3;
+	store->write_param(ParamID::ZONE_GNSS_HDOPFILT_THR, zone_hdop_filter_threshold);
 
 	// Inside zone
 	CHECK_FALSE(store->is_zone_exclusion());
 
 	// Outside zone
-	zone.center_longitude_x = -1.0;
-	zone.center_latitude_y = 53;
-	store->write_zone(zone);
+	zone_center_longitude_x = -1.0;
+	store->write_param(ParamID::ZONE_CENTER_LONGITUDE, zone_center_longitude_x);
+	zone_center_latitude_y = 53;
+	store->write_param(ParamID::ZONE_CENTER_LATITUDE, zone_center_latitude_y);
 	CHECK_TRUE(store->is_zone_exclusion());
 
 	// Enable activation date later than GPS time
-	zone.enable_activation_date = true;
-	zone.year = 2021;
-	zone.month = 2;
-	zone.day = 1;
-	zone.hour = 0;
-	zone.minute = 0;
-	store->write_zone(zone);
+	bool zone_enable_activation_date = true;
+	store->write_param(ParamID::ZONE_ENABLE_ACTIVATION_DATE, zone_enable_activation_date	);
+	std::time_t zone_activation_date = convert_epochtime(2021, 2, 1, 0, 0, 0);
+	store->write_param(ParamID::ZONE_ACTIVATION_DATE, zone_activation_date);
 	CHECK_FALSE(store->is_zone_exclusion());
 
 	// Enable activation date before GPS time
-	zone.enable_activation_date = true;
-	zone.year = 2020;
-	zone.month = 12;
-	zone.day = 31;
-	zone.hour = 23;
-	zone.minute = 59;
-	store->write_zone(zone);
+	zone_activation_date = convert_epochtime(2020, 12, 31, 23, 59, 0);
+	store->write_param(ParamID::ZONE_ACTIVATION_DATE, zone_activation_date);
 	CHECK_TRUE(store->is_zone_exclusion());
 
 	// Put back inside zone
-	zone.center_longitude_x = -2.118413;
-	zone.center_latitude_y = 51.3765242;
-	store->write_zone(zone);
+	zone_center_longitude_x = -2.118413;
+	store->write_param(ParamID::ZONE_CENTER_LONGITUDE, zone_center_longitude_x);
+	zone_center_latitude_y = 51.3765242;
+	store->write_param(ParamID::ZONE_CENTER_LATITUDE, zone_center_latitude_y);
 	CHECK_FALSE(store->is_zone_exclusion());
 
 	// Outside zone but monitoring disabled
-	zone.center_longitude_x = -1.0;
-	zone.center_latitude_y = 53;
-	zone.enable_monitoring = false;
-	store->write_zone(zone);
+	zone_enable_out_of_zone_detection_mode = false;
+	store->write_param(ParamID::ZONE_ENABLE_OUT_OF_ZONE_DETECTION_MODE, zone_enable_out_of_zone_detection_mode);
+	zone_center_longitude_x = -1.0;
+	store->write_param(ParamID::ZONE_CENTER_LONGITUDE, zone_center_longitude_x);
+	zone_center_latitude_y = 53;
+	store->write_param(ParamID::ZONE_CENTER_LATITUDE, zone_center_latitude_y);
 	CHECK_FALSE(store->is_zone_exclusion());
 }
 
@@ -1368,22 +1315,34 @@ TEST(ConfigStore, RetrieveArgosConfigZoneExclusionMode)
 	store->notify_gps_location(gps_location);
 
 	// Set up exclusion zone
-	BaseZone zone;
-	zone.zone_id = 0;
-	zone.zone_type = BaseZoneType::CIRCLE;
-	zone.center_longitude_x = -2.118413;
-	zone.center_latitude_y = 51.3765242;
-	zone.radius_m = 100000;  // 100 km
-	zone.enable_activation_date = false;
-	zone.enable_monitoring = true;
-	zone.enable_out_of_zone_detection_mode = true;
-	zone.argos_extra_flags_enable = true;
-	zone.argos_duty_cycle = 0xAAAAAAU;
-	zone.argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
-	zone.argos_mode = BaseArgosMode::LEGACY;
-	zone.argos_power = BaseArgosPower::POWER_3_MW;
-	zone.argos_time_repetition_seconds = 120;
-	store->write_zone(zone);
+	BaseZoneType zone_type = BaseZoneType::CIRCLE;
+	store->write_param(ParamID::ZONE_TYPE, zone_type);
+	double zone_center_longitude_x = -2.118413;
+	store->write_param(ParamID::ZONE_CENTER_LONGITUDE, zone_center_longitude_x);
+	double zone_center_latitude_y = 51.3765242;
+	store->write_param(ParamID::ZONE_CENTER_LATITUDE, zone_center_latitude_y);
+	unsigned int zone_delta_arg_loc_argos_seconds = 100;
+	store->write_param(ParamID::ZONE_GNSS_DELTA_ARG_LOC_ARGOS_SECONDS, zone_delta_arg_loc_argos_seconds);
+	unsigned int zone_radius_m = 100000;  // 100 km
+	store->write_param(ParamID::ZONE_RADIUS, zone_radius_m);
+	bool zone_enable_out_of_zone_detection_mode = true;
+	store->write_param(ParamID::ZONE_ENABLE_OUT_OF_ZONE_DETECTION_MODE, zone_enable_out_of_zone_detection_mode);
+	unsigned int zone_gnss_acquisition_timeout_seconds = 30;
+	store->write_param(ParamID::ZONE_GNSS_ACQ_TIMEOUT, zone_gnss_acquisition_timeout_seconds);
+	unsigned int zone_hdop_filter_threshold = 3;
+	store->write_param(ParamID::ZONE_GNSS_HDOPFILT_THR, zone_hdop_filter_threshold);
+	unsigned int zone_argos_duty_cycle = 0xAAAAAAU;
+	store->write_param(ParamID::ZONE_ARGOS_DUTY_CYCLE, zone_argos_duty_cycle);
+	unsigned int zone_argos_ntry_per_message = 4;
+	store->write_param(ParamID::ZONE_ARGOS_NTRY_PER_MESSAGE, zone_argos_ntry_per_message);
+	BaseArgosDepthPile zone_argos_depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	store->write_param(ParamID::ZONE_ARGOS_DEPTH_PILE, zone_argos_depth_pile);
+	BaseArgosMode zone_argos_mode = BaseArgosMode::LEGACY;
+	store->write_param(ParamID::ZONE_ARGOS_MODE, zone_argos_mode);
+	BaseArgosPower zone_argos_power = BaseArgosPower::POWER_3_MW;
+	store->write_param(ParamID::ZONE_ARGOS_POWER, zone_argos_power);
+	unsigned int zone_argos_time_repetition_seconds = 120;
+	store->write_param(ParamID::ZONE_ARGOS_REPETITION_SECONDS, zone_argos_time_repetition_seconds);
 
 	// Set default params
 	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_12;
@@ -1423,20 +1382,21 @@ TEST(ConfigStore, RetrieveArgosConfigZoneExclusionMode)
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
 
 	// Set outside zone
-	zone.center_longitude_x = -1.0;
-	zone.center_latitude_y = 53;
-	store->write_zone(zone);
+	zone_center_longitude_x = -1.0;
+	store->write_param(ParamID::ZONE_CENTER_LONGITUDE, zone_center_longitude_x);
+	zone_center_latitude_y = 53;
+	store->write_param(ParamID::ZONE_CENTER_LATITUDE, zone_center_longitude_x);
 
 	store->get_argos_configuration(argos_config);
 
-	CHECK_EQUAL((unsigned int)zone.argos_depth_pile, (unsigned int)argos_config.depth_pile);
+	CHECK_EQUAL((unsigned int)zone_argos_depth_pile, (unsigned int)argos_config.depth_pile);
 	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
-	CHECK_EQUAL(zone.argos_duty_cycle, argos_config.duty_cycle);
+	CHECK_EQUAL(zone_argos_duty_cycle, argos_config.duty_cycle);
 	CHECK_EQUAL(frequency, argos_config.frequency);
-	CHECK_EQUAL((unsigned int)zone.argos_mode, (unsigned int)argos_config.mode);
-	CHECK_EQUAL(ntry_per_message, argos_config.ntry_per_message);
-	CHECK_EQUAL((unsigned int)zone.argos_power, (unsigned int)argos_config.power);
-	CHECK_EQUAL(zone.argos_time_repetition_seconds, argos_config.tr_nom);
+	CHECK_EQUAL((unsigned int)zone_argos_mode, (unsigned int)argos_config.mode);
+	CHECK_EQUAL(zone_argos_ntry_per_message, argos_config.ntry_per_message);
+	CHECK_EQUAL((unsigned int)zone_argos_power, (unsigned int)argos_config.power);
+	CHECK_EQUAL(zone_argos_time_repetition_seconds, argos_config.tr_nom);
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
 }
 
@@ -1461,20 +1421,22 @@ TEST(ConfigStore, RetrieveGPSConfigZoneExclusionMode)
 	store->notify_gps_location(gps_location);
 
 	// Set up exclusion zone
-	BaseZone zone;
-	zone.zone_id = 0;
-	zone.zone_type = BaseZoneType::CIRCLE;
-	zone.center_longitude_x = -2.118413;
-	zone.center_latitude_y = 51.3765242;
-	zone.delta_arg_loc_argos_seconds = 100;
-	zone.radius_m = 100000;  // 100 km
-	zone.enable_activation_date = false;
-	zone.enable_monitoring = true;
-	zone.enable_out_of_zone_detection_mode = true;
-	zone.gnss_extra_flags_enable = true;
-	zone.gnss_acquisition_timeout_seconds = 30;
-	zone.hdop_filter_threshold = 3;
-	store->write_zone(zone);
+	BaseZoneType zone_type = BaseZoneType::CIRCLE;
+	store->write_param(ParamID::ZONE_TYPE, zone_type);
+	double zone_center_longitude_x = -2.118413;
+	store->write_param(ParamID::ZONE_CENTER_LONGITUDE, zone_center_longitude_x);
+	double zone_center_latitude_y = 51.3765242;
+	store->write_param(ParamID::ZONE_CENTER_LATITUDE, zone_center_latitude_y);
+	unsigned int zone_delta_arg_loc_argos_seconds = 100;
+	store->write_param(ParamID::ZONE_GNSS_DELTA_ARG_LOC_ARGOS_SECONDS, zone_delta_arg_loc_argos_seconds);
+	unsigned int zone_radius_m = 100000;  // 100 km
+	store->write_param(ParamID::ZONE_RADIUS, zone_radius_m);
+	bool zone_enable_out_of_zone_detection_mode = true;
+	store->write_param(ParamID::ZONE_ENABLE_OUT_OF_ZONE_DETECTION_MODE, zone_enable_out_of_zone_detection_mode);
+	unsigned int zone_gnss_acquisition_timeout_seconds = 30;
+	store->write_param(ParamID::ZONE_GNSS_ACQ_TIMEOUT, zone_gnss_acquisition_timeout_seconds);
+	unsigned int zone_hdop_filter_threshold = 3;
+	store->write_param(ParamID::ZONE_GNSS_HDOPFILT_THR, zone_hdop_filter_threshold);
 
 	// Set default params
 	unsigned int hdop_filter_threshold = 10;
@@ -1503,27 +1465,16 @@ TEST(ConfigStore, RetrieveGPSConfigZoneExclusionMode)
 	CHECK_EQUAL(hdop_filter_threshold, gnss_config.hdop_filter_threshold);
 
 	// Set outside zone (DLOC specified)
-	zone.center_longitude_x = -1.0;
-	zone.center_latitude_y = 53;
-	store->write_zone(zone);
+	zone_center_longitude_x = -1.0;
+	store->write_param(ParamID::ZONE_CENTER_LONGITUDE, zone_center_longitude_x);
+	zone_center_latitude_y = 53;
+	store->write_param(ParamID::ZONE_CENTER_LATITUDE, zone_center_latitude_y);
 
 	store->get_gnss_configuration(gnss_config);
 
-	CHECK_EQUAL(zone.gnss_acquisition_timeout_seconds, gnss_config.acquisition_timeout);
-	CHECK_EQUAL((unsigned int)zone.delta_arg_loc_argos_seconds, (unsigned int)gnss_config.dloc_arg_nom);
+	CHECK_EQUAL(zone_gnss_acquisition_timeout_seconds, gnss_config.acquisition_timeout);
+	CHECK_EQUAL((unsigned int)zone_delta_arg_loc_argos_seconds, (unsigned int)gnss_config.dloc_arg_nom);
 	CHECK_EQUAL(gnss_en, gnss_config.enable);
 	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
-	CHECK_EQUAL(zone.hdop_filter_threshold, gnss_config.hdop_filter_threshold);
-
-	// Set outside zone (DLOC "use default")
-	zone.delta_arg_loc_argos_seconds = 0;
-	store->write_zone(zone);
-
-	store->get_gnss_configuration(gnss_config);
-
-	CHECK_EQUAL(zone.gnss_acquisition_timeout_seconds, gnss_config.acquisition_timeout);
-	CHECK_EQUAL((unsigned int)dloc_arg_nom, (unsigned int)gnss_config.dloc_arg_nom);
-	CHECK_EQUAL(gnss_en, gnss_config.enable);
-	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
-	CHECK_EQUAL(zone.hdop_filter_threshold, gnss_config.hdop_filter_threshold);
+	CHECK_EQUAL(zone_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
 }

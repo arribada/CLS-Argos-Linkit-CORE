@@ -19,344 +19,6 @@
 using namespace std::literals::string_literals;
 
 
-class ZoneCodec {
-private:
-	static unsigned int decode_arg_loc_argos(unsigned int x) {
-		switch (x) {
-		case 1:
-			return 7 * 60;
-			break;
-		case 2:
-			return 15 * 60;
-			break;
-		case 3:
-			return 30 * 60;
-			break;
-		case 4:
-			return 1 * 60 * 60;
-			break;
-		case 5:
-			return 2 * 60 * 60;
-			break;
-		case 6:
-			return 3 * 60 * 60;
-			break;
-		case 7:
-			return 4 * 60 * 60;
-			break;
-		case 8:
-			return 6 * 60 * 60;
-			break;
-		case 9:
-			return 12 * 60 * 60;
-			break;
-		case 10:
-			return 24 * 60 * 60;
-			break;
-		case 15:
-			return 0;  // Signals to use DLOC_ARG_NOM
-		default:
-			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%lu)", __FUNCTION__, x);
-			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
-		}
-
-	}
-
-	static BaseArgosDepthPile decode_depth_pile(unsigned int x) {
-		switch (x) {
-		case 1:
-			return BaseArgosDepthPile::DEPTH_PILE_1;
-			break;
-		case 2:
-			return BaseArgosDepthPile::DEPTH_PILE_2;
-			break;
-		case 4:
-			return BaseArgosDepthPile::DEPTH_PILE_4;
-			break;
-		case 8:
-			return BaseArgosDepthPile::DEPTH_PILE_8;
-			break;
-		case 9:
-			return BaseArgosDepthPile::DEPTH_PILE_12;
-			break;
-		case 10:
-			return BaseArgosDepthPile::DEPTH_PILE_16;
-			break;
-		case 11:
-			return BaseArgosDepthPile::DEPTH_PILE_20;
-			break;
-		case 12:
-			return BaseArgosDepthPile::DEPTH_PILE_24;
-			break;
-		
-		default:
-			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%lu)", __FUNCTION__, x);
-			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
-		}
-	}
-
-	static BaseCommsVector decode_comms_vector(unsigned int x) {
-		switch (x) {
-		case 0:
-			return BaseCommsVector::UNCHANGED;
-		case 1:
-			return BaseCommsVector::ARGOS_PREFERRED;
-		case 2:
-			return BaseCommsVector::CELLULAR_PREFERRED;
-		default:
-			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%lu)", __FUNCTION__, x);
-			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
-		}
-	}
-
-	static unsigned int encode_depth_pile(BaseArgosDepthPile x) {
-		switch (x) {
-		case BaseArgosDepthPile::DEPTH_PILE_1:
-			return 1;
-			break;
-		case BaseArgosDepthPile::DEPTH_PILE_2:
-			return 2;
-			break;
-		case BaseArgosDepthPile::DEPTH_PILE_3:
-			return 3;
-			break;
-		case BaseArgosDepthPile::DEPTH_PILE_4:
-			return 4;
-			break;
-		case BaseArgosDepthPile::DEPTH_PILE_8:
-			return 8;
-			break;
-		case BaseArgosDepthPile::DEPTH_PILE_12:
-			return 9;
-			break;
-		case BaseArgosDepthPile::DEPTH_PILE_16:
-			return 10;
-			break;
-		case BaseArgosDepthPile::DEPTH_PILE_20:
-			return 11;
-			break;
-		case BaseArgosDepthPile::DEPTH_PILE_24:
-			return 12;
-			break;
-		default:
-			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%d)", __FUNCTION__, x);
-			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
-		}
-	}
-
-	static unsigned int encode_arg_loc_argos(unsigned int x) {
-		switch (x) {
-		case 0:
-			return 15;
-		case 7 * 60:
-			return 1;
-			break;
-		case 15 * 60:
-			return 2;
-			break;
-		case 30 * 60:
-			return 3;
-			break;
-		case 1 * 60 * 60:
-			return 4;
-			break;
-		case 2 * 60 * 60:
-			return 5;
-			break;
-		case 3 * 60 * 60:
-			return 6;
-			break;
-		case 4 * 60 * 60:
-			return 7;
-			break;
-		case 6 * 60 * 60:
-			return 8;
-			break;
-		case 12 * 60 * 60:
-			return 9;
-			break;
-		case 24 * 60 * 60:
-			return 10;
-			break;
-		
-		default:
-			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%lu)", __FUNCTION__, x);
-			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
-		}
-	}
-
-	static double convert_longitude_to_double(uint32_t longitude) {
-		// =IF(LON/20000>180,LON/20000-360,LON/20000)
-		if ((longitude / 20000) > 180) {
-			return ((double)longitude / 20000) - 360;
-		} else {
-			return (double)longitude / 20000;
-		}
-	}
-
-	static uint32_t convert_double_to_longitude(double longitude) {
-		// IF(LON<0,INT((LON+360)*20000),INT(LON*20000))
-		if (longitude < 0) {
-			return (uint32_t)((longitude + 360) * 20000);
-		} else {
-			return (uint32_t)(longitude * 20000);
-		}
-	}
-
-	static double convert_latitude_to_double(uint32_t latitude) {
-		// (LAT/20000)-90
-		return ((double)latitude / 20000) - 90;
-	}
-
-	static uint32_t convert_double_to_latitude(double latitude) {
-		// (LAT+90)*20000
-		return (uint32_t)((latitude + 90) * 20000);
-	}
-
-public:
-	static void decode(const std::string& data, BaseZone& zone) {
-		unsigned int base_pos = 0;
-		EXTRACT_BITS(zone.zone_id, data, base_pos, 7);
-		EXTRACT_BITS_CAST(BaseZoneType, zone.zone_type, data, base_pos, 1);
-		EXTRACT_BITS(zone.enable_monitoring, data, base_pos, 1);
-		EXTRACT_BITS(zone.enable_entering_leaving_events, data, base_pos, 1);
-		EXTRACT_BITS(zone.enable_out_of_zone_detection_mode, data, base_pos, 1);
-		EXTRACT_BITS(zone.enable_activation_date, data, base_pos, 1);
-		EXTRACT_BITS(zone.year, data, base_pos, 5);
-		zone.year += 2020;
-		EXTRACT_BITS(zone.month, data, base_pos, 4);
-		EXTRACT_BITS(zone.day, data, base_pos, 5);
-		EXTRACT_BITS(zone.hour, data, base_pos, 5);
-		EXTRACT_BITS(zone.minute, data, base_pos, 6);
-		unsigned int comms_vector;
-		EXTRACT_BITS(comms_vector, data, base_pos, 2);
-		zone.comms_vector = decode_comms_vector(comms_vector);
-		EXTRACT_BITS(zone.delta_arg_loc_argos_seconds, data, base_pos, 4);
-		zone.delta_arg_loc_argos_seconds = decode_arg_loc_argos(zone.delta_arg_loc_argos_seconds);
-		EXTRACT_BITS(zone.delta_arg_loc_cellular_seconds, data, base_pos, 7);  // Not used
-		EXTRACT_BITS(zone.argos_extra_flags_enable, data, base_pos, 1);
-		unsigned int argos_depth_pile;
-		EXTRACT_BITS(argos_depth_pile, data, base_pos, 4);
-		zone.argos_depth_pile = decode_depth_pile(argos_depth_pile);
-		unsigned int argos_power;
-		EXTRACT_BITS(argos_power, data, base_pos, 2);
-		zone.argos_power = (BaseArgosPower)(argos_power + 1);
-		EXTRACT_BITS(zone.argos_time_repetition_seconds, data, base_pos, 7);
-		zone.argos_time_repetition_seconds *= 10;
-		EXTRACT_BITS_CAST(BaseArgosMode, zone.argos_mode, data, base_pos, 2);
-		EXTRACT_BITS(zone.argos_duty_cycle, data, base_pos, 24);
-		EXTRACT_BITS(zone.gnss_extra_flags_enable, data, base_pos, 1);
-		EXTRACT_BITS(zone.hdop_filter_threshold, data, base_pos, 4);
-		EXTRACT_BITS(zone.gnss_acquisition_timeout_seconds, data, base_pos, 8);
-		uint32_t center_longitude_x;
-		EXTRACT_BITS(center_longitude_x, data, base_pos, 23);
-		zone.center_longitude_x = convert_longitude_to_double(center_longitude_x);
-		uint32_t center_latitude_y;
-		EXTRACT_BITS(center_latitude_y, data, base_pos, 22);
-		zone.center_latitude_y = convert_latitude_to_double(center_latitude_y);
-		EXTRACT_BITS(zone.radius_m, data, base_pos, 12);
-		zone.radius_m *= 50;
-
-		DEBUG_TRACE("Decoded Zone Information");
-        DEBUG_TRACE("zone_id = %u", zone.zone_id);
-        DEBUG_TRACE("zone_type = %u", (unsigned int)zone.zone_type);
-        DEBUG_TRACE("enable_monitoring = %u", zone.enable_monitoring);
-        DEBUG_TRACE("enable_entering_leaving_events = %u", zone.enable_entering_leaving_events);
-        DEBUG_TRACE("enable_out_of_zone_detection_mode = %u", zone.enable_out_of_zone_detection_mode);
-        DEBUG_TRACE("enable_activation_date = %u", zone.enable_activation_date);
-        DEBUG_TRACE("year = %u", zone.year);
-        DEBUG_TRACE("month = %u", zone.month);
-        DEBUG_TRACE("day = %u", zone.day);
-        DEBUG_TRACE("hour = %u", zone.hour);
-        DEBUG_TRACE("minute = %u", zone.minute);
-        DEBUG_TRACE("comms_vector = %u", zone.comms_vector);
-        DEBUG_TRACE("delta_arg_loc_argos_seconds = %u", zone.delta_arg_loc_argos_seconds);
-        DEBUG_TRACE("delta_arg_loc_cellular_seconds = %u", zone.delta_arg_loc_cellular_seconds);
-        DEBUG_TRACE("argos_extra_flags_enable = %u", zone.argos_extra_flags_enable);
-        DEBUG_TRACE("argos_depth_pile = %u", zone.argos_depth_pile);
-        DEBUG_TRACE("argos_power = %u", zone.argos_power);
-        DEBUG_TRACE("argos_time_repetition_seconds = %u", zone.argos_time_repetition_seconds);
-        DEBUG_TRACE("argos_mode = %u", zone.argos_mode);
-        DEBUG_TRACE("argos_duty_cycle = %06X", zone.argos_duty_cycle);
-        DEBUG_TRACE("gnss_extra_flags_enable = %u", zone.gnss_extra_flags_enable);
-        DEBUG_TRACE("hdop_filter_threshold = %u", zone.hdop_filter_threshold);
-        DEBUG_TRACE("gnss_acquisition_timeout_seconds = %u", zone.gnss_acquisition_timeout_seconds);
-        DEBUG_TRACE("center_latitude_y = %lf", zone.center_latitude_y);
-        DEBUG_TRACE("center_longitude_x = %lf", zone.center_longitude_x);
-        DEBUG_TRACE("radius_m = %u", zone.radius_m);
-	}
-
-	static void encode(const BaseZone& zone, std::string &data) {
-		unsigned int base_pos = 0;
-
-		DEBUG_TRACE("Encoded Zone Information");
-        DEBUG_TRACE("zone_id = %u", zone.zone_id);
-        DEBUG_TRACE("zone_type = %u", (unsigned int)zone.zone_type);
-        DEBUG_TRACE("enable_monitoring = %u", zone.enable_monitoring);
-        DEBUG_TRACE("enable_entering_leaving_events = %u", zone.enable_entering_leaving_events);
-        DEBUG_TRACE("enable_out_of_zone_detection_mode = %u", zone.enable_out_of_zone_detection_mode);
-        DEBUG_TRACE("enable_activation_date = %u", zone.enable_activation_date);
-        DEBUG_TRACE("year = %u", zone.year);
-        DEBUG_TRACE("month = %u", zone.month);
-        DEBUG_TRACE("day = %u", zone.day);
-        DEBUG_TRACE("hour = %u", zone.hour);
-        DEBUG_TRACE("minute = %u", zone.minute);
-        DEBUG_TRACE("comms_vector = %u", zone.comms_vector);
-        DEBUG_TRACE("delta_arg_loc_argos_seconds = %u", zone.delta_arg_loc_argos_seconds);
-        DEBUG_TRACE("delta_arg_loc_cellular_seconds = %u", zone.delta_arg_loc_cellular_seconds);
-        DEBUG_TRACE("argos_extra_flags_enable = %u", zone.argos_extra_flags_enable);
-        DEBUG_TRACE("argos_depth_pile = %u", zone.argos_depth_pile);
-        DEBUG_TRACE("argos_power = %u", zone.argos_power);
-        DEBUG_TRACE("argos_time_repetition_seconds = %u", zone.argos_time_repetition_seconds);
-        DEBUG_TRACE("argos_mode = %u", zone.argos_mode);
-        DEBUG_TRACE("argos_duty_cycle = %06X", zone.argos_duty_cycle);
-        DEBUG_TRACE("gnss_extra_flags_enable = %u", zone.gnss_extra_flags_enable);
-        DEBUG_TRACE("hdop_filter_threshold = %u", zone.hdop_filter_threshold);
-        DEBUG_TRACE("gnss_acquisition_timeout_seconds = %u", zone.gnss_acquisition_timeout_seconds);
-        DEBUG_TRACE("center_latitude_y = %lf", zone.center_latitude_y);
-        DEBUG_TRACE("center_longitude_x = %lf", zone.center_longitude_x);
-        DEBUG_TRACE("radius_m = %u", zone.radius_m);
-
-		// Zero out the data buffer to the required number of bytes -- this will round up to
-		// the nearest number of bytes and zero all bytes before encoding
-		unsigned int total_bits = 160;
-		data.assign((total_bits + 4) / 8, 0);
-
-		PACK_BITS(zone.zone_id, data, base_pos, 7);
-		PACK_BITS_CAST(uint32_t, zone.zone_type, data, base_pos, 1);
-		PACK_BITS(zone.enable_monitoring, data, base_pos, 1);
-		PACK_BITS(zone.enable_entering_leaving_events, data, base_pos, 1);
-		PACK_BITS(zone.enable_out_of_zone_detection_mode, data, base_pos, 1);
-		PACK_BITS(zone.enable_activation_date, data, base_pos, 1);
-		PACK_BITS((zone.year - 2020), data, base_pos, 5);
-		PACK_BITS(zone.month, data, base_pos, 4);
-		PACK_BITS(zone.day, data, base_pos, 5);
-		PACK_BITS(zone.hour, data, base_pos, 5);
-		PACK_BITS(zone.minute, data, base_pos, 6);
-		PACK_BITS_CAST(uint32_t, zone.comms_vector, data, base_pos, 2);
-		unsigned int delta_arg_loc_argos_seconds = encode_arg_loc_argos(zone.delta_arg_loc_argos_seconds);
-		PACK_BITS(delta_arg_loc_argos_seconds, data, base_pos, 4);
-		PACK_BITS(zone.delta_arg_loc_cellular_seconds, data, base_pos, 7);
-		PACK_BITS(zone.argos_extra_flags_enable, data, base_pos, 1);
-		unsigned int argos_depth_pile;
-		argos_depth_pile = encode_depth_pile(zone.argos_depth_pile);
-		PACK_BITS(argos_depth_pile, data, base_pos, 4);
-		PACK_BITS(((unsigned int)zone.argos_power - 1), data, base_pos, 2);
-		PACK_BITS((zone.argos_time_repetition_seconds / 10), data, base_pos, 7);
-		PACK_BITS_CAST(uint32_t, zone.argos_mode, data, base_pos, 2);
-		PACK_BITS(zone.argos_duty_cycle, data, base_pos, 24);
-		PACK_BITS(zone.gnss_extra_flags_enable, data, base_pos, 1);
-		PACK_BITS(zone.hdop_filter_threshold, data, base_pos, 4);
-		PACK_BITS(zone.gnss_acquisition_timeout_seconds, data, base_pos, 8);
-		uint32_t center_longitude_x = convert_double_to_longitude(zone.center_longitude_x);
-		PACK_BITS(center_longitude_x, data, base_pos, 23);
-		uint32_t center_latitude_y = convert_double_to_latitude(zone.center_latitude_y);
-		PACK_BITS(center_latitude_y, data, base_pos, 22);
-		PACK_BITS((zone.radius_m / 50), data, base_pos, 12);
-	}
-};
-
-
 class PassPredictCodec {
 private:
 
@@ -702,6 +364,9 @@ protected:
 	static inline void encode(std::string& output, const BaseLEDMode& value) {
 		encode(output, (unsigned int&)value);
 	}
+	static inline void encode(std::string& output, const BaseZoneType& value) {
+		encode(output, (unsigned int&)value);
+	}
 	static inline void encode(std::string& output, const std::time_t& value) {
 		char buff[256];
 		auto time = std::gmtime(&value);
@@ -893,6 +558,8 @@ protected:
 	static void validate(const BaseMap &, const BaseArgosPower&) {
 	}
 	static void validate(const BaseMap &, const BaseLEDMode&) {
+	}
+	static void validate(const BaseMap &, const BaseZoneType&) {
 	}
 public:
 	static std::string encode(DTECommand command, ...) {
@@ -1204,6 +871,15 @@ private:
 			return BaseLEDMode::HRS_24;
 		} else if (s == "3") {
 			return BaseLEDMode::ALWAYS;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
+	static BaseZoneType decode_zone_type(const std::string& s) {
+		if (s == "0") {
+			return BaseZoneType::CIRCLE;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -1529,6 +1205,13 @@ private:
 							val.push_back(key_value);
 							break;
 						}
+						case BaseEncoding::ZONETYPE:
+						{
+							BaseZoneType x = decode_zone_type(value);
+							key_value.value = x;
+							val.push_back(key_value);
+							break;
+						}
 						case BaseEncoding::KEY_LIST:
 						case BaseEncoding::KEY_VALUE_LIST:
 						default:
@@ -1749,6 +1432,7 @@ public:
 				case BaseEncoding::GNSSFIXMODE:
 				case BaseEncoding::GNSSDYNMODEL:
 				case BaseEncoding::LEDMODE:
+				case BaseEncoding::ZONETYPE:
 				default:
 					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;
