@@ -94,4 +94,12 @@ static const BaseMap param_map[] = {
 	{ "ZONE_CENTER_LONGITUDE", "ZOP18", BaseEncoding::FLOAT, -180.0, 180.0, {}, true, true },
 	{ "ZONE_CENTER_LATITUDE", "ZOP19", BaseEncoding::FLOAT, -90.0, 90.0, {}, true, true },
 	{ "ZONE_RADIUS", "ZOP20", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
+	//////////////////////////
+	// CERTIFICATION
+	//////////////////////////
+	{ "CERT_TX_ENABLE", "CTP01", BaseEncoding::BOOLEAN, 0, 0, { }, true, true },
+	{ "CERT_TX_PAYLOAD", "CTP02", BaseEncoding::TEXT, "", "", {}, true, true },
+	{ "CERT_TX_MODULATION", "CTP03", BaseEncoding::MODULATION, 0, 0, { 0U, 1U, 2U }, true, true },
+	{ "CERT_TX_REPETITION", "CTP04", BaseEncoding::UINT, 2U, 0xFFFFFFFFU, { }, true, true },
+
 };

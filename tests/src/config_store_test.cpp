@@ -238,7 +238,7 @@ TEST(ConfigStore, CheckDefaultZoneSettings)
 	CHECK_TRUE(store->read_param<BaseZoneType>(ParamID::ZONE_TYPE) == BaseZoneType::CIRCLE);
 	CHECK_FALSE(store->read_param<bool>(ParamID::ZONE_ENABLE_OUT_OF_ZONE_DETECTION_MODE));
 	CHECK_TRUE(store->read_param<bool>(ParamID::ZONE_ENABLE_ACTIVATION_DATE));
-	CHECK_TRUE(store->read_param<std::time_t>(ParamID::ZONE_ACTIVATION_DATE) == (std::time_t)1577839800);
+	CHECK_TRUE(store->read_param<std::time_t>(ParamID::ZONE_ACTIVATION_DATE) == (std::time_t)1577836800U);
 	CHECK_TRUE(store->read_param<BaseArgosDepthPile>(ParamID::ZONE_ARGOS_DEPTH_PILE) == BaseArgosDepthPile::DEPTH_PILE_1);
 	CHECK_TRUE(store->read_param<BaseArgosPower>(ParamID::ZONE_ARGOS_POWER) == BaseArgosPower::POWER_200_MW);
 	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_ARGOS_REPETITION_SECONDS) == 240);

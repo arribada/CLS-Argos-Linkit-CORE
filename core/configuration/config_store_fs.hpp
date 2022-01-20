@@ -72,6 +72,9 @@ protected:
 			void operator()(BaseZoneType &s) {
 				std::memcpy(entry_buffer, &s, sizeof(s));
 			};
+			void operator()(BaseArgosModulation &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
 			void operator()(BaseRawData &) {
 			};
 		} s;
@@ -176,6 +179,12 @@ protected:
 		case BaseEncoding::ZONETYPE:
 		{
 			BaseZoneType value = *(BaseZoneType *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::MODULATION:
+		{
+			BaseArgosModulation value = *(BaseArgosModulation *)param_value;
 			m_params.at(index) = value;
 			break;
 		}

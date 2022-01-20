@@ -161,7 +161,7 @@ protected:
 		/* ZONE_TYPE */ BaseZoneType::CIRCLE,
 		/* ZONE_ENABLE_OUT_OF_ZONE_DETECTION_MODE */ (bool)false,
 		/* ZONE_ENABLE_ACTIVATION_DATE */ (bool)true,
-		/* ZONE_ACTIVATION_DATE */ static_cast<std::time_t>(1577839800U), // 01/01/2020 00:00:00
+		/* ZONE_ACTIVATION_DATE */ static_cast<std::time_t>(1577836800U), // 01/01/2020 00:00:00
 		/* ZONE_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 #if MODEL_SB
 		/* ZONE_ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
@@ -190,6 +190,10 @@ protected:
 		/* ZONE_CENTER_LONGITUDE */ -123.3925,
 		/* ZONE_CENTER_LATITUDE */ -48.8752,
 		/* ZONE_RADIUS */ 1000U,
+		/* CERT_TX_ENABLE */ (bool)false,
+		/* CERT_TX_PAYLOAD */ "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"s, // 27 bytes for long payload
+		/* CERT_TX_MODULATION */ BaseArgosModulation::A2,
+		/* CERT_TX_REPETITION */ 60U,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,

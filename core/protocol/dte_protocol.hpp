@@ -478,6 +478,9 @@ protected:
 	static inline void encode(std::string& output, const BaseArgosPower& value) {
 		encode(output, (unsigned int&)value);
 	}
+	static inline void encode(std::string& output, const BaseArgosModulation& value) {
+		encode(output, (unsigned int&)value);
+	}
 	static void validate(const BaseMap &arg_map, const std::string& value) {
 		if (value.length() > BASE_TEXT_MAX_LENGTH) {
 			DEBUG_ERROR("parameter \"%s\" string length %u is out of bounds", arg_map.name.c_str(), value.length());
@@ -560,6 +563,8 @@ protected:
 	static void validate(const BaseMap &, const BaseLEDMode&) {
 	}
 	static void validate(const BaseMap &, const BaseZoneType&) {
+	}
+	static void validate(const BaseMap &, const BaseArgosModulation&) {
 	}
 public:
 	static std::string encode(DTECommand command, ...) {
@@ -880,6 +885,19 @@ private:
 	static BaseZoneType decode_zone_type(const std::string& s) {
 		if (s == "0") {
 			return BaseZoneType::CIRCLE;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
+	static BaseArgosModulation decode_argos_modulation(const std::string& s) {
+		if (s == "0") {
+			return BaseArgosModulation::A2;
+		} else if (s == "1") {
+			return BaseArgosModulation::A3;
+		} else if (s == "2") {
+			return BaseArgosModulation::A4;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -1212,6 +1230,13 @@ private:
 							val.push_back(key_value);
 							break;
 						}
+						case BaseEncoding::MODULATION:
+						{
+							BaseArgosModulation x = decode_argos_modulation(value);
+							key_value.value = x;
+							val.push_back(key_value);
+							break;
+						}
 						case BaseEncoding::KEY_LIST:
 						case BaseEncoding::KEY_VALUE_LIST:
 						default:
@@ -1433,6 +1458,7 @@ public:
 				case BaseEncoding::GNSSDYNMODEL:
 				case BaseEncoding::LEDMODE:
 				case BaseEncoding::ZONETYPE:
+				case BaseEncoding::MODULATION:
 				default:
 					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;
