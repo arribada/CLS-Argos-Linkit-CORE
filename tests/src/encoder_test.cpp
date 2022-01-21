@@ -397,7 +397,7 @@ TEST(Encoder, PARAM_TR_NOM)
 
 TEST(Encoder, PARAM_TR_NOM_OutOfRangeCheck)
 {
-	ParamValue p = { ParamID::TR_NOM, 44U};
+	ParamValue p = { ParamID::TR_NOM, 29U};
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
 	p = { ParamID::TR_NOM, 1201U};
@@ -723,7 +723,7 @@ TEST(Encoder, PARAM_TR_LB)
 
 TEST(Encoder, PARAM_TR_LB_OutOfRangeCheck)
 {
-	ParamValue p = { ParamID::TR_LB, 44U};
+	ParamValue p = { ParamID::TR_LB, 29U};
 	std::vector<ParamValue> v = { p };
 	CHECK_THROWS(ErrorCode, DTEEncoder::encode(DTECommand::PARMR_RESP, v));
 	p = { ParamID::TR_LB, 1201U};
