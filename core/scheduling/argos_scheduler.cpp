@@ -65,6 +65,8 @@ extern "C" {
 #define ARGOS_TX_MARGIN_SECS        0  // Don't try to compensate TX
 #define ARGOS_RX_MARGIN_SECS        0  // RX always follows TX
 
+// TX certification power off threshold (in seconds)
+#define CERT_TX_POWER_OFF_REPETITION_THRESHOLD  15
 
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
@@ -82,6 +84,15 @@ ArgosScheduler::ArgosScheduler() {
 }
 
 void ArgosScheduler::process_rx() {
+
+	// If we are in TX certification mode, don't power off the device if the
+	// TX repetition period is 15 seconds or less to avoid re-loading time
+	if (m_argos_config.cert_tx_enable) {
+		DEBUG_TRACE("ArgosScheduler::process_rx: TX certification is on");
+		if (m_argos_config.cert_tx_repetition > CERT_TX_POWER_OFF_REPETITION_THRESHOLD)
+			power_off();
+		return;
+	}
 
 	if (m_is_tx_pending) {
 		DEBUG_TRACE("ArgosScheduler::process_rx: DL RX deferred while TX pending");
@@ -136,7 +147,10 @@ void ArgosScheduler::reschedule() {
 		return;
 	}
 
-	if (m_argos_config.mode == BaseArgosMode::OFF) {
+	if (m_argos_config.cert_tx_enable) {
+		DEBUG_TRACE("ArgosScheduler: certification TX mode");
+		schedule = next_certification_tx();
+	} else if (m_argos_config.mode == BaseArgosMode::OFF) {
 		DEBUG_WARN("ArgosScheduler: mode is OFF -- not scheduling");
 		return;
 	} else if (m_argos_config.gnss_en && !rtc->is_set()) {
@@ -177,6 +191,15 @@ static inline bool is_in_duty_cycle(uint64_t time_ms, unsigned int duty_cycle)
 	uint64_t msec_of_day = (time_ms % (SECONDS_PER_DAY * MS_PER_SEC));
 	unsigned int hour_of_day = msec_of_day / (SECONDS_PER_HOUR * MS_PER_SEC);
 	return (duty_cycle & (0x800000 >> hour_of_day));
+}
+
+uint64_t ArgosScheduler::next_certification_tx()
+{
+	if (INVALID_SCHEDULE == m_last_transmission_schedule) {
+		return 0;
+	} else {
+		return m_argos_config.cert_tx_repetition * MS_PER_SEC;
+	}
 }
 
 uint64_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
@@ -394,7 +417,9 @@ void ArgosScheduler::process_schedule() {
 
 	uint64_t now = rtc->gettime();
 	if (!m_switch_state && (m_earliest_tx == INVALID_SCHEDULE || m_earliest_tx <= now)) {
-		if (m_argos_config.time_sync_burst_en && !m_time_sync_burst_sent && m_num_gps_entries && rtc->is_set()) {
+		if (m_argos_config.cert_tx_enable) {
+			prepare_certification_burst();
+		} else if (m_argos_config.time_sync_burst_en && !m_time_sync_burst_sent && m_num_gps_entries && rtc->is_set()) {
 			prepare_time_sync_burst();
 		} else if (!m_argos_config.gnss_en) {
 			prepare_doppler_burst();
@@ -470,6 +495,43 @@ unsigned int ArgosScheduler::convert_longitude(double x) {
 		return x * LON_LAT_RESOLUTION;
 	else
 		return ((unsigned int)((x - 0.00005) * -LON_LAT_RESOLUTION)) | 1<<21; // -ve: bit 21 is sign
+}
+
+unsigned int ArgosScheduler::build_certification_packet(ArgosPacket& packet) {
+
+	unsigned int sz;
+
+	// Convert from ASCII hex to a real binary buffer
+	packet = Binascii::unhexlify(m_argos_config.cert_tx_payload);
+
+	DEBUG_TRACE("ArgosScheduler::build_certification_packet: TX payload size %u bytes", packet.size());
+
+	// Check the size to determine the packet #bits to send in payload
+	if (packet.size() > SHORT_PACKET_BYTES) {
+		DEBUG_TRACE("ArgosScheduler::build_certification_packet: Using long packet");
+		sz = LONG_PACKET_BITS;
+		packet.resize(LONG_PACKET_BYTES);
+	} else {
+		DEBUG_TRACE("ArgosScheduler::build_certification_packet: Using short packet");
+		sz = SHORT_PACKET_BITS;
+		packet.resize(SHORT_PACKET_BYTES);
+	}
+
+	switch (m_argos_config.cert_tx_modulation) {
+	case BaseArgosModulation::A2:
+		m_next_mode = ArgosMode::ARGOS_2;
+		break;
+	case BaseArgosModulation::A3:
+		m_next_mode = ArgosMode::ARGOS_3;
+		break;
+	case BaseArgosModulation::A4:
+	default:
+		DEBUG_WARN("ArgosScheduler::build_certification_packet: modulation mode %u not supported, using A2 instead", m_argos_config.cert_tx_modulation);
+		m_next_mode = ArgosMode::ARGOS_2;
+		break;
+	}
+
+	return sz;
 }
 
 void ArgosScheduler::build_doppler_packet(ArgosPacket& packet) {
@@ -699,6 +761,15 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	set_frequency(m_argos_config.frequency);
 	set_tx_power(m_argos_config.power);
 	send_packet(packet, total_bits, mode);
+}
+
+void ArgosScheduler::prepare_certification_burst() {
+	// Mark last schedule attempt
+	m_last_transmission_schedule = rtc->gettime() * MS_PER_SEC;
+
+	ArgosPacket packet;
+	unsigned int sz = build_certification_packet(packet);
+	handle_packet(packet, sz, m_next_mode);
 }
 
 void ArgosScheduler::prepare_time_sync_burst() {

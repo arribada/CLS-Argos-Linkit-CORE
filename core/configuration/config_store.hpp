@@ -64,6 +64,10 @@ struct ArgosConfig {
 	bool gnss_en;
 	unsigned int argos_rx_aop_update_period;
 	std::time_t last_aop_update;
+	bool        cert_tx_enable;
+	std::string cert_tx_payload;
+	BaseArgosModulation cert_tx_modulation;
+	unsigned int cert_tx_repetition;
 };
 
 enum class ConfigMode {
@@ -361,6 +365,7 @@ public:
 	}
 
 	void get_gnss_configuration(GNSSConfig& gnss_config) {
+		auto cert_tx_enable = read_param<bool>(ParamID::CERT_TX_ENABLE);
 		auto lb_en = read_param<bool>(ParamID::LB_EN);
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();
@@ -435,6 +440,12 @@ public:
 				DEBUG_INFO("ConfigurationStore: NORMAL mode detected");
 				m_last_config_mode = ConfigMode::NORMAL;
 			}
+		}
+
+		// Disable GNSS if certification TX is enabled
+		if (cert_tx_enable) {
+			DEBUG_TRACE("ConfigurationStore::get_gnss_configuration: disable GNSS as TX certification mode is set");
+			gnss_config.enable = false;
 		}
 	}
 
@@ -543,6 +554,16 @@ public:
 				m_last_config_mode = ConfigMode::NORMAL;
 			}
 		}
+
+		// Extract certification tx params
+		argos_config.cert_tx_enable = read_param<bool>(ParamID::CERT_TX_ENABLE);
+		argos_config.cert_tx_modulation = read_param<BaseArgosModulation>(ParamID::CERT_TX_MODULATION);
+		argos_config.cert_tx_payload = read_param<std::string>(ParamID::CERT_TX_PAYLOAD);
+		argos_config.cert_tx_repetition = read_param<unsigned int>(ParamID::CERT_TX_REPETITION);
+
+		// Mark GNSS disabled if certification is set
+		if (argos_config.cert_tx_enable)
+			argos_config.gnss_en = false;
 	}
 
 	void increment_tx_counter() {
