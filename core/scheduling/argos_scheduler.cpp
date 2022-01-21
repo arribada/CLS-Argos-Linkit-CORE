@@ -73,6 +73,8 @@ extern Scheduler *system_scheduler;
 extern RTC       *rtc;
 extern Logger    *sensor_log;
 extern BatteryMonitor *battery_monitor;
+extern Timer          *system_timer;
+
 
 ArgosScheduler::ArgosScheduler() {
 	m_is_running = false;
@@ -195,11 +197,19 @@ static inline bool is_in_duty_cycle(uint64_t time_ms, unsigned int duty_cycle)
 
 uint64_t ArgosScheduler::next_certification_tx()
 {
+	uint64_t now = system_timer->get_counter();
 	if (INVALID_SCHEDULE == m_last_transmission_schedule) {
-		return 0;
+		m_next_schedule_absolute = now;
 	} else {
-		return m_argos_config.cert_tx_repetition * MS_PER_SEC;
+		m_next_schedule_absolute = m_last_transmission_schedule + (m_argos_config.cert_tx_repetition * MS_PER_SEC);
 	}
+
+	DEBUG_TRACE("ArgosScheduler::next_certification_tx: tx_rep=%u now=%llu next=%llu", m_argos_config.cert_tx_repetition, now, m_next_schedule_absolute);
+
+	if (now > m_next_schedule_absolute)
+		return 0;
+
+	return m_next_schedule_absolute - now;
 }
 
 uint64_t ArgosScheduler::next_duty_cycle(unsigned int duty_cycle)
@@ -765,7 +775,7 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 
 void ArgosScheduler::prepare_certification_burst() {
 	// Mark last schedule attempt
-	m_last_transmission_schedule = rtc->gettime() * MS_PER_SEC;
+	m_last_transmission_schedule = m_next_schedule_absolute;
 
 	ArgosPacket packet;
 	unsigned int sz = build_certification_packet(packet);
