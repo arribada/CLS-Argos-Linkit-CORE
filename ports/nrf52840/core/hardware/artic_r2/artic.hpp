@@ -5,6 +5,7 @@
 #include "argos_scheduler.hpp"
 #include "nrf_spim.hpp"
 #include "artic_firmware.hpp"
+#include "pa_driver.hpp"
 
 #define MAX_BURST  (2048)
 
@@ -113,6 +114,7 @@ private:
 	ArticTransceiverState m_state;
 	std::function<void(ArgosAsyncEvent)> m_notification_callback;
 	NrfSPIM *m_nrf_spim;
+	PADriver *m_pa_driver;
 	unsigned int m_argos_id;
 	unsigned int m_polling_counter;
 	unsigned int m_next_delay;

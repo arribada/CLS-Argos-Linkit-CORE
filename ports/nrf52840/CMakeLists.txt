@@ -189,6 +189,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_spim.c
+    ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_twim.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_rtc.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_wdt.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_gpiote.c
@@ -205,6 +206,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
     ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
+    ${PROJ_DIR}/core/hardware/artic_r2/pa_driver.cpp
     ${PROJ_DIR}/core/hardware/m8q/m8q.cpp
     ${PROJ_DIR}/core/hardware/m8q/nrf_uart_m8.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp

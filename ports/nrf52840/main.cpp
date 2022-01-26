@@ -24,6 +24,7 @@
 #include "nrf_battery_mon.hpp"
 #include "m8q.hpp"
 #include "fs_log.hpp"
+#include "nrfx_twim.h"
 
 FileSystem *main_filesystem;
 
@@ -172,6 +173,13 @@ int main()
 			PMU::powerdown();
 		}
 		DEBUG_TRACE("Exiting Power On Reed Switch Check");
+	}
+
+    // Initialise the I2C driver
+	for (uint32_t i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)
+	{
+		nrfx_twim_init(&BSP::I2C_Inits[i].twim, &BSP::I2C_Inits[i].twim_config, nullptr, nullptr);
+		nrfx_twim_enable(&BSP::I2C_Inits[i].twim);
 	}
 
 	DEBUG_TRACE("Battery monitor...");

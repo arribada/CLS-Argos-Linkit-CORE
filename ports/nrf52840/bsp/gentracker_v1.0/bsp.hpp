@@ -9,6 +9,7 @@
 #include "nrfx_gpiote.h"
 #include "nrfx_saadc.h"
 #include "nrf_gpio.h"
+#include "nrfx_twim.h"
 #include "nrfx_wdt.h"
 
 // Logical device mappings to physical devices
@@ -18,6 +19,10 @@
 #define BATTERY_ADC	   BSP::ADC::ADC_CHANNEL_0
 #define UART_GPS	   BSP::UART::UART_0
 #define POWER_CONTROL_PIN  BSP::GPIO_POWER_CONTROL
+
+// I2C bus addresses
+#define MCP4716_DEVICE      BSP::I2C::I2C_1
+#define MCP4716_I2C_ADDR    0x60
 
 namespace BSP
 {
@@ -192,6 +197,26 @@ namespace BSP
     } ADC_InitTypeDefAndInst_t;
 
     extern const ADC_InitTypeDefAndInst_t ADC_Inits;
+
+    ////////////////////////////////// I2C definitions /////////////////////////////////
+    enum I2C
+	{
+#if NRFX_TWIM0_ENABLED
+    	I2C_0,
+#endif
+#if NRFX_TWIM1_ENABLED
+		I2C_1,
+#endif
+		I2C_TOTAL_NUMBER
+	};
+
+    typedef struct
+    {
+        nrfx_twim_t twim;
+        nrfx_twim_config_t twim_config;
+    } I2C_InitTypeDefAndInst_t;
+
+    extern const I2C_InitTypeDefAndInst_t I2C_Inits[I2C_TOTAL_NUMBER];
 
     ////////////////////////////////// WDT definitions /////////////////////////////////
     enum WDT

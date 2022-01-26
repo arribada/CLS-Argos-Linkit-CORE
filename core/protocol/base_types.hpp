@@ -154,7 +154,12 @@ enum class BaseArgosPower {
 	POWER_3_MW = 1,
 	POWER_40_MW,
 	POWER_200_MW,
-	POWER_500_MW
+	POWER_500_MW,
+	POWER_5_MW,
+	POWER_50_MW,
+	POWER_350_MW,
+	POWER_750_MW,
+	POWER_1500_MW
 };
 
 static inline const char *argos_power_to_string(BaseArgosPower power) {
@@ -166,6 +171,16 @@ static inline const char *argos_power_to_string(BaseArgosPower power) {
 		return "200 mW";
 	if (power == BaseArgosPower::POWER_500_MW)
 		return "500 mW";
+	if (power == BaseArgosPower::POWER_5_MW)
+		return "5 mW";
+	if (power == BaseArgosPower::POWER_50_MW)
+		return "50 mW";
+	if (power == BaseArgosPower::POWER_350_MW)
+		return "350 mW";
+	if (power == BaseArgosPower::POWER_750_MW)
+		return "750 mW";
+	if (power == BaseArgosPower::POWER_1500_MW)
+		return "1500 mW";
 	return "UNKNOWN";
 }
 

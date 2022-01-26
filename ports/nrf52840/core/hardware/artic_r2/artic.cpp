@@ -442,6 +442,7 @@ void ArticTransceiver::add_rx_packet_filter(const uint32_t address) {
 
 
 ArticTransceiver::ArticTransceiver() {
+	m_pa_driver = nullptr;
     m_nrf_spim = nullptr;
     m_state = ArticTransceiverState::stopped;
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
@@ -553,6 +554,7 @@ void ArticTransceiver::state_starting() {
     m_rx_total_time = 0;
     m_is_first_tx = true;
 	m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
+	m_pa_driver = new PADriver();
 	m_rx_pending = false;
 	ARTIC_STATE_CHANGE(starting, powering_on);
 }
@@ -577,9 +579,13 @@ void ArticTransceiver::state_error() {
 }
 
 void ArticTransceiver::state_stopped_enter() {
-	// Cleanup the SPIM insance
+	// Cleanup the SPIM instance
 	delete m_nrf_spim;
     m_nrf_spim = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
+
+    // Cleanup PA driver
+    delete m_pa_driver;
+    m_pa_driver = nullptr;
 
 	// FIXME: should this be moved into the NrfSPIM driver?
 	nrf_gpio_cfg_output(BSP::SPI_Inits[SPI_SATELLITE].config.ss_pin);
@@ -975,6 +981,7 @@ void ArticTransceiver::state_transmitting_enter() {
 
 void ArticTransceiver::state_transmitting_exit() {
 	m_is_first_tx = false;
+	m_pa_driver->set_output_power(0);
 }
 
 void ArticTransceiver::state_transmitting() {
@@ -1295,24 +1302,33 @@ void ArticTransceiver::set_tx_power(const BaseArgosPower power) {
 #ifndef BOARD_LINKIT
 	(void)power;
 #else
-	// GA16 and GA8 pins allows PA gain to be set only coarsely as:
-	// 0dB   - 00
-	// 8dB   - 01
-	// 16dB  - 10
-	// 24dB  - 11
-	GPIOPins::clear(BSP::GPIO::GPIO_G8_33);
-	GPIOPins::clear(BSP::GPIO::GPIO_G16_33);
 	switch (power) {
 	case BaseArgosPower::POWER_40_MW:
-		GPIOPins::set(BSP::GPIO::GPIO_G16_33);
+		m_pa_driver->set_output_power(40);
 		break;
 	case BaseArgosPower::POWER_500_MW:
+		m_pa_driver->set_output_power(500);
+		break;
 	case BaseArgosPower::POWER_200_MW:
-		GPIOPins::set(BSP::GPIO::GPIO_G8_33);
-		GPIOPins::set(BSP::GPIO::GPIO_G16_33);
+		m_pa_driver->set_output_power(200);
 		break;
 	case BaseArgosPower::POWER_3_MW:
-		GPIOPins::set(BSP::GPIO::GPIO_G8_33);
+		m_pa_driver->set_output_power(3);
+		break;
+	case BaseArgosPower::POWER_5_MW:
+		m_pa_driver->set_output_power(5);
+		break;
+	case BaseArgosPower::POWER_50_MW:
+		m_pa_driver->set_output_power(50);
+		break;
+	case BaseArgosPower::POWER_350_MW:
+		m_pa_driver->set_output_power(350);
+		break;
+	case BaseArgosPower::POWER_750_MW:
+		m_pa_driver->set_output_power(750);
+		break;
+	case BaseArgosPower::POWER_1500_MW:
+		m_pa_driver->set_output_power(1500);
 		break;
 	default:
 		break;
