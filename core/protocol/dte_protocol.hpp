@@ -827,6 +827,18 @@ private:
 			return BaseArgosPower::POWER_200_MW;
 		} else if (s == "4") {
 			return BaseArgosPower::POWER_500_MW;
+		} else if (s == "5") {
+			return BaseArgosPower::POWER_5_MW;
+		} else if (s == "6") {
+			return BaseArgosPower::POWER_50_MW;
+		} else if (s == "7") {
+			return BaseArgosPower::POWER_350_MW;
+		} else if (s == "8") {
+			return BaseArgosPower::POWER_750_MW;
+		} else if (s == "9") {
+			return BaseArgosPower::POWER_1000_MW;
+		} else if (s == "10") {
+			return BaseArgosPower::POWER_1500_MW;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;

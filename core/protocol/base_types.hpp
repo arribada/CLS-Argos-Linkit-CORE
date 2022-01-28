@@ -159,6 +159,7 @@ enum class BaseArgosPower {
 	POWER_50_MW,
 	POWER_350_MW,
 	POWER_750_MW,
+	POWER_1000_MW,
 	POWER_1500_MW
 };
 

@@ -1327,6 +1327,9 @@ void ArticTransceiver::set_tx_power(const BaseArgosPower power) {
 	case BaseArgosPower::POWER_750_MW:
 		m_pa_driver->set_output_power(750);
 		break;
+	case BaseArgosPower::POWER_1000_MW:
+		m_pa_driver->set_output_power(1000);
+		break;
 	case BaseArgosPower::POWER_1500_MW:
 		m_pa_driver->set_output_power(1500);
 		break;
