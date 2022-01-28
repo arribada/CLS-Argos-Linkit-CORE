@@ -180,6 +180,8 @@ static inline const char *argos_power_to_string(BaseArgosPower power) {
 		return "350 mW";
 	if (power == BaseArgosPower::POWER_750_MW)
 		return "750 mW";
+	if (power == BaseArgosPower::POWER_1000_MW)
+		return "1000 mW";
 	if (power == BaseArgosPower::POWER_1500_MW)
 		return "1500 mW";
 	return "UNKNOWN";
