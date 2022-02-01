@@ -247,7 +247,7 @@ TEST(ConfigStore, CheckDefaultZoneSettings)
 	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_ARGOS_NTRY_PER_MESSAGE) == 0U);
 	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_GNSS_DELTA_ARG_LOC_ARGOS_SECONDS) == 3600U);
 	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_GNSS_HDOPFILT_THR) == 2U);
-	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_GNSS_HACCFILT_THR) == 50U);
+	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_GNSS_HACCFILT_THR) == 5U);
 	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_GNSS_ACQ_TIMEOUT) == 240U);
 	CHECK_TRUE(store->read_param<double>(ParamID::ZONE_CENTER_LONGITUDE) == -123.3925);
 	CHECK_TRUE(store->read_param<double>(ParamID::ZONE_CENTER_LATITUDE) == -48.8752);
