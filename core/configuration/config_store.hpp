@@ -201,6 +201,7 @@ protected:
 		/* CERT_TX_MODULATION */ BaseArgosModulation::A2,
 		/* CERT_TX_REPETITION */ 60U,
 		/* HW_VERSION */ "",
+		/* BATT_VOLTAGE */ (double)0,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
@@ -293,6 +294,10 @@ public:
 				b_is_valid = true;
 			} else if (param_id == ParamID::DEVICE_MODEL) {
 				m_params.at((unsigned)param_id) = DEVICE_MODEL_NAME;
+				b_is_valid = true;
+			} else if (param_id == ParamID::BATT_VOLTAGE) {
+				update_battery_level();
+				m_params.at((unsigned)param_id) = (double)m_battery_voltage / 1000.0;
 				b_is_valid = true;
 			} else {
 				b_is_valid = is_valid();

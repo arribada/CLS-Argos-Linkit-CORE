@@ -105,4 +105,7 @@ static const BaseMap param_map[] = {
 
 	// HW version identification
 	{ "HW_VERSION", "IDT04", BaseEncoding::TEXT, "", "", {}, true, false },
+
+	// Battery voltage
+	{ "BATT_VOLTAGE", "POT06", BaseEncoding::FLOAT, 0.0, 12.0, {}, true, false },
 };
