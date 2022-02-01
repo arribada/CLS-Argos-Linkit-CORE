@@ -200,7 +200,7 @@ protected:
 		/* CERT_TX_PAYLOAD */ "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"s, // 27 bytes for long payload
 		/* CERT_TX_MODULATION */ BaseArgosModulation::A2,
 		/* CERT_TX_REPETITION */ 60U,
-		/* HW_VERSION */ "",
+		/* HW_VERSION */ ""s,
 		/* BATT_VOLTAGE */ (double)0,
 	}};
 	static inline const BasePassPredict default_prepass = {
