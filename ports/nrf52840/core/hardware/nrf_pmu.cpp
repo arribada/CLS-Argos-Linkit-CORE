@@ -7,6 +7,7 @@
 #include "nrfx_wdt.h"
 #include "nrf_power.h"
 #include "nrf_sdh.h"
+#include "nrfx_twim.h"
 #include <string>
 
 static uint32_t m_reset_cause = 0;
@@ -85,4 +86,15 @@ const std::string PMU::reset_cause()
 		return "Soft Reset";
 	else
 		return "Power On Reset";
+}
+
+const std::string PMU::hardware_version()
+{
+	// Try to read I2C register of MCP4716 (present on V2 but not V1)
+	uint8_t xfer;
+	nrfx_err_t error = nrfx_twim_rx(&BSP::I2C_Inits[MCP4716_DEVICE].twim, MCP4716_I2C_ADDR, &xfer, sizeof(xfer));
+    if (error == NRFX_SUCCESS)
+    	return "LinkIt V2";
+    else
+    	return "LinkIt V1";
 }

@@ -13,4 +13,5 @@ public:
 	static void start_watchdog();
 	static void kick_watchdog();
 	static const std::string reset_cause();
+	static const std::string hardware_version();
 };

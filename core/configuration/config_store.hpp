@@ -9,6 +9,8 @@
 #include "messages.hpp"
 #include "haversine.hpp"
 #include "timeutils.hpp"
+#include "pmu.hpp"
+
 
 #define MAX_CONFIG_ITEMS  (unsigned int)ParamID::__PARAM_SIZE
 #define LB_EXIT_DELTA          5
@@ -198,6 +200,7 @@ protected:
 		/* CERT_TX_PAYLOAD */ "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"s, // 27 bytes for long payload
 		/* CERT_TX_MODULATION */ BaseArgosModulation::A2,
 		/* CERT_TX_REPETITION */ 60U,
+		/* HW_VERSION */ "",
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
@@ -280,6 +283,9 @@ public:
 				b_is_valid = true;
 			} else if (param_id == ParamID::FW_APP_VERSION) {
 				m_params.at((unsigned)param_id) = FW_APP_VERSION_STR;
+				b_is_valid = true;
+			} else if (param_id == ParamID::HW_VERSION) {
+				m_params.at((unsigned)param_id) = PMU::hardware_version();
 				b_is_valid = true;
 			} else if (param_id == ParamID::ARGOS_DECID) {
 				b_is_valid = true;

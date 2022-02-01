@@ -30,3 +30,7 @@ void PMU::kick_watchdog() {
 const std::string PMU::reset_cause() {
 	return "UNKNOWN";
 }
+
+const std::string PMU::hardware_version() {
+	return "SIMULATOR";
+}
