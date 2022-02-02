@@ -895,7 +895,7 @@ private:
 	}
 
 	static BaseZoneType decode_zone_type(const std::string& s) {
-		if (s == "0") {
+		if (s == "1") {
 			return BaseZoneType::CIRCLE;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());

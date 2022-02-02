@@ -156,7 +156,7 @@ protected:
 		/* ARGOS_TX_JITTER_EN */ (bool)true,
 		/* ARGOS_RX_EN */ (bool)true,
 		/* ARGOS_RX_MAX_WINDOW */ 15U*60U,
-		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 7U,
+		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 30U,
 		/* ARGOS_RX_COUNTER */ 0U,
 		/* ARGOS_RX_TIME */ 0U,
 		/* ASSIST_NOW_EN */ (bool)true,
