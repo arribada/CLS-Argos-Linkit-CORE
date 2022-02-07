@@ -366,14 +366,21 @@ add_custom_target(flash_softdev
 add_custom_target(flash
                   COMMENT "Flashing the softdevice & firmware using JLink..."
                   COMMAND nrfjprog -f nrf52 --eraseall
-                  COMMAND nrfjprog -f nrf52 --program ${PROJECT_SOURCE_DIR}/${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --sectoranduicrerase
-                  COMMAND nrfjprog -f nrf52 --program ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex --sectorerase
+                  COMMAND nrfjprog -f nrf52 --program ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_merged.hex --sectorerase
                   COMMAND nrfjprog -f nrf52 --reset
 )
 
 add_custom_target(dfu_app
                   COMMENT "Sending application image over DFU (reset device with DEBUG pin jumpered!)..."
                   COMMAND nrfutil dfu usb-serial -p /dev/ttyACM0 -pkg ${TARGET_NAME}_dfu.zip
+)
+
+add_custom_target(merged_hex
+                  COMMENT "Create combined bootloader, settings and applications file"
+                  COMMAND nrfutil settings generate --family NRF52840 --application ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex --application-version 0 --bootloader-version 1 --bl-settings-version 2 --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ${PROJECT_SOURCE_DIR}/${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ${PROJECT_SOURCE_DIR}/${PROJ_DIR}/nrfutil_pkg_key.pem ${TARGET_NAME}_settings.hex
+                  COMMAND mergehex -m bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/LinkIt_v1_xxaa_merged.hex ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex -o m1.hex
+                  COMMAND mergehex -m m1.hex ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_settings.hex -o ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_merged.hex
+                  COMMAND rm -f m1.hex
 )
 
 add_dependencies(flash ${TARGET_NAME})
