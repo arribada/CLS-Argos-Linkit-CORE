@@ -142,6 +142,7 @@ private:
 	ArgosAsyncEvent m_tx_event;
 	double      m_tx_freq;
 	bool        m_is_first_tx;
+	uint32_t    m_tcxo_warmup_time;
 
 	// Argos RX state
 	ArgosMode    m_rx_mode;
@@ -160,7 +161,7 @@ private:
 	void get_status_register(uint32_t *status);
 	void print_status(uint32_t status);
 	void get_and_print_status();
-	void set_tcxo_warmup_time(uint32_t time_s);
+	void set_tcxo_warmup(uint32_t time_s);
 	void clear_interrupt(uint8_t interrupt_num);
 	bool check_crc(firmware_header_t *firmware_header);
 	void send_artic_command(artic_cmd_t cmd, uint32_t *response);
@@ -244,4 +245,5 @@ public:
 	uint64_t get_rx_time_on() override;
 	void set_frequency(const double freq) override;
 	void set_tx_power(const BaseArgosPower power) override;
+	void set_tcxo_warmup_time(const unsigned int time_s) override;
 };

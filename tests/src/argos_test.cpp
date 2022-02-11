@@ -32,6 +32,7 @@ TEST_GROUP(ArgosScheduler)
 	LinuxTimer *linux_timer;
 	FakeTimer *fake_timer;
 	FakeLog *fake_log;
+	unsigned int txco_warmup = 5U;
 
 	void setup() {
 		mock_battery = new MockBatteryMonitor;
@@ -56,6 +57,9 @@ TEST_GROUP(ArgosScheduler)
 		// Setup PP_MIN_ELEVATION for 5.0
 		double min_elevation = 5.0;
 		fake_config_store->write_param(ParamID::PP_MIN_ELEVATION, min_elevation);
+
+		// Setup ARGOS_TCXO_WARMUP_TIME
+		fake_config_store->write_param(ParamID::ARGOS_TCXO_WARMUP_TIME, txco_warmup);
 	}
 
 	void teardown() {
@@ -109,6 +113,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -146,6 +151,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacket)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	mock().expectOneCall("power_off").onObject(argos_sched);
@@ -203,6 +209,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -244,6 +251,7 @@ TEST(ArgosScheduler, DutyCycleModeSchedulingShortPacket)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -390,6 +398,7 @@ TEST(ArgosScheduler, SchedulingLongPacket)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -493,6 +502,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -510,6 +520,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacket)
 		printf("i=%u\n", i);
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 		mock().expectOneCall("power_off").onObject(argos_sched);
@@ -680,6 +691,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -698,6 +710,7 @@ TEST(ArgosScheduler, PrepassSchedulingLongPacket)
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -774,6 +787,7 @@ TEST(ArgosScheduler, DutyCycleModeManyShortPackets)
 			mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 			mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 			mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+			mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 			mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 			mock().expectOneCall("power_off").onObject(argos_sched);
 			mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -830,6 +844,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -878,6 +893,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -908,6 +924,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -922,6 +939,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -957,6 +975,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1042,6 +1061,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1110,6 +1130,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1161,6 +1182,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1195,6 +1217,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithNonZeroAltitude)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1249,6 +1272,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1285,6 +1309,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMaxTruncatedAltitude)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1338,6 +1363,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1372,6 +1398,7 @@ TEST(ArgosScheduler, SchedulingShortPacketWithMinTruncatedAltitude)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1503,6 +1530,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCountInfiniteInDutyCycleMode)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1519,6 +1547,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCountInfiniteInDutyCycleMode)
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).ignoreOtherParameters();
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1649,6 +1678,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCountInfiniteInLegacyMode)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1665,6 +1695,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCountInfiniteInLegacyMode)
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).ignoreOtherParameters();
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1813,6 +1844,7 @@ TEST(ArgosScheduler, SchedulingLongPacketLowBatteryFlag)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -1899,6 +1931,7 @@ TEST(ArgosScheduler, SchedulingShortPacketLowBatteryFlag)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2019,6 +2052,7 @@ TEST(ArgosScheduler, SchedulingShortPacketOutOfZoneFlag)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)zone_argos_power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2209,6 +2243,7 @@ TEST(ArgosScheduler, SchedulingLongPacketOutOfZoneFlag)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)zone_argos_power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2263,6 +2298,7 @@ TEST(ArgosScheduler, TimeSyncBurstTransmissionIsSent)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2363,6 +2399,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurst)
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2450,6 +2487,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithTimeSyncro)
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		if (i == 0)
 			mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 		else
@@ -2541,6 +2579,7 @@ TEST(ArgosScheduler, SchedulingNonPrepassTxJitter)
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2642,6 +2681,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketTXJitter)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2660,6 +2700,7 @@ TEST(ArgosScheduler, PrepassSchedulingShortPacketTXJitter)
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2760,6 +2801,7 @@ TEST(ArgosScheduler, OutOfZoneModeChangeLegacy)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2824,6 +2866,7 @@ TEST(ArgosScheduler, OutOfZoneModeChangeLegacy)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)zone_argos_power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2921,6 +2964,7 @@ TEST(ArgosScheduler, OutOfZoneModeChangePrepass)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -2985,6 +3029,7 @@ TEST(ArgosScheduler, OutOfZoneModeChangePrepass)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)zone_argos_power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -3065,6 +3110,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstWithNonZeroSens
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -3153,6 +3199,7 @@ TEST(ArgosScheduler, LegacyModeSchedulingShortPacketInfiniteBurstConfirmDepthPil
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", (k<10) ? 120 : 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -3278,6 +3325,7 @@ TEST(ArgosScheduler, TestDownlinkReceive)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -3437,6 +3485,7 @@ TEST(ArgosScheduler, TestDownlinkWithAOPUpdatePeriod)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -3527,6 +3576,7 @@ TEST(ArgosScheduler, TestDownlinkWithAOPUpdatePeriod)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -3553,6 +3603,7 @@ TEST(ArgosScheduler, TestDownlinkWithAOPUpdatePeriod)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -3581,6 +3632,7 @@ TEST(ArgosScheduler, TestDownlinkWithAOPUpdatePeriod)
 
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
@@ -3595,6 +3647,7 @@ TEST(ArgosScheduler, TestDownlinkWithAOPUpdatePeriod)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -3647,6 +3700,7 @@ TEST(ArgosScheduler, GNSSOffLegacySchedulingDopplerPacket)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 24).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -3666,6 +3720,7 @@ TEST(ArgosScheduler, GNSSOffLegacySchedulingDopplerPacket)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 24).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
@@ -3728,6 +3783,7 @@ TEST(ArgosScheduler, GNSSOffDutyCycleSchedulingDopplerPacket)
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 24).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -3749,6 +3805,7 @@ TEST(ArgosScheduler, GNSSOffDutyCycleSchedulingDopplerPacket)
 		mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 		mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 		mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+		mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 		mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 24).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 		mock().expectOneCall("power_off").onObject(argos_sched);
 		mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
@@ -3861,6 +3918,7 @@ TEST(ArgosScheduler, TestAOPUpdateWithOutOfServiceSatellite)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -3951,6 +4009,7 @@ TEST(ArgosScheduler, CertificationTXShortPacketA2MinimumRepetition)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
@@ -3962,6 +4021,7 @@ TEST(ArgosScheduler, CertificationTXShortPacketA2MinimumRepetition)
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -3996,6 +4056,7 @@ TEST(ArgosScheduler, CertificationTXShortPacketA2)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
@@ -4009,6 +4070,7 @@ TEST(ArgosScheduler, CertificationTXShortPacketA2)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -4043,6 +4105,7 @@ TEST(ArgosScheduler, CertificationTXShortPacketA3)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
@@ -4056,6 +4119,7 @@ TEST(ArgosScheduler, CertificationTXShortPacketA3)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -4091,6 +4155,7 @@ TEST(ArgosScheduler, CertificationTXLongPacketA3)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
@@ -4104,6 +4169,7 @@ TEST(ArgosScheduler, CertificationTXLongPacketA3)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -4139,6 +4205,7 @@ TEST(ArgosScheduler, CertificationTXLongPacketA3PayloadResized)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
@@ -4152,6 +4219,7 @@ TEST(ArgosScheduler, CertificationTXLongPacketA3PayloadResized)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_3);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 
@@ -4187,6 +4255,7 @@ TEST(ArgosScheduler, CertificationTXShortPacketA4FallsBackToA2)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 	argos_sched->start();
@@ -4200,6 +4269,7 @@ TEST(ArgosScheduler, CertificationTXShortPacketA4FallsBackToA2)
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
 	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);
 

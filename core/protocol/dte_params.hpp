@@ -108,4 +108,7 @@ static const BaseMap param_map[] = {
 
 	// Battery voltage
 	{ "BATT_VOLTAGE", "POT06", BaseEncoding::FLOAT, 0.0, 12.0, {}, true, false },
+
+	// TCXO warmup period
+	{ "ARGOS_TCXO_WARMUP_TIME", "ARP35", BaseEncoding::UINT, 0U, 30U, {}, true, true },
 };

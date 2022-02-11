@@ -70,6 +70,7 @@ struct ArgosConfig {
 	std::string cert_tx_payload;
 	BaseArgosModulation cert_tx_modulation;
 	unsigned int cert_tx_repetition;
+	unsigned int argos_tcxo_warmup_time;
 };
 
 enum class ConfigMode {
@@ -81,8 +82,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x09;
-	static inline const unsigned int m_config_version_code_zone = 0x1c07e800 | 0x02;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0A;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
@@ -202,6 +202,7 @@ protected:
 		/* CERT_TX_REPETITION */ 60U,
 		/* HW_VERSION */ ""s,
 		/* BATT_VOLTAGE */ (double)0,
+		/* ARGOS_TCXO_WARMUP_TIME */ 5U,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
@@ -571,6 +572,7 @@ public:
 		argos_config.cert_tx_modulation = read_param<BaseArgosModulation>(ParamID::CERT_TX_MODULATION);
 		argos_config.cert_tx_payload = read_param<std::string>(ParamID::CERT_TX_PAYLOAD);
 		argos_config.cert_tx_repetition = read_param<unsigned int>(ParamID::CERT_TX_REPETITION);
+		argos_config.argos_tcxo_warmup_time = read_param<unsigned int>(ParamID::ARGOS_TCXO_WARMUP_TIME);
 
 		// Mark GNSS disabled if certification is set
 		if (argos_config.cert_tx_enable)

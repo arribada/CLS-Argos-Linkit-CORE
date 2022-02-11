@@ -66,6 +66,7 @@ public:
 	virtual uint64_t get_rx_time_on() = 0;
 	virtual void set_frequency(const double freq) = 0;
 	virtual void set_tx_power(const BaseArgosPower power) = 0;
+	virtual void set_tcxo_warmup_time(const unsigned int time) = 0;
 	virtual void send_ack(const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report, const ArgosMode mode) = 0;
 
 private:

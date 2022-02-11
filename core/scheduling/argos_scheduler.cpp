@@ -770,6 +770,7 @@ void ArgosScheduler::handle_packet(ArgosPacket const& packet, unsigned int total
 	power_on(m_argos_config.argos_id, [this](ArgosAsyncEvent e) { handle_event(e); });
 	set_frequency(m_argos_config.frequency);
 	set_tx_power(m_argos_config.power);
+	set_tcxo_warmup_time(m_argos_config.argos_tcxo_warmup_time);
 	send_packet(packet, total_bits, mode);
 }
 

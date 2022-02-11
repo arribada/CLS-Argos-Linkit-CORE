@@ -22,7 +22,7 @@
 #define INVALID_MEM_SELECTION (0xFF)
 
 #ifndef DEFAULT_TCXO_WARMUP_TIME_SECONDS
-#define DEFAULT_TCXO_WARMUP_TIME_SECONDS 3
+#define DEFAULT_TCXO_WARMUP_TIME_SECONDS 5
 #endif
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
@@ -343,7 +343,7 @@ void ArticTransceiver::send_command(uint8_t command)
     }
 }
 
-void ArticTransceiver::set_tcxo_warmup_time(uint32_t time_s)
+void ArticTransceiver::set_tcxo_warmup(uint32_t time_s)
 {
     uint8_t write_buffer[3];
     write_buffer[0] = (time_s) >> 16;
@@ -445,6 +445,7 @@ ArticTransceiver::ArticTransceiver() {
 	m_pa_driver = nullptr;
     m_nrf_spim = nullptr;
     m_state = ArticTransceiverState::stopped;
+    m_tcxo_warmup_time = DEFAULT_TCXO_WARMUP_TIME_SECONDS;
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
 	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
 }
@@ -1034,7 +1035,7 @@ void ArticTransceiver::initiate_tx() {
 	burst_access(XMEM, TX_PAYLOAD_ADDRESS, (const uint8_t *)&m_tx_buffer[0], nullptr, m_tx_buffer.length(), false);
 
 	// Set TCXO warm up
-	set_tcxo_warmup_time(m_is_first_tx ? DEFAULT_TCXO_WARMUP_TIME_SECONDS : 0);
+	set_tcxo_warmup(m_is_first_tx ? m_tcxo_warmup_time : 0);
 
 	// Check which mode is required
 	uint8_t cmd = (m_tx_mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_PTT_A3_TX_MODE : ARTIC_CMD_SET_PTT_A2_TX_MODE;
@@ -1296,6 +1297,10 @@ void ArticTransceiver::send_ack(const unsigned int a_dcs, const unsigned int dl_
 
 void ArticTransceiver::set_frequency(const double freq) {
 	m_tx_freq = freq;
+}
+
+void ArticTransceiver::set_tcxo_warmup_time(const unsigned int time_s) {
+	m_tcxo_warmup_time = time_s;
 }
 
 void ArticTransceiver::set_tx_power(const BaseArgosPower power) {

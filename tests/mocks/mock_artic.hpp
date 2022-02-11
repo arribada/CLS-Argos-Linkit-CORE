@@ -45,6 +45,9 @@ public:
 	void set_frequency(const double freq) override {
 		mock().actualCall("set_frequency").onObject(this).withParameter("freq", freq);
 	}
+	void set_tcxo_warmup_time(const unsigned int time) override {
+		mock().actualCall("set_tcxo_warmup_time").onObject(this).withParameter("time", time);
+	}
 	void set_tx_power(const BaseArgosPower power) override {
 		mock().actualCall("set_tx_power").onObject(this).withParameter("power", (unsigned int)power);
 	}
