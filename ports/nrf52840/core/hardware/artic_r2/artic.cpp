@@ -353,6 +353,16 @@ void ArticTransceiver::set_tcxo_warmup(uint32_t time_s)
     burst_access(XMEM, TCXO_WARMUP_TIME_ADDRESS, write_buffer, NULL, sizeof(write_buffer), false);
 }
 
+void ArticTransceiver::set_tcxo_control(bool state)
+{
+    uint8_t write_buffer[3];
+    write_buffer[0] = 0;
+    write_buffer[1] = 0;
+    write_buffer[2] = state;
+
+    burst_access(XMEM, TCXO_CONTROL_ADDRESS, write_buffer, NULL, sizeof(write_buffer), false);
+}
+
 void ArticTransceiver::get_status_register(uint32_t *status)
 {
     uint8_t buffer[SIZE_SPI_REG_XMEM_YMEM_IOMEM];
@@ -1036,6 +1046,7 @@ void ArticTransceiver::initiate_tx() {
 
 	// Set TCXO warm up
 	set_tcxo_warmup(m_is_first_tx ? m_tcxo_warmup_time : 0);
+	set_tcxo_control(1);  // Keep TCXO on after command
 
 	// Check which mode is required
 	uint8_t cmd = (m_tx_mode == ArgosMode::ARGOS_3) ? ARTIC_CMD_SET_PTT_A3_TX_MODE : ARTIC_CMD_SET_PTT_A2_TX_MODE;

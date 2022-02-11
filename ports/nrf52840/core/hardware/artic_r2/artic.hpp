@@ -162,6 +162,7 @@ private:
 	void print_status(uint32_t status);
 	void get_and_print_status();
 	void set_tcxo_warmup(uint32_t time_s);
+	void set_tcxo_control(bool state);
 	void clear_interrupt(uint8_t interrupt_num);
 	bool check_crc(firmware_header_t *firmware_header);
 	void send_artic_command(artic_cmd_t cmd, uint32_t *response);
