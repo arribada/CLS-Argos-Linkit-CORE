@@ -27,6 +27,7 @@ void GPSScheduler::start(std::function<void(ServiceEvent&)> data_notification_ca
     m_is_first_fix_found = false;
     m_is_first_schedule = true;
     m_num_gps_fixes = 0;
+    m_is_underwater = false;
 
     reschedule();
 }
@@ -48,7 +49,14 @@ void GPSScheduler::stop()
 void GPSScheduler::notify_saltwater_switch_state(bool state)
 {
     DEBUG_TRACE("GPSScheduler::notify_saltwater_switch_state");
-    (void) state; // Unused
+    m_is_underwater = state;
+    if (m_is_underwater) {
+    	// Cancel ongoing GPS (if any) immediately clean-up and reschedule
+    	if (system_scheduler->is_scheduled(m_task_acquisition_timeout)) {
+            system_scheduler->cancel_task(m_task_acquisition_timeout);
+    		task_acquisition_timeout(true); // Force timeout and re-schedule
+    	}
+    }
 }
 
 void GPSScheduler::reschedule()
@@ -63,6 +71,9 @@ void GPSScheduler::reschedule()
 
     std::time_t now = rtc->gettime();
     uint32_t aq_period = m_is_first_schedule ? FIRST_AQPERIOD_SEC : (m_is_first_fix_found ? m_gnss_config.dloc_arg_nom : m_gnss_config.cold_start_retry_period);
+
+    DEBUG_TRACE("GPSScheduler::reschedule: is_first=%u first_fix=%u cold=%u aqperiod=%u",
+    		(unsigned int)m_is_first_schedule, (unsigned int)m_is_first_fix_found, (unsigned int)m_gnss_config.cold_start_retry_period, (unsigned int)aq_period);
 
     // Since we are now scheduling, this is no longer the first schedule
     m_is_first_schedule = false;
@@ -87,8 +98,15 @@ void GPSScheduler::deschedule() {
 }
 
 void GPSScheduler::task_acquisition_period() {
-    DEBUG_TRACE("GPSScheduler::task_acquisition_period");
-    try
+	if (m_is_underwater) {
+	    DEBUG_TRACE("GPSScheduler::task_acquisition_period: ignoring as underwater");
+	    reschedule();
+	    return;
+	} else {
+		DEBUG_TRACE("GPSScheduler::task_acquisition_period");
+	}
+
+	try
     {
     	// Clear the first schedule indication flag
     	m_wakeup_time = system_timer->get_counter();
@@ -110,13 +128,13 @@ void GPSScheduler::task_acquisition_period() {
     catch(ErrorCode e)
     {
         // If our power on failed then log this as a failed GPS fix and notify the user
-        log_invalid_gps_entry();
-        if (m_data_notification_callback) {
-        	ServiceEvent ev;
-        	ev.event_type = ServiceEventType::SENSOR_LOG_UPDATED;
-        	ev.event_data = false;
-            m_data_notification_callback(ev);
-        }
+    	log_invalid_gps_entry();
+		if (m_data_notification_callback) {
+			ServiceEvent ev;
+			ev.event_type = ServiceEventType::SENSOR_LOG_UPDATED;
+			ev.event_data = false;
+			m_data_notification_callback(ev);
+		}
         reschedule();
         return;
     }
@@ -129,7 +147,7 @@ void GPSScheduler::task_acquisition_period() {
     	aq_timeout = m_gnss_config.acquisition_timeout_cold_start;
     	DEBUG_TRACE("GPSScheduler::task_acquisition_period: using cold start timeout of %u secs", aq_timeout);
     }
-    m_task_acquisition_timeout = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_timeout, this),
+    m_task_acquisition_timeout = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_timeout, this, true),
     		"GPSSchedulerAcquisitionTimeout",
     		Scheduler::DEFAULT_PRIORITY, aq_timeout * MS_PER_SEC);
 }
@@ -154,11 +172,12 @@ void GPSScheduler::log_invalid_gps_entry()
     sensor_log->write(&gps_entry);
 }
 
-void GPSScheduler::task_acquisition_timeout() {
+void GPSScheduler::task_acquisition_timeout(bool log_invalid_entry = true) {
     DEBUG_TRACE("GPSScheduler::task_acquisition_timeout");
     power_off();
 
-    log_invalid_gps_entry();
+    if (log_invalid_entry)
+    	log_invalid_gps_entry();
 
     if (m_data_notification_callback) {
     	ServiceEvent e;

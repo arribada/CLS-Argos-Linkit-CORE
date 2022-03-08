@@ -62,6 +62,7 @@ private:
 	GNSSConfig 	 m_gnss_config;
 	bool       	 m_is_first_fix_found;
 	bool       	 m_is_first_schedule;
+	bool         m_is_underwater;
 	uint64_t     m_wakeup_time;
 	unsigned int m_num_consecutive_fixes;
 	std::time_t  m_next_schedule;
@@ -80,7 +81,7 @@ private:
 	Scheduler::TaskHandle m_task_update_rtc;
 	Scheduler::TaskHandle m_task_process_gnss_data;
 	void task_acquisition_period();
-	void task_acquisition_timeout();
+	void task_acquisition_timeout(bool);
 	void task_update_rtc();
 	void task_process_gnss_data();
 
