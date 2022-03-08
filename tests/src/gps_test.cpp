@@ -700,3 +700,94 @@ TEST(GpsScheduler, GNSSEnabledWithHdopAndHaccFilterAndNConsecutiveFixes)
 	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10, 3, 35000);
 	increment_time_s(1);
 }
+
+
+TEST(GpsScheduler, GNSSInterruptedByUnderwaterEvent)
+{
+	bool lb_en = false;
+	unsigned int lb_threshold = 0U;
+	bool gnss_en = true;
+	unsigned int dloc_arg_nom = 10*60;
+	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 120;
+	bool gnss_hdopfilt_en = false;
+	bool gnss_haccfilt_en = false;
+	bool underwater_en = true;
+
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
+	fake_config_store->write_param(ParamID::GNSS_HACCFILT_EN, gnss_haccfilt_en);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	BaseGNSSFixMode fix_mode = BaseGNSSFixMode::FIX_2D;
+	fake_config_store->write_param(ParamID::GNSS_FIX_MODE, fix_mode);
+	BaseGNSSDynModel dyn_model = BaseGNSSDynModel::SEA;
+	fake_config_store->write_param(ParamID::GNSS_DYN_MODEL, dyn_model);
+
+	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
+
+	location_scheduler->start();
+
+	// We're expecting the device to turn on at 27/01/2020 00:00:30
+	increment_time_s(FIRST_AQPERIOD - 1);
+
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(1);
+
+	// Now fire an underwater event before we get GPS lock
+	mock().expectOneCall("power_off").onObject(mock_m8q);
+	mock_m8q->notify_saltwater_switch_state(true);
+}
+
+
+TEST(GpsScheduler, GNSSIgnoredAfterUnderwaterEvent)
+{
+	bool lb_en = false;
+	unsigned int lb_threshold = 0U;
+	bool gnss_en = true;
+	unsigned int dloc_arg_nom = 10*60;
+	unsigned int gnss_acq_timeout = 60;
+	bool gnss_hdopfilt_en = false;
+	bool gnss_haccfilt_en = false;
+	bool underwater_en = true;
+
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
+	fake_config_store->write_param(ParamID::GNSS_HACCFILT_EN, gnss_haccfilt_en);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	BaseGNSSFixMode fix_mode = BaseGNSSFixMode::FIX_2D;
+	fake_config_store->write_param(ParamID::GNSS_FIX_MODE, fix_mode);
+	BaseGNSSDynModel dyn_model = BaseGNSSDynModel::SEA;
+	fake_config_store->write_param(ParamID::GNSS_DYN_MODEL, dyn_model);
+
+	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
+
+	location_scheduler->start();
+
+	// Now fire an underwater event before we schedule
+	mock_m8q->notify_saltwater_switch_state(true);
+
+	// We're expecting the device to turn on at 27/01/2020 00:00:30 - remain off
+	increment_time_s(FIRST_AQPERIOD);
+
+	// Next schedule attempt will be at 00:01:00 - remain off
+	increment_time_s(30);
+
+	// Next schedule attempt will be at 00:02:00 - remain off
+	increment_time_s(60);
+
+	// Now fire a surfaced event - next time will power on
+	mock_m8q->notify_saltwater_switch_state(false);
+
+	// Next schedule attempt will be at 00:03:00 - power on
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(60);
+}
