@@ -37,9 +37,19 @@ endif()
 if(${BOARD} MATCHES HORIZON)
     set(TARGET_NAME ${PROJECT_NAME}_horizon_board)
     set(BOARD_DIR     "${PROJ_DIR}/bsp/horizon_v4.0")
+    set(DEVICE_MODEL "Horizon CORE")
+    set(MODEL_SB 0)
+    set(MODEL_UW 0)
+    set(MODEL_CORE 1)
+    set(NO_ARGOS_PA_GAIN_CTRL 1)
+    set(NO_GPS_POWER_REG 1)
+    set(HW_VERSION_DETECT 0)
 elseif(${BOARD} MATCHES LINKIT)
     set(TARGET_NAME ${PROJECT_NAME}_${MODEL}_board)
     set(BOARD_DIR     "${PROJ_DIR}/bsp/gentracker_v1.0")
+    set(NO_ARGOS_PA_GAIN_CTRL 0)
+    set(NO_GPS_POWER_REG 0)
+    set(HW_VERSION_DETECT 1)
 else()
     message(FATAL_ERROR "Board must be HORIZON or LINKIT")
 endif()
@@ -227,6 +237,8 @@ target_sources(${TARGET_NAME} PRIVATE
 target_compile_definitions(${TARGET_NAME} PRIVATE
     Release=0
     Debug=1
+    NO_ARGOS_PA_GAIN_CTRL=${NO_ARGOS_PA_GAIN_CTRL}
+    NO_GPS_POWER_REG=${NO_GPS_POWER_REG}
     MODEL_SB=${MODEL_SB}
     MODEL_UW=${MODEL_UW}
     MODEL_CORE=${MODEL_CORE}

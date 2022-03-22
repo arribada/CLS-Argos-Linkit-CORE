@@ -90,6 +90,7 @@ const std::string PMU::reset_cause()
 
 const std::string PMU::hardware_version()
 {
+#if 1 == HW_VERSION_DETECT
 	// Try to read I2C register of MCP4716 (present on V2 but not V1)
 	uint8_t xfer;
 	nrfx_err_t error = nrfx_twim_rx(&BSP::I2C_Inits[MCP4716_DEVICE].twim, MCP4716_I2C_ADDR, &xfer, sizeof(xfer));
@@ -97,4 +98,7 @@ const std::string PMU::hardware_version()
     	return "LinkIt V2";
     else
     	return "LinkIt V1";
+#else
+    return "Unknown";
+#endif
 }

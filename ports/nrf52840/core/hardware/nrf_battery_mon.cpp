@@ -12,10 +12,6 @@
 #define ADC_GAIN      (1.0f/3.0f)  // 1/3 gain
 #define RP506_ADC_GAIN (4)
 
-// Battery voltage divider
-#define VOLTAGE_DIV_R1 (1200000) // 1.2M
-#define VOLTAGE_DIV_R2 (560000)  // 560k
-
 // LUT steps from 4.2V down to 3.2V in 0.1V steps
 #define BATT_LUT_ENTRIES 11
 #define BATT_LUT_MIN_V   3200

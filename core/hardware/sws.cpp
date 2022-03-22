@@ -19,10 +19,10 @@ void SWS::sample_sws() {
 	DEBUG_TRACE("SWS::sample_sws: m_sample_iteration=%u", m_sample_iteration);
 
 	// Sample the SWS pin
-	GPIOPins::set(BSP::GPIO::GPIO_SLOW_SWS_SEND);
+	GPIOPins::set(SWS_ENABLE_PIN);
 	PMU::delay_ms(1); // Wait a while to allow for any water capacitance (this value is a total guess)
-	new_state = GPIOPins::value(BSP::GPIO::GPIO_SLOW_SWS_RX);
-	GPIOPins::clear(BSP::GPIO::GPIO_SLOW_SWS_SEND);
+	new_state = GPIOPins::value(SWS_SAMPLE_PIN);
+	GPIOPins::clear(SWS_ENABLE_PIN);
 
 	DEBUG_TRACE("SWS::sample_sws: state=%u", new_state);
 

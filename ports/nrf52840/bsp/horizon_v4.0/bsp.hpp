@@ -9,12 +9,22 @@
 #include "nrfx_gpiote.h"
 #include "nrfx_saadc.h"
 #include "nrf_gpio.h"
+#include "nrfx_twim.h"
+#include "nrfx_wdt.h"
 
 // Logical device mappings to physical devices
 #define RTC_DATE_TIME  BSP::RTC::RTC_1
 #define RTC_TIMER      BSP::RTC::RTC_2
 #define SPI_SATELLITE  BSP::SPI::SPI_2
 #define BATTERY_ADC	   BSP::ADC::ADC_CHANNEL_0
+#define SWS_ENABLE_PIN BSP::GPIO::GPIO_SWS_EN
+#define SWS_SAMPLE_PIN BSP::GPIO::GPIO_SWS
+#define UART_GPS	   BSP::UART::UART_0
+
+// Battery voltage divider
+#define VOLTAGE_DIV_R1 (1000000) // 1.0M
+#define VOLTAGE_DIV_R2 (680000)  // 680k
+
 
 namespace BSP
 {
@@ -189,4 +199,40 @@ namespace BSP
     } ADC_InitTypeDefAndInst_t;
 
     extern const ADC_InitTypeDefAndInst_t ADC_Inits;
+
+    ////////////////////////////////// I2C definitions /////////////////////////////////
+    enum I2C
+	{
+#if NRFX_TWIM0_ENABLED
+    	I2C_0,
+#endif
+#if NRFX_TWIM1_ENABLED
+		I2C_1,
+#endif
+		I2C_TOTAL_NUMBER
+	};
+
+    typedef struct
+    {
+        nrfx_twim_t twim;
+        nrfx_twim_config_t twim_config;
+    } I2C_InitTypeDefAndInst_t;
+
+    extern const I2C_InitTypeDefAndInst_t I2C_Inits[I2C_TOTAL_NUMBER];
+
+    ////////////////////////////////// WDT definitions /////////////////////////////////
+    enum WDT
+	{
+#if NRFX_WDT_ENABLED
+    	WDT,
+#endif
+		WDT_TOTAL_NUMBER
+	};
+
+    typedef struct
+    {
+    	nrfx_wdt_config_t config;
+    } WDT_InitTypeDefAndInst_t;
+
+    extern const WDT_InitTypeDefAndInst_t WDT_Inits[WDT_TOTAL_NUMBER];
 }

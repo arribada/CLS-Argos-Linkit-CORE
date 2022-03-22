@@ -10,10 +10,19 @@ public:
 class PADriver : public PAInterface {
 public:
 	PADriver();
+	~PADriver();
 	void set_output_power(unsigned int mW) override;
 
 private:
 	PAInterface *m_interface;
+};
+
+
+class DummyPA : public PAInterface {
+public:
+	DummyPA() {}
+	void set_output_power(unsigned int) override {
+	}
 };
 
 

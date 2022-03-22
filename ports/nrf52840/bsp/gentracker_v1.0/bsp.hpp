@@ -19,10 +19,18 @@
 #define BATTERY_ADC	   BSP::ADC::ADC_CHANNEL_0
 #define UART_GPS	   BSP::UART::UART_0
 #define POWER_CONTROL_PIN  BSP::GPIO_POWER_CONTROL
+#define SWS_ENABLE_PIN BSP::GPIO::GPIO_SLOW_SWS_SEND
+#define SWS_SAMPLE_PIN BSP::GPIO::GPIO_SLOW_SWS_RX
+#define GPIO_AG_PWR_PIN BSP::GPIO::GPIO_AG_PWR
 
 // I2C bus addresses
 #define MCP4716_DEVICE      BSP::I2C::I2C_1
 #define MCP4716_I2C_ADDR    0x60
+
+// Battery voltage divider
+#define VOLTAGE_DIV_R1 (1200000) // 1.2M
+#define VOLTAGE_DIV_R2 (560000)  // 560k
+
 
 namespace BSP
 {

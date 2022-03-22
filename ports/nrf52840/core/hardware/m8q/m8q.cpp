@@ -186,8 +186,8 @@ M8QReceiver::M8QReceiver()
 
 M8QReceiver::~M8QReceiver()
 {
+	power_off();
     delete m_nrf_uart_m8;
-    GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN); // Ensure the GPS is hard shutdown
 }
 
 void M8QReceiver::power_off()
@@ -213,8 +213,12 @@ void M8QReceiver::power_off()
     delete m_nrf_uart_m8;
     m_nrf_uart_m8 = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
 
+#if 0 == NO_GPS_POWER_REG
     // Disable the power supply for the GPS
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
+#else
+    // TODO: Use shutdown command
+#endif
 
     m_rx_buffer.pending = false;
     m_data_notification_callback = nullptr;
@@ -426,8 +430,12 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
     memset(&m_last_received_dop, 0, sizeof(m_last_received_dop));
     memset(&m_last_received_status, 0, sizeof(m_last_received_status));
 
+#if 0 == NO_GPS_POWER_REG
     // Enable the power supply for the GPS
     GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);
+#else
+    // External wake-up pin
+#endif
 
     nrf_delay_ms(1000); // Necessary to allow the device to boot
     
@@ -573,6 +581,8 @@ void M8QReceiver::populate_gnss_data_and_callback()
 M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
 {
     // Disable NMEA and only allow UBX messages
+
+	// TODO: on horizon we might need to add auto-bauding support into the code
 
     m_nrf_uart_m8->change_baudrate(9600);
 

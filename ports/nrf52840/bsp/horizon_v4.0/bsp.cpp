@@ -264,4 +264,47 @@ namespace BSP
             }
         }
     };
+
+    ///////////////////////////////// I2C definitions /////////////////////////////////
+    const I2C_InitTypeDefAndInst_t I2C_Inits[I2C_TOTAL_NUMBER] =
+    {
+    #if NRFX_TWIM0_ENABLED
+        {
+            .twim = NRFX_TWIM_INSTANCE(0),
+            {
+                .scl = NRFX_SPIM_PIN_NOT_USED,
+                .sda = NRFX_SPIM_PIN_NOT_USED,
+                .frequency = NRF_TWIM_FREQ_100K,
+                .interrupt_priority = INTERRUPT_PRIORITY_I2C_0,
+                .hold_bus_uninit = 0, // Hold pull up state on gpio pins after uninit <0 = Disabled, 1 = Enabled>
+            }
+        },
+    #endif
+    #if NRFX_TWIM1_ENABLED
+        {
+            .twim = NRFX_TWIM_INSTANCE(1),
+            {
+                .scl = NRF_GPIO_PIN_MAP(0, 15),
+                .sda = NRF_GPIO_PIN_MAP(0, 27),
+                .frequency = NRF_TWIM_FREQ_400K,
+                .interrupt_priority = INTERRUPT_PRIORITY_I2C_1,
+                .hold_bus_uninit = 0, // Hold pull up state on gpio pins after uninit <0 = Disabled, 1 = Enabled>
+            }
+        }
+    #endif
+    };
+
+    ///////////////////////////////// WDT definitions /////////////////////////////////
+    const WDT_InitTypeDefAndInst_t WDT_Inits[WDT_TOTAL_NUMBER] =
+    {
+#if NRFX_WDT_ENABLED
+    	{
+			.config =
+			{
+				.behaviour = NRF_WDT_BEHAVIOUR_RUN_SLEEP_HALT,
+				.reload_value = 15 * 60 * 1000   // 15 minutes
+			}
+    	}
+#endif
+    };
 }
