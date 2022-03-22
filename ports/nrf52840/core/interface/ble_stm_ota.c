@@ -167,6 +167,7 @@ uint32_t ble_stm_ota_init(ble_stm_ota_t * p_stm_ota, const ble_stm_ota_init_t * 
     add_char_params.char_props.read   = 0;
     add_char_params.char_props.write  = 1;
     add_char_params.char_props.notify = 0;
+    add_char_params.char_props.write_wo_resp = 1;
     add_char_params.p_init_value      = NULL;
 
     add_char_params.write_access = SEC_OPEN;
