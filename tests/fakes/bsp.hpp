@@ -5,6 +5,8 @@
 #include "nrfx_saadc.h"
 
 #define RTC_TIMER      BSP::RTC::RTC_1
+#define SWS_ENABLE_PIN BSP::GPIO::GPIO_SLOW_SWS_SEND
+#define SWS_SAMPLE_PIN BSP::GPIO::GPIO_SLOW_SWS_RX
 
 namespace BSP
 {

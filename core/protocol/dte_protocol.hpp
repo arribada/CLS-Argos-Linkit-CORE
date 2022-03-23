@@ -438,6 +438,9 @@ protected:
 	static inline void encode_acquisition_period(std::string& output, unsigned int& value) {
 		unsigned int x;
 		switch (value) {
+		    case 0:
+		    	x = 0;
+		    	break;
 			case 10 * 60:
 				x = 1;
 				break;
@@ -846,7 +849,9 @@ private:
 	}
 
 	static unsigned int decode_acquisition_period(const std::string& s) {
-		if (s == "1") {
+		if (s == "0") {
+			return 0;
+		} else if (s == "1") {
 			return 10 * 60;
 		} else if (s == "2") {
 			return 15 * 60;

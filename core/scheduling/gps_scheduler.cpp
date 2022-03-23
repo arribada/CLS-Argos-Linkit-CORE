@@ -56,10 +56,15 @@ void GPSScheduler::notify_saltwater_switch_state(bool state)
             system_scheduler->cancel_task(m_task_acquisition_timeout);
     		task_acquisition_timeout(true); // Force timeout and re-schedule
     	}
+    } else {
+    	// If GNSS is configured to trigger on a surfaced event, then
+    	// reschedule with immediate flag set
+		if (m_gnss_config.trigger_on_surfaced)
+			reschedule(true);
     }
 }
 
-void GPSScheduler::reschedule()
+void GPSScheduler::reschedule(bool immediate)
 {
 	// Obtain fresh copy of configuration as it may have changed
 	configuration_store->get_gnss_configuration(m_gnss_config);
@@ -72,6 +77,11 @@ void GPSScheduler::reschedule()
     std::time_t now = rtc->gettime();
     uint32_t aq_period = m_is_first_schedule ? FIRST_AQPERIOD_SEC : (m_is_first_fix_found ? m_gnss_config.dloc_arg_nom : m_gnss_config.cold_start_retry_period);
 
+    if (aq_period == 0 && !immediate) {
+    	DEBUG_TRACE("GPSScheduler::reschedule: GNSS not configured with periodic schedule");
+    	return;
+    }
+
     DEBUG_TRACE("GPSScheduler::reschedule: is_first=%u first_fix=%u cold=%u aqperiod=%u",
     		(unsigned int)m_is_first_schedule, (unsigned int)m_is_first_fix_found, (unsigned int)m_gnss_config.cold_start_retry_period, (unsigned int)aq_period);
 
@@ -79,7 +89,7 @@ void GPSScheduler::reschedule()
     m_is_first_schedule = false;
 
     // Find the next schedule time aligned to UTC 00:00
-    m_next_schedule = now - (now % aq_period) + aq_period;
+    m_next_schedule = immediate ? now : now - (now % aq_period) + aq_period;
 
     // Find the time in milliseconds until this schedule
     int64_t time_until_next_schedule_ms = (m_next_schedule - now) * MS_PER_SEC;

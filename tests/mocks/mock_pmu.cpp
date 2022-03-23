@@ -34,3 +34,7 @@ const std::string PMU::reset_cause() {
 const std::string PMU::hardware_version() {
 	return "SIMULATOR";
 }
+
+uint32_t PMU::device_identifier() {
+	return 0x12345678;
+}

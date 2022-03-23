@@ -85,7 +85,7 @@ private:
 	void task_update_rtc();
 	void task_process_gnss_data();
 
-	void reschedule();
+	void reschedule(bool immediate = false);
 	void deschedule();
 	void populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time);
 	void log_invalid_gps_entry();
