@@ -88,6 +88,11 @@ const std::string PMU::reset_cause()
 		return "Power On Reset";
 }
 
+uint32_t PMU::device_identifier()
+{
+	return NRF_FICR->DEVICEID[0];
+}
+
 const std::string PMU::hardware_version()
 {
 #if 1 == HW_VERSION_DETECT

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 class PMU {
 public:
@@ -14,4 +15,5 @@ public:
 	static void kick_watchdog();
 	static const std::string reset_cause();
 	static const std::string hardware_version();
+	static uint32_t device_identifier();
 };

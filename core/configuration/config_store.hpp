@@ -99,11 +99,19 @@ protected:
 		/* ARGOS_FREQ */ 401.65,
 		/* ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
 		/* TR_NOM */ 60U,
+
+#if ARGOS_EXT
+		/* ARGOS_MODE */ BaseArgosMode::OFF,
+#else
+
 #if MODEL_SB
 		/* ARGOS_MODE */ BaseArgosMode::PASS_PREDICTION,
 #else
 		/* ARGOS_MODE */ BaseArgosMode::LEGACY,
 #endif
+
+#endif // ARGOS_EXT
+
 #if MODEL_SB
 		/* NTRY_PER_MESSAGE */ 6U,
 #else
@@ -203,6 +211,7 @@ protected:
 		/* HW_VERSION */ ""s,
 		/* BATT_VOLTAGE */ (double)0,
 		/* ARGOS_TCXO_WARMUP_TIME */ 5U,
+		/* DEVICE_DECID */ 0U,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
@@ -299,6 +308,9 @@ public:
 			} else if (param_id == ParamID::BATT_VOLTAGE) {
 				update_battery_level();
 				m_params.at((unsigned)param_id) = (double)m_battery_voltage / 1000.0;
+				b_is_valid = true;
+			} else if (param_id == ParamID::DEVICE_DECID) {
+				m_params.at((unsigned)param_id) = (unsigned int)PMU::device_identifier();
 				b_is_valid = true;
 			} else {
 				b_is_valid = is_valid();

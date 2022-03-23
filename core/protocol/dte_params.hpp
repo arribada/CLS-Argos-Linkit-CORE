@@ -111,4 +111,10 @@ static const BaseMap param_map[] = {
 
 	// TCXO warmup period
 	{ "ARGOS_TCXO_WARMUP_TIME", "ARP35", BaseEncoding::UINT, 0U, 30U, {}, true, true },
+
+	///////////////////////////
+	// HORIZON support
+	///////////////////////////
+	{ "DEVICE_DECID", "IDT10", BaseEncoding::UINT, 0U, 0xFFFFFFFU, {}, true, false },
+
 };
