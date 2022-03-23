@@ -44,12 +44,14 @@ if(${BOARD} MATCHES HORIZON)
     set(NO_ARGOS_PA_GAIN_CTRL 1)
     set(NO_GPS_POWER_REG 1)
     set(HW_VERSION_DETECT 0)
+    set(BOOTLOADER "bootloader/gentracker_secure_bootloader/horizon_v4.0/armgcc/_build/horizon_bootloader_v4_linkit_merged.hex")
 elseif(${BOARD} MATCHES LINKIT)
     set(TARGET_NAME ${PROJECT_NAME}_${MODEL}_board)
     set(BOARD_DIR     "${PROJ_DIR}/bsp/gentracker_v1.0")
     set(NO_ARGOS_PA_GAIN_CTRL 0)
     set(NO_GPS_POWER_REG 0)
     set(HW_VERSION_DETECT 1)
+    set(BOOTLOADER "bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/cls_bootloader_v1_linkit_merged.hex")
 else()
     message(FATAL_ERROR "Board must be HORIZON or LINKIT")
 endif()
@@ -390,7 +392,7 @@ add_custom_target(dfu_app
 add_custom_target(merged_hex
                   COMMENT "Create combined bootloader, settings and applications file"
                   COMMAND nrfutil settings generate --family NRF52840 --application ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex --application-version 0 --bootloader-version 1 --bl-settings-version 2 --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ${PROJECT_SOURCE_DIR}/${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ${PROJECT_SOURCE_DIR}/${PROJ_DIR}/nrfutil_pkg_key.pem ${TARGET_NAME}_settings.hex
-                  COMMAND mergehex -m bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/LinkIt_v1_xxaa_merged.hex ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex -o m1.hex
+                  COMMAND mergehex -m ${BOOTLOADER} ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex -o m1.hex
                   COMMAND mergehex -m m1.hex ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_settings.hex -o ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_merged.hex
                   COMMAND rm -f m1.hex
 )

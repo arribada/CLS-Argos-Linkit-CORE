@@ -1,5 +1,5 @@
-PROJECT_NAME     := secure_bootloader_usb_mbr_gentracker_v1
-TARGETS          := cls_bootloader_v1_linkit
+PROJECT_NAME     := secure_bootloader_usb_mbr_horizon_v4
+TARGETS          := horizon_bootloader_v4_linkit
 OUTPUT_DIRECTORY := _build
 
 PROJ_DIR := ../..
