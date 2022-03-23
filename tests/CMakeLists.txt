@@ -120,7 +120,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/scheduling/argos_scheduler.cpp"
     "${ROOT_DIR}/core/scheduling/gps_scheduler.cpp"
     "${ROOT_DIR}/core/filesystem/ota_flash_file_updater.cpp"
-    "${ROOT_DIR}/core/hardware/sws.cpp"
+    "${ROOT_DIR}/core/hardware/uwdetector.cpp"
     "${ROOT_DIR}/core/hardware/reed.cpp"
     "${ROOT_DIR}/core/sm/gentracker.cpp"
     "${ROOT_DIR}/core/sm/ledsm.cpp"

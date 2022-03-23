@@ -1,3 +1,4 @@
+#include "sws.hpp"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_log_redirect.h"
@@ -15,7 +16,6 @@
 #include "nrf_timer.hpp"
 #include "nrf_switch.hpp"
 #include "reed.hpp"
-#include "sws.hpp"
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
 #include "artic.hpp"

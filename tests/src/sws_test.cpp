@@ -2,8 +2,9 @@
 #include "CppUTestExt/MockSupport.h"
 
 #include <iostream>
-#include "bsp.hpp"
+
 #include "sws.hpp"
+#include "bsp.hpp"
 #include "fake_config_store.hpp"
 #include "linux_timer.hpp"
 
