@@ -10,6 +10,7 @@ namespace UBX
 
     enum class MessageClass : uint8_t 
     {
+    	MSG_CLASS_BAD = 0x00,
         MSG_CLASS_NAV = 0x01,
         MSG_CLASS_RXM = 0x02,
         MSG_CLASS_INF = 0x04,
@@ -171,6 +172,11 @@ namespace UBX
                 uint8_t  msgID;
                 uint8_t  rate;
             };
+			struct __attribute__((__packed__)) MSG_MSG_NORATE
+			{
+				MessageClass  msgClass;
+				uint8_t  msgID;
+			};
         } // namespace MSG
 
         namespace GNSS
@@ -365,7 +371,6 @@ namespace UBX
                 DEVMASK_SPIFLASH = (1 << 4)
             };
 
-
             struct __attribute__((__packed__)) MSG_CFG
             {
                 uint32_t clearMask;
@@ -373,7 +378,7 @@ namespace UBX
                 uint32_t loadMask;
                 uint8_t  deviceMask;
             };
-        } // namespace RST
+        } // namespace CFG
 
         namespace RXM
         {
@@ -634,10 +639,40 @@ namespace UBX
                 uint16_t magAcc;       // Magnetic declination accuracy
             };
         } // namespace PVT
-
     } // namespace NAV
 
     /****************************** MGA *************************************/
+
+    namespace RXM
+	{
+		enum Id : uint8_t
+		{
+			ID_PMREQ = 0x41
+		};
+
+		enum PMREQFlags : uint8_t
+		{
+			BACKUP = 2,
+			FORCE = 4
+		};
+
+		enum PMREQWakeupSources : uint8_t
+		{
+			UARTRX = 8,
+			EXTINT0 = 32,
+			EXTINT1 = 64,
+			SPICS = 128
+		};
+
+        struct __attribute__((__packed__)) MSG_PMREQ
+        {
+            uint8_t  version;
+            uint8_t  reserved1[3];
+            uint32_t duration;
+            uint32_t flags;
+            uint32_t wakeupSources;
+        };
+	}
 
     namespace MGA
     {

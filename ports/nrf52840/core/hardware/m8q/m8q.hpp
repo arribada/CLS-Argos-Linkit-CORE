@@ -61,6 +61,9 @@ private:
     SendReturnCode disable_nav_pvt_message();
     SendReturnCode disable_nav_dop_message();
 	SendReturnCode disable_nav_status_message();
+	SendReturnCode enter_shutdown_mode();
+	SendReturnCode exit_shutdown_mode();
+	SendReturnCode sync_baud_rate();
 
 	SendReturnCode print_version();
 

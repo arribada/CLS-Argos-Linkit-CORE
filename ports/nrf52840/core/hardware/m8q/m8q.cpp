@@ -187,21 +187,32 @@ M8QReceiver::M8QReceiver()
 M8QReceiver::~M8QReceiver()
 {
 	power_off();
-    delete m_nrf_uart_m8;
 }
 
 void M8QReceiver::power_off()
 {
-    if (m_state == State::POWERED_OFF)
-        return;
-    
+
+#if 0 == NO_GPS_POWER_REG
+	// We can rely upon the regulator state having powered off the device
+	if (State::POWERED_OFF == m_state)
+		return;
+#else
+	// No power regulator, so we should forcibly run through a shutdown sequence e.g.,
+	// to cover the scenario when the board is initially powered for the first time
+#endif
+
+	// This code should be callable even if the device is powered off already
     m_state = State::POWERED_OFF;
 
     DEBUG_INFO("M8QReceiver::power_off");
 
+    if (!m_nrf_uart_m8)
+        m_nrf_uart_m8 = new NrfUARTM8(UART_GPS, [this](uint8_t *data, size_t len) { reception_callback(data, len); });
+
     m_capture_messages = true;
 
     // Disable any messages so they don't interrupt our navigation database dump
+    setup_uart_port();
     disable_nav_pvt_message();
     disable_nav_status_message();
     disable_nav_dop_message();
@@ -210,15 +221,10 @@ void M8QReceiver::power_off()
     	fetch_navigation_database();
     }
 
+    enter_shutdown_mode();
+
     delete m_nrf_uart_m8;
     m_nrf_uart_m8 = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
-
-#if 0 == NO_GPS_POWER_REG
-    // Disable the power supply for the GPS
-    GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
-#else
-    // TODO: Use shutdown command
-#endif
 
     m_rx_buffer.pending = false;
     m_data_notification_callback = nullptr;
@@ -430,14 +436,7 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
     memset(&m_last_received_dop, 0, sizeof(m_last_received_dop));
     memset(&m_last_received_status, 0, sizeof(m_last_received_status));
 
-#if 0 == NO_GPS_POWER_REG
-    // Enable the power supply for the GPS
-    GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);
-#else
-    // External wake-up pin
-#endif
-
-    nrf_delay_ms(1000); // Necessary to allow the device to boot
+    exit_shutdown_mode();
     
     SendReturnCode ret;
 
@@ -582,9 +581,10 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
 {
     // Disable NMEA and only allow UBX messages
 
-	// TODO: on horizon we might need to add auto-bauding support into the code
-
-    m_nrf_uart_m8->change_baudrate(9600);
+	// Make sure we are running at the correct baud rate for the module
+	auto ret = sync_baud_rate();
+	if (ret != SendReturnCode::SUCCESS)
+		return ret;
 
     CFG::PRT::MSG_UART uart_prt = 
     {
@@ -601,7 +601,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
 
     //DEBUG_TRACE("GPS CFG-PRT ->");
 
-    auto ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_PRT, uart_prt, false);
+    ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_PRT, uart_prt, false);
     m_nrf_uart_m8->change_baudrate(uart_prt.baudRate);
 
     nrf_delay_ms(100); // Wait for the port to have changed baudrate
@@ -1032,4 +1032,72 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_nav_status_message()
     //DEBUG_TRACE("GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::sync_baud_rate()
+{
+#if 0 == NO_GPS_POWER_REG
+	// Power regulator present so just set to initial baud rate
+    m_nrf_uart_m8->change_baudrate(9600);
+    return SendReturnCode::SUCCESS;
+#else
+
+    std::array<unsigned int, 2> baud_rate = { 460800, 9600 };
+
+    for (unsigned int i = 0; i < baud_rate.size(); i++)
+    {
+    	/* Employ two attempts, the first can be used to wake-up the device */
+    	for (unsigned int j = 0; j < 2; j++)
+    	{
+    		m_nrf_uart_m8->change_baudrate(baud_rate.at(i));
+
+    		// This message forces a ACKNAK response
+    		CFG::MSG::MSG_MSG_NORATE cfg_msg_invalid =
+    	    {
+    	        .msgClass = MessageClass::MSG_CLASS_BAD,
+    	        .msgID = 0,
+    	    };
+
+    	    if (SendReturnCode::NACKD == send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_invalid))
+    	    	return SendReturnCode::SUCCESS;
+    	}
+    }
+
+    return SendReturnCode::RESPONSE_TIMEOUT;
+
+#endif
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::enter_shutdown_mode()
+{
+#if 0 == NO_GPS_POWER_REG
+    // Disable the power supply for the GPS
+    GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
+#else
+    RXM::MSG_PMREQ rxm_pmreq =
+    {
+    	.version = 0,
+        .reserved1 = {0,0,0},
+        .duration = 0,
+        .flags = RXM::PMREQFlags::BACKUP,
+        .wakeupSources = RXM::PMREQWakeupSources::UARTRX
+    };
+
+    (void)send_packet_contents(MessageClass::MSG_CLASS_RXM, RXM::ID_PMREQ, rxm_pmreq, false);
+#endif
+
+    return SendReturnCode::SUCCESS;
+}
+
+M8QReceiver::SendReturnCode M8QReceiver::exit_shutdown_mode()
+{
+#if 0 == NO_GPS_POWER_REG
+    // Enable the power supply for the GPS
+    GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);
+    nrf_delay_ms(1000); // Necessary to allow the device to boot
+#else
+	// No action needed -- we rely upon the baud synchronisation to wake-up the device
+#endif
+
+    return SendReturnCode::SUCCESS;
 }

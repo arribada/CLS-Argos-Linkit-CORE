@@ -255,6 +255,7 @@ int main()
 	DEBUG_TRACE("GPS M8Q ...");
 	M8QReceiver m8q_gnss;
 	location_scheduler = &m8q_gnss;
+	m8q_gnss.stop(); // Forcibly power off
 
 	DEBUG_TRACE("Entering main SM...");
 
