@@ -254,7 +254,7 @@ namespace BSP
                 // ADC_CHANNEL_0
                 .resistor_p = NRF_SAADC_RESISTOR_DISABLED,
                 .resistor_n = NRF_SAADC_RESISTOR_DISABLED,
-                .gain = NRF_SAADC_GAIN1_3,
+                .gain = NRF_SAADC_GAIN1_6,
                 .reference = NRF_SAADC_REFERENCE_INTERNAL,
                 .acq_time = NRF_SAADC_ACQTIME_3US,
                 .mode = NRF_SAADC_MODE_SINGLE_ENDED,

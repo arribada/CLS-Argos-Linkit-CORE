@@ -22,10 +22,9 @@
 #define UART_GPS	   BSP::UART::UART_0
 #define REED_SWITCH_ACTIVE_STATE   false
 
-// Battery voltage divider
-#define VOLTAGE_DIV_R1 (1000000) // 1.0M
-#define VOLTAGE_DIV_R2 (680000)  // 680k
-
+// Battery voltage ADC gain
+#define ADC_GAIN        (1.0f/6.0f)  // 1/6 gain
+#define RP506_ADC_GAIN  1.67f
 
 namespace BSP
 {

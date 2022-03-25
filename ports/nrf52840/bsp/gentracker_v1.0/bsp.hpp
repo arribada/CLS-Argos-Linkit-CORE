@@ -28,9 +28,9 @@
 #define MCP4716_DEVICE      BSP::I2C::I2C_1
 #define MCP4716_I2C_ADDR    0x60
 
-// Battery voltage divider
-#define VOLTAGE_DIV_R1 (1200000) // 1.2M
-#define VOLTAGE_DIV_R2 (560000)  // 560k
+// Battery voltage ADC gain
+#define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain
+#define RP506_ADC_GAIN        4.0f
 
 
 namespace BSP
