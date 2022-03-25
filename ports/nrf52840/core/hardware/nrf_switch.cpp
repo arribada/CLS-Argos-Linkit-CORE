@@ -55,10 +55,12 @@ static void nrfx_gpiote_in_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polar
 	}
 }
 
-NrfSwitch::NrfSwitch(int pin, unsigned int hysteresis_time_ms) : Switch(pin, hysteresis_time_ms) {
+NrfSwitch::NrfSwitch(int pin, unsigned int hysteresis_time_ms, bool active_state) : Switch(pin, hysteresis_time_ms, active_state) {
 	// Initialise the library if it is not yet initialised
 	if (!nrfx_gpiote_is_init())
 		nrfx_gpiote_init();
+	m_is_started = false;
+	m_current_state = -1; // Unknown state to start with (will force a trigger on any event)
 }
 
 NrfSwitch::~NrfSwitch() {
@@ -66,20 +68,26 @@ NrfSwitch::~NrfSwitch() {
 }
 
 void NrfSwitch::start(std::function<void(bool)> func) {
+	if (m_is_started)
+		return;
 	Switch::start(func);
 	NrfSwitchManager::add(BSP::GPIO_Inits[m_pin].pin_number, this);
 	if (NRFX_SUCCESS != nrfx_gpiote_in_init(BSP::GPIO_Inits[m_pin].pin_number, &BSP::GPIO_Inits[m_pin].gpiote_in_config, nrfx_gpiote_in_event_handler)) {
 		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
 	}
 	nrfx_gpiote_in_event_enable(BSP::GPIO_Inits[m_pin].pin_number, true);
+	m_is_started = true;
 }
 
 void NrfSwitch::stop() {
+	if (!m_is_started)
+		return;
 	system_timer->cancel_schedule(m_timer_handle);
 	nrfx_gpiote_in_event_disable(BSP::GPIO_Inits[m_pin].pin_number);
 	nrfx_gpiote_in_uninit(BSP::GPIO_Inits[m_pin].pin_number);
 	NrfSwitchManager::remove(BSP::GPIO_Inits[m_pin].pin_number);
 	Switch::stop();
+	m_is_started = false;
 }
 
 void NrfSwitch::update_state(bool state) {
@@ -97,6 +105,6 @@ void NrfSwitch::process_event(bool state) {
 	// Each time we get a new event we trigger the timer to post it after the hysteresis time.
 	// If we receive another event, we cancel the previous task and start a new one.
 	system_timer->cancel_schedule(m_timer_handle);
-	m_timer_handle = system_timer->add_schedule(std::bind(&NrfSwitch::update_state, this, state),
+	m_timer_handle = system_timer->add_schedule(std::bind(&NrfSwitch::update_state, this, (state == m_active_state)),
 			now + m_hysteresis_time_ms);
 }

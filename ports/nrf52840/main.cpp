@@ -190,7 +190,7 @@ int main()
     battery_monitor = &nrf_battery_monitor;
 
     DEBUG_TRACE("Reed switch...");
-    NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS);
+    NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS, REED_SWITCH_ACTIVE_STATE);
 
     DEBUG_TRACE("Reed gesture...");
 	ReedSwitch reed_gesture_switch(nrf_reed_switch);

@@ -20,6 +20,7 @@
 #define SWS_ENABLE_PIN BSP::GPIO::GPIO_SWS_EN
 #define SWS_SAMPLE_PIN BSP::GPIO::GPIO_SWS
 #define UART_GPS	   BSP::UART::UART_0
+#define REED_SWITCH_ACTIVE_STATE   false
 
 // Battery voltage divider
 #define VOLTAGE_DIV_R1 (1000000) // 1.0M

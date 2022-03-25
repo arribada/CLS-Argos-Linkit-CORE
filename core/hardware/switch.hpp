@@ -11,13 +11,15 @@ protected:
 	std::function<void(bool)> m_state_change_handler;
 	int m_pin;
 	unsigned int m_hysteresis_time_ms;
-	bool m_current_state;
+	int  m_current_state;
+	bool m_active_state;
 
 public:
-	Switch(int pin, unsigned int hysteresis_time_ms) {
+	Switch(int pin, unsigned int hysteresis_time_ms, bool active_state = true) {
 		m_pin = pin;
 		m_hysteresis_time_ms = hysteresis_time_ms;
 		m_current_state = false;
+		m_active_state = active_state;
 	}
 	virtual ~Switch() {
 	}
