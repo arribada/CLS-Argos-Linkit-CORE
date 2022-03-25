@@ -12,7 +12,7 @@ using namespace UBX;
 template <typename T>
 M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass msgClass, uint8_t id, T contents, bool expect_ack)
 {
-    const std::time_t timeout = 3;
+    const std::time_t timeout = 2;
 
     // Construct packet header
     UBX::Header header = {
@@ -62,7 +62,7 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
                         UBX::ACK::MSG_ACK *msg_ack_ptr = reinterpret_cast<UBX::ACK::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
                         if (msg_ack_ptr->clsID == msgClass && msg_ack_ptr->msgID == id)
                         {
-                            //DEBUG_TRACE("GPS ACK-ACK <-");
+                            DEBUG_TRACE("GPS ACK-ACK <-");
                             return SendReturnCode::SUCCESS;
                         }
                     }
@@ -71,7 +71,7 @@ M8QReceiver::SendReturnCode M8QReceiver::send_packet_contents(UBX::MessageClass 
                         UBX::ACK::MSG_ACK *msg_nack_ptr = reinterpret_cast<UBX::ACK::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
                         if (msg_nack_ptr->clsID == msgClass && msg_nack_ptr->msgID == id)
                         {
-                            DEBUG_WARN("GPS ACK-NACK <-");
+                            DEBUG_TRACE("GPS ACK-NACK <-");
                             return SendReturnCode::NACKD;
                         }
                     }
@@ -199,6 +199,7 @@ void M8QReceiver::power_off()
 #else
 	// No power regulator, so we should forcibly run through a shutdown sequence e.g.,
 	// to cover the scenario when the board is initially powered for the first time
+	exit_shutdown_mode();
 #endif
 
 	// This code should be callable even if the device is powered off already
@@ -212,13 +213,16 @@ void M8QReceiver::power_off()
     m_capture_messages = true;
 
     // Disable any messages so they don't interrupt our navigation database dump
-    setup_uart_port();
-    disable_nav_pvt_message();
-    disable_nav_status_message();
-    disable_nav_dop_message();
-
-    if (m_assistnow_enable) {
-    	fetch_navigation_database();
+    if (SendReturnCode::SUCCESS == setup_uart_port()) {
+		disable_nav_pvt_message();
+		disable_nav_status_message();
+		disable_nav_dop_message();
+		if (m_assistnow_enable) {
+			fetch_navigation_database();
+		}
+		setup_power_management();
+    } else {
+    	DEBUG_ERROR("M8QReceiver: power_off: failed to configure UART");
     }
 
     enter_shutdown_mode();
@@ -599,7 +603,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
         .reserved2 = {0}
     };
 
-    //DEBUG_TRACE("GPS CFG-PRT ->");
+    DEBUG_TRACE("M8QReceiver::setup_uart_port: GPS CFG-PRT ->");
 
     ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_PRT, uart_prt, false);
     m_nrf_uart_m8->change_baudrate(uart_prt.baudRate);
@@ -674,7 +678,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
         }
     };
 
-    //DEBUG_TRACE("GPS CFG-GNSS ->");
+    DEBUG_TRACE("M8QReceiver::setup_gnss_channel_sharing: GPS CFG-GNSS ->");
     ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_GNSS, cfg_msg_cfg_gnss);
     if (ret != SendReturnCode::SUCCESS)
         return ret;
@@ -685,7 +689,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
     nrf_delay_ms(500);
 
     // Save the configuration up until this point into RAM so that it is retained through the CFG-RST hardware reset
-    //DEBUG_TRACE("GPS CFG-CFG ->");
+    DEBUG_TRACE("M8QReceiver::setup_gnss_channel_sharing: GPS CFG-CFG ->");
     CFG::CFG::MSG_CFG cfg_msg_cfg_cfg =
     {
         .clearMask   = 0,
@@ -708,7 +712,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
         return ret;
 
     // If Galileo is enabled, UBX-CFG-GNSS must be followed by UBX-CFG-RST with resetMode set to Hardware reset
-    //DEBUG_TRACE("GPS CFG-RST ->");
+    DEBUG_TRACE("M8QReceiver::setup_gnss_channel_sharing: GPS CFG-RST ->");
     CFG::RST::MSG_RST cfg_msg_cfg_rst =
     {
         .navBbrMask = 0x0000,
@@ -719,7 +723,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_gnss_channel_sharing()
     ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_RST, cfg_msg_cfg_rst, false); // No acknowledge from this message
 
     // Wait for the device to have reset
-    nrf_delay_ms(100); // This is an estimated value
+    nrf_delay_ms(1000); // This is an estimated value
 
     return ret;
 }
@@ -742,7 +746,12 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_power_management()
         .extintInactivityMs = 0
     };
 
-    //DEBUG_TRACE("GPS CFG-PM2 ->");
+#if 0 == NO_GPS_POWER_REG
+	// Configure EXT_INT pin for power management
+    cfg_msg_cfg_pm2.flags |= CFG::PM2::FLAGS_EXTINTWAKE | CFG::PM2::FLAGS_EXTINTBACKUP;
+#endif
+
+    DEBUG_TRACE("M8QReceiver::setup_power_management: GPS CFG-PM2 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_PM2, cfg_msg_cfg_pm2);
 }
@@ -755,7 +764,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_lower_power_mode()
         .lpMode = CFG::RXM::CONTINUOUS_MODE
     };
 
-    //DEBUG_TRACE("GPS CFG-RXM ->");
+    DEBUG_TRACE("M8QReceiver::setup_lower_power_mode: GPS CFG-RXM ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_RXM, cfg_msg_cfg_rxm);
 }
@@ -785,7 +794,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_simple_navigation_settings(const 
         .reserved2 = {0}
     };
 
-    //DEBUG_TRACE("GPS CFG-NAV5 ->");
+    DEBUG_TRACE("M8QReceiver::setup_simple_navigation_settings: GPS CFG-NAV5 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_NAV5, cfg_msg_cfg_nav5);
 }
@@ -819,7 +828,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_expert_navigation_settings()
         .useAdr = 0
     };
 
-    //DEBUG_TRACE("GPS CFG-NAVX5 ->");
+    DEBUG_TRACE("M8QReceiver::setup_expert_navigation_settings: GPS CFG-NAVX5 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_NAVX5, cfg_msg_cfg_navx5);
 }
@@ -856,7 +865,7 @@ M8QReceiver::SendReturnCode M8QReceiver::supply_time_assistance()
         .tAccNs = 0
     };
 
-    //DEBUG_TRACE("GPS MGA-INI-TIME-UTC ->");
+    DEBUG_TRACE("M8QReceiver::supply_time_assistance: GPS MGA-INI-TIME-UTC ->");
 
     // This message expects a MGA-ACK as opposed to a ACK-ACK so we can't use this function for testing the response
     SendReturnCode ret = send_packet_contents(MessageClass::MSG_CLASS_MGA, MGA::ID_INI_TIME_UTC, cfg_msg_ini_time_utc, false);
@@ -876,7 +885,7 @@ M8QReceiver::SendReturnCode M8QReceiver::supply_time_assistance()
                 UBX::MGA::MSG_ACK *msg_ack_ptr = reinterpret_cast<UBX::MGA::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
                 if (msg_ack_ptr->msgId == MGA::ID_INI_TIME_UTC)
                 {
-                    //DEBUG_TRACE("GPS MGA-ACK <- infoCode: %u", msg_ack_ptr->infoCode);
+                    DEBUG_TRACE("GPS MGA-ACK <- infoCode: %u", msg_ack_ptr->infoCode);
                     return SendReturnCode::SUCCESS;
                 }
             }
@@ -912,7 +921,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_odometer()
         .reserved4 = {0}
     };
 
-    //DEBUG_TRACE("GPS CFG-ODO ->");
+    DEBUG_TRACE("M8QReceiver::disable_odometer: GPS CFG-ODO ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_ODO, cfg_msg_cfg_odo);
 }
@@ -935,7 +944,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_timepulse_output()
         .flags = 0
     };
 
-    //DEBUG_TRACE("GPS CFG-TP5 ->");
+    DEBUG_TRACE("M8QReceiver::disable_timepulse_output: GPS CFG-TP5 ->");
 
     auto ret = send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_TP5, cfg_msg_cfg_tp5);
     if (ret != SendReturnCode::SUCCESS)
@@ -945,7 +954,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_timepulse_output()
 
     cfg_msg_cfg_tp5.tpIdx = 1;
 
-    //DEBUG_TRACE("GPS CFG-TP5 ->");
+    DEBUG_TRACE("M8QReceiver::disable_timepulse_output: GPS CFG-TP5 ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_TP5, cfg_msg_cfg_tp5);
 }
@@ -959,7 +968,7 @@ M8QReceiver::SendReturnCode M8QReceiver::enable_nav_pvt_message()
         .rate = 1
     };
 
-    //DEBUG_TRACE("GPS CFG-MSG ->");
+    DEBUG_TRACE("M8QReceiver::enable_nav_pvt_message: GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_pvt);
 }
@@ -973,7 +982,7 @@ M8QReceiver::SendReturnCode M8QReceiver::enable_nav_dop_message()
         .rate = 1
     };
 
-    //DEBUG_TRACE("GPS CFG-MSG ->");
+    DEBUG_TRACE("M8QReceiver::enable_nav_dop_message: GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
 }
@@ -987,7 +996,7 @@ M8QReceiver::SendReturnCode M8QReceiver::enable_nav_status_message()
         .rate = 1
     };
 
-    //DEBUG_TRACE("GPS CFG-MSG ->");
+    DEBUG_TRACE("M8QReceiver::enable_nav_status_message: GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
 }
@@ -1001,7 +1010,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_nav_pvt_message()
         .rate = 0
     };
 
-    //DEBUG_TRACE("GPS CFG-MSG ->");
+    DEBUG_TRACE("M8QReceiver::disable_nav_pvt_message: GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_pvt);
 }
@@ -1015,7 +1024,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_nav_dop_message()
         .rate = 0
     };
 
-    //DEBUG_TRACE("GPS CFG-MSG ->");
+    DEBUG_TRACE("M8QReceiver::disable_nav_dop_message: GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
 }
@@ -1029,7 +1038,7 @@ M8QReceiver::SendReturnCode M8QReceiver::disable_nav_status_message()
         .rate = 0
     };
 
-    //DEBUG_TRACE("GPS CFG-MSG ->");
+    DEBUG_TRACE("M8QReceiver::disable_nav_status_message: GPS CFG-MSG ->");
 
     return send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_nav_dop);
 }
@@ -1046,9 +1055,10 @@ M8QReceiver::SendReturnCode M8QReceiver::sync_baud_rate()
 
     for (unsigned int i = 0; i < baud_rate.size(); i++)
     {
-    	/* Employ two attempts, the first can be used to wake-up the device */
-    	for (unsigned int j = 0; j < 2; j++)
+    	/* Employ N attempts, the first can be used to wake-up the device */
+    	for (unsigned int j = 0; j < 3; j++)
     	{
+    		DEBUG_TRACE("M8QReceiver::sync_baud_rate: baud=%u", baud_rate.at(i));
     		m_nrf_uart_m8->change_baudrate(baud_rate.at(i));
 
     		// This message forces a ACKNAK response
@@ -1057,6 +1067,8 @@ M8QReceiver::SendReturnCode M8QReceiver::sync_baud_rate()
     	        .msgClass = MessageClass::MSG_CLASS_BAD,
     	        .msgID = 0,
     	    };
+
+    		DEBUG_TRACE("M8QReceiver::sync_baud_rate: GPS CFG-MSG ->");
 
     	    if (SendReturnCode::NACKD == send_packet_contents(MessageClass::MSG_CLASS_CFG, CFG::ID_MSG, cfg_msg_invalid))
     	    	return SendReturnCode::SUCCESS;
@@ -1074,16 +1086,10 @@ M8QReceiver::SendReturnCode M8QReceiver::enter_shutdown_mode()
     // Disable the power supply for the GPS
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
 #else
-    RXM::MSG_PMREQ rxm_pmreq =
-    {
-    	.version = 0,
-        .reserved1 = {0,0,0},
-        .duration = 0,
-        .flags = RXM::PMREQFlags::BACKUP,
-        .wakeupSources = RXM::PMREQWakeupSources::UARTRX
-    };
 
-    (void)send_packet_contents(MessageClass::MSG_CLASS_RXM, RXM::ID_PMREQ, rxm_pmreq, false);
+	// Use GPIO_GPS_EXT_INT as a shutdown
+    GPIOPins::clear(BSP::GPIO::GPIO_GPS_EXT_INT);
+
 #endif
 
     return SendReturnCode::SUCCESS;
@@ -1096,7 +1102,8 @@ M8QReceiver::SendReturnCode M8QReceiver::exit_shutdown_mode()
     GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);
     nrf_delay_ms(1000); // Necessary to allow the device to boot
 #else
-	// No action needed -- we rely upon the baud synchronisation to wake-up the device
+	// Use GPIO_GPS_EXT_INT as a wake-up
+    GPIOPins::set(BSP::GPIO::GPIO_GPS_EXT_INT);
 #endif
 
     return SendReturnCode::SUCCESS;
