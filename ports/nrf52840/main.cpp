@@ -41,6 +41,7 @@ Timer *system_timer;
 Scheduler *system_scheduler;
 RGBLed *status_led;
 Switch *saltwater_switch;
+Switch *pressure_sensor;
 ReedSwitch *reed_switch;
 DTEHandler *dte_handler;
 RTC *rtc;

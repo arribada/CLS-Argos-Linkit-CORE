@@ -484,6 +484,9 @@ protected:
 	static inline void encode(std::string& output, const BaseArgosModulation& value) {
 		encode(output, (unsigned int&)value);
 	}
+	static inline void encode(std::string& output, const BaseUnderwaterDetectSource& value) {
+		encode(output, (unsigned int&)value);
+	}
 	static void validate(const BaseMap &arg_map, const std::string& value) {
 		if (value.length() > BASE_TEXT_MAX_LENGTH) {
 			DEBUG_ERROR("parameter \"%s\" string length %u is out of bounds", arg_map.name.c_str(), value.length());
@@ -560,6 +563,8 @@ protected:
 	static void validate(const BaseMap &, const BaseArgosDepthPile&) {
 	}
 	static void validate(const BaseMap &, const BaseArgosMode&) {
+	}
+	static void validate(const BaseMap &, const BaseUnderwaterDetectSource&) {
 	}
 	static void validate(const BaseMap &, const BaseArgosPower&) {
 	}
@@ -986,6 +991,17 @@ private:
 		}
 	}
 
+	static BaseUnderwaterDetectSource decode_underwater_detect_source(const std::string& s) {
+		if (s == "0") {
+			return BaseUnderwaterDetectSource::SWS;
+		} else if (s == "1") {
+			return BaseUnderwaterDetectSource::PRESSURE_SENSOR;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
 	static BaseArgosDepthPile decode_depth_pile(const std::string& s) {
 		if (s == "1") {
 			return BaseArgosDepthPile::DEPTH_PILE_1;
@@ -1179,6 +1195,14 @@ private:
 						case BaseEncoding::DATESTRING:
 						{
 							std::time_t x = decode_datestring(value);
+							key_value.value = x;
+							val.push_back(key_value);
+							break;
+						}
+						case BaseEncoding::UWDETECTSOURCE:
+						{
+							BaseUnderwaterDetectSource x = decode_underwater_detect_source(value);
+							DTEEncoder::validate(param_ref, x);
 							key_value.value = x;
 							val.push_back(key_value);
 							break;
@@ -1471,6 +1495,7 @@ public:
 				case BaseEncoding::ARGOSPOWER:
 				case BaseEncoding::AQPERIOD:
 				case BaseEncoding::ARGOSFREQ:
+				case BaseEncoding::UWDETECTSOURCE:
 				case BaseEncoding::GNSSFIXMODE:
 				case BaseEncoding::GNSSDYNMODEL:
 				case BaseEncoding::LEDMODE:

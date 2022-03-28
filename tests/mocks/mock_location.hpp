@@ -16,8 +16,8 @@ public:
 	void stop() override {
 		mock().actualCall("stop").onObject(this);
 	}
-	void notify_saltwater_switch_state(bool state) override {
-		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
+	void notify_underwater_state(bool state) override {
+		mock().actualCall("notify_underwater_state").onObject(this).withParameter("state", state);
 	}
 	void notify_sensor_log_update() override {
 		mock().actualCall("notify_sensor_log_update").onObject(this);

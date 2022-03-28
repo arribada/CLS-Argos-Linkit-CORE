@@ -46,9 +46,9 @@ void GPSScheduler::stop()
     power_off();
 }
 
-void GPSScheduler::notify_saltwater_switch_state(bool state)
+void GPSScheduler::notify_underwater_state(bool state)
 {
-    DEBUG_TRACE("GPSScheduler::notify_saltwater_switch_state");
+    DEBUG_TRACE("GPSScheduler::notify_underwater_state");
     m_is_underwater = state;
     if (m_is_underwater) {
     	// Cancel ongoing GPS (if any) immediately clean-up and reschedule

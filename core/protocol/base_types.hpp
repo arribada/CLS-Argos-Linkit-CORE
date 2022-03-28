@@ -110,6 +110,8 @@ enum class ParamID {
 	ARGOS_TCXO_WARMUP_TIME,
 	DEVICE_DECID,
 	GNSS_TRIGGER_ON_SURFACED,
+	UNDERWATER_DETECT_SOURCE,
+	UNDERWATER_DETECT_THRESH,
 	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
 };
@@ -133,8 +135,14 @@ enum class BaseEncoding {
 	LEDMODE,
 	ZONETYPE,
 	MODULATION,
+	UWDETECTSOURCE,
 	KEY_LIST,
 	KEY_VALUE_LIST
+};
+
+enum class BaseUnderwaterDetectSource {
+	SWS = 0,
+	PRESSURE_SENSOR
 };
 
 enum class BaseLogDType {
@@ -303,7 +311,7 @@ using BaseName = std::string;
 using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
 
 // !!! Do not change the ordering of variants and also make sure std::string is the first entry !!!
-using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation>;
+using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation, BaseUnderwaterDetectSource>;
 
 struct BaseMap {
 	BaseName 	   name;

@@ -8,6 +8,9 @@
 #define SWS_ENABLE_PIN BSP::GPIO::GPIO_SLOW_SWS_SEND
 #define SWS_SAMPLE_PIN BSP::GPIO::GPIO_SLOW_SWS_RX
 
+#define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain
+#define RP506_ADC_GAIN        4.0f
+
 namespace BSP
 {
     enum RTC

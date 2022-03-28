@@ -18,7 +18,7 @@ public:
 	virtual ~GPSScheduler() {}
 	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override;
 	void stop() override;
-	void notify_saltwater_switch_state(bool state) override;
+	void notify_underwater_state(bool state) override;
 	void notify_sensor_log_update() override {};
 
 protected:

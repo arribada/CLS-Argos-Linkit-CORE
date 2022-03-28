@@ -958,16 +958,16 @@ void ArgosScheduler::update_tx_jitter(int min, int max) {
 	}
 }
 
-void ArgosScheduler::notify_saltwater_switch_state(bool state) {
-	DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state");
+void ArgosScheduler::notify_underwater_state(bool state) {
+	DEBUG_TRACE("ArgosScheduler::notify_underwater_state");
 	if (m_is_running && m_argos_config.underwater_en) {
 		m_switch_state = state;
 		if (!m_switch_state) {
-			DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state: state=0: rescheduling");
+			DEBUG_TRACE("ArgosScheduler::notify_underwater_state: state=0: rescheduling");
 			m_earliest_tx = rtc->gettime() + m_argos_config.dry_time_before_tx;
 			reschedule();
 		} else {
-			DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state: state=1: deferring schedule");
+			DEBUG_TRACE("ArgosScheduler::notify_underwater_state: state=1: deferring schedule");
 			deschedule();
 		}
 	}

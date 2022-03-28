@@ -880,14 +880,14 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	DEBUG_TRACE("************* rtc: %u SWS: 1", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(true);
+	argos_sched->notify_underwater_state(true);
 
 	// SWS: 0
 	t = 31;
 	DEBUG_TRACE("************* rtc: %u SWS: 0", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(false);
+	argos_sched->notify_underwater_state(false);
 
 	// Next schedule at t=45
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
@@ -909,14 +909,14 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	DEBUG_TRACE("************* rtc: %u SWS: 1", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(true);
+	argos_sched->notify_underwater_state(true);
 
 	// SWS: 0
 	t = 92;
 	DEBUG_TRACE("************* rtc: %u SWS: 0", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(false);
+	argos_sched->notify_underwater_state(false);
 
 	// Should use earliest TX
 	t = 92 + dry_time_before_tx;
@@ -953,7 +953,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	DEBUG_TRACE("************* rtc: %u SWS: 1", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(true);
+	argos_sched->notify_underwater_state(true);
 
 	// Shall not transmit as SWS=1
 	t = 181;
@@ -967,7 +967,7 @@ TEST(ArgosScheduler, DutyCycleWithSaltwaterSwitchEvents)
 	DEBUG_TRACE("************* rtc: %u SWS: 0", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(false);
+	argos_sched->notify_underwater_state(false);
 
 	// Should use earliest TX
 	t += dry_time_before_tx;
@@ -1083,7 +1083,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	DEBUG_TRACE("************* rtc: %u SWS: 1", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(true);
+	argos_sched->notify_underwater_state(true);
 
 	// SWS: 1
 	t += 400;
@@ -1097,7 +1097,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	DEBUG_TRACE("************* rtc: %u SWS: 0", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(false);
+	argos_sched->notify_underwater_state(false);
 
 	t += 10;
 	DEBUG_TRACE("************* rtc: %u", t);
@@ -1112,7 +1112,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	DEBUG_TRACE("************* rtc: %u SWS: 1", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(true);
+	argos_sched->notify_underwater_state(true);
 
 	t += 30;
 	DEBUG_TRACE("************* rtc: %u SWS 1", t);
@@ -1125,7 +1125,7 @@ TEST(ArgosScheduler, PrepassWithSaltwaterSwitchEvents)
 	DEBUG_TRACE("************* rtc: %u SWS: 0", t);
 	fake_rtc->settime(t);
 	fake_timer->set_counter((t*1000));
-	argos_sched->notify_saltwater_switch_state(false);
+	argos_sched->notify_underwater_state(false);
 
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);

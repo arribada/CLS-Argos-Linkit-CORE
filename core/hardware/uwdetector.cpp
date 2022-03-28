@@ -77,6 +77,7 @@ void UWDetector::start(std::function<void(bool)> func) {
 	m_period_underwater_ms = m_sched_units * 1000 * configuration_store->read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ);
 	m_period_surface_ms = m_sched_units * 1000 * configuration_store->read_param<unsigned int>(ParamID::SAMPLING_SURF_FREQ);
 	m_sample_iteration = 0;
+	m_activation_threshold = configuration_store->read_param<double>(ParamID::UNDERWATER_DETECT_THRESH);
 	bool is_underwater_enabled = configuration_store->read_param<bool>(ParamID::UNDERWATER_EN);
 	// Do not schedule first sampling unless UNDERWATER_EN is set
 	if (is_underwater_enabled)

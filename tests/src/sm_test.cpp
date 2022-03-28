@@ -432,7 +432,7 @@ TEST(Sm, CheckSWSEventsDispatchedInOperationalState)
 	CHECK_FALSE(status_led->is_flashing());
 
 	// Notify an SWS event and make sure it is dispatched into the schedulers
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(location_scheduler).withParameter("state", true);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", true);
+	mock().expectOneCall("notify_underwater_state").onObject(location_scheduler).withParameter("state", true);
+	mock().expectOneCall("notify_underwater_state").onObject(comms_scheduler).withParameter("state", true);
 	fake_saltwater_switch->set_state(true);
 }

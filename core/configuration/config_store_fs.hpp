@@ -75,6 +75,9 @@ protected:
 			void operator()(BaseArgosModulation &s) {
 				std::memcpy(entry_buffer, &s, sizeof(s));
 			};
+			void operator()(BaseUnderwaterDetectSource &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
 			void operator()(BaseRawData &) {
 			};
 		} s;
@@ -155,6 +158,12 @@ protected:
 		case BaseEncoding::ARGOSPOWER:
 		{
 			BaseArgosPower value = *(BaseArgosPower *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::UWDETECTSOURCE:
+		{
+			BaseUnderwaterDetectSource value = *(BaseUnderwaterDetectSource *)param_value;
 			m_params.at(index) = value;
 			break;
 		}

@@ -740,7 +740,7 @@ TEST(GpsScheduler, GNSSInterruptedByUnderwaterEvent)
 
 	// Now fire an underwater event before we get GPS lock
 	mock().expectOneCall("power_off").onObject(mock_m8q);
-	mock_m8q->notify_saltwater_switch_state(true);
+	mock_m8q->notify_underwater_state(true);
 }
 
 
@@ -773,7 +773,7 @@ TEST(GpsScheduler, GNSSIgnoredAfterUnderwaterEvent)
 	location_scheduler->start();
 
 	// Now fire an underwater event before we schedule
-	mock_m8q->notify_saltwater_switch_state(true);
+	mock_m8q->notify_underwater_state(true);
 
 	// We're expecting the device to turn on at 27/01/2020 00:00:30 - remain off
 	increment_time_s(FIRST_AQPERIOD);
@@ -785,7 +785,7 @@ TEST(GpsScheduler, GNSSIgnoredAfterUnderwaterEvent)
 	increment_time_s(60);
 
 	// Now fire a surfaced event - next time will power on
-	mock_m8q->notify_saltwater_switch_state(false);
+	mock_m8q->notify_underwater_state(false);
 
 	// Next schedule attempt will be at 00:03:00 - power on
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
@@ -835,7 +835,7 @@ TEST(GpsScheduler, GNSSNoPeriodicTriggerOnSurfaceEvent)
 	increment_time_s(1000);
 
 	// Now fire a surfaced event - next time will power on
-	mock_m8q->notify_saltwater_switch_state(false);
+	mock_m8q->notify_underwater_state(false);
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(1);
 

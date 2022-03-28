@@ -31,6 +31,7 @@ extern BLEService *ble_service;
 extern OTAFileUpdater *ota_updater;
 extern DTEHandler *dte_handler;
 extern Switch *saltwater_switch;
+extern Switch *pressure_sensor;
 extern ReedSwitch *reed_switch;
 extern BatteryMonitor *battery_monitor;
 
@@ -77,7 +78,7 @@ void GenTracker::react(ReedSwitchEvent const &event)
 	}
 }
 
-void GenTracker::react(SaltwaterSwitchEvent const &) { }
+void GenTracker::react(UWDetectionEvent const &) { }
 
 void GenTracker::react(ErrorEvent const &event) {
 	DEBUG_ERROR("GenTracker::react: ErrorEvent: error_code=%u", event.error_code);
@@ -211,17 +212,31 @@ void PreOperationalState::exit() {
 	led_handle::dispatch<SetLEDOff>({});
 }
 
-void OperationalState::react(SaltwaterSwitchEvent const &event)
+void OperationalState::react(UWDetectionEvent const &event)
 {
-	DEBUG_INFO("react: SaltwaterSwitchEvent: state=%u", event.state);
-	location_scheduler->notify_saltwater_switch_state(event.state);
-	comms_scheduler->notify_saltwater_switch_state(event.state);
+	DEBUG_INFO("react: UWDetectionEvent: state=%u", event.state);
+	location_scheduler->notify_underwater_state(event.state);
+	comms_scheduler->notify_underwater_state(event.state);
 };
 
 void OperationalState::entry() {
 	DEBUG_INFO("entry: OperationalState");
 	led_handle::dispatch<SetLEDOff>({});
-	saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
+
+	// Select the source of the underwater detector
+	BaseUnderwaterDetectSource source = configuration_store->read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE);
+	switch (source)
+	{
+	case BaseUnderwaterDetectSource::PRESSURE_SENSOR:
+		underwater_detector = pressure_sensor ? pressure_sensor : saltwater_switch;
+		break;
+	default:
+	case BaseUnderwaterDetectSource::SWS:
+		underwater_detector = saltwater_switch;
+		break;
+	}
+
+	underwater_detector->start([](bool s) { UWDetectionEvent e; e.state = s; dispatch(e); });
 	comms_scheduler->start([](ServiceEvent& e) {
 		if (e.event_type == ServiceEventType::ARGOS_TX_START) {
 			LED_MODE_GUARD {
@@ -251,7 +266,7 @@ void OperationalState::exit() {
 	led_handle::dispatch<SetLEDOff>({});
 	location_scheduler->stop();
 	comms_scheduler->stop();
-	saltwater_switch->stop();
+	underwater_detector->stop();
 }
 
 void ConfigurationState::entry() {

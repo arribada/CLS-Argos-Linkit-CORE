@@ -117,4 +117,6 @@ static const BaseMap param_map[] = {
 	///////////////////////////
 	{ "DEVICE_DECID", "IDT10", BaseEncoding::UINT, 0U, 0U, {}, true, false },
 	{ "GNSS_TRIGGER_ON_SURFACED", "GNP25", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "UNDERWATER_DETECT_SOURCE", "UNP10", BaseEncoding::UWDETECTSOURCE, 0, 0, {}, true, true },
+	{ "UNDERWATER_DETECT_THRESH", "UNP11", BaseEncoding::FLOAT, 0.0, 0.0, {}, true, true },
 };

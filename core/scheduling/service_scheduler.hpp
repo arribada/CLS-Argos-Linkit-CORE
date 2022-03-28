@@ -23,6 +23,6 @@ public:
 	virtual ~ServiceScheduler() {}
 	virtual void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) = 0;
 	virtual void stop() = 0;
-	virtual void notify_saltwater_switch_state(bool state) = 0;
+	virtual void notify_underwater_state(bool state) = 0;
 	virtual void notify_sensor_log_update() = 0;
 };

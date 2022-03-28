@@ -13,6 +13,7 @@ protected:
 	unsigned int m_hysteresis_time_ms;
 	int  m_current_state;
 	bool m_active_state;
+	double m_activation_threshold;
 
 public:
 	Switch(int pin, unsigned int hysteresis_time_ms, bool active_state = true) {
