@@ -6,7 +6,7 @@
 
 class SWS : public UWDetector {
 public:
-	SWS(unsigned int sched_units = 1) : UWDetector(sched_units) {}
+	SWS(unsigned int sched_units = 1) : UWDetector(sched_units, 5, 1000) {}
 	bool detector_state() override {
 		GPIOPins::set(SWS_ENABLE_PIN);
 		PMU::delay_ms(1); // Wait a while to allow for any water capacitance (this value is a total guess)

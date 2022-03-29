@@ -215,7 +215,7 @@ protected:
 		/* DEVICE_DECID */ 0U,
 		/* GNSS_TRIGGER_ON_SURFACED */ (bool)false,
 		/* UNDERWATER_DETECT_SOURCE */ BaseUnderwaterDetectSource::SWS,
-		/* UNDERWATER_DETECT_THRESH */ (double)0,
+		/* UNDERWATER_DETECT_THRESH */ (double)0.1
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,

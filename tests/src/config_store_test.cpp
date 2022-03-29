@@ -56,6 +56,8 @@ TEST(ConfigStore, CreateConfigStoreWithDefaultParams)
 	// Check some defaults are correct
 	CHECK_EQUAL(0U, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
 	CHECK_EQUAL(DEVICE_MODEL_NAME, store->read_param<std::string>(ParamID::DEVICE_MODEL));
+	CHECK_EQUAL(0U, (unsigned int)store->read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE));
+	CHECK_EQUAL(0.1, store->read_param<double>(ParamID::UNDERWATER_DETECT_THRESH));
 
 	delete store;
 }

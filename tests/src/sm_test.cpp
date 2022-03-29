@@ -196,6 +196,7 @@ TEST(Sm, CheckTransitionToOperationalConfigValid)
 
 	mock().enable();
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 
@@ -222,6 +223,7 @@ TEST(Sm, CheckTransitionToOperationalConfigValidBatteryLow)
 	fsm_handle::start();
 
 	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("kick_watchdog");
@@ -412,6 +414,7 @@ TEST(Sm, CheckSWSEventsDispatchedInOperationalState)
 	fsm_handle::start();
 
 	mock().enable();
+	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");

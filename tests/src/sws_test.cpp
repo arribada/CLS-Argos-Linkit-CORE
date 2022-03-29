@@ -24,6 +24,7 @@ TEST_GROUP(SWS)
 		linux_timer = new LinuxTimer;
 		system_timer = linux_timer;
 		system_scheduler = new Scheduler(system_timer);
+		configuration_store->init();
 	}
 
 	void teardown() {
@@ -35,7 +36,7 @@ TEST_GROUP(SWS)
 
 TEST(SWS, UnderwaterEvent)
 {
-	SWS s(1);   // Use 1 sec scheduling units
+	SWS s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 
@@ -67,7 +68,7 @@ TEST(SWS, UnderwaterEvent)
 
 TEST(SWS, SurfacedEvent)
 {
-	SWS s(1);   // Use 1 sec scheduling units
+	SWS s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 
@@ -99,7 +100,7 @@ TEST(SWS, SurfacedEvent)
 
 TEST(SWS, SchedulingPeriodSurfaced)
 {
-	SWS s(1);   // Use 1 sec scheduling units
+	SWS s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 
@@ -132,7 +133,7 @@ TEST(SWS, SchedulingPeriodSurfaced)
 
 TEST(SWS, SchedulingPeriodUnderwater)
 {
-	SWS s(1);   // Use 1 sec scheduling units
+	SWS s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 
@@ -164,7 +165,7 @@ TEST(SWS, SchedulingPeriodUnderwater)
 
 TEST(SWS, UnderwaterModeDisabled)
 {
-	SWS s(1);   // Use 1 sec scheduling units
+	SWS s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 

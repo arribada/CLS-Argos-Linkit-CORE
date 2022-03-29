@@ -10,9 +10,6 @@ extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
 
 
-#define SAMPLING_ITERATIONS	  5
-#define SAMPLING_PERIOD_MS	  1000
-
 void UWDetector::sample_detector() {
 
 	bool new_state;
@@ -29,11 +26,11 @@ void UWDetector::sample_detector() {
 
 	} else {
 
-		m_sample_iteration = SAMPLING_ITERATIONS;  // Terminate early
+		m_sample_iteration = m_iterations;  // Terminate early
 
 	}
 
-	if (m_sample_iteration >= SAMPLING_ITERATIONS) {
+	if (m_sample_iteration >= m_iterations) {
 
 		// If we reached the terminal number of iterations then the SWS state must have been
 		// set for all sampling iterations -- we treat SWS as definitively set.
@@ -60,10 +57,10 @@ void UWDetector::sample_detector() {
 				Scheduler::DEFAULT_PRIORITY, new_sched);
 
 	} else {
-		DEBUG_TRACE("SWS::sample_sws: new_sched=%u", SAMPLING_PERIOD_MS);
+		DEBUG_TRACE("SWS::sample_sws: new_sched=%u", m_period_ms);
 		m_task_handle = system_scheduler->post_task_prio(std::bind(&UWDetector::sample_detector, this),
 				"UWSampleSwitch",
-				Scheduler::DEFAULT_PRIORITY, SAMPLING_PERIOD_MS);
+				Scheduler::DEFAULT_PRIORITY, m_period_ms);
 	}
 }
 

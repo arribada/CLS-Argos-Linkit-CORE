@@ -23,6 +23,7 @@
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
 #include "m8q.hpp"
+#include "ms5837.hpp"
 #include "fs_log.hpp"
 #include "nrfx_twim.h"
 
@@ -200,6 +201,16 @@ int main()
 	DEBUG_TRACE("SWS...");
 	SWS nrf_saltwater_switch;
 	saltwater_switch = &nrf_saltwater_switch;
+
+	DEBUG_TRACE("MS5837...");
+	MS5837 *ms5837_pressure_sensor;
+	try {
+		ms5837_pressure_sensor = new MS5837();
+	} catch (...) {
+		ms5837_pressure_sensor = nullptr;
+	}
+
+	pressure_sensor = ms5837_pressure_sensor;
 
     DEBUG_TRACE("Timer...");
 	system_timer = &NrfTimer::get_instance();
