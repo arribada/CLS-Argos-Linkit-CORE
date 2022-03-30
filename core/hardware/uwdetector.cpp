@@ -13,7 +13,7 @@ extern Scheduler *system_scheduler;
 void UWDetector::sample_detector() {
 
 	bool new_state;
-	DEBUG_TRACE("SWS::sample_sws: m_sample_iteration=%u", m_sample_iteration);
+	DEBUG_TRACE("UWDetector::sample_sws: m_sample_iteration=%u", m_sample_iteration);
 
 	// Sample the switch
 	new_state = detector_state();
@@ -57,7 +57,7 @@ void UWDetector::sample_detector() {
 				Scheduler::DEFAULT_PRIORITY, new_sched);
 
 	} else {
-		DEBUG_TRACE("SWS::sample_sws: new_sched=%u", m_period_ms);
+		DEBUG_TRACE("UWDetector::sample_sws: new_sched=%u", m_period_ms);
 		m_task_handle = system_scheduler->post_task_prio(std::bind(&UWDetector::sample_detector, this),
 				"UWSampleSwitch",
 				Scheduler::DEFAULT_PRIORITY, m_period_ms);

@@ -29,6 +29,8 @@
 #define MCP4716_I2C_ADDR    0x60
 #define MS5837_DEVICE       BSP::I2C::I2C_1
 #define MS5837_ADDRESS      0x76
+#define MS5803_DEVICE       BSP::I2C::I2C_1
+#define MS5803_ADDRESS      0x77
 
 // Battery voltage ADC gain
 #define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain

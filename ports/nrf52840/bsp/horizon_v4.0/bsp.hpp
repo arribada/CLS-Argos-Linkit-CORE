@@ -22,9 +22,11 @@
 #define UART_GPS	   BSP::UART::UART_0
 #define REED_SWITCH_ACTIVE_STATE   false
 #define MS5837_DEVICE  BSP::I2C::I2C_1
+#define MS5803_DEVICE  BSP::I2C::I2C_1
 
 // Device addresses
 #define MS5837_ADDRESS	0x76
+#define MS5803_ADDRESS	0x77
 
 // Battery voltage ADC gain
 #define ADC_GAIN        (1.0f/6.0f)  // 1/6 gain

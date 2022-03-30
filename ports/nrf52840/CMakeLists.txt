@@ -159,7 +159,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/scheduling
     ${PROJ_DIR}/core/hardware/artic_r2
     ${PROJ_DIR}/core/hardware/m8q
-    ${PROJ_DIR}/core/hardware/ms5837
+    ${PROJ_DIR}/core/hardware/ms5803
 )
 
 target_sources(${TARGET_NAME} PRIVATE
@@ -220,7 +220,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/filesystem/ota_flash_file_updater.cpp
     ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
-    ${PROJ_DIR}/core/hardware/ms5837/ms5837.cpp
+    ${PROJ_DIR}/core/hardware/ms5803/ms5803.cpp
     ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
     ${PROJ_DIR}/core/hardware/artic_r2/pa_driver.cpp
     ${PROJ_DIR}/core/hardware/m8q/m8q.cpp

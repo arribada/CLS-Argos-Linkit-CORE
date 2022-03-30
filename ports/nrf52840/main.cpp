@@ -23,7 +23,7 @@
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
 #include "m8q.hpp"
-#include "ms5837.hpp"
+#include "ms5803.hpp"
 #include "fs_log.hpp"
 #include "nrfx_twim.h"
 
@@ -214,16 +214,16 @@ int main()
 	SWS nrf_saltwater_switch;
 	saltwater_switch = &nrf_saltwater_switch;
 
-	DEBUG_TRACE("MS5837...");
-	MS5837 *ms5837_pressure_sensor;
+	DEBUG_TRACE("MS5803...");
+	MS5803 *ms5803_pressure_sensor;
 	try {
-		ms5837_pressure_sensor = new MS5837();
+		ms5803_pressure_sensor = new MS5803();
 	} catch (...) {
-		DEBUG_TRACE("MS5837: not detected");
-		ms5837_pressure_sensor = nullptr;
+		DEBUG_TRACE("MS5803: not detected");
+		ms5803_pressure_sensor = nullptr;
 	}
 
-	pressure_sensor = ms5837_pressure_sensor;
+	pressure_sensor = ms5803_pressure_sensor;
 
 	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
