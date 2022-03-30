@@ -196,19 +196,16 @@ void M8QReceiver::power_off()
 	// We can rely upon the regulator state having powered off the device
 	if (State::POWERED_OFF == m_state)
 		return;
-#else
-	// No power regulator, so we should forcibly run through a shutdown sequence e.g.,
+#endif
+
+	// In case of no power regulator, forcibly run through a shutdown sequence e.g.,
 	// to cover the scenario when the board is initially powered for the first time
 	exit_shutdown_mode();
-#endif
 
 	// This code should be callable even if the device is powered off already
     m_state = State::POWERED_OFF;
 
     DEBUG_INFO("M8QReceiver::power_off");
-
-    if (!m_nrf_uart_m8)
-        m_nrf_uart_m8 = new NrfUARTM8(UART_GPS, [this](uint8_t *data, size_t len) { reception_callback(data, len); });
 
     m_capture_messages = true;
 
@@ -225,10 +222,9 @@ void M8QReceiver::power_off()
     	DEBUG_ERROR("M8QReceiver: power_off: failed to configure UART");
     }
 
-    enter_shutdown_mode();
+    m_capture_messages = false;
 
-    delete m_nrf_uart_m8;
-    m_nrf_uart_m8 = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
+    enter_shutdown_mode();
 
     m_rx_buffer.pending = false;
     m_data_notification_callback = nullptr;
@@ -432,17 +428,14 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
     m_capture_messages = true;
     m_assistnow_enable = nav_settings.assistnow_enable;
 
-    if (!m_nrf_uart_m8)
-        m_nrf_uart_m8 = new NrfUARTM8(UART_GPS, [this](uint8_t *data, size_t len) { reception_callback(data, len); });
-
     // Clear our dop and pvt message containers
     memset(&m_last_received_pvt, 0, sizeof(m_last_received_pvt));
     memset(&m_last_received_dop, 0, sizeof(m_last_received_dop));
     memset(&m_last_received_status, 0, sizeof(m_last_received_status));
 
-    exit_shutdown_mode();
-    
     SendReturnCode ret;
+
+    exit_shutdown_mode();
 
     ret = setup_uart_port();                  if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_gnss_channel_sharing();       if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
@@ -1047,7 +1040,7 @@ M8QReceiver::SendReturnCode M8QReceiver::sync_baud_rate()
 {
 #if 0 == NO_GPS_POWER_REG
 	// Power regulator present so just set to initial baud rate
-    m_nrf_uart_m8->change_baudrate(9600);
+    //m_nrf_uart_m8->change_baudrate(9600);
     return SendReturnCode::SUCCESS;
 #else
 
@@ -1086,17 +1079,24 @@ M8QReceiver::SendReturnCode M8QReceiver::enter_shutdown_mode()
     // Disable the power supply for the GPS
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
 #else
-
 	// Use GPIO_GPS_EXT_INT as a shutdown
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_EXT_INT);
-
 #endif
+
+    if (m_nrf_uart_m8) {
+		delete m_nrf_uart_m8;
+		m_nrf_uart_m8 = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
+    }
 
     return SendReturnCode::SUCCESS;
 }
 
 M8QReceiver::SendReturnCode M8QReceiver::exit_shutdown_mode()
 {
+	// Configure UART if not already done
+    if (!m_nrf_uart_m8)
+        m_nrf_uart_m8 = new NrfUARTM8(UART_GPS, [this](uint8_t *data, size_t len) { reception_callback(data, len); });
+
 #if 0 == NO_GPS_POWER_REG
     // Enable the power supply for the GPS
     GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);

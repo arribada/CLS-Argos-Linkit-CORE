@@ -13,9 +13,6 @@ struct ErrorEvent : tinyfsm::Event { ErrorCode error_code; };
 
 class GenTracker : public tinyfsm::Fsm<GenTracker>
 {
-protected:
-	Switch *underwater_detector;
-
 public:
 	void react(tinyfsm::Event const &);
 	void react(ReedSwitchEvent const &event);
@@ -60,6 +57,9 @@ public:
 
 class OperationalState : public GenTracker
 {
+private:
+	Switch *underwater_detector;
+
 public:
 	void react(UWDetectionEvent const &event) override;
 	void entry() override;

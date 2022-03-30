@@ -97,7 +97,8 @@ void GPSScheduler::reschedule(bool immediate)
     DEBUG_INFO("GPSScheduler::schedule_aquisition in %llu seconds", time_until_next_schedule_ms / 1000);
 
     deschedule(); // Ensure any previous schedule has been cleared
-    m_task_acquisition_period = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_period, this),
+    m_task_acquisition_period = system_scheduler->post_task_prio(
+    		[this]() { task_acquisition_period(); },
     		"GPSSchedulerAcquisitionPeriod",
     		Scheduler::DEFAULT_PRIORITY, time_until_next_schedule_ms);
 }
@@ -133,7 +134,7 @@ void GPSScheduler::task_acquisition_period() {
             m_data_notification_callback(e);
         }
         power_on(nav_settings,
-        		 std::bind(&GPSScheduler::gnss_data_callback, this, std::placeholders::_1));
+        		[this](GNSSData data) { gnss_data_callback(data); } );
     }
     catch(ErrorCode e)
     {
@@ -157,7 +158,8 @@ void GPSScheduler::task_acquisition_period() {
     	aq_timeout = m_gnss_config.acquisition_timeout_cold_start;
     	DEBUG_TRACE("GPSScheduler::task_acquisition_period: using cold start timeout of %u secs", aq_timeout);
     }
-    m_task_acquisition_timeout = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_acquisition_timeout, this, true),
+    m_task_acquisition_timeout = system_scheduler->post_task_prio(
+    		[this]() { task_acquisition_timeout(true); },
     		"GPSSchedulerAcquisitionTimeout",
     		Scheduler::DEFAULT_PRIORITY, aq_timeout * MS_PER_SEC);
 }
@@ -298,9 +300,9 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
 
     // Update our time based off this data, schedule this as high priority
     m_gnss_data.pending_rtc_set = true;
-    m_task_update_rtc = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_update_rtc, this),
-    		"GPSSchedulerUpdateRTC",
-    		Scheduler::HIGHEST_PRIORITY);
+    m_task_update_rtc = system_scheduler->post_task_prio([this]() {
+    	task_update_rtc();
+    }, "GPSSchedulerUpdateRTC", Scheduler::HIGHEST_PRIORITY);
 
     // Only process this data if it satisfies an optional hdop threshold
     if (m_gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP > m_gnss_config.hdop_filter_threshold)) {
@@ -333,7 +335,8 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
 
         // Defer processing this data till we are outside of this interrupt context
         m_gnss_data.pending_data_logging = true;
-        m_task_process_gnss_data = system_scheduler->post_task_prio(std::bind(&GPSScheduler::task_process_gnss_data, this),
+        m_task_process_gnss_data = system_scheduler->post_task_prio(
+        		[this]() { task_process_gnss_data(); },
         		"GPSSchedulerProcessGNSSData",
         		Scheduler::DEFAULT_PRIORITY);
     }

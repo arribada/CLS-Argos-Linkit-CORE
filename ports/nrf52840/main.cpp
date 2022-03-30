@@ -186,6 +186,18 @@ int main()
 		nrfx_twim_enable(&BSP::I2C_Inits[i].twim);
 	}
 
+    DEBUG_TRACE("Timer...");
+	system_timer = &NrfTimer::get_instance();
+	NrfTimer::get_instance().init();
+
+	DEBUG_TRACE("Scheduler...");
+	Scheduler scheduler(system_timer);
+	system_scheduler = &scheduler;
+
+	DEBUG_TRACE("LED...");
+	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
+	status_led = &nrf_status_led;
+
 	DEBUG_TRACE("Battery monitor...");
 
     NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
@@ -207,22 +219,11 @@ int main()
 	try {
 		ms5837_pressure_sensor = new MS5837();
 	} catch (...) {
+		DEBUG_TRACE("MS5837: not detected");
 		ms5837_pressure_sensor = nullptr;
 	}
 
 	pressure_sensor = ms5837_pressure_sensor;
-
-    DEBUG_TRACE("Timer...");
-	system_timer = &NrfTimer::get_instance();
-	NrfTimer::get_instance().init();
-
-	DEBUG_TRACE("Scheduler...");
-	Scheduler scheduler(system_timer);
-	system_scheduler = &scheduler;
-
-	DEBUG_TRACE("LED...");
-	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
-	status_led = &nrf_status_led;
 
 	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
