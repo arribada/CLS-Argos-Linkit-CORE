@@ -34,14 +34,12 @@ else()
 endif()
 
 # Append board model to the target name
-if(${BOARD} MATCHES HORIZON)
-    set(TARGET_NAME ${PROJECT_NAME}_horizon_board)
-    set(BOARD_DIR     "${PROJ_DIR}/bsp/horizon_v4.0")
-elseif(${BOARD} MATCHES LINKIT)
+if(${BOARD} MATCHES LINKIT)
     set(TARGET_NAME ${PROJECT_NAME}_${MODEL}_board)
-    set(BOARD_DIR     "${PROJ_DIR}/bsp/gentracker_v1.0")
+    set(BOARD_DIR   "${PROJ_DIR}/bsp/gentracker_v1.0")
+    set(NO_ARGOS_PA_GAIN_CTRL 0)
 else()
-    message(FATAL_ERROR "Board must be HORIZON or LINKIT")
+    message(FATAL_ERROR "Board must be LINKIT")
 endif()
 
 if (DEBUG_LEVEL)
@@ -227,11 +225,12 @@ target_sources(${TARGET_NAME} PRIVATE
 target_compile_definitions(${TARGET_NAME} PRIVATE
     Release=0
     Debug=1
+    NO_ARGOS_PA_GAIN_CTRL=${NO_ARGOS_PA_GAIN_CTRL}
     MODEL_SB=${MODEL_SB}
     MODEL_UW=${MODEL_UW}
     MODEL_CORE=${MODEL_CORE}
     BUILD_TYPE=${CMAKE_BUILD_TYPE}
-	DEBUG_ENABLE=1
+    DEBUG_ENABLE=1
     DEBUG_LEVEL=${DEBUG_LEVEL}
     DEBUG_USING_RTC
     BOARD_PCA10059

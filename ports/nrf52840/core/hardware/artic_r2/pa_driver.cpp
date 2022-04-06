@@ -7,6 +7,9 @@
 
 
 PADriver::PADriver() {
+#if NO_ARGOS_PA_GAIN_CTRL == 1
+	m_interface = new DummyPA();
+#else
 	try {
 		DEBUG_TRACE("Checking for MCP4716...");
 		m_interface = new MCP47X6();
@@ -15,11 +18,19 @@ PADriver::PADriver() {
 		DEBUG_TRACE("MCP4716 not found - using RFPA133");
 		m_interface = new RFPA133();
 	}
+#endif
 }
+
+PADriver::~PADriver() {
+	delete m_interface;
+}
+
 
 void PADriver::set_output_power(unsigned int mW) {
 	m_interface->set_output_power(mW);
 }
+
+#if NO_ARGOS_PA_GAIN_CTRL == 0
 
 RFPA133::RFPA133() {
 }
@@ -102,3 +113,5 @@ MCP47X6::MCP47X6() {
 
 MCP47X6::~MCP47X6() {
 }
+
+#endif
