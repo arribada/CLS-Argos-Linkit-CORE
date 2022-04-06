@@ -83,7 +83,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0A;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0B;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
@@ -168,8 +168,11 @@ protected:
 		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 30U,
 		/* ARGOS_RX_COUNTER */ 0U,
 		/* ARGOS_RX_TIME */ 0U,
+#if 0 == NO_GPS_POWER_REG
 		/* ASSIST_NOW_EN */ (bool)true,
-
+#else
+		/* ASSIST_NOW_EN */ (bool)false,
+#endif
 		/* LB_GNSS_HACCFILT_THR */ 5U,
 		/* LB_NTRY_PER_MESSAGE */ 4U,
 
