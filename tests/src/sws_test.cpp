@@ -49,7 +49,12 @@ TEST(SWS, UnderwaterEvent)
 	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
 	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
-	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
+	s.start([&switch_state, &num_callbacks](ServiceEvent &event) {
+		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+			switch_state = std::get<bool>(event.event_data);
+			num_callbacks++;
+		}
+	});
 
 	for (unsigned int i = 0; i < 5; i++) {
 		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
@@ -81,7 +86,12 @@ TEST(SWS, SurfacedEvent)
 	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
 	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
-	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
+	s.start([&switch_state, &num_callbacks](ServiceEvent &event) {
+		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+			switch_state = std::get<bool>(event.event_data);
+			num_callbacks++;
+		}
+	});
 
 	for (unsigned int i = 0; i < 1; i++) {
 		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
@@ -113,7 +123,12 @@ TEST(SWS, SchedulingPeriodSurfaced)
 	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
 	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
-	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
+	s.start([&switch_state, &num_callbacks](ServiceEvent &event) {
+		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+			switch_state = std::get<bool>(event.event_data);
+			num_callbacks++;
+		}
+	});
 
 	// Sampling should happen every 2 seconds when surfaced
 	for (unsigned int i = 0; i < 5; i++) {
@@ -146,7 +161,13 @@ TEST(SWS, SchedulingPeriodUnderwater)
 	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
 	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
-	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
+	s.start([&switch_state, &num_callbacks](ServiceEvent &event) {
+		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+			switch_state = std::get<bool>(event.event_data);
+			DEBUG_TRACE("state: %u", switch_state);
+			num_callbacks++;
+		}
+	});
 
 	for (unsigned int i = 0; i < 10; i++) {
 		mock().expectOneCall("set").withUnsignedIntParameter("pin", BSP::GPIO::GPIO_SLOW_SWS_SEND);
@@ -178,7 +199,12 @@ TEST(SWS, UnderwaterModeDisabled)
 	configuration_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
 	configuration_store->write_param(ParamID::SAMPLING_UNDER_FREQ, under_period);
 	configuration_store->write_param(ParamID::SAMPLING_SURF_FREQ, surf_period);
-	s.start([&switch_state, &num_callbacks](bool state) { switch_state = state; num_callbacks++; } );
+	s.start([&switch_state, &num_callbacks](ServiceEvent &event) {
+		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+			switch_state = std::get<bool>(event.event_data);
+			num_callbacks++;
+		}
+	});
 
 	CHECK_FALSE(system_scheduler->is_any_task_scheduled());
 

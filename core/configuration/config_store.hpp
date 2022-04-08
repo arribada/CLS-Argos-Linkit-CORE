@@ -218,7 +218,21 @@ protected:
 		/* DEVICE_DECID */ 0U,
 		/* GNSS_TRIGGER_ON_SURFACED */ (bool)false,
 		/* UNDERWATER_DETECT_SOURCE */ BaseUnderwaterDetectSource::SWS,
-		/* UNDERWATER_DETECT_THRESH */ (double)1.1
+		/* UNDERWATER_DETECT_THRESH */ (double)1.1,
+		/* PH_SENSOR_ENABLE */ (bool)false,
+		/* PH_SENSOR_PERIODIC */ 0U,
+		/* PH_SENSOR_VALUE */ (double)0.0,
+		/* SEA_TEMP_SENSOR_ENABLE */ (bool)false,
+		/* SEA_TEMP_SENSOR_PERIODIC */ 0U,
+		/* SEA_TEMP_SENSOR_VALUE */ (double)0.0,
+		/* ALS_SENSOR_ENABLE */ (bool)false,
+		/* ALS_SENSOR_PERIODIC */ 0U,
+		/* ALS_SENSOR_VALUE */ (double)0.0,
+		/* CDT_SENSOR_ENABLE */ (bool)false,
+		/* CDT_SENSOR_PERIODIC */ 0U,
+		/* CDT_SENSOR_CONDUCTIVITY */ (double)0.0,
+		/* CDT_SENSOR_DEPTH */ (double)0.0,
+		/* CDT_SENSOR_TEMPERATURE */ (double)0.0,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,

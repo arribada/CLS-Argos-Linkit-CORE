@@ -1,11 +1,7 @@
-#ifndef __GPS_SCHEDULER_HPP_
-#define __GPS_SCHEDULER_HPP_
+#pragma once
 
-#include <functional>
-#include <atomic>
-#include "config_store.hpp"
 #include "service_scheduler.hpp"
-#include "scheduler.hpp"
+#include "logger.hpp"
 
 
 class GPSLogFormatter : public LogFormatter {
@@ -67,13 +63,12 @@ struct GPSNavSettings {
 	bool			 assistnow_enable;
 };
 
-class GPSScheduler : public ServiceScheduler {
+class GPSScheduler : public Service {
 public:
+	GPSScheduler(Logger *logger) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger) {
+		service_init();
+	}
 	virtual ~GPSScheduler() {}
-	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override;
-	void stop() override;
-	void notify_underwater_state(bool state) override;
-	void notify_sensor_log_update() override {};
 
 protected:
 	struct GNSSData {
@@ -113,7 +108,6 @@ protected:
 	};
 
 private:
-	GNSSConfig 	 m_gnss_config;
 	bool       	 m_is_first_fix_found;
 	bool       	 m_is_first_schedule;
 	bool         m_is_underwater;
@@ -126,31 +120,31 @@ private:
 		std::atomic<bool> pending_data_logging;
 	} m_gnss_data;
 	unsigned int m_num_gps_fixes;
-
-	std::function<void(ServiceEvent&)> m_data_notification_callback;
-
-	// Tasks
-	Scheduler::TaskHandle m_task_acquisition_period;
-	Scheduler::TaskHandle m_task_acquisition_timeout;
 	Scheduler::TaskHandle m_task_update_rtc;
 	Scheduler::TaskHandle m_task_process_gnss_data;
-	void task_acquisition_period();
-	void task_acquisition_timeout(bool);
+	bool m_is_active;
+
+	// Service interface methods
+	void service_init() override;
+	void service_term() override;
+	bool service_is_enabled() override;
+	unsigned int service_next_schedule_in_ms() override;
+	bool service_initiate() override;
+	bool service_cancel() override;
+	unsigned int service_next_timeout() override;
+	bool service_is_triggered_on_surfaced() override;
+	bool service_is_usable_underwater() override;
+
+	// Private methods for GNSS
 	void task_update_rtc();
 	void task_process_gnss_data();
-
-	void reschedule(bool immediate = false);
-	void deschedule();
 	void populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time);
-	void log_invalid_gps_entry();
-
+	void invalid_log_entry();
 	void gnss_data_callback(GNSSData data);
 	void populate_gnss_data_and_callback();
-	
+
 	// These methods are specific to the chipset and should be implemented by device-specific subclass
 	virtual void power_off() = 0;
 	virtual void power_on(const GPSNavSettings& nav_settings,
-						  std::function<void(GNSSData data)> data_notification_callback = nullptr) = 0;
+			std::function<void(GNSSData data)> data_notification_callback = nullptr) = 0;
 };
-
-#endif // __GPS_SCHEDULER_HPP_

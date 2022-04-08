@@ -33,6 +33,7 @@ enum ErrorCode : int {
 	NOT_IMPLEMENTED,
 	I2C_COMMS_ERROR,
 	I2C_CRC_FAILURE,
+	INVALID_SENSOR_ID
 };
 
 #endif // __ERROR_HPP_

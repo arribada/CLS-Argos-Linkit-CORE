@@ -1,11 +1,10 @@
 #include <cstdint>
 
-#include "uwdetector.hpp"
+#include "pressure_sensor.hpp"
 
-class MS5803 : public UWDetector {
+class MS5803 : public PressureSensor {
 public:
 	MS5803();
-	bool   detector_state() override;
 	double read();
 
 private:
@@ -24,6 +23,7 @@ private:
 	};
 	uint16_t m_coefficients[8];
 
+	bool detector_state() override;
 	void send_command(uint8_t command);
 	void read_coeffs();
 	uint32_t sample_adc(uint8_t measurement);

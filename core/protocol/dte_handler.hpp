@@ -10,113 +10,6 @@
 using namespace std::literals::string_literals;
 
 
-class LogFormatter {
-public:
-	virtual ~LogFormatter() {}
-	virtual const std::string header() = 0;
-	virtual const std::string log_entry(const LogEntry& e) = 0;
-};
-
-
-class SysLogFormatter : public LogFormatter {
-private:
-	const char *log_level_str(LogType t) {
-		switch (t) {
-		case LogType::LOG_ERROR:
-			return "ERROR";
-		case LogType::LOG_WARN:
-			return "WARN";
-		case LogType::LOG_INFO:
-			return "INFO";
-		case LogType::LOG_TRACE:
-			return "TRACE";
-		default:
-		case LogType::LOG_GPS:
-		case LogType::LOG_STARTUP:
-		case LogType::LOG_ARTIC:
-		case LogType::LOG_UNDERWATER:
-		case LogType::LOG_BATTERY:
-		case LogType::LOG_STATE:
-		case LogType::LOG_ZONE:
-		case LogType::LOG_OTA_UPDATE:
-		case LogType::LOG_BLE:
-			return "UNKNOWN";
-		}
-	}
-public:
-	const std::string header() override {
-		return "log_datetime,log_level,message\r\n";
-	}
-	const std::string log_entry(const LogEntry& e) override {
-		char entry[512], d1[128];
-		std::time_t t;
-		std::tm *tm;
-
-		t = convert_epochtime(e.header.year, e.header.month, e.header.day, e.header.hours, e.header.minutes, e.header.seconds);
-		tm = std::gmtime(&t);
-		std::strftime(d1, sizeof(d1), "%d/%m/%Y %H:%M:%S", tm);
-
-		snprintf(entry, sizeof(entry), "%s,%s,%s\r\n",
-				d1,
-				log_level_str(e.header.log_type),
-				e.data);
-		return std::string(entry);
-	}
-};
-
-class GPSLogFormatter : public LogFormatter {
-public:
-	const std::string header() override {
-		return "log_datetime,batt_voltage,iTOW,fix_datetime,valid,onTime,ttff,fixType,flags,flags2,flags3,numSV,lon,lat,height,hMSL,hAcc,vAcc,velN,velE,velD,gSpeed,headMot,sAcc,headAcc,pDOP,vDOP,hDOP,headVeh\r\n";
-	}
-	const std::string log_entry(const LogEntry& e) override {
-		char entry[512], d1[128], d2[128];
-		const GPSLogEntry *gps = (const GPSLogEntry *)&e;
-		std::time_t t;
-		std::tm *tm;
-
-		t = convert_epochtime(gps->header.year, gps->header.month, gps->header.day, gps->header.hours, gps->header.minutes, gps->header.seconds);
-		tm = std::gmtime(&t);
-		std::strftime(d1, sizeof(d1), "%d/%m/%Y %H:%M:%S", tm);
-		t = convert_epochtime(gps->info.year, gps->info.month, gps->info.day, gps->info.hour, gps->info.min, gps->info.sec);
-		tm = std::gmtime(&t);
-		std::strftime(d2, sizeof(d2), "%d/%m/%Y %H:%M:%S", tm);
-
-		// Convert to CSV
-		snprintf(entry, sizeof(entry), "%s,%f,%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\r\n",
-				d1,
-				(double)gps->info.batt_voltage/1000,
-				(unsigned int)gps->info.iTOW,
-				d2,
-				(unsigned int)gps->info.valid,
-				(unsigned int)gps->info.onTime,
-				(unsigned int)gps->info.ttff,
-				(unsigned int)gps->info.fixType,
-				(unsigned int)gps->info.flags,
-				(unsigned int)gps->info.flags2,
-				(unsigned int)gps->info.flags3,
-				(unsigned int)gps->info.numSV,
-				gps->info.lon,
-				gps->info.lat,
-				(double)gps->info.height / 1000,
-				(double)gps->info.hMSL / 1000,
-				(double)gps->info.hAcc / 1000,
-				(double)gps->info.vAcc / 1000,
-				(double)gps->info.velN / 1000,
-				(double)gps->info.velE / 1000,
-				(double)gps->info.velD / 1000,
-				(double)gps->info.gSpeed / 1000,
-				(double)gps->info.headMot,
-				(double)gps->info.sAcc / 1000,
-				(double)gps->info.headAcc,
-				(double)gps->info.pDOP,
-				(double)gps->info.vDOP,
-				(double)gps->info.hDOP,
-				(double)gps->info.headVeh);
-		return std::string(entry);
-	}
-};
-
 // This governs the maximum number of log entries we can read out in a single request
 #define DTE_HANDLER_MAX_LOG_DUMP_ENTRIES          8U
 
@@ -148,8 +41,6 @@ class DTEHandler {
 private:
 	unsigned int m_dumpd_NNN;
 	unsigned int m_dumpd_mmm;
-	GPSLogFormatter m_gps_formatter;
-	SysLogFormatter m_sys_formatter;
 
 public:
 	DTEHandler() {
@@ -390,18 +281,19 @@ public:
 		}
 
 		Logger *logger;
-		LogFormatter *formatter;
 
 		// Extract the d_type parameter from arg_list to determine which log file to use
 		unsigned int d_type = std::get<unsigned int>(arg_list[0]);
 		if ((unsigned int)BaseLogDType::INTERNAL == d_type)
 		{
 			logger = system_log;
-			formatter = &m_sys_formatter;
 		} else {
 			logger = sensor_log;
-			formatter = &m_gps_formatter;
 		}
+
+		// Get the log formatter
+		LogFormatter *formatter;
+		formatter = logger->get_log_formatter();
 
 		// Check to see if this is the first item
 		unsigned int total_entries = logger->num_entries();

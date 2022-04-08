@@ -5,12 +5,14 @@
 #include "error.hpp"
 #include "pmu.hpp"
 
-MS5803::MS5803() : UWDetector()
+MS5803::MS5803()
 {
 	// This will raise an exception if the sensor is not present which should be caught
 	// by the main application
 	read_coeffs();
 	check_coeffs();
+
+	PressureSensor();
 }
 
 bool MS5803::detector_state()

@@ -1,5 +1,4 @@
-#ifndef __LOGGER_HPP_
-#define __LOGGER_HPP_
+#pragma once
 
 #include <cstring>
 #include <stdint.h>
@@ -20,11 +19,41 @@ enum LogLevel {
 	LOG_LEVEL_DEBUG
 };
 
+class LogFormatter {
+public:
+	static const char *log_level_str(LogType t) {
+		switch (t) {
+		case LogType::LOG_ERROR:
+			return "ERROR";
+		case LogType::LOG_WARN:
+			return "WARN";
+		case LogType::LOG_INFO:
+			return "INFO";
+		case LogType::LOG_TRACE:
+			return "TRACE";
+		default:
+		case LogType::LOG_GPS:
+		case LogType::LOG_STARTUP:
+		case LogType::LOG_ARTIC:
+		case LogType::LOG_UNDERWATER:
+		case LogType::LOG_BATTERY:
+		case LogType::LOG_STATE:
+		case LogType::LOG_ZONE:
+		case LogType::LOG_OTA_UPDATE:
+		case LogType::LOG_BLE:
+			return "UNKNOWN";
+		}
+	}
+	virtual ~LogFormatter() {}
+	virtual const std::string header() = 0;
+	virtual const std::string log_entry(const LogEntry& e) = 0;
+};
 
 class Logger {
 
 private:
 	int m_log_level = LOG_LEVEL_DEBUG;
+	LogFormatter* m_log_formatter;
 
 	static inline void sync_datetime(LogHeader &header) {
 #ifdef DEBUG_USING_RTC
@@ -41,10 +70,17 @@ private:
 	}
 
 public:
+	Logger() { m_log_formatter = nullptr; }
 	virtual ~Logger() {}
 
 	void set_log_level(int level) {
 		m_log_level = level;
+	}
+	void set_log_formatter(LogFormatter* formatter) {
+		m_log_formatter = formatter;
+	}
+	LogFormatter* get_log_formatter() {
+		return m_log_formatter;
 	}
 	void warn(const char *msg, ...) {
 		if (m_log_level >= LOG_LEVEL_WARN) {
@@ -105,5 +141,3 @@ public:
 	virtual bool is_ready() = 0;
 	virtual void truncate() = 0;
 };
-
-#endif // __LOGGER_HPP_

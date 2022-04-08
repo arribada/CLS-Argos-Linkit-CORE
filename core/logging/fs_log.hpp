@@ -29,7 +29,7 @@ private:
 	}
 public:
 
-	FsLog(LFSFileSystem *fs, const char *filename, const unsigned int max_size) {
+	FsLog(LFSFileSystem *fs, const char *filename, const unsigned int max_size) : Logger() {
 		m_filesystem = fs;
 		m_filename = filename;
 		m_max_size = max_size;

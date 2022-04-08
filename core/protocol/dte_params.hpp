@@ -119,4 +119,22 @@ static const BaseMap param_map[] = {
 	{ "GNSS_TRIGGER_ON_SURFACED", "GNP25", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "UNDERWATER_DETECT_SOURCE", "UNP10", BaseEncoding::UWDETECTSOURCE, 0, 0, {}, true, true },
 	{ "UNDERWATER_DETECT_THRESH", "UNP11", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
+
+	////////////////////////////
+	// EXTERNAL sensors
+	////////////////////////////
+	{ "PH_SENSOR_ENABLE", "PHP01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "PH_SENSOR_PERIODIC", "PHP02", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+	{ "PH_SENSOR_VALUE", "PHP03", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
+	{ "SEA_TEMP_SENSOR_ENABLE", "STP01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "SEA_TEMP_SENSOR_PERIODIC", "STP02", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+	{ "SEA_TEMP_SENSOR_VALUE", "STP03", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
+	{ "ALS_SENSOR_ENABLE", "LTP01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "ALS_SENSOR_PERIODIC", "LTP02", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+	{ "ALS_SENSOR_VALUE", "LTP03", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
+	{ "CDT_SENSOR_ENABLE", "CDP01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "CDT_SENSOR_PERIODIC", "CDP02", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+	{ "CDT_SENSOR_CONDUCTIVITY", "CDP03", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
+	{ "CDT_SENSOR_DEPTH", "CDP04", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
+	{ "CDT_SENSOR_TEMPERATURE", "CDP05", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
 };

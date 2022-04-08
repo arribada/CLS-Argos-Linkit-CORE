@@ -3,6 +3,8 @@
 #include <fstream>
 #include <string>
 
+#include "gps_scheduler.hpp"
+#include "sys_log.hpp"
 #include "dte_handler.hpp"
 #include "config_store_fs.hpp"
 #include "fake_memory_access.hpp"
@@ -39,6 +41,8 @@ TEST_GROUP(DTEHandler)
 	MockLog *mock_sensor_log;
 	DTEHandler *dte_handler;
 	FakeBatteryMonitor *fake_battery_monitor;
+	GPSLogFormatter gps_log_formatter;
+	SysLogFormatter sys_log_formatter;
 
 	void setup() {
 		ram_flash = new RamFlash(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
@@ -53,8 +57,10 @@ TEST_GROUP(DTEHandler)
 		memory_access = fake_memory_access;
 		mock_system_log = new MockLog;
 		system_log = mock_system_log;
+		system_log->set_log_formatter(&sys_log_formatter);
 		mock_sensor_log = new MockLog;
 		sensor_log = mock_sensor_log;
+		sensor_log->set_log_formatter(&gps_log_formatter);
 		dte_handler = new DTEHandler();
 		fake_battery_monitor = new FakeBatteryMonitor();
 		battery_monitor = fake_battery_monitor;

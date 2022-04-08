@@ -2,30 +2,41 @@
 
 #include <functional>
 #include "scheduler.hpp"
-#include "switch.hpp"
+#include "service.hpp"
 
 
-class UWDetector : public Switch {
+class UWDetector : public Service {
 private:
 	bool m_is_first_time;
-	Scheduler::TaskHandle m_task_handle;
+	bool m_current_state;
 	unsigned int m_period_underwater_ms;
 	unsigned int m_period_surface_ms;
 	unsigned int m_sample_iteration;
 	unsigned int m_sched_units;
 	unsigned int m_iterations;
 	unsigned int m_period_ms;
-	void sample_detector();
+	double m_activation_threshold;
 
 public:
-	UWDetector(unsigned int sched_units=1, unsigned int iterations=1, unsigned int period_ms=0) : Switch(0, 0) {
+	UWDetector(unsigned int sched_units=1, unsigned int iterations=1, unsigned int period_ms=0) :
+		Service(ServiceIdentifier::UW_SENSOR, "UWDetector")	{
 		m_is_first_time = true;
+		m_current_state = false;
 		m_sched_units = sched_units;
 		m_iterations = iterations;
 		m_period_ms = period_ms;
 	}
-	~UWDetector();
-	void start(std::function<void(bool)> func) override;
-	void stop() override;
+	virtual ~UWDetector() {}
+
+private:
 	virtual bool detector_state() { return false; };
+	virtual bool service_is_enabled() = 0;
+	void service_init() override;
+	void service_term() override;
+	unsigned int service_next_schedule_in_ms() override;
+	void service_initiate() override;
+	bool service_cancel() override;
+	unsigned int service_next_timeout() override;
+	bool service_is_triggered_on_surfaced() override;
+	bool service_is_usable_underwater() override;
 };
