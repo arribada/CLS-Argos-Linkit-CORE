@@ -64,13 +64,13 @@ private:
 	unsigned int service_next_schedule_in_ms() override {
 		unsigned int schedule =
 				1000 * configuration_store->read_param<unsigned int>(ParamID::PH_SENSOR_PERIODIC);
-		return schedule;
+		return schedule == 0 ? Service::SCHEDULE_DISABLED : schedule;
 	}
 	void service_initiate() override {
 		ServiceEventData data;
 		LogEntry e;
 		read_and_populate_log_entry(&e);
-		service_complete(&data, &log);
+		service_complete(&data, &e);
 	}
 	bool service_cancel() override { return false; }
 	unsigned int service_next_timeout() override { return 0; }

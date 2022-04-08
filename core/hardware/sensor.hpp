@@ -5,7 +5,7 @@
 
 class Sensor : public Service {
 public:
-	Sensor(ServiceIdentifier service, char *name, Logger *logger) : Service(service, name, logger) {}
+	Sensor(ServiceIdentifier service, const char *name, Logger *logger) : Service(service, name, logger) {}
 	virtual ~Sensor() {}
 	virtual void calibrate(double value, unsigned int offset) = 0;
 	virtual double read(unsigned int port = 0) = 0;

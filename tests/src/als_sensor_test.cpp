@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "mock_ph.hpp"
+#include "mock_als.hpp"
 #include "fake_config_store.hpp"
 #include "fake_logger.hpp"
 #include "fake_rtc.hpp"
@@ -16,7 +16,7 @@ extern Scheduler *system_scheduler;
 extern RTC *rtc;
 
 
-TEST_GROUP(PHSensor)
+TEST_GROUP(ALSSensor)
 {
 	FakeConfigurationStore *fake_config_store;
 	FakeTimer *fake_timer;
@@ -48,9 +48,9 @@ TEST_GROUP(PHSensor)
 };
 
 
-TEST(PHSensor, SensorDisabled)
+TEST(ALSSensor, SensorDisabled)
 {
-	MockPHSensor s(logger);
+	MockALSSensor s(logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -58,8 +58,8 @@ TEST(PHSensor, SensorDisabled)
 	unsigned int period = 10;
 	bool sensor_en = false;
 
-	configuration_store->write_param(ParamID::PH_SENSOR_ENABLE, sensor_en);
-	configuration_store->write_param(ParamID::PH_SENSOR_PERIODIC, period);
+	configuration_store->write_param(ParamID::ALS_SENSOR_ENABLE, sensor_en);
+	configuration_store->write_param(ParamID::ALS_SENSOR_PERIODIC, period);
 
 	s.start([&num_callbacks](ServiceEvent &event) {
 		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
@@ -80,9 +80,9 @@ TEST(PHSensor, SensorDisabled)
 }
 
 
-TEST(PHSensor, SchedulingPeriodic)
+TEST(ALSSensor, SchedulingPeriodic)
 {
-	MockPHSensor s(logger);
+	MockALSSensor s(logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -90,8 +90,8 @@ TEST(PHSensor, SchedulingPeriodic)
 	unsigned int period = 10;
 	bool sensor_en = true;
 
-	configuration_store->write_param(ParamID::PH_SENSOR_ENABLE, sensor_en);
-	configuration_store->write_param(ParamID::PH_SENSOR_PERIODIC, period);
+	configuration_store->write_param(ParamID::ALS_SENSOR_ENABLE, sensor_en);
+	configuration_store->write_param(ParamID::ALS_SENSOR_PERIODIC, period);
 
 	s.start([&num_callbacks](ServiceEvent &event) {
 		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
@@ -111,18 +111,18 @@ TEST(PHSensor, SchedulingPeriodic)
 
 	// Validate log entries
 	for (unsigned int i = 0; i < 5; i++) {
-		PHLogEntry e;
+		ALSLogEntry e;
 		logger->read(&e, i);
-		CHECK_EQUAL((double)i, e.ph);
+		CHECK_EQUAL((double)i, e.lumens);
 	}
 
 	s.stop();
 }
 
 
-TEST(PHSensor, SchedulingNoPeriodic)
+TEST(ALSSensor, SchedulingNoPeriodic)
 {
-	MockPHSensor s(logger);
+	MockALSSensor s(logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -130,8 +130,8 @@ TEST(PHSensor, SchedulingNoPeriodic)
 	unsigned int period = 0;
 	bool sensor_en = true;
 
-	configuration_store->write_param(ParamID::PH_SENSOR_ENABLE, sensor_en);
-	configuration_store->write_param(ParamID::PH_SENSOR_PERIODIC, period);
+	configuration_store->write_param(ParamID::ALS_SENSOR_ENABLE, sensor_en);
+	configuration_store->write_param(ParamID::ALS_SENSOR_PERIODIC, period);
 
 	s.start([&num_callbacks](ServiceEvent &event) {
 		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
