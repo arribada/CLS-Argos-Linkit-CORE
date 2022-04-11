@@ -1,7 +1,9 @@
 #pragma once
 
-#include "service_scheduler.hpp"
+#include <atomic>
+#include "service.hpp"
 #include "logger.hpp"
+#include "timeutils.hpp"
 
 
 class GPSLogFormatter : public LogFormatter {
@@ -63,12 +65,10 @@ struct GPSNavSettings {
 	bool			 assistnow_enable;
 };
 
-class GPSScheduler : public Service {
+class GPSService : public Service {
 public:
-	GPSScheduler(Logger *logger) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger) {
-		service_init();
-	}
-	virtual ~GPSScheduler() {}
+	GPSService(Logger *logger) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger) {}
+	virtual ~GPSService() {}
 
 protected:
 	struct GNSSData {
@@ -107,6 +107,17 @@ protected:
 		uint32_t   ttff;      // ms
 	};
 
+	// Service interface methods
+	void service_init() override;
+	void service_term() override;
+	bool service_is_enabled() override;
+	unsigned int service_next_schedule_in_ms() override;
+	void service_initiate() override;
+	bool service_cancel() override;
+	unsigned int service_next_timeout() override;
+	bool service_is_triggered_on_surfaced() override;
+	bool service_is_usable_underwater() override;
+
 private:
 	bool       	 m_is_first_fix_found;
 	bool       	 m_is_first_schedule;
@@ -124,22 +135,11 @@ private:
 	Scheduler::TaskHandle m_task_process_gnss_data;
 	bool m_is_active;
 
-	// Service interface methods
-	void service_init() override;
-	void service_term() override;
-	bool service_is_enabled() override;
-	unsigned int service_next_schedule_in_ms() override;
-	bool service_initiate() override;
-	bool service_cancel() override;
-	unsigned int service_next_timeout() override;
-	bool service_is_triggered_on_surfaced() override;
-	bool service_is_usable_underwater() override;
-
 	// Private methods for GNSS
 	void task_update_rtc();
 	void task_process_gnss_data();
 	void populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time);
-	void invalid_log_entry();
+	GPSLogEntry invalid_log_entry();
 	void gnss_data_callback(GNSSData data);
 	void populate_gnss_data_and_callback();
 

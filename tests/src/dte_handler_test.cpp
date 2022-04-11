@@ -3,9 +3,10 @@
 #include <fstream>
 #include <string>
 
-#include "gps_scheduler.hpp"
 #include "sys_log.hpp"
 #include "dte_handler.hpp"
+
+#include "../../core/services/gps_service.hpp"
 #include "config_store_fs.hpp"
 #include "fake_memory_access.hpp"
 #include "fake_battery_mon.hpp"

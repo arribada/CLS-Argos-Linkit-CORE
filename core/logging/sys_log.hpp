@@ -2,7 +2,7 @@
 
 #include <string>
 #include "logger.hpp"
-
+#include "timeutils.hpp"
 
 class SysLogFormatter : public LogFormatter {
 public:

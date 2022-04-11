@@ -9,6 +9,9 @@ using namespace std;
 
 class ConsoleLog : public Logger {
 
+public:
+	ConsoleLog() : Logger("Console") {}
+
 private:
 	void debug_formatter(const char *level, LogHeader *header, const char *msg) {
 #ifndef CPPUTEST

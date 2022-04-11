@@ -2,7 +2,7 @@
 
 #include "CppUTestExt/MockSupportPlugin.h"
 #include <functional>
-#include "gps_scheduler.hpp"
+#include "gps_service.hpp"
 
 class MockGPSNavSettingsComparator : public MockNamedValueComparator
 {

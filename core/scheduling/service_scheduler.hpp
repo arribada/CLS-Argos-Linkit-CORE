@@ -17,6 +17,7 @@ enum class ServiceEventType {
 using ServiceEventData = std::variant<bool>;
 
 enum class ServiceIdentifier : unsigned int {
+	UNKNOWN,
 	ARGOS_TX,
 	ARGOS_RX,
 	GNSS_SENSOR,
@@ -30,6 +31,7 @@ enum class ServiceIdentifier : unsigned int {
 };
 
 struct ServiceEvent {
+	ServiceEvent() { event_source = ServiceIdentifier::UNKNOWN; }
 	ServiceEventType  event_type;
 	ServiceEventData  event_data;
 	ServiceIdentifier event_source;

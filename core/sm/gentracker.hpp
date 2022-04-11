@@ -5,9 +5,9 @@
 #include "error.hpp"
 #include "ble_service.hpp"
 #include "reed.hpp"
+#include "service.hpp"
 
 struct ReedSwitchEvent : tinyfsm::Event { ReedSwitchGesture state; };
-struct UWDetectionEvent : tinyfsm::Event { bool state; };
 struct ErrorEvent : tinyfsm::Event { ErrorCode error_code; };
 
 
@@ -16,7 +16,6 @@ class GenTracker : public tinyfsm::Fsm<GenTracker>
 public:
 	void react(tinyfsm::Event const &);
 	void react(ReedSwitchEvent const &event);
-	virtual void react(UWDetectionEvent const &event);
 	void react(ErrorEvent const &event);
 	virtual void entry(void);
 	virtual void exit(void);
@@ -58,10 +57,9 @@ public:
 class OperationalState : public GenTracker
 {
 private:
-	Switch *underwater_detector;
+	void service_event_handler(ServiceEvent &e);
 
 public:
-	void react(UWDetectionEvent const &event) override;
 	void entry() override;
 	void exit() override;
 };

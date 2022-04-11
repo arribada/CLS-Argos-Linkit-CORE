@@ -9,6 +9,7 @@
 #include "ble_service.hpp"
 #include "ota_file_updater.hpp"
 #include "rgb_led.hpp"
+#include "led.hpp"
 #include "switch.hpp"
 #include "memory_access.hpp"
 #include "rtc.hpp"
@@ -35,6 +36,7 @@ Switch *reed_switch;
 Switch *saltwater_switch;
 Switch *pressure_sensor;
 RGBLed *status_led;
+Led *ext_status_led;
 MemoryAccess *memory_access;
 RTC *rtc;
 BatteryMonitor *battery_monitor;

@@ -1,7 +1,7 @@
 #include "service.hpp"
 #include "scheduler.hpp"
 #include "rtc.hpp"
-
+#include "timeutils.hpp"
 
 extern Scheduler *system_scheduler;
 extern RTC *rtc;
@@ -18,6 +18,7 @@ void ServiceManager::remove(Service& s) {
 
 
 void ServiceManager::startall(std::function<void(ServiceEvent&)> data_notification_callback) {
+	m_data_notification_callback = data_notification_callback;
 	for (auto const& p : m_map)
 		p.second.start(data_notification_callback);
 }
@@ -48,7 +49,13 @@ Logger *ServiceManager::get_logger(ServiceIdentifier service_id) {
 	return nullptr;
 }
 
+void ServiceManager::inject_event(ServiceEvent& event) {
+	if (m_data_notification_callback)
+		m_data_notification_callback(event);
+}
+
 Service::Service(ServiceIdentifier service_id, const char *name, Logger *logger) {
+	m_is_started = false;
 	m_name = name;
 	m_is_underwater = false;
 	m_service_id = service_id;
@@ -69,17 +76,22 @@ void Service::start(std::function<void(ServiceEvent&)> data_notification_callbac
 	m_data_notification_callback = data_notification_callback;
 	service_init();
 	reschedule();
+	m_is_started = true;
 }
 
 void Service::stop() {
-	DEBUG_TRACE("Service::start: service %s stopped", m_name);
-	deschedule();
-	if (service_cancel())
-		notify_service_inactive();
-	service_term();
+	DEBUG_TRACE("Service::stop: service %s stopped", m_name);
+	if (m_is_started) {
+		deschedule();
+		if (service_cancel())
+			notify_service_inactive();
+		m_is_started = false;
+		service_term();
+	}
 }
 
 void Service::notify_underwater_state(bool state) {
+	DEBUG_TRACE("Service::notify_underwater_state: service %s notify UW %u", m_name, state);
 	if (service_is_usable_underwater())
 		return; // Don't care since the sensor can be used underwater
 	m_is_underwater = state;
@@ -99,6 +111,10 @@ void Service::notify_peer_event(ServiceEvent& event) {
 	if (event.event_source == ServiceIdentifier::UW_SENSOR)
 		notify_underwater_state(std::get<bool>(event.event_data));
 };
+
+bool Service::is_started() {
+	return m_is_started;
+}
 
 void Service::service_complete(ServiceEventData *event_data, void *entry) {
 	DEBUG_TRACE("Service::service_complete: service %s", m_name);
@@ -139,6 +155,7 @@ void Service::reschedule(bool immediate) {
 			m_task_period = system_scheduler->post_task_prio(
 				[this]() {
 				unsigned int timeout_ms = service_next_timeout();
+				DEBUG_TRACE("Service::reschedule: service %s time out in %u msecs", m_name, timeout_ms);
 				if (timeout_ms) {
 					m_task_timeout = system_scheduler->post_task_prio(
 						[this]() {

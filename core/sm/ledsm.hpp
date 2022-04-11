@@ -2,7 +2,6 @@
 
 #include "tinyfsm.hpp"
 #include "timer.hpp"
-#include "rgb_led.hpp"
 
 
 struct SetLEDOff : tinyfsm::Event { };

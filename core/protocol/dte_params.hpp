@@ -137,4 +137,7 @@ static const BaseMap param_map[] = {
 	{ "CDT_SENSOR_CONDUCTIVITY", "CDP03", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
 	{ "CDT_SENSOR_DEPTH", "CDP04", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
 	{ "CDT_SENSOR_TEMPERATURE", "CDP05", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
+
+	// EXTERNAL LED
+	{ "EXT_LED_MODE", "LDP02", BaseEncoding::LEDMODE, 0U, 0U, {}, true, true },
 };

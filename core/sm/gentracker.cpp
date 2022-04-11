@@ -5,6 +5,7 @@
 #include "config_store.hpp"
 #include "service_scheduler.hpp"
 #include "scheduler.hpp"
+#include "service.hpp"
 #include "dte_handler.hpp"
 #include "filesystem.hpp"
 #include "config_store.hpp"
@@ -23,23 +24,12 @@ extern FileSystem *main_filesystem;
 extern Scheduler *system_scheduler;
 extern Timer *system_timer;
 extern ServiceScheduler *comms_scheduler;
-extern ServiceScheduler *location_scheduler;
-extern Logger *sensor_log;
-extern Logger *system_log;
 extern ConfigurationStore *configuration_store;
 extern BLEService *ble_service;
 extern OTAFileUpdater *ota_updater;
 extern DTEHandler *dte_handler;
-extern Switch *saltwater_switch;
-extern Switch *pressure_sensor;
 extern ReedSwitch *reed_switch;
 extern BatteryMonitor *battery_monitor;
-
-// Macro for determining LED mode state
-#define LED_MODE_GUARD \
-	if (configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::ALWAYS || \
-		(configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::HRS_24 && \
-		 system_timer->get_counter() < (24 * 3600 * 1000)))
 
 // FSM initial state -> LEDOff
 FSM_INITIAL_STATE(LEDState, LEDOff);
@@ -77,8 +67,6 @@ void GenTracker::react(ReedSwitchEvent const &event)
 		transit<OffState>();
 	}
 }
-
-void GenTracker::react(UWDetectionEvent const &) { }
 
 void GenTracker::react(ErrorEvent const &event) {
 	DEBUG_ERROR("GenTracker::react: ErrorEvent: error_code=%u", event.error_code);
@@ -135,12 +123,10 @@ void BootState::entry() {
 	try {
 		// The underlying classes will create the files on the filesystem if they do not
 		// already yet exist
-		sensor_log->create();
-		system_log->create();
+		LoggerManager::create();
 		configuration_store->init();
 	    DEBUG_INFO("Firmware Version: %s", FW_APP_VERSION_STR_C);
-		DEBUG_INFO("sensor_log: has %u entries", sensor_log->num_entries());
-		DEBUG_INFO("system_log: has %u entries", system_log->num_entries());
+		LoggerManager::show_info();
 		DEBUG_INFO("configuration_store: is_valid=%u", configuration_store->is_valid());
 		DEBUG_INFO("reset cause: %s", PMU::reset_cause().c_str());
 		// Transition to PreOperational state after initialisation
@@ -212,61 +198,65 @@ void PreOperationalState::exit() {
 	led_handle::dispatch<SetLEDOff>({});
 }
 
-void OperationalState::react(UWDetectionEvent const &event)
-{
-	DEBUG_INFO("react: UWDetectionEvent: state=%u", event.state);
-	location_scheduler->notify_underwater_state(event.state);
-	comms_scheduler->notify_underwater_state(event.state);
-};
-
 void OperationalState::entry() {
 	DEBUG_INFO("entry: OperationalState");
 	led_handle::dispatch<SetLEDOff>({});
 
-	// Select the source of the underwater detector
-	BaseUnderwaterDetectSource source = configuration_store->read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE);
-	switch (source)
-	{
-	case BaseUnderwaterDetectSource::PRESSURE_SENSOR:
-		underwater_detector = pressure_sensor ? pressure_sensor : saltwater_switch;
-		break;
-	default:
-	case BaseUnderwaterDetectSource::SWS:
-		underwater_detector = saltwater_switch;
-		break;
-	}
-
-	underwater_detector->start([](bool s) { UWDetectionEvent e; e.state = s; dispatch(e); });
-	comms_scheduler->start([](ServiceEvent& e) {
-		if (e.event_type == ServiceEventType::ARGOS_TX_START) {
-			LED_MODE_GUARD {
-				led_handle::dispatch<SetLEDArgosTX>({});
-			}
-		}
-		else if (e.event_type == ServiceEventType::ARGOS_TX_END)
-			led_handle::dispatch<SetLEDArgosTXComplete>({});
+	comms_scheduler->start([this](ServiceEvent& e) {
+		service_event_handler(e);
 	});
-	location_scheduler->start([](ServiceEvent& e) {
-		if (e.event_type == ServiceEventType::GNSS_ON) {
-			LED_MODE_GUARD {
-				led_handle::dispatch<SetLEDGNSSOn>({});
-			}
-		} else {
+
+	ServiceManager::startall([this](ServiceEvent& e) {
+		service_event_handler(e);
+	});
+}
+
+void OperationalState::service_event_handler(ServiceEvent& e) {
+
+	// Notify event to all peer services
+	ServiceManager::notify_peer_event(e);
+
+	// Legacy service event handling for comms scheduler
+	if (e.event_source == ServiceIdentifier::UW_SENSOR) {
+		comms_scheduler->notify_underwater_state(std::get<bool>(e.event_data));
+		return;
+	}
+	else if (e.event_source == ServiceIdentifier::GNSS_SENSOR) {
+		if (e.event_type == ServiceEventType::SERVICE_ACTIVE) {
+			led_handle::dispatch<SetLEDGNSSOn>({});
+		} else if (e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
 			if (std::get<bool>(e.event_data))
 				led_handle::dispatch<SetLEDGNSSOffWithFix>({});
 			else
 				led_handle::dispatch<SetLEDGNSSOffWithoutFix>({});
 			comms_scheduler->notify_sensor_log_update();
 		}
-	});
+		return;
+	}
+	else if (e.event_source == ServiceIdentifier::ARGOS_TX) {
+		// New Argos TX event handling
+		if (e.event_type == ServiceEventType::SERVICE_ACTIVE) {
+			led_handle::dispatch<SetLEDArgosTX>({});
+		}
+		else if (e.event_type == ServiceEventType::SERVICE_INACTIVE) {
+			led_handle::dispatch<SetLEDArgosTXComplete>({});
+		}
+	} else if (e.event_source == ServiceIdentifier::UNKNOWN) {
+		// Legacy event handling
+		if (e.event_type == ServiceEventType::ARGOS_TX_START) {
+			led_handle::dispatch<SetLEDArgosTX>({});
+		}
+		else if (e.event_type == ServiceEventType::ARGOS_TX_END) {
+			led_handle::dispatch<SetLEDArgosTXComplete>({});
+		}
+	}
 }
 
 void OperationalState::exit() {
 	DEBUG_INFO("exit: OperationalState");
 	led_handle::dispatch<SetLEDOff>({});
-	location_scheduler->stop();
+	ServiceManager::stopall();
 	comms_scheduler->stop();
-	underwater_detector->stop();
 }
 
 void ConfigurationState::entry() {

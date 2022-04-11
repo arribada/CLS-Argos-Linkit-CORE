@@ -1,30 +1,20 @@
-#ifndef __MOCK_LOCATION_HPP_
-#define __MOCK_LOCATION_HPP_
+#pragma once
 
 #include "mock_comparators.hpp"
-#include "service_scheduler.hpp"
+#include "service.hpp"
 
-class MockLocationScheduler : public ServiceScheduler {
+class MockLocationScheduler : public Service {
 public:
-	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr) override {
-
-		// Install a comparator for checking the equality of std::functions
-		mock().installComparator("std::function<void(ServiceEvent&)>", m_comparator);
-
-		mock().actualCall("start").onObject(this).withParameterOfType("std::function<void(ServiceEvent&)>", "data_notification_callback", &data_notification_callback);
-	}
-	void stop() override {
-		mock().actualCall("stop").onObject(this);
-	}
-	void notify_underwater_state(bool state) override {
-		mock().actualCall("notify_underwater_state").onObject(this).withParameter("state", state);
-	}
-	void notify_sensor_log_update() override {
-		mock().actualCall("notify_sensor_log_update").onObject(this);
-	}
+	MockLocationScheduler(Logger *logger = nullptr) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger) {}
 
 private:
-	MockStdFunctionServiceEventComparator m_comparator;
+	void service_init() override {}
+	void service_term() override {}
+	bool service_is_enabled() override { return false; }
+	unsigned int service_next_schedule_in_ms() override { return Service::SCHEDULE_DISABLED; }
+	void service_initiate() override {}
+	bool service_cancel() override { return false; }
+	unsigned int service_next_timeout() override { return 0; }
+	bool service_is_triggered_on_surfaced() override { return false; }
+	bool service_is_usable_underwater() override { return false; }
 };
-
-#endif // __MOCK_LOCATION_HPP_

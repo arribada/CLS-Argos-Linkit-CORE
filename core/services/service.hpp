@@ -22,8 +22,10 @@ public:
 	void stop();
 	void notify_underwater_state(bool state);
 	void notify_peer_event(ServiceEvent& event);
+	bool is_started();
 
 private:
+	bool m_is_started;
 	const char *m_name;
 	bool m_is_underwater;
 	Scheduler::TaskHandle m_task_period;
@@ -60,6 +62,7 @@ protected:
 class ServiceManager
 {
 private:
+	static inline std::function<void(ServiceEvent&)> m_data_notification_callback = nullptr;
 	static inline unsigned int m_unique_identifier = 0;
 	static inline std::map<unsigned int, Service&> m_map;
 
@@ -70,5 +73,6 @@ public:
 	static void stopall();
 	static void notify_underwater_state(bool state);
 	static void notify_peer_event(ServiceEvent& event);
+	static void inject_event(ServiceEvent& event);
 	static Logger *get_logger(ServiceIdentifier service_id);
 };

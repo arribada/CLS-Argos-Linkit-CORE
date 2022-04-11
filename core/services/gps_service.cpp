@@ -1,7 +1,7 @@
-#include "gps_scheduler.hpp"
 #include "config_store.hpp"
 #include "rtc.hpp"
 #include "battery.hpp"
+#include "gps_service.hpp"
 #include "timer.hpp"
 
 
@@ -9,13 +9,14 @@ extern ConfigurationStore *configuration_store;
 extern BatteryMonitor *battery_monitor;
 extern RTC *rtc;
 extern Timer *system_timer;
+extern Scheduler *system_scheduler;
 
 
 #define MS_PER_SEC         (1000)
 #define FIRST_AQPERIOD_SEC (30)     // Schedule for first AQPERIOD to accelerate first fix
 
 
-void GPSScheduler::service_init() {
+void GPSService::service_init() {
 	m_is_active = false;
     m_gnss_data.pending_data_logging = false;
     m_gnss_data.pending_rtc_set = false;
@@ -25,16 +26,16 @@ void GPSScheduler::service_init() {
 	power_off();
 }
 
-void GPSScheduler::service_term() {
+void GPSService::service_term() {
 }
 
-bool GPSScheduler::service_is_enabled() {
+bool GPSService::service_is_enabled() {
 	GNSSConfig gnss_config;
 	configuration_store->get_gnss_configuration(gnss_config);
 	return gnss_config.enable;
 }
 
-unsigned int GPSScheduler::service_next_schedule_in_ms() {
+unsigned int GPSService::service_next_schedule_in_ms() {
 	GNSSConfig gnss_config;
 	configuration_store->get_gnss_configuration(gnss_config);
 
@@ -45,8 +46,8 @@ unsigned int GPSScheduler::service_next_schedule_in_ms() {
     	return Service::SCHEDULE_DISABLED;
     }
 
-    DEBUG_TRACE("GPSScheduler::reschedule: is_first=%u first_fix=%u cold=%u aqperiod=%u",
-    		(unsigned int)m_is_first_schedule, (unsigned int)m_is_first_fix_found, (unsigned int)m_gnss_config.cold_start_retry_period, (unsigned int)aq_period);
+    DEBUG_TRACE("GPSService::reschedule: is_first=%u first_fix=%u cold=%u aqperiod=%u",
+    		(unsigned int)m_is_first_schedule, (unsigned int)m_is_first_fix_found, (unsigned int)gnss_config.cold_start_retry_period, (unsigned int)aq_period);
 
     // Find the next schedule time aligned to UTC 00:00
     std::time_t next_schedule = now - (now % aq_period) + aq_period;
@@ -55,7 +56,7 @@ unsigned int GPSScheduler::service_next_schedule_in_ms() {
     return (next_schedule - now) * MS_PER_SEC;
 }
 
-bool GPSScheduler::service_initiate() {
+void GPSService::service_initiate() {
 	GNSSConfig gnss_config;
 	configuration_store->get_gnss_configuration(gnss_config);
 	GPSNavSettings nav_settings = {
@@ -70,52 +71,60 @@ bool GPSScheduler::service_initiate() {
 	m_num_consecutive_fixes = gnss_config.min_num_fixes;
 
 	try {
+		m_is_active = true;
 		power_on(nav_settings,
 			[this](GNSSData data) {
 				gnss_data_callback(data);
 			}
 		);
 	} catch (...) {
+		m_is_active = false;
 		ServiceEventData event_data = false;
-		service_complete(event_data, invalid_log_entry());
+		GPSLogEntry log_entry = invalid_log_entry();
+		service_complete(&event_data, &log_entry);
 	}
 }
 
-bool GPSScheduler::service_cancel(bool is_timeout) {
+bool GPSService::service_cancel() {
 	// Cleanly terminate
+	DEBUG_TRACE("GPSService::service_cancel");
 	system_scheduler->cancel_task(m_task_update_rtc);
 	system_scheduler->cancel_task(m_task_process_gnss_data);
-	power_off();
 
-	if (is_timeout && m_is_active) {
+	if (m_is_active) {
+		power_off();
 		ServiceEventData event_data = false;
-		service_complete(event_data, invalid_log_entry());
+		GPSLogEntry log_entry = invalid_log_entry();
+		service_complete(&event_data, &log_entry);
+		m_is_active = false;
+		return true;
 	}
 
-	m_is_active = false;
+	return false;
 }
 
-unsigned int GPSScheduler::service_next_timeout() {
+unsigned int GPSService::service_next_timeout() {
 	GNSSConfig gnss_config;
 	configuration_store->get_gnss_configuration(gnss_config);
-	return m_is_first_fix_found ? gnss_config.acquisition_timeout_cold_start : gnss_config.acquisition_timeout;
+	unsigned int timeout = m_is_first_fix_found ? gnss_config.acquisition_timeout : gnss_config.acquisition_timeout_cold_start;
+	return timeout * MS_PER_SEC;
 }
 
-bool GPSScheduler::service_is_triggered_on_surfaced() {
+bool GPSService::service_is_triggered_on_surfaced() {
 	GNSSConfig gnss_config;
 	configuration_store->get_gnss_configuration(gnss_config);
 	return gnss_config.trigger_on_surfaced;
 }
 
-bool GPSScheduler::service_is_usable_underwater() {
+bool GPSService::service_is_usable_underwater() {
 	return false;
 }
 
 
 
-GPSLogEntry GPSScheduler::invalid_log_entry()
+GPSLogEntry GPSService::invalid_log_entry()
 {
-    DEBUG_INFO("GPSScheduler::invalid_log_entry");
+    DEBUG_INFO("GPSService::invalid_log_entry");
 
     GPSLogEntry gps_entry;
     memset(&gps_entry, 0, sizeof(gps_entry));
@@ -133,16 +142,16 @@ GPSLogEntry GPSScheduler::invalid_log_entry()
     return gps_entry;
 }
 
-void GPSScheduler::task_update_rtc()
+void GPSService::task_update_rtc()
 {
     rtc->settime(convert_epochtime(m_gnss_data.data.year, m_gnss_data.data.month, m_gnss_data.data.day, m_gnss_data.data.hour, m_gnss_data.data.min, m_gnss_data.data.sec));
-    DEBUG_TRACE("GPSScheduler::task_update_rtc");
+    DEBUG_TRACE("GPSService::task_update_rtc");
     m_gnss_data.pending_rtc_set = false;
 }
 
-void GPSScheduler::task_process_gnss_data()
+void GPSService::task_process_gnss_data()
 {
-    DEBUG_TRACE("GPSScheduler::task_process_gnss_data");
+    DEBUG_TRACE("GPSService::task_process_gnss_data");
 
     GPSLogEntry gps_entry;
     memset(&gps_entry, 0, sizeof(gps_entry));
@@ -199,7 +208,7 @@ void GPSScheduler::task_process_gnss_data()
     gps_entry.info.event_type = GPSEventType::FIX;
     gps_entry.info.valid = true;
 
-    DEBUG_INFO("GPSScheduler::task_process_gnss_data: lat=%lf lon=%lf hDOP=%lf hAcc=%lf numSV=%u batt=%lfV ", gps_entry.info.lat, gps_entry.info.lon,
+    DEBUG_INFO("GPSService::task_process_gnss_data: lat=%lf lon=%lf hDOP=%lf hAcc=%lf numSV=%u batt=%lfV ", gps_entry.info.lat, gps_entry.info.lon,
     		static_cast<double>(gps_entry.info.hDOP),
 			static_cast<double>(gps_entry.info.hAcc),
 			gps_entry.info.numSV,
@@ -213,13 +222,16 @@ void GPSScheduler::task_process_gnss_data()
     configuration_store->notify_gps_location(gps_entry);
 
     ServiceEventData event_data = true;
-    service_complete(data, &gps_entry);
+    service_complete(&event_data, &gps_entry);
 }
 
-void GPSScheduler::gnss_data_callback(GNSSData data) {
+void GPSService::gnss_data_callback(GNSSData data) {
     // If we haven't finished processing our last data then ignore this one
     if (m_gnss_data.pending_data_logging || m_gnss_data.pending_rtc_set)
         return;
+
+    GNSSConfig gnss_config;
+    configuration_store->get_gnss_configuration(gnss_config);
 
     m_gnss_data.data = data;
 
@@ -230,22 +242,22 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
     }, "GPSSchedulerUpdateRTC", Scheduler::HIGHEST_PRIORITY);
 
     // Only process this data if it satisfies an optional hdop threshold
-    if (m_gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP > m_gnss_config.hdop_filter_threshold)) {
-    	m_num_consecutive_fixes = m_gnss_config.min_num_fixes;
-    	DEBUG_TRACE("GPSScheduler::gnss_data_callback: HDOP threshold %u not met with %f", m_gnss_config.hdop_filter_threshold, (double)m_gnss_data.data.hDOP);
+    if (gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP > gnss_config.hdop_filter_threshold)) {
+    	m_num_consecutive_fixes = gnss_config.min_num_fixes;
+    	DEBUG_TRACE("GPSService::gnss_data_callback: HDOP threshold %u not met with %f", gnss_config.hdop_filter_threshold, (double)m_gnss_data.data.hDOP);
     	return;
     }
 
     // Only process this data if it satisfies an optional hacc threshold
-    if (m_gnss_config.hacc_filter_enable && (m_gnss_data.data.hAcc > 1000 * m_gnss_config.hacc_filter_threshold)) {
-    	m_num_consecutive_fixes = m_gnss_config.min_num_fixes;
-    	DEBUG_TRACE("GPSScheduler::gnss_data_callback: HACC threshold %u not met with %f", 1000 * m_gnss_config.hacc_filter_threshold, (double)m_gnss_data.data.hAcc);
+    if (gnss_config.hacc_filter_enable && (m_gnss_data.data.hAcc > 1000 * gnss_config.hacc_filter_threshold)) {
+    	m_num_consecutive_fixes = gnss_config.min_num_fixes;
+    	DEBUG_TRACE("GPSService::gnss_data_callback: HACC threshold %u not met with %f", 1000 * gnss_config.hacc_filter_threshold, (double)m_gnss_data.data.hAcc);
     	return;
     }
 
     // Now check the requisite number of consecutive fixes have been made
     if (--m_num_consecutive_fixes) {
-       	DEBUG_TRACE("GPSScheduler::gnss_data_callback: criteria met with %u consecutive fixes remaining", m_num_consecutive_fixes);
+       	DEBUG_TRACE("GPSService::gnss_data_callback: criteria met with %u consecutive fixes remaining", m_num_consecutive_fixes);
         return;
     }
 
@@ -259,12 +271,12 @@ void GPSScheduler::gnss_data_callback(GNSSData data) {
         m_gnss_data.pending_data_logging = true;
         m_task_process_gnss_data = system_scheduler->post_task_prio(
         		[this]() { task_process_gnss_data(); },
-        		"GPSSchedulerProcessGNSSData",
+        		"GPSProcessGNSSData",
         		Scheduler::DEFAULT_PRIORITY);
     }
 }
 
-void GPSScheduler::populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time)
+void GPSService::populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time)
 {
 	service_set_log_header_time(entry.header, time);
 }
