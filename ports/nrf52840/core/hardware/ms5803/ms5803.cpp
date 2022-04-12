@@ -4,6 +4,8 @@
 #include "nrfx_twim.h"
 #include "error.hpp"
 #include "pmu.hpp"
+#include "debug.hpp"
+
 
 MS5803::MS5803()
 {
@@ -11,16 +13,9 @@ MS5803::MS5803()
 	// by the main application
 	read_coeffs();
 	check_coeffs();
-
-	PressureSensor();
 }
 
-bool MS5803::detector_state()
-{
-	return (read() >= m_activation_threshold);
-}
-
-double MS5803::read()
+double MS5803::read(unsigned int)
 {
 	int32_t D1 = (int32_t)sample_adc(MS5803Command::ADC_D1);
 	int32_t D2 = (int32_t)sample_adc(MS5803Command::ADC_D2);

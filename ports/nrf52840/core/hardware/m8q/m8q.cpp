@@ -4,6 +4,9 @@
 #include "nrf_delay.h"
 #include "rtc.hpp"
 #include "error.hpp"
+#include "debug.hpp"
+#include "timeutils.hpp"
+
 
 extern RTC *rtc;
 
@@ -181,6 +184,7 @@ M8QReceiver::M8QReceiver()
     m_navigation_database_len = 0;
     m_rx_buffer.pending = false;
     m_capture_messages = false;
+    m_assistnow_enable = false;
     m_state = State::POWERED_OFF;
 }
 

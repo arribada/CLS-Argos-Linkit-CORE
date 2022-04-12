@@ -1,38 +1,27 @@
 #pragma once
 
-#include "sensor.hpp"
-#include "config_store.hpp"
+#include "sensor_service.hpp"
 #include "logger.hpp"
 #include "messages.hpp"
+#include "timeutils.hpp"
 
-extern ConfigurationStore *configuration_store;
 
-struct __attribute__((packed)) CDTLogEntry {
+struct __attribute__((packed)) SeaTempLogEntry {
 	LogHeader header;
 	union {
-		struct {
-			double conductivity;
-			double depth;
-			double temperature;
-		};
+		double sea_temp;
 		uint8_t data[MAX_LOG_PAYLOAD];
 	};
 };
 
-enum class CDTSensorPort : unsigned int {
-	CONDUCTIVITY,
-	DEPTH,
-	TEMPERATURE
-};
-
-class CDTLogFormatter : public LogFormatter {
+class SeaTempLogFormatter : public LogFormatter {
 public:
 	const std::string header() override {
-		return "log_datetime,conductivity,depth,temperature\r\n";
+		return "log_datetime,sea_temp\r\n";
 	}
 	const std::string log_entry(const LogEntry& e) override {
 		char entry[512], d1[128];
-		const CDTLogEntry *log = (const CDTLogEntry *)&e;
+		const SeaTempLogEntry *log = (const SeaTempLogEntry *)&e;
 		std::time_t t;
 		std::tm *tm;
 
@@ -41,42 +30,35 @@ public:
 		std::strftime(d1, sizeof(d1), "%d/%m/%Y %H:%M:%S", tm);
 
 		// Convert to CSV
-		snprintf(entry, sizeof(entry), "%s,%f,%f,%f\r\n",
+		snprintf(entry, sizeof(entry), "%s,%f\r\n",
 				d1,
-				log->conductivity,
-				log->depth,
-				log->temperature);
+				log->sea_temp);
 		return std::string(entry);
 	}
 };
 
 
-class CDTSensor : public Sensor {
+class SeaTempSensorService : public SensorService {
 public:
-	CDTSensor(Logger *logger) : Sensor(ServiceIdentifier::CDT_SENSOR, "CDT", logger) {}
-	virtual ~CDTSensor() {}
+	SeaTempSensorService(Sensor& sensor, Logger *logger) : SensorService(sensor, ServiceIdentifier::SEA_TEMP_SENSOR, "SEA_TEMP", logger) {}
 
 private:
-	virtual void calibrate(double value, unsigned int offset) = 0;
-	virtual double read(unsigned int port = 0) = 0;
 
 	void read_and_populate_log_entry(LogEntry *e) override {
-		CDTLogEntry *log = (CDTLogEntry *)e;
-		log->conductivity = read((unsigned int)CDTSensorPort::CONDUCTIVITY);
-		log->depth = read((unsigned int)CDTSensorPort::DEPTH);
-		log->temperature = read((unsigned int)CDTSensorPort::TEMPERATURE);
+		SeaTempLogEntry *log = (SeaTempLogEntry *)e;
+		log->sea_temp = m_sensor.read();
 		service_set_log_header_time(log->header, service_current_time());
 	}
 
 	void service_init() override {};
 	void service_term() override {};
 	bool service_is_enabled() override {
-		bool enable = configuration_store->read_param<bool>(ParamID::CDT_SENSOR_ENABLE);
+		bool enable = service_read_param<bool>(ParamID::SEA_TEMP_SENSOR_ENABLE);
 		return enable;
 	}
 	unsigned int service_next_schedule_in_ms() override {
 		unsigned int schedule =
-				1000 * configuration_store->read_param<unsigned int>(ParamID::CDT_SENSOR_PERIODIC);
+				1000 * service_read_param<unsigned int>(ParamID::SEA_TEMP_SENSOR_PERIODIC);
 		return schedule == 0 ? Service::SCHEDULE_DISABLED : schedule;
 	}
 	void service_initiate() override {

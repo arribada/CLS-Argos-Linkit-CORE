@@ -1,22 +1,23 @@
 #pragma once
 
 #include <array>
-#include "gps_scheduler.hpp"
+
+#include "gps.hpp"
 #include "nrf_uart_m8.hpp"
 #include "ubx.hpp"
 
 
-class M8QReceiver : public GPSScheduler {
+class M8QReceiver : public GPSDevice {
 public:
 	M8QReceiver();
 	~M8QReceiver();
 
-private:
 	// These methods are specific to the chipset and should be implemented by a device-specific subclass
 	void power_off() override;
 	void power_on(const GPSNavSettings& nav_settings,
 			      std::function<void(GNSSData data)> data_notification_callback) override;
 
+private:
 	enum class SendReturnCode
 	{
 		SUCCESS,

@@ -7,7 +7,10 @@
 #include "service_scheduler.hpp"
 #include "scheduler.hpp"
 #include "logger.hpp"
+#include "base_types.hpp"
+#include "config_store.hpp"
 
+extern ConfigurationStore *configuration_store;
 
 class Service {
 public:
@@ -18,6 +21,7 @@ public:
 	unsigned int get_unique_id();
 	ServiceIdentifier get_service_id();
 	Logger *get_logger();
+	void set_logger(Logger *logger);
 	void start(std::function<void(ServiceEvent&)> data_notification_callback = nullptr);
 	void stop();
 	void notify_underwater_state(bool state);
@@ -57,6 +61,15 @@ protected:
 	void service_complete(ServiceEventData *event_data = nullptr, void *entry = nullptr);
 	void service_set_log_header_time(LogHeader& header, std::time_t time);
 	std::time_t service_current_time();
+	void service_set_time(std::time_t);
+	uint16_t service_get_voltage();
+	uint64_t service_current_timer();
+	template <typename T> T& service_read_param(ParamID param_id) {
+		return configuration_store->read_param<T>(param_id);
+	}
+	template <typename T> void service_write_param(ParamID param_id, T& value) {
+		configuration_store->write_param(param_id, value);
+	}
 };
 
 class ServiceManager

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <atomic>
+
+#include "gps.hpp"
 #include "service.hpp"
 #include "logger.hpp"
 #include "timeutils.hpp"
@@ -59,53 +61,12 @@ public:
 	}
 };
 
-struct GPSNavSettings {
-	BaseGNSSFixMode  fix_mode;
-	BaseGNSSDynModel dyn_model;
-	bool			 assistnow_enable;
-};
-
 class GPSService : public Service {
 public:
-	GPSService(Logger *logger) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger) {}
+	GPSService(GPSDevice& device, Logger *logger) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger), m_device(device) {}
 	virtual ~GPSService() {}
 
 protected:
-	struct GNSSData {
-		uint32_t   iTOW;
-		uint16_t   year;
-		uint8_t    month;
-		uint8_t    day;
-		uint8_t    hour;
-		uint8_t    min;
-		uint8_t    sec;
-		uint8_t    valid;
-		uint32_t   tAcc;
-		int32_t    nano;
-		uint8_t    fixType;
-		uint8_t    flags;
-		uint8_t    flags2;
-		uint8_t    flags3;
-		uint8_t    numSV;
-		double     lon;       // Degrees
-		double     lat;       // Degrees
-		int32_t    height;    // mm
-		int32_t    hMSL;      // mm
-		uint32_t   hAcc;      // mm
-		uint32_t   vAcc;      // mm
-		int32_t    velN;      // mm
-		int32_t    velE;      // mm
-		int32_t    velD;      // mm
-		int32_t    gSpeed;    // mm/s
-		float      headMot;   // Degrees
-		uint32_t   sAcc;      // mm/s
-		float      headAcc;   // Degrees
-		float      pDOP;
-		float      vDOP;
-		float      hDOP;
-		float      headVeh;   // Degrees
-		uint32_t   ttff;      // ms
-	};
 
 	// Service interface methods
 	void service_init() override;
@@ -119,6 +80,7 @@ protected:
 	bool service_is_usable_underwater() override;
 
 private:
+	GPSDevice&   m_device;
 	bool       	 m_is_first_fix_found;
 	bool       	 m_is_first_schedule;
 	bool         m_is_underwater;
@@ -142,9 +104,4 @@ private:
 	GPSLogEntry invalid_log_entry();
 	void gnss_data_callback(GNSSData data);
 	void populate_gnss_data_and_callback();
-
-	// These methods are specific to the chipset and should be implemented by device-specific subclass
-	virtual void power_off() = 0;
-	virtual void power_on(const GPSNavSettings& nav_settings,
-			std::function<void(GNSSData data)> data_notification_callback = nullptr) = 0;
 };

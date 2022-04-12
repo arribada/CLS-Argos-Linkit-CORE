@@ -2,10 +2,14 @@
 #include "scheduler.hpp"
 #include "rtc.hpp"
 #include "timeutils.hpp"
+#include "timer.hpp"
+#include "config_store.hpp"
+#include "battery.hpp"
 
+extern Timer *system_timer;
 extern Scheduler *system_scheduler;
 extern RTC *rtc;
-
+extern BatteryMonitor *battery_monitor;
 
 unsigned int ServiceManager::add(Service& s) {
 	m_map.insert({m_unique_identifier, s});
@@ -70,6 +74,7 @@ Service::~Service() {
 unsigned int Service::get_unique_id() { return m_unique_id; }
 ServiceIdentifier Service::get_service_id() { return m_service_id; }
 Logger *Service::get_logger() { return m_logger; }
+void Service::set_logger(Logger *logger) { m_logger = logger; }
 
 void Service::start(std::function<void(ServiceEvent&)> data_notification_callback) {
 	DEBUG_TRACE("Service::start: service %s started", m_name);
@@ -142,6 +147,18 @@ void Service::service_set_log_header_time(LogHeader& header, std::time_t time)
 
 std::time_t Service::service_current_time() {
 	return rtc->gettime();
+}
+
+uint64_t Service::service_current_timer() {
+	return system_timer->get_counter();
+}
+
+void Service::service_set_time(std::time_t t) {
+	rtc->settime(t);
+}
+
+uint16_t Service::service_get_voltage() {
+	return battery_monitor->get_voltage();
 }
 
 void Service::reschedule(bool immediate) {

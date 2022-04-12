@@ -3,7 +3,8 @@
 
 #include <iostream>
 
-#include "mock_cdt.hpp"
+#include "cdt_sensor_service.hpp"
+#include "mock_sensor.hpp"
 #include "fake_config_store.hpp"
 #include "fake_logger.hpp"
 #include "fake_rtc.hpp"
@@ -50,7 +51,8 @@ TEST_GROUP(CDTSensor)
 
 TEST(CDTSensor, SensorDisabled)
 {
-	MockCDTSensor s(logger);
+	MockSensor drv;
+	CDTSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -82,7 +84,8 @@ TEST(CDTSensor, SensorDisabled)
 
 TEST(CDTSensor, SchedulingPeriodic)
 {
-	MockCDTSensor s(logger);
+	MockSensor drv;
+	CDTSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -101,9 +104,9 @@ TEST(CDTSensor, SchedulingPeriodic)
 
 	// Sampling should happen every 10
 	for (unsigned int i = 0; i < 5; i++) {
-		mock().expectOneCall("read").onObject(&s).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
-		mock().expectOneCall("read").onObject(&s).withUnsignedIntParameter("port", 1).andReturnValue((double)i+1);
-		mock().expectOneCall("read").onObject(&s).withUnsignedIntParameter("port", 2).andReturnValue((double)i+2);
+		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
+		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 1).andReturnValue((double)i+1);
+		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 2).andReturnValue((double)i+2);
 		fake_timer->increment_counter(period*1000);
 		system_scheduler->run();
 	}
@@ -126,7 +129,8 @@ TEST(CDTSensor, SchedulingPeriodic)
 
 TEST(CDTSensor, SchedulingNoPeriodic)
 {
-	MockCDTSensor s(logger);
+	MockSensor drv;
+	CDTSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();

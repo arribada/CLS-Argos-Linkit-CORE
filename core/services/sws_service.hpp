@@ -1,15 +1,12 @@
 #pragma once
 
 #include "bsp.hpp"
-#include "uwdetector.hpp"
 #include "gpio.hpp"
-#include "config_store.hpp"
+#include "uwdetector_service.hpp"
 
-extern ConfigurationStore *configuration_store;
-
-class SWS : public UWDetector {
+class SWSService : public UWDetectorService {
 public:
-	SWS(unsigned int sched_units = 1) : UWDetector(sched_units, 5, 1000) {}
+	SWSService(unsigned int sched_units = 1) : UWDetectorService(sched_units, 5, 1000) {}
 
 private:
 	bool detector_state() override {
@@ -21,8 +18,8 @@ private:
 	}
 
 	bool service_is_enabled() override {
-		bool enabled = configuration_store->read_param<bool>(ParamID::UNDERWATER_EN);
-		BaseUnderwaterDetectSource src = configuration_store->read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE);
+		bool enabled = service_read_param<bool>(ParamID::UNDERWATER_EN);
+		BaseUnderwaterDetectSource src = service_read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE);
 		return enabled && (src == BaseUnderwaterDetectSource::SWS);
 	}
 };

@@ -23,6 +23,7 @@
 #define REED_SWITCH_ACTIVE_STATE   false
 #define MS5837_DEVICE  BSP::I2C::I2C_1
 #define MS5803_DEVICE  BSP::I2C::I2C_1
+#define EXT_LED_PIN    BSP::GPIO::GPIO_EXT2_GPIO2
 
 // Device addresses
 #define MS5837_ADDRESS	0x76

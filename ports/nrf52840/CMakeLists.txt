@@ -145,6 +145,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4
     ${CORE_DIR}/ble_services
     ${CORE_DIR}/hardware
+    ${CORE_DIR}/services
     ${CORE_DIR}/configuration
     ${CORE_DIR}/filesystem
     ${CORE_DIR}/interface
@@ -210,12 +211,14 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_gpiote.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_saadc.c
     ${SDK_ROOT}/modules/nrfx/hal/nrf_nvmc.c
-    ${CORE_DIR}/hardware/uwdetector.cpp
     ${CORE_DIR}/hardware/reed.cpp
     ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/sm/ledsm.cpp
-    ${CORE_DIR}/scheduling/gps_scheduler.cpp
+    ${CORE_DIR}/services/service.cpp
+    ${CORE_DIR}/services/gps_service.cpp
+    ${CORE_DIR}/services/uwdetector_service.cpp
+    ${CORE_DIR}/logging/logger.cpp
     ${CORE_DIR}/util/haversine.cpp
     ${CORE_DIR}/filesystem/ota_flash_file_updater.cpp
     ${BOARD_DIR}/bsp.cpp

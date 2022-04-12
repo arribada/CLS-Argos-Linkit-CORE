@@ -17,8 +17,8 @@ extern ConfigurationStore *configuration_store;
 		 system_timer->get_counter() < (24 * 3600 * 1000)))
 
 #define EXT_LED_MODE_GUARD \
-	if (configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::ALWAYS || \
-		(configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::HRS_24 && \
+	if (configuration_store->read_param<BaseLEDMode>(ParamID::EXT_LED_MODE) == BaseLEDMode::ALWAYS || \
+		(configuration_store->read_param<BaseLEDMode>(ParamID::EXT_LED_MODE) == BaseLEDMode::HRS_24 && \
 		 system_timer->get_counter() < (24 * 3600 * 1000)))
 
 

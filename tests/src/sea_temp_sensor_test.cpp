@@ -3,7 +3,8 @@
 
 #include <iostream>
 
-#include "mock_sea_temp.hpp"
+#include "../../core/services/sea_temp_sensor_service.hpp"
+#include "mock_sensor.hpp"
 #include "fake_config_store.hpp"
 #include "fake_logger.hpp"
 #include "fake_rtc.hpp"
@@ -50,7 +51,8 @@ TEST_GROUP(SeaTempSensor)
 
 TEST(SeaTempSensor, SensorDisabled)
 {
-	MockSeaTempSensor s(logger);
+	MockSensor drv;
+	SeaTempSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -82,7 +84,8 @@ TEST(SeaTempSensor, SensorDisabled)
 
 TEST(SeaTempSensor, SchedulingPeriodic)
 {
-	MockSeaTempSensor s(logger);
+	MockSensor drv;
+	SeaTempSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -101,7 +104,7 @@ TEST(SeaTempSensor, SchedulingPeriodic)
 
 	// Sampling should happen every 10
 	for (unsigned int i = 0; i < 5; i++) {
-		mock().expectOneCall("read").onObject(&s).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
+		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
 		fake_timer->increment_counter(period*1000);
 		system_scheduler->run();
 	}
@@ -122,7 +125,8 @@ TEST(SeaTempSensor, SchedulingPeriodic)
 
 TEST(SeaTempSensor, SchedulingNoPeriodic)
 {
-	MockSeaTempSensor s(logger);
+	MockSensor drv;
+	SeaTempSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();

@@ -1,4 +1,7 @@
-#include "sws.hpp"
+#include "sws_service.hpp"
+#include "pressure_detector_service.hpp"
+#include "gps_service.hpp"
+#include "sys_log.hpp"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_log_redirect.h"
@@ -26,6 +29,8 @@
 #include "ms5803.hpp"
 #include "fs_log.hpp"
 #include "nrfx_twim.h"
+#include "gpio_led.hpp"
+
 
 FileSystem *main_filesystem;
 
@@ -33,7 +38,6 @@ ConfigurationStore *configuration_store;
 BLEService *ble_service;
 OTAFileUpdater *ota_updater;
 ServiceScheduler *comms_scheduler;
-ServiceScheduler *location_scheduler;
 MemoryAccess *memory_access;
 Logger *sensor_log;
 Logger *system_log;
@@ -41,8 +45,7 @@ Logger *console_log;
 Timer *system_timer;
 Scheduler *system_scheduler;
 RGBLed *status_led;
-Switch *saltwater_switch;
-Switch *pressure_sensor;
+Led *ext_status_led;
 ReedSwitch *reed_switch;
 DTEHandler *dte_handler;
 RTC *rtc;
@@ -194,9 +197,17 @@ int main()
 	Scheduler scheduler(system_timer);
 	system_scheduler = &scheduler;
 
-	DEBUG_TRACE("LED...");
+	DEBUG_TRACE("RGB LED...");
 	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
 	status_led = &nrf_status_led;
+
+#ifdef EXT_LED_PIN
+	DEBUG_TRACE("External LED...");
+	GPIOLed gpio_led(EXT_LED_PIN);
+	ext_status_led = &gpio_led;
+#else
+	ext_status_led = nullptr;
+#endif
 
 	DEBUG_TRACE("Battery monitor...");
 
@@ -211,19 +222,15 @@ int main()
 	reed_switch = &reed_gesture_switch;
 
 	DEBUG_TRACE("SWS...");
-	SWS nrf_saltwater_switch;
-	saltwater_switch = &nrf_saltwater_switch;
+	SWSService sws();
 
 	DEBUG_TRACE("MS5803...");
-	MS5803 *ms5803_pressure_sensor;
 	try {
-		ms5803_pressure_sensor = new MS5803();
+		static MS5803 ms5803_pressure_sensor;
+		static PressureDetectorService pressure_detector(ms5803_pressure_sensor);
 	} catch (...) {
 		DEBUG_TRACE("MS5803: not detected");
-		ms5803_pressure_sensor = nullptr;
 	}
-
-	pressure_sensor = ms5803_pressure_sensor;
 
 	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
@@ -237,12 +244,14 @@ int main()
 	main_filesystem = &lfs_file_system;
 
 	DEBUG_TRACE("LFS System Log...");
+	SysLogFormatter sys_log_formatter;
 	FsLog fs_system_log(&lfs_file_system, "system.log", 1024*1024);
-	system_log = &fs_system_log;
+	fs_system_log.set_log_formatter(&sys_log_formatter);
 
-	DEBUG_TRACE("LFS Sensor Log...");
+	DEBUG_TRACE("LFS (GPS) Sensor Log...");
+	GPSLogFormatter fs_sensor_log_formatter;
 	FsLog fs_sensor_log(&lfs_file_system, "sensor.log", 1024*1024);
-	sensor_log = &fs_sensor_log;
+	fs_sensor_log.set_log_formatter(&fs_sensor_log_formatter);
 
 	DEBUG_TRACE("Configuration store...");
 	LFSConfigurationStore store(lfs_file_system);
@@ -266,9 +275,13 @@ int main()
 	comms_scheduler = &artic_transceiver;
 
 	DEBUG_TRACE("GPS M8Q ...");
-	M8QReceiver m8q_gnss;
-	location_scheduler = &m8q_gnss;
-	m8q_gnss.stop(); // Forcibly power off
+	try {
+		static M8QReceiver m8q_gnss;
+		m8q_gnss.power_off(); // Forcibly power off
+		static GPSService gps_service(m8q_gnss, &fs_sensor_log);
+	} catch (...) {
+		DEBUG_TRACE("GPS M8Q not detected");
+	}
 
 	DEBUG_TRACE("Entering main SM...");
 

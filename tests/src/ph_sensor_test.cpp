@@ -3,7 +3,8 @@
 
 #include <iostream>
 
-#include "mock_ph.hpp"
+#include "../../core/services/ph_sensor_service.hpp"
+#include "mock_sensor.hpp"
 #include "fake_config_store.hpp"
 #include "fake_logger.hpp"
 #include "fake_rtc.hpp"
@@ -50,7 +51,8 @@ TEST_GROUP(PHSensor)
 
 TEST(PHSensor, SensorDisabled)
 {
-	MockPHSensor s(logger);
+	MockSensor drv;
+	PHSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -82,7 +84,8 @@ TEST(PHSensor, SensorDisabled)
 
 TEST(PHSensor, SchedulingPeriodic)
 {
-	MockPHSensor s(logger);
+	MockSensor drv;
+	PHSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -101,7 +104,7 @@ TEST(PHSensor, SchedulingPeriodic)
 
 	// Sampling should happen every 10
 	for (unsigned int i = 0; i < 5; i++) {
-		mock().expectOneCall("read").onObject(&s).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
+		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
 		fake_timer->increment_counter(period*1000);
 		system_scheduler->run();
 	}
@@ -122,7 +125,8 @@ TEST(PHSensor, SchedulingPeriodic)
 
 TEST(PHSensor, SchedulingNoPeriodic)
 {
-	MockPHSensor s(logger);
+	MockSensor drv;
+	PHSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();

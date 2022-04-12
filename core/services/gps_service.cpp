@@ -1,14 +1,8 @@
-#include "config_store.hpp"
-#include "rtc.hpp"
-#include "battery.hpp"
 #include "gps_service.hpp"
-#include "timer.hpp"
-
+#include "config_store.hpp"
+#include "scheduler.hpp"
 
 extern ConfigurationStore *configuration_store;
-extern BatteryMonitor *battery_monitor;
-extern RTC *rtc;
-extern Timer *system_timer;
 extern Scheduler *system_scheduler;
 
 
@@ -23,7 +17,7 @@ void GPSService::service_init() {
     m_is_first_fix_found = false;
     m_is_first_schedule = true;
     m_num_gps_fixes = 0;
-	power_off();
+	m_device.power_off();
 }
 
 void GPSService::service_term() {
@@ -39,7 +33,7 @@ unsigned int GPSService::service_next_schedule_in_ms() {
 	GNSSConfig gnss_config;
 	configuration_store->get_gnss_configuration(gnss_config);
 
-    std::time_t now = rtc->gettime();
+    std::time_t now = service_current_time();
     std::time_t aq_period = m_is_first_schedule ? FIRST_AQPERIOD_SEC : (m_is_first_fix_found ? gnss_config.dloc_arg_nom : gnss_config.cold_start_retry_period);
 
     if (aq_period == 0) {
@@ -65,14 +59,14 @@ void GPSService::service_initiate() {
 		gnss_config.assistnow_enable
 	};
 
-	m_next_schedule = rtc->gettime();
+	m_next_schedule = service_current_time();
 	m_is_first_schedule = false;
-	m_wakeup_time = system_timer->get_counter();
+	m_wakeup_time = service_current_timer();
 	m_num_consecutive_fixes = gnss_config.min_num_fixes;
 
 	try {
 		m_is_active = true;
-		power_on(nav_settings,
+		m_device.power_on(nav_settings,
 			[this](GNSSData data) {
 				gnss_data_callback(data);
 			}
@@ -92,7 +86,7 @@ bool GPSService::service_cancel() {
 	system_scheduler->cancel_task(m_task_process_gnss_data);
 
 	if (m_is_active) {
-		power_off();
+		m_device.power_off();
 		ServiceEventData event_data = false;
 		GPSLogEntry log_entry = invalid_log_entry();
 		service_complete(&event_data, &log_entry);
@@ -131,12 +125,12 @@ GPSLogEntry GPSService::invalid_log_entry()
 
     gps_entry.header.log_type = LOG_GPS;
 
-    populate_gps_log_with_time(gps_entry, rtc->gettime());
+    populate_gps_log_with_time(gps_entry, service_current_time());
 
-    gps_entry.info.batt_voltage = battery_monitor->get_voltage();
+    gps_entry.info.batt_voltage = service_get_voltage();
     gps_entry.info.event_type = GPSEventType::NO_FIX;
     gps_entry.info.valid = false;
-    gps_entry.info.onTime = system_timer->get_counter() - m_wakeup_time;
+    gps_entry.info.onTime = service_current_timer() - m_wakeup_time;
     gps_entry.info.schedTime = m_next_schedule;
 
     return gps_entry;
@@ -144,7 +138,7 @@ GPSLogEntry GPSService::invalid_log_entry()
 
 void GPSService::task_update_rtc()
 {
-    rtc->settime(convert_epochtime(m_gnss_data.data.year, m_gnss_data.data.month, m_gnss_data.data.day, m_gnss_data.data.hour, m_gnss_data.data.min, m_gnss_data.data.sec));
+    service_set_time(convert_epochtime(m_gnss_data.data.year, m_gnss_data.data.month, m_gnss_data.data.day, m_gnss_data.data.hour, m_gnss_data.data.min, m_gnss_data.data.sec));
     DEBUG_TRACE("GPSService::task_update_rtc");
     m_gnss_data.pending_rtc_set = false;
 }
@@ -158,9 +152,9 @@ void GPSService::task_process_gnss_data()
 
     gps_entry.header.log_type = LOG_GPS;
 
-    populate_gps_log_with_time(gps_entry, rtc->gettime());
+    populate_gps_log_with_time(gps_entry, service_current_time());
 
-    gps_entry.info.batt_voltage = battery_monitor->get_voltage();
+    gps_entry.info.batt_voltage = service_get_voltage();
 
     // Store GPS data
     gps_entry.info.iTOW          = m_gnss_data.data.iTOW;
@@ -194,7 +188,7 @@ void GPSService::task_process_gnss_data()
     gps_entry.info.hDOP          = m_gnss_data.data.hDOP;
     gps_entry.info.headVeh       = m_gnss_data.data.headVeh;
     gps_entry.info.ttff          = m_gnss_data.data.ttff;
-    gps_entry.info.onTime        = system_timer->get_counter() - m_wakeup_time;
+    gps_entry.info.onTime        = service_current_timer() - m_wakeup_time;
 
     if (m_num_gps_fixes == 1) {
     	// For the very first fix, we need to compute the scheduled GPS time since the RTC
@@ -215,7 +209,7 @@ void GPSService::task_process_gnss_data()
 			(double)gps_entry.info.batt_voltage / 1000);
 
     m_is_active = false;
-    power_off();
+    m_device.power_off();
     m_gnss_data.pending_data_logging = false;
 
     // Notify configuration store that we have a new valid GPS fix

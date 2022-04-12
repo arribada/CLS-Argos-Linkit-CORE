@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "sws.hpp"
+#include "sws_service.hpp"
 #include "bsp.hpp"
 #include "fake_config_store.hpp"
 #include "linux_timer.hpp"
@@ -36,7 +36,7 @@ TEST_GROUP(SWS)
 
 TEST(SWS, UnderwaterEvent)
 {
-	SWS s(1);   // Use 1 msec scheduling units
+	SWSService s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 
@@ -73,7 +73,7 @@ TEST(SWS, UnderwaterEvent)
 
 TEST(SWS, SurfacedEvent)
 {
-	SWS s(1);   // Use 1 msec scheduling units
+	SWSService s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 
@@ -110,7 +110,7 @@ TEST(SWS, SurfacedEvent)
 
 TEST(SWS, SchedulingPeriodSurfaced)
 {
-	SWS s(1);   // Use 1 msec scheduling units
+	SWSService s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 
@@ -148,7 +148,7 @@ TEST(SWS, SchedulingPeriodSurfaced)
 
 TEST(SWS, SchedulingPeriodUnderwater)
 {
-	SWS s(1);   // Use 1 msec scheduling units
+	SWSService s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 
@@ -186,7 +186,7 @@ TEST(SWS, SchedulingPeriodUnderwater)
 
 TEST(SWS, UnderwaterModeDisabled)
 {
-	SWS s(1);   // Use 1 msec scheduling units
+	SWSService s(1);   // Use 1 msec scheduling units
 	bool switch_state = false;
 	unsigned int num_callbacks = 0;
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "uwdetector.hpp"
+#include "uwdetector_service.hpp"
 
-class FakeSWS : public UWDetector {
+class FakeSWS : public UWDetectorService {
 public:
 	void set_state(bool state) {
 		ServiceEvent e;

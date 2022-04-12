@@ -1,16 +1,9 @@
-#include "bsp.hpp"
-#include "config_store.hpp"
-#include "scheduler.hpp"
-#include "gpio.hpp"
+#include "uwdetector_service.hpp"
+
 #include "debug.hpp"
-#include "pmu.hpp"
-#include "uwdetector.hpp"
-
-extern ConfigurationStore *configuration_store;
-extern Scheduler *system_scheduler;
 
 
-void UWDetector::service_initiate() {
+void UWDetectorService::service_initiate() {
 
 	bool new_state;
 	DEBUG_TRACE("UWDetector::sample_sws: m_sample_iteration=%u", m_sample_iteration);
@@ -54,34 +47,34 @@ void UWDetector::service_initiate() {
 	}
 }
 
-void UWDetector::service_init() {
+void UWDetectorService::service_init() {
 	m_is_first_time = true;
-	m_period_underwater_ms = m_sched_units * 1000 * configuration_store->read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ);
-	m_period_surface_ms = m_sched_units * 1000 * configuration_store->read_param<unsigned int>(ParamID::SAMPLING_SURF_FREQ);
-	m_activation_threshold = configuration_store->read_param<double>(ParamID::UNDERWATER_DETECT_THRESH);
+	m_period_underwater_ms = m_sched_units * 1000 * service_read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ);
+	m_period_surface_ms = m_sched_units * 1000 * service_read_param<unsigned int>(ParamID::SAMPLING_SURF_FREQ);
+	m_activation_threshold = service_read_param<double>(ParamID::UNDERWATER_DETECT_THRESH);
 	m_sample_iteration = 0;
 }
 
-void UWDetector::service_term() {
+void UWDetectorService::service_term() {
 };
 
-unsigned int UWDetector::service_next_schedule_in_ms() {
+unsigned int UWDetectorService::service_next_schedule_in_ms() {
 	if (m_sample_iteration)
 		return m_period_ms;
 	else
 		return m_current_state ? m_period_underwater_ms : m_period_surface_ms;
 }
 
-bool UWDetector::service_cancel() { return false; }
+bool UWDetectorService::service_cancel() { return false; }
 
-unsigned int UWDetector::service_next_timeout() {
+unsigned int UWDetectorService::service_next_timeout() {
 	return 0;
 };
 
-bool UWDetector::service_is_triggered_on_surfaced() {
+bool UWDetectorService::service_is_triggered_on_surfaced() {
 	return false;
 };
 
-bool UWDetector::service_is_usable_underwater() {
+bool UWDetectorService::service_is_usable_underwater() {
 	return true;
 }

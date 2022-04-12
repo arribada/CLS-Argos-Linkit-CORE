@@ -14,6 +14,7 @@
 #include "binascii.hpp"
 #include "crc8.hpp"
 #include "crc16.hpp"
+#include "rtc.hpp"
 
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
@@ -62,6 +63,8 @@ static constexpr const char *const status_string[] =
 
 extern Scheduler *system_scheduler;
 extern Timer *system_timer;
+extern RTC *rtc;
+
 
 static_assert(ARRAY_SIZE(status_string) == TOTAL_NUMBER_STATUS_FLAG);
 

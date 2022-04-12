@@ -1,11 +1,13 @@
+#pragma once
+
 #include <cstdint>
+#include "sensor.hpp"
 
-#include "pressure_sensor.hpp"
-
-class MS5803 : public PressureSensor {
+class MS5803 : public Sensor {
 public:
 	MS5803();
-	double read();
+	void calibrate(double, unsigned int) override {};
+	double read(unsigned int) override;
 
 private:
 	enum MS5803Command : uint8_t {
@@ -23,7 +25,6 @@ private:
 	};
 	uint16_t m_coefficients[8];
 
-	bool detector_state() override;
 	void send_command(uint8_t command);
 	void read_coeffs();
 	uint32_t sample_adc(uint8_t measurement);

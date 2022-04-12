@@ -3,11 +3,13 @@
 
 #include <iostream>
 
-#include "mock_als.hpp"
+#include "../../core/services/als_sensor_service.hpp"
+#include "mock_sensor.hpp"
 #include "fake_config_store.hpp"
 #include "fake_logger.hpp"
 #include "fake_rtc.hpp"
 #include "fake_timer.hpp"
+#include "scheduler.hpp"
 
 
 extern Timer *system_timer;
@@ -50,7 +52,8 @@ TEST_GROUP(ALSSensor)
 
 TEST(ALSSensor, SensorDisabled)
 {
-	MockALSSensor s(logger);
+	MockSensor drv;
+	ALSSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -79,10 +82,10 @@ TEST(ALSSensor, SensorDisabled)
 	s.stop();
 }
 
-
 TEST(ALSSensor, SchedulingPeriodic)
 {
-	MockALSSensor s(logger);
+	MockSensor drv;
+	ALSSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();
@@ -101,7 +104,7 @@ TEST(ALSSensor, SchedulingPeriodic)
 
 	// Sampling should happen every 10
 	for (unsigned int i = 0; i < 5; i++) {
-		mock().expectOneCall("read").onObject(&s).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
+		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
 		fake_timer->increment_counter(period*1000);
 		system_scheduler->run();
 	}
@@ -122,7 +125,8 @@ TEST(ALSSensor, SchedulingPeriodic)
 
 TEST(ALSSensor, SchedulingNoPeriodic)
 {
-	MockALSSensor s(logger);
+	MockSensor drv;
+	ALSSensorService s(drv, logger);
 	unsigned int num_callbacks = 0;
 
 	system_timer->start();

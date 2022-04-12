@@ -1,11 +1,9 @@
 #pragma once
 
-#include "sensor.hpp"
-#include "config_store.hpp"
+#include "sensor_service.hpp"
 #include "logger.hpp"
 #include "messages.hpp"
-
-extern ConfigurationStore *configuration_store;
+#include "timeutils.hpp"
 
 struct __attribute__((packed)) PHLogEntry {
 	LogHeader header;
@@ -40,30 +38,27 @@ public:
 };
 
 
-class PHSensor : public Sensor {
+class PHSensorService : public SensorService {
 public:
-	PHSensor(Logger *logger) : Sensor(ServiceIdentifier::PH_SENSOR, "PH", logger) {}
-	virtual ~PHSensor() {}
+	PHSensorService(Sensor& sensor, Logger *logger) : SensorService(sensor, ServiceIdentifier::PH_SENSOR, "PH", logger) {}
 
 private:
-	virtual void calibrate(double value, unsigned int offset) = 0;
-	virtual double read(unsigned int port = 0) = 0;
 
 	void read_and_populate_log_entry(LogEntry *e) override {
 		PHLogEntry *ph = (PHLogEntry *)e;
-		ph->ph = read();
+		ph->ph = m_sensor.read();
 		service_set_log_header_time(ph->header, service_current_time());
 	}
 
 	void service_init() override {};
 	void service_term() override {};
 	bool service_is_enabled() override {
-		bool enable = configuration_store->read_param<bool>(ParamID::PH_SENSOR_ENABLE);
+		bool enable = service_read_param<bool>(ParamID::PH_SENSOR_ENABLE);
 		return enable;
 	}
 	unsigned int service_next_schedule_in_ms() override {
 		unsigned int schedule =
-				1000 * configuration_store->read_param<unsigned int>(ParamID::PH_SENSOR_PERIODIC);
+				1000 * service_read_param<unsigned int>(ParamID::PH_SENSOR_PERIODIC);
 		return schedule == 0 ? Service::SCHEDULE_DISABLED : schedule;
 	}
 	void service_initiate() override {

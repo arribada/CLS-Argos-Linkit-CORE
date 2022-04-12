@@ -1,13 +1,12 @@
 #pragma once
 
-#include "sea_temp_sensor.hpp"
+#include "sensor.hpp"
 
 #include "CppUTestExt/MockSupport.h"
 
-class MockSeaTempSensor : public SeaTempSensor {
+class MockSensor : public Sensor {
 
 public:
-	MockSeaTempSensor(Logger *logger) : SeaTempSensor(logger) {}
 	void calibrate(double value, unsigned int offset) override {
 		mock().actualCall("calibrate").onObject(this).withParameter("value", value).withParameter("offset", offset);
 	}

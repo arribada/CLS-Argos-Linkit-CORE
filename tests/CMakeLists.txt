@@ -122,7 +122,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/services/gps_service.cpp"
     "${ROOT_DIR}/core/services/service.cpp"
     "${ROOT_DIR}/core/filesystem/ota_flash_file_updater.cpp"
-    "${ROOT_DIR}/core/hardware/uwdetector.cpp"
+    "${ROOT_DIR}/core/services/uwdetector_service.cpp"
     "${ROOT_DIR}/core/hardware/reed.cpp"
     "${ROOT_DIR}/core/sm/gentracker.cpp"
     "${ROOT_DIR}/core/sm/ledsm.cpp"
