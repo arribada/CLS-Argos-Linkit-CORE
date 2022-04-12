@@ -1,5 +1,9 @@
 #include "sws_service.hpp"
 #include "pressure_detector_service.hpp"
+#include "als_sensor_service.hpp"
+#include "ph_sensor_service.hpp"
+#include "sea_temp_sensor_service.hpp"
+#include "cdt_sensor_service.hpp"
 #include "gps_service.hpp"
 #include "sys_log.hpp"
 #include "nrf_delay.h"
@@ -27,6 +31,10 @@
 #include "nrf_battery_mon.hpp"
 #include "m8q.hpp"
 #include "ms5803.hpp"
+#include "ltr_303.hpp"
+#include "oem_ph.hpp"
+#include "oem_rtd.hpp"
+#include "cdt.hpp"
 #include "fs_log.hpp"
 #include "nrfx_twim.h"
 #include "gpio_led.hpp"
@@ -253,6 +261,26 @@ int main()
 	FsLog fs_sensor_log(&lfs_file_system, "sensor.log", 1024*1024);
 	fs_sensor_log.set_log_formatter(&fs_sensor_log_formatter);
 
+	DEBUG_TRACE("ALS Sensor Log...");
+	ALSLogFormatter als_sensor_log_formatter;
+	FsLog als_sensor_log(&lfs_file_system, "ALS", 1024*1024);
+	als_sensor_log.set_log_formatter(&als_sensor_log_formatter);
+
+	DEBUG_TRACE("PH Sensor Log...");
+	PHLogFormatter ph_sensor_log_formatter;
+	FsLog ph_sensor_log(&lfs_file_system, "PH", 1024*1024);
+	ph_sensor_log.set_log_formatter(&ph_sensor_log_formatter);
+
+	DEBUG_TRACE("RTD Sensor Log...");
+	SeaTempLogFormatter rtd_sensor_log_formatter;
+	FsLog rtd_sensor_log(&lfs_file_system, "RTD", 1024*1024);
+	rtd_sensor_log.set_log_formatter(&rtd_sensor_log_formatter);
+
+	DEBUG_TRACE("CDT Sensor Log...");
+	CDTLogFormatter cdt_sensor_log_formatter;
+	FsLog cdt_sensor_log(&lfs_file_system, "CDT", 1024*1024);
+	cdt_sensor_log.set_log_formatter(&cdt_sensor_log_formatter);
+
 	DEBUG_TRACE("Configuration store...");
 	LFSConfigurationStore store(lfs_file_system);
 	configuration_store = &store;
@@ -281,6 +309,38 @@ int main()
 		static GPSService gps_service(m8q_gnss, &fs_sensor_log);
 	} catch (...) {
 		DEBUG_TRACE("GPS M8Q not detected");
+	}
+
+	DEBUG_TRACE("LTR303...");
+	try {
+		static LTR303 ltr303;
+		static ALSSensorService als_sensor_service(ltr303, &als_sensor_log);
+	} catch (...) {
+		DEBUG_TRACE("LTR303: not detected");
+	}
+
+	DEBUG_TRACE("OEM PH...");
+	try {
+		static OEM_PH_Sensor ph;
+		static PHSensorService ph_sensor_service(ph, &ph_sensor_log);
+	} catch (...) {
+		DEBUG_TRACE("OEM PH: not detected");
+	}
+
+	DEBUG_TRACE("OEM RTD...");
+	try {
+		static OEM_RTD_Sensor rtd;
+		static SeaTempSensorService rtd_sensor_service(rtd, &rtd_sensor_log);
+	} catch (...) {
+		DEBUG_TRACE("OEM RTD: not detected");
+	}
+
+	DEBUG_TRACE("CDT...");
+	try {
+		static CDT cdt;
+		static CDTSensorService cdt_sensor_service(cdt, &cdt_sensor_log);
+	} catch (...) {
+		DEBUG_TRACE("CDT: not detected");
 	}
 
 	DEBUG_TRACE("Entering main SM...");
