@@ -128,6 +128,10 @@ unsigned int Logger::get_unique_id() {
 	return m_unique_id;
 }
 
+const char *Logger::get_name() {
+	return m_name;
+}
+
 unsigned int LoggerManager::add(Logger& s) {
 	m_map.insert({m_unique_identifier, s});
 	return m_unique_identifier++;
@@ -152,4 +156,13 @@ void LoggerManager::show_info()
 {
 	for (auto const &s : m_map)
 		s.second.show_info();
+}
+
+Logger *LoggerManager::find_by_name(const char *name) {
+	for (auto const &s : m_map) {
+		if (std::string(name) == std::string(s.second.get_name()))
+			return &s.second;
+	}
+
+	return nullptr;
 }

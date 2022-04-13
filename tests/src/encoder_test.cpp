@@ -163,8 +163,16 @@ TEST(Encoder, DUMPD_REQ)
 	std::string s;
 	s = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::INTERNAL);
 	STRCMP_EQUAL("$DUMPD#001;0\r", s.c_str());
-	s = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::SENSOR);
+	s = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::GNSS_SENSOR);
 	STRCMP_EQUAL("$DUMPD#001;1\r", s.c_str());
+	s = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::ALS_SENSOR);
+	STRCMP_EQUAL("$DUMPD#001;2\r", s.c_str());
+	s = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::PH_SENSOR);
+	STRCMP_EQUAL("$DUMPD#001;3\r", s.c_str());
+	s = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::RTD_SENSOR);
+	STRCMP_EQUAL("$DUMPD#001;4\r", s.c_str());
+	s = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::CDT_SENSOR);
+	STRCMP_EQUAL("$DUMPD#001;5\r", s.c_str());
 }
 
 TEST(Encoder, DUMPD_RESP)

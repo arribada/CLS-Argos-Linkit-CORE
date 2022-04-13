@@ -23,18 +23,13 @@
 FileSystem *main_filesystem ;
 Timer *system_timer;
 ConfigurationStore *configuration_store;
-ServiceScheduler *location_scheduler;
 ServiceScheduler *comms_scheduler;
 DTEHandler *dte_handler;
 Scheduler *system_scheduler;
 Logger *console_log;
-Logger *sensor_log;
-Logger *system_log;
 BLEService *ble_service;
 OTAFileUpdater *ota_updater;
 Switch *reed_switch;
-Switch *saltwater_switch;
-Switch *pressure_sensor;
 RGBLed *status_led;
 Led *ext_status_led;
 MemoryAccess *memory_access;

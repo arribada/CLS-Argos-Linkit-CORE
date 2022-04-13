@@ -51,6 +51,7 @@ public:
 	void trace(const char *msg, ...);
 	void show_info();
 	unsigned int get_unique_id();
+	const char *get_name();
 
 	virtual void create() = 0;
 	virtual void write(void *) = 0;
@@ -72,5 +73,6 @@ public:
 	static void remove(Logger& s);
 	static void create();
 	static void truncate();
+	static Logger *find_by_name(const char *);
 	static void show_info();
 };

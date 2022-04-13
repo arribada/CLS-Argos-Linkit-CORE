@@ -71,7 +71,6 @@ extern "C" {
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
 extern RTC       *rtc;
-extern Logger    *sensor_log;
 extern BatteryMonitor *battery_monitor;
 extern Timer          *system_timer;
 
@@ -450,8 +449,14 @@ void ArgosScheduler::notify_sensor_log_update() {
 		GPSLogEntry gps_entry;
 
 		// Read the most recent GPS entry out of the sensor log
-		unsigned int idx = sensor_log->num_entries() - 1;  // Most recent entry in log
-		sensor_log->read(&gps_entry, idx);
+		Logger *logger = LoggerManager::find_by_name("sensor.log");
+		if (logger == nullptr) {
+			DEBUG_ERROR("ArgosScheduler::notify_sensor_log_update: could not access logger");
+			return;
+		}
+
+		unsigned int idx = logger->num_entries() - 1;  // Most recent entry in log
+		logger->read(&gps_entry, idx);
 
 		// Update last known position if the GPS entry is valid (otherwise we preserve the last one)
 		if (gps_entry.info.valid) {

@@ -47,8 +47,6 @@ BLEService *ble_service;
 OTAFileUpdater *ota_updater;
 ServiceScheduler *comms_scheduler;
 MemoryAccess *memory_access;
-Logger *sensor_log;
-Logger *system_log;
 Logger *console_log;
 Timer *system_timer;
 Scheduler *system_scheduler;

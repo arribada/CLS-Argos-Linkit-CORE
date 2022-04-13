@@ -17,7 +17,6 @@ extern Timer *system_timer;
 extern ConfigurationStore *configuration_store;
 extern ServiceScheduler *comms_scheduler;
 extern Scheduler *system_scheduler;
-extern Logger *sensor_log;
 extern RTC *rtc;
 extern BatteryMonitor *battery_monitor;
 
@@ -43,9 +42,8 @@ TEST_GROUP(ArgosScheduler)
 		fake_config_store = new FakeConfigurationStore;
 		configuration_store = fake_config_store;
 		configuration_store->init();
-		fake_log = new FakeLog;
+		fake_log = new FakeLog("sensor.log");
 		fake_log->create();
-		sensor_log = fake_log;
 		fake_rtc = new FakeRTC;
 		rtc = fake_rtc;
 		linux_timer = new LinuxTimer;

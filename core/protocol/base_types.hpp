@@ -162,13 +162,21 @@ enum class BaseUnderwaterDetectSource {
 
 enum class BaseLogDType {
 	INTERNAL,
-	SENSOR
+	GNSS_SENSOR,
+	ALS_SENSOR,
+	PH_SENSOR,
+	RTD_SENSOR,
+	CDT_SENSOR
 };
 
 enum class BaseEraseType {
-	SENSOR = 1,
+	GNSS_SENSOR = 1,
 	SYSTEM,
-	SENSOR_AND_SYSTEM
+	ALL,
+	ALS_SENSOR,
+	PH_SENSOR,
+	RTD_SENSOR,
+	CDT_SENSOR
 };
 
 enum class BaseArgosMode {

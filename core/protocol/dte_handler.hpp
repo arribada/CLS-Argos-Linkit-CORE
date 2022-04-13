@@ -1,6 +1,8 @@
 #pragma once
 
 #include <algorithm>
+#include <string>
+#include <map>
 
 #include "dte_protocol.hpp"
 #include "config_store.hpp"
@@ -34,11 +36,26 @@ enum class DTEError {
 // The DTEHandler requires access to the following system objects that are extern declared
 extern ConfigurationStore *configuration_store;
 extern MemoryAccess *memory_access;
-extern Logger *sensor_log;
-extern Logger *system_log;
 
 class DTEHandler {
 private:
+	// Table of loggers
+	static inline std::map<unsigned int, std::string> m_logger_dump = {
+		{0, "system.log"},
+		{1, "sensor.log"},
+		{2, "ALS"},
+		{3, "PH"},
+		{4, "RTD"},
+		{5, "CDT"},
+	};
+	static inline std::map<unsigned int, std::string> m_logger_erase = {
+		{1, "sensor.log"},
+		{2, "system.log"},
+		{4, "ALS"},
+		{5, "PH"},
+		{6, "RTD"},
+		{7, "CDT"},
+	};
 	unsigned int m_dumpd_NNN;
 	unsigned int m_dumpd_mmm;
 
@@ -280,15 +297,21 @@ public:
 			return DTEEncoder::encode(DTECommand::DUMPD_RESP, error_code);
 		}
 
-		Logger *logger;
+		Logger *logger = nullptr;
 
 		// Extract the d_type parameter from arg_list to determine which log file to use
 		unsigned int d_type = std::get<unsigned int>(arg_list[0]);
-		if ((unsigned int)BaseLogDType::INTERNAL == d_type)
-		{
-			logger = system_log;
-		} else {
-			logger = sensor_log;
+
+		try {
+			logger = LoggerManager::find_by_name(m_logger_dump.at(d_type).c_str());
+		} catch (...) {
+			// Ignore any exceptions -- the logger will be nullptr
+		}
+
+		// Either invalid log file or the logger doesn't exist
+		if (logger == nullptr) {
+			error_code = (int)DTEError::INCORRECT_DATA;
+			return DTEEncoder::encode(DTECommand::DUMPD_RESP, error_code);
 		}
 
 		// Get the log formatter
@@ -340,25 +363,33 @@ public:
 			return DTEEncoder::encode(DTECommand::ERASE_RESP, error_code);
 		}
 
-		Logger *logger;
-
 		DEBUG_TRACE("Processing ERASE");
 
 		// Extract the d_type parameter from arg_list to determine which log file(s) to erase
 		unsigned int d_type = std::get<unsigned int>(arg_list[0]);
-		if ((unsigned int)BaseEraseType::SYSTEM == d_type || (unsigned int)BaseEraseType::SENSOR_AND_SYSTEM == d_type)
-		{
-			DEBUG_TRACE("Truncating system log");
-			logger = system_log;
-			logger->truncate();
-		}
-		if ((unsigned int)BaseEraseType::SENSOR == d_type || (unsigned int)BaseEraseType::SENSOR_AND_SYSTEM == d_type)
-		{
-			DEBUG_TRACE("Truncating sensor log");
-			logger = sensor_log;
-			logger->truncate();
-		}
 
+		if (d_type == (unsigned int)BaseEraseType::ALL) {
+			// Truncate all loggers
+			LoggerManager::truncate();
+		} else {
+			Logger *logger = nullptr;
+
+			try {
+				logger = LoggerManager::find_by_name(m_logger_erase.at(d_type).c_str());
+			} catch (...) {
+				// Ignore any exceptions -- the logger will be nullptr
+			}
+
+			if (logger)
+			{
+				DEBUG_TRACE("Truncating log %s", logger->get_name());
+				logger->truncate();
+			}
+			else
+			{
+				error_code = (int)DTEError::INCORRECT_DATA;
+			}
+		}
 		return DTEEncoder::encode(DTECommand::ERASE_RESP, error_code);
 	}
 
