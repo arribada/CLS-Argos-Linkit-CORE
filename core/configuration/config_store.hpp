@@ -3,6 +3,8 @@
 #include <array>
 #include <type_traits>
 #include <ctime>
+#include <cmath>
+
 #include "base_types.hpp"
 #include "error.hpp"
 #include "debug.hpp"
@@ -10,7 +12,7 @@
 #include "haversine.hpp"
 #include "timeutils.hpp"
 #include "pmu.hpp"
-
+#include "sensor.hpp"
 
 #define MAX_CONFIG_ITEMS  (unsigned int)ParamID::__PARAM_SIZE
 #define LB_EXIT_DELTA          5
@@ -333,6 +335,54 @@ public:
 				b_is_valid = true;
 			} else if (param_id == ParamID::DEVICE_DECID) {
 				m_params.at((unsigned)param_id) = (unsigned int)PMU::device_identifier();
+				b_is_valid = true;
+			} else if (param_id == ParamID::ALS_SENSOR_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("ALS");
+					m_params.at((unsigned)param_id) = s.read(1);
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::PH_SENSOR_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("PH");
+					m_params.at((unsigned)param_id) = s.read();
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::SEA_TEMP_SENSOR_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("RTD");
+					m_params.at((unsigned)param_id) = s.read();
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::CDT_SENSOR_CONDUCTIVITY_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("CDT");
+					m_params.at((unsigned)param_id) = s.read(0);
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::CDT_SENSOR_DEPTH_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("CDT");
+					m_params.at((unsigned)param_id) = s.read(1);
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::CDT_SENSOR_TEMPERATURE_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("CDT");
+					m_params.at((unsigned)param_id) = s.read(2);
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
 				b_is_valid = true;
 			} else {
 				b_is_valid = is_valid();

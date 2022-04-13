@@ -7,7 +7,7 @@
 #include "debug.hpp"
 
 
-MS5803::MS5803()
+MS5803::MS5803() : Sensor("PRS")
 {
 	// This will raise an exception if the sensor is not present which should be caught
 	// by the main application

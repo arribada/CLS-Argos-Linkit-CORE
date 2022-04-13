@@ -14,6 +14,7 @@
 #include "memory_access.hpp"
 #include "rtc.hpp"
 #include "battery.hpp"
+#include "debug.hpp"
 
 #include "CppUTest/CommandLineTestRunner.h"
 #include "CppUTest/TestRegistry.h"
@@ -26,7 +27,6 @@ ConfigurationStore *configuration_store;
 ServiceScheduler *comms_scheduler;
 DTEHandler *dte_handler;
 Scheduler *system_scheduler;
-Logger *console_log;
 BLEService *ble_service;
 OTAFileUpdater *ota_updater;
 Switch *reed_switch;
@@ -41,7 +41,7 @@ MockSupportPlugin mockPlugin;
 int main(int argc, char** argv)
 {
 	ConsoleLog con_log;
-	console_log = &con_log;
+	DebugLogger::console_log = &con_log;
     TestRegistry::getCurrentRegistry()->installPlugin(&mockPlugin);
     int exit_code = CommandLineTestRunner::RunAllTests(argc, argv);
     return exit_code;

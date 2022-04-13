@@ -47,7 +47,6 @@ BLEService *ble_service;
 OTAFileUpdater *ota_updater;
 ServiceScheduler *comms_scheduler;
 MemoryAccess *memory_access;
-Logger *console_log;
 Timer *system_timer;
 Scheduler *system_scheduler;
 RGBLed *status_led;
@@ -163,8 +162,8 @@ int main()
 	rtc = &NrfRTC::get_instance();
 	NrfRTC::get_instance().init();
 
-	ConsoleLog console_console_log;
-	console_log = &console_console_log;
+	ConsoleLog console_log;
+	DebugLogger::console_log = &console_log;
 
     nrf_log_redirect_init();
 
@@ -253,6 +252,7 @@ int main()
 	SysLogFormatter sys_log_formatter;
 	FsLog fs_system_log(&lfs_file_system, "system.log", 1024*1024);
 	fs_system_log.set_log_formatter(&sys_log_formatter);
+	DebugLogger::system_log = &fs_system_log;
 
 	DEBUG_TRACE("LFS (GPS) Sensor Log...");
 	GPSLogFormatter fs_sensor_log_formatter;

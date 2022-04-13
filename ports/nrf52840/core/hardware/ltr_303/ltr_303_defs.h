@@ -1,0 +1,19 @@
+#pragma once
+
+#define LTR303_DEVICE_ADDR  0x29
+
+#define LTR303_ALS_CONTR_ADDR           0x80
+#define LTR303_ALS_MEAS_RATE_ADDR       0x85
+#define LTR303_PART_ID_ADDR             0x86
+#define LTR303_MANUFAC_ID_ADDR          0x87
+#define LTR303_ALS_DATA_CH1_0_ADDR      0x88
+#define LTR303_ALS_DATA_CH1_1_ADDR      0x89
+#define LTR303_ALS_DATA_CH0_0_ADDR      0x8A
+#define LTR303_ALS_DATA_CH0_1_ADDR      0x8B
+#define LTR303_ALS_STATUS_ADDR          0x8C
+#define LTR303_INTERRUPT_ADDR           0x8F
+#define LTR303_ALS_THRES_UP_0_ADDR      0x97
+#define LTR303_ALS_THRES_UP_1_ADDR      0x98
+#define LTR303_ALS_THRES_LOW_0_ADDR     0x99
+#define LTR303_ALS_THRES_LOW_1_ADDR     0x9A
+#define LTR303_INTERRUPT_PERSIST_ADDR   0x9E
