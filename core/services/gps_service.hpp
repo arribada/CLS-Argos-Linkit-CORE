@@ -6,7 +6,7 @@
 #include "service.hpp"
 #include "logger.hpp"
 #include "timeutils.hpp"
-
+#include "scheduler.hpp"
 
 class GPSLogFormatter : public LogFormatter {
 public:
@@ -64,7 +64,6 @@ public:
 class GPSService : public Service {
 public:
 	GPSService(GPSDevice& device, Logger *logger) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger), m_device(device) {}
-	virtual ~GPSService() {}
 
 protected:
 

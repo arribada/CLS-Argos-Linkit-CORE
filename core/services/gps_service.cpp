@@ -17,7 +17,6 @@ void GPSService::service_init() {
     m_is_first_fix_found = false;
     m_is_first_schedule = true;
     m_num_gps_fixes = 0;
-	m_device.power_off();
 }
 
 void GPSService::service_term() {
