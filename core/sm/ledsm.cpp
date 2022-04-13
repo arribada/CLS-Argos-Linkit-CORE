@@ -144,7 +144,10 @@ void LEDGNSSOffWithFix::entry() {
 			}
 		}
 		system_timer->add_schedule([this]() {
-			transit<LEDOff>();
+			if (is_in_state<LEDConfigNotConnected>())
+				transit<LEDConfigNotConnected>();
+			else
+				transit<LEDOff>();
 		}, system_timer->get_counter() + 3000);
 	}
 	m_is_gnss_on = false;
@@ -165,7 +168,10 @@ void LEDGNSSOffWithoutFix::entry() {
 				ext_status_led->off();
 		}
 		system_timer->add_schedule([this]() {
-			transit<LEDOff>();
+			if (is_in_state<LEDConfigNotConnected>())
+				transit<LEDConfigNotConnected>();
+			else
+				transit<LEDOff>();
 		}, system_timer->get_counter() + 3000);
 	}
 	m_is_gnss_on = false;
@@ -193,8 +199,12 @@ void LEDArgosTXComplete::entry() {
 		system_timer->add_schedule([this]() {
 			if (m_is_gnss_on)
 				transit<LEDGNSSOn>();
-			else
-				transit<LEDOff>();
+			else {
+				if (is_in_state<LEDConfigNotConnected>())
+					transit<LEDConfigNotConnected>();
+				else
+					transit<LEDOff>();
+			}
 		}, system_timer->get_counter() + 50); // Add 50ms to avoid race condition on timer tick
 	}
 }
