@@ -33,6 +33,12 @@
 #define MS5837_ADDRESS      0x76
 #define MS5803_DEVICE       BSP::I2C::I2C_1
 #define MS5803_ADDRESS      0x77
+#define LIGHT_DEVICE   		BSP::I2C::I2C_1
+#define LIGHT_DEVICE_ADDR   0x29
+#define OEM_PH_DEVICE  		BSP::I2C::I2C_1
+#define OEM_PH_DEVICE_ADDR  0x65
+#define OEM_RTD_DEVICE 		BSP::I2C::I2C_1
+#define OEM_RTD_DEVICE_ADDR 0x68
 
 // Battery voltage ADC gain
 #define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain
