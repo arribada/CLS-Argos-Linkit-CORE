@@ -39,7 +39,7 @@ extern MemoryAccess *memory_access;
 
 class DTEHandler {
 private:
-	// Table of loggers
+	// Tables
 	static inline std::map<unsigned int, std::string> m_logger_dump = {
 		{0, "system.log"},
 		{1, "sensor.log"},
@@ -55,6 +55,14 @@ private:
 		{5, "PH"},
 		{6, "RTD"},
 		{7, "CDT"},
+	};
+	static inline std::map<unsigned int, std::string> m_scalw = {
+		{0, "AXL"},
+		{1, "PRS"},
+		{2, "ALS"},
+		{3, "PH"},
+		{4, "RTD"},
+		{5, "CDT"},
 	};
 	unsigned int m_dumpd_NNN;
 	unsigned int m_dumpd_mmm;
@@ -393,6 +401,34 @@ public:
 		return DTEEncoder::encode(DTECommand::ERASE_RESP, error_code);
 	}
 
+	static std::string SCALW_REQ(int error_code, std::vector<BaseType>& arg_list) {
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::SCALW_RESP, error_code);
+		}
+
+		// Extract the sensor_id parameter from arg_list to determine which sensor to calibrate
+		unsigned int sensor_id = std::get<unsigned int>(arg_list[0]);
+
+		// Extract the calibration offset parameter from arg_list to determine which sensor offset to calibrate
+		unsigned int offset = std::get<unsigned int>(arg_list[1]);
+
+		// Extract the calibration value parameter from arg_list to use
+		unsigned int value = std::get<double>(arg_list[2]);
+
+		try {
+			const char *name = m_scalw.at(sensor_id).c_str();
+			DEBUG_TRACE("Calibrating sensor %s...", name);
+			Sensor& s = SensorManager::find_by_name(name);
+			s.calibrate(value, offset);
+		} catch (...) {
+			DEBUG_TRACE("Sensor calibration failed");
+			error_code = (int)DTEError::INCORRECT_DATA;
+		}
+
+		return DTEEncoder::encode(DTECommand::SCALW_RESP, error_code);
+	}
+
 public:
 	void reset_state() {
 		m_dumpd_NNN = 0;
@@ -481,6 +517,9 @@ public:
 			break;
 		case DTECommand::ERASE_REQ:
 			resp = ERASE_REQ(error_code, arg_list);
+			break;
+		case DTECommand::SCALW_REQ:
+			resp = SCALW_REQ(error_code, arg_list);
 			break;
 		default:
 			break;

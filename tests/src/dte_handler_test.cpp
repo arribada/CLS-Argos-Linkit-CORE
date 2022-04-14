@@ -14,6 +14,7 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+#include "mock_sensor.hpp"
 #include "mock_logger.hpp"
 #include "previpass.h"
 #include "binascii.hpp"
@@ -439,4 +440,66 @@ TEST(DTEHandler, GenerateDefaultPassPredictFile)
 				(double)pp.records[i].semiMajorAxisDriftMeterPerDay
 				);
 	}
+}
+
+TEST(DTEHandler, SCALW_REQ)
+{
+	DTECommand command;
+	std::string req;
+	std::string resp;
+	std::vector<ParamID> params;
+	std::vector<ParamValue> param_values;
+	std::vector<BaseType> arg_list;
+	unsigned int error_code;
+
+	// 0=>AXL
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 0U, 0U, 0.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::INCORRECT_DATA == error_code);
+
+	// 1=>PRS
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 1U, 0U, 0.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::INCORRECT_DATA == error_code);
+
+	// 2=>ALS
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 2U, 0U, 0.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::INCORRECT_DATA == error_code);
+
+	// Invoke AXL sensor
+	MockSensor s1("AXL");
+	mock().expectOneCall("calibrate").onObject(&s1).withDoubleParameter("value", 0.0).withUnsignedIntParameter("offset", 0U);
+
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 0U, 0U, 0.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::OK == error_code);
+
+	// Invoke PRS sensor
+	MockSensor s2("PRS");
+	mock().expectOneCall("calibrate").onObject(&s2).withDoubleParameter("value", 1.0).withUnsignedIntParameter("offset", 0U);
+
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 1U, 0U, 1.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::OK == error_code);
+
+	// Invoke PRS sensor
+	MockSensor s3("ALS");
+	mock().expectOneCall("calibrate").onObject(&s3).withDoubleParameter("value", 2.0).withUnsignedIntParameter("offset", 0U);
+
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 2U, 0U, 2.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::OK == error_code);
 }

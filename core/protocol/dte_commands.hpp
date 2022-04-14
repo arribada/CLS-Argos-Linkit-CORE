@@ -20,6 +20,7 @@ enum class DTECommand {
 	FACTW_REQ,
 	STATR_REQ,
 	ERASE_REQ,
+	SCALW_REQ,
 	__NUM_REQ,
 	PARML_RESP = RESP_CMD_BASE,
 	PARMR_RESP,
@@ -35,6 +36,7 @@ enum class DTECommand {
 	FACTW_RESP,
 	STATR_RESP,
 	ERASE_RESP,
+	SCALW_RESP,
 	__NUM_RESP
 };
 
@@ -254,6 +256,43 @@ static const DTECommandMap command_map[] = {
 		}
 	},
 	{
+		.name = "SCALW",
+		.command = DTECommand::SCALW_REQ,
+		.prototype =
+		{
+			{
+				.name = "sensor",
+				.key = "",
+				.encoding = BaseEncoding::UINT,
+				.min_value = 0U,
+				.max_value = 5U,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			},
+			{
+				.name = "offset",
+				.key = "",
+				.encoding = BaseEncoding::UINT,
+				.min_value = 0U,
+				.max_value = 0U,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			},
+			{
+				.name = "value",
+				.key = "",
+				.encoding = BaseEncoding::FLOAT,
+				.min_value = 0.0,
+				.max_value = 0.0,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			}
+		}
+	},
+	{
 		.name = "PARML",
 		.command = DTECommand::PARML_RESP,
 		.prototype = 
@@ -427,6 +466,13 @@ static const DTECommandMap command_map[] = {
 	{
 		.name = "ERASE",
 		.command = DTECommand::ERASE_RESP,
+		.prototype =
+		{
+		}
+	},
+	{
+		.name = "SCALW",
+		.command = DTECommand::SCALW_RESP,
 		.prototype =
 		{
 		}

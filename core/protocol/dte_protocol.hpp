@@ -627,6 +627,13 @@ public:
 						encode(payload, arg);
 						break;
 					}
+				case BaseEncoding::UINT:
+					{
+						unsigned int arg = va_arg(args, unsigned int);
+						validate(command_args[arg_index], arg);
+						encode(payload, arg, false);
+						break;
+					}
 				case BaseEncoding::HEXADECIMAL:
 					{
 						unsigned int arg = va_arg(args, unsigned int);
