@@ -7,15 +7,12 @@
 #include "debug.hpp"
 
 
-MS5803::MS5803() : Sensor("PRS")
-{
-	// This will raise an exception if the sensor is not present which should be caught
-	// by the main application
+MS5803LL::MS5803LL(unsigned int bus, unsigned char addr) : m_bus(bus), m_addr(addr) {
 	read_coeffs();
 	check_coeffs();
 }
 
-double MS5803::read(unsigned int)
+void MS5803LL::read(double& temperature, double& pressure)
 {
 	int32_t D1 = (int32_t)sample_adc(MS5803Command::ADC_D1);
 	int32_t D2 = (int32_t)sample_adc(MS5803Command::ADC_D2);
@@ -93,16 +90,18 @@ double MS5803::read(unsigned int)
     double sample = (double)((((SENS * D1) >> 21 ) - OFF) >> 15) / 10000.0; // Convert to bar
     DEBUG_TRACE("MS5803::read: %f bar", sample);
 
-    return sample;
+    pressure = sample;
+    temperature = TEMP / 1000.0;
 }
 
-void MS5803::send_command(uint8_t command)
+
+void MS5803LL::send_command(uint8_t command)
 {
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[MS5803_DEVICE].twim, MS5803_ADDRESS, (const uint8_t *)&command, sizeof(command), false))
+    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[m_bus].twim, m_addr, (const uint8_t *)&command, sizeof(command), false))
         throw ErrorCode::I2C_COMMS_ERROR;
 }
 
-void MS5803::read_coeffs()
+void MS5803LL::read_coeffs()
 {
 	// Reset the device first
 	send_command(MS5803Command::RESET);
@@ -113,26 +112,26 @@ void MS5803::read_coeffs()
         uint8_t read_buffer[2];
 
         send_command((uint8_t)MS5803Command::PROM | (i * 2));
-        if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[MS5803_DEVICE].twim, MS5803_ADDRESS, read_buffer, 2))
+        if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[m_bus].twim, m_addr, read_buffer, 2))
             throw ErrorCode::I2C_COMMS_ERROR;
 
         m_coefficients[i] = (uint16_t) (((uint16_t)read_buffer[0] << 8) + read_buffer[1]);
     }
 }
 
-uint32_t MS5803::sample_adc(uint8_t measurement)
+uint32_t MS5803LL::sample_adc(uint8_t measurement)
 {
 	uint8_t cmd = (uint8_t)MS5803Command::ADC_CONV | (uint8_t)MS5803Command::ADC_4096 | measurement;
     send_command(cmd);
     PMU::delay_ms(10);
     send_command((uint8_t)MS5803Command::ADC_READ);
     uint8_t read_buffer[3];
-    if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[MS5803_DEVICE].twim, MS5803_ADDRESS, read_buffer, 3))
+    if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[m_bus].twim, m_addr, read_buffer, 3))
         throw ErrorCode::I2C_COMMS_ERROR;
     return ((uint32_t)read_buffer[0] << 16) + ((uint32_t)read_buffer[1] << 8) + read_buffer[2];
 }
 
-void MS5803::check_coeffs()
+void MS5803LL::check_coeffs()
 {
     uint32_t n_rem = 0; // crc reminder
 
@@ -164,7 +163,7 @@ void MS5803::check_coeffs()
     uint8_t actual_crc = n_rem ^ 0x00;
 
     if (actual_crc != (uint8_t)crc_temp) {
-    	DEBUG_TRACE("MS5803::check_coeffs: CRC failure");
+    	DEBUG_TRACE("MS5803LL::check_coeffs: CRC failure");
         throw ErrorCode::I2C_CRC_FAILURE;
     }
 }
