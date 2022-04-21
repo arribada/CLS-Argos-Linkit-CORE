@@ -169,12 +169,14 @@ int main()
 
 	// Check the reed switch is engaged for 3 seconds if this is a power on event
     DEBUG_TRACE("PMU Reset Cause = %s", PMU::reset_cause().c_str());
+
+#ifdef POWER_ON_RESET_REQUIRES_REED_SWITCH
 	if (PMU::reset_cause() == "Power On Reset") {
 		unsigned int countdown = 3000;
 		DEBUG_TRACE("Enter Power On Reed Switch Check");
 		while (countdown) {
 			//DEBUG_TRACE("Reed Switch: %u", GPIOPins::value(BSP::GPIO_REED_SW));
-			if (!GPIOPins::value(BSP::GPIO_REED_SW))
+			if (GPIOPins::value(BSP::GPIO_REED_SW) != REED_SWITCH_ACTIVE_STATE)
 				break;
 			PMU::delay_ms(1);
 			countdown--;
@@ -186,6 +188,7 @@ int main()
 		}
 		DEBUG_TRACE("Exiting Power On Reed Switch Check");
 	}
+#endif
 
     // Initialise the I2C driver
 	for (uint32_t i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)

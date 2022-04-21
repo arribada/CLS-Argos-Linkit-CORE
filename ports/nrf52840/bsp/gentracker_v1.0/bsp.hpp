@@ -44,6 +44,8 @@
 #define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain
 #define RP506_ADC_GAIN        4.0f
 
+// Require reed switch engaged to boot up after power on reset
+#define POWER_ON_RESET_REQUIRES_REED_SWITCH
 
 namespace BSP
 {
