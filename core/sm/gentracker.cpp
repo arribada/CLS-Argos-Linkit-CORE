@@ -102,8 +102,7 @@ void BootState::entry() {
 	led_handle::dispatch<SetLEDBoot>({});
 
 	// If we can't mount the filesystem then try to format it first and retry
-	DEBUG_TRACE("mount filesystem");
-	if (main_filesystem->mount() < 0)
+	if (!main_filesystem->is_mounted() && main_filesystem->mount() < 0)
 	{
 		DEBUG_TRACE("format filesystem");
 		if (main_filesystem->format() < 0 || main_filesystem->mount() < 0)

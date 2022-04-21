@@ -7,8 +7,10 @@
 #include "debug.hpp"
 
 
-MS5803LL::MS5803LL(unsigned int bus, unsigned char addr) : m_bus(bus), m_addr(addr) {
+MS5803LL::MS5803LL(unsigned int bus, unsigned char addr) {
 	DEBUG_TRACE("MS5803LL::MS5803LL(%u, 0x%02x)", bus, (unsigned int)addr);
+	m_bus = bus;
+	m_addr = addr;
 	read_coeffs();
 	check_coeffs();
 }

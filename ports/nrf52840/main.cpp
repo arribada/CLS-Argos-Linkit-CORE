@@ -251,6 +251,19 @@ int main()
 	LFSFileSystem lfs_file_system(&is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);
 	main_filesystem = &lfs_file_system;
 
+	// If we can't mount the filesystem then try to format it first and retry
+	DEBUG_TRACE("Mount LFS filesystem...");
+	if (main_filesystem->mount() < 0)
+	{
+		DEBUG_TRACE("Format LFS filesystem...");
+		if (main_filesystem->format() < 0 || main_filesystem->mount() < 0)
+		{
+			// We can't mount a formatted filesystem, something bad has happened
+			DEBUG_ERROR("Failed to format LFS filesystem");
+			PMU::powerdown();
+		}
+	}
+
 	DEBUG_TRACE("LFS System Log...");
 	SysLogFormatter sys_log_formatter;
 	FsLog fs_system_log(&lfs_file_system, "system.log", 1024*1024);
