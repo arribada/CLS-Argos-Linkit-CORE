@@ -8,6 +8,7 @@
 
 
 MS5803LL::MS5803LL(unsigned int bus, unsigned char addr) : m_bus(bus), m_addr(addr) {
+	DEBUG_TRACE("MS5803LL::MS5803LL(%u, 0x%02x)", bus, (unsigned int)addr);
 	read_coeffs();
 	check_coeffs();
 }
@@ -87,11 +88,10 @@ void MS5803LL::read(double& temperature, double& pressure)
     /* Calculate pressure */
 
     // P = (D1 * SENS / 2^21 - OFF) / 2^15
-    double sample = (double)((((SENS * D1) >> 21 ) - OFF) >> 15) / 10000.0; // Convert to bar
-    DEBUG_TRACE("MS5803::read: %f bar", sample);
-
-    pressure = sample;
+    pressure = (double)((((SENS * D1) >> 21 ) - OFF) >> 15) / 10000.0; // Convert to bar
     temperature = TEMP / 1000.0;
+
+    DEBUG_TRACE("MS5803::read: %f bar @ %f deg C", pressure, temperature);
 }
 
 
@@ -103,6 +103,8 @@ void MS5803LL::send_command(uint8_t command)
 
 void MS5803LL::read_coeffs()
 {
+	DEBUG_TRACE("MS5803LL::read_coeffs");
+
 	// Reset the device first
 	send_command(MS5803Command::RESET);
 	PMU::delay_ms(10);
@@ -133,7 +135,9 @@ uint32_t MS5803LL::sample_adc(uint8_t measurement)
 
 void MS5803LL::check_coeffs()
 {
-    uint32_t n_rem = 0; // crc reminder
+	DEBUG_TRACE("MS5803LL::check_coeffs");
+
+	uint32_t n_rem = 0; // crc reminder
 
     uint16_t crc_temp = m_coefficients[7]; // Save the end of the configuration data
 
