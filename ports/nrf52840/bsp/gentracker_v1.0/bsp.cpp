@@ -272,9 +272,9 @@ namespace BSP
         {
             .twim = NRFX_TWIM_INSTANCE(0),
             {
-                .scl = NRFX_SPIM_PIN_NOT_USED,
-                .sda = NRFX_SPIM_PIN_NOT_USED,
-                .frequency = NRF_TWIM_FREQ_100K,
+                .scl = NRF_GPIO_PIN_MAP(1, 13),
+				.sda = NRF_GPIO_PIN_MAP(1, 14),
+				.frequency = NRF_TWIM_FREQ_400K,
                 .interrupt_priority = INTERRUPT_PRIORITY_I2C_0,
                 .hold_bus_uninit = 0, // Hold pull up state on gpio pins after uninit <0 = Disabled, 1 = Enabled>
             }

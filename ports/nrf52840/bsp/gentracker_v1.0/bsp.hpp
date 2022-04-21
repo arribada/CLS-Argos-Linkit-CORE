@@ -25,20 +25,26 @@
 #define REED_SWITCH_ACTIVE_STATE   true
 #define SAT_PWR_EN     BSP::GPIO::GPIO_SAT_EN
 #define SAT_RESET      BSP::GPIO::GPIO_SAT_RESET
+#define EXT_LED_PIN    BSP::GPIO::GPIO_EXT1_GPIO3
+#define EXT_I2C_BUS     BSP::I2C::I2C_0
+#define ONBOARD_I2C_BUS BSP::I2C::I2C_1
+
+// I2C device mappings
+#define CDT_MS5803_DEVICE EXT_I2C_BUS
+#define CDT_AD5933_DEVICE EXT_I2C_BUS
+#define MCP4716_DEVICE    ONBOARD_I2C_BUS
+#define MS5803_DEVICE     ONBOARD_I2C_BUS
+#define LIGHT_DEVICE   	  EXT_I2C_BUS
+#define OEM_PH_DEVICE  	  EXT_I2C_BUS
+#define OEM_RTD_DEVICE 	  EXT_I2C_BUS
 
 // I2C bus addresses
-#define MCP4716_DEVICE      BSP::I2C::I2C_1
 #define MCP4716_I2C_ADDR    0x60
-#define MS5837_DEVICE       BSP::I2C::I2C_1
-#define MS5837_ADDRESS      0x76
-#define MS5803_DEVICE       BSP::I2C::I2C_1
 #define MS5803_ADDRESS      0x77
-#define LIGHT_DEVICE   		BSP::I2C::I2C_1
 #define LIGHT_DEVICE_ADDR   0x29
-#define OEM_PH_DEVICE  		BSP::I2C::I2C_1
 #define OEM_PH_DEVICE_ADDR  0x65
-#define OEM_RTD_DEVICE 		BSP::I2C::I2C_1
 #define OEM_RTD_DEVICE_ADDR 0x68
+#define AD5933_ADDRESS		0x0D
 
 // Battery voltage ADC gain
 #define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain
