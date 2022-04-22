@@ -5,6 +5,8 @@
 #include "sea_temp_sensor_service.hpp"
 #include "cdt_sensor_service.hpp"
 #include "gps_service.hpp"
+#include "pressure_sensor_service.hpp"
+#include "axl_sensor_service.hpp"
 #include "sys_log.hpp"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
@@ -35,6 +37,7 @@
 #include "oem_ph.hpp"
 #include "oem_rtd.hpp"
 #include "cdt.hpp"
+#include "bmx160.hpp"
 #include "fs_log.hpp"
 #include "nrfx_twim.h"
 #include "gpio_led.hpp"
@@ -232,14 +235,6 @@ int main()
 	DEBUG_TRACE("SWS...");
 	SWSService sws();
 
-	DEBUG_TRACE("MS5803...");
-	try {
-		static MS5803 ms5803_pressure_sensor;
-		static PressureDetectorService pressure_detector(ms5803_pressure_sensor);
-	} catch (...) {
-		DEBUG_TRACE("MS5803: not detected");
-	}
-
 	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
 
@@ -295,6 +290,16 @@ int main()
 	FsLog cdt_sensor_log(&lfs_file_system, "CDT", 1024*1024);
 	cdt_sensor_log.set_log_formatter(&cdt_sensor_log_formatter);
 
+	DEBUG_TRACE("PRESSURE Sensor Log...");
+	PressureLogFormatter pressure_sensor_log_formatter;
+	FsLog pressure_sensor_log(&lfs_file_system, "PRESSURE", 1024*1024);
+	pressure_sensor_log.set_log_formatter(&pressure_sensor_log_formatter);
+
+	DEBUG_TRACE("AXL Sensor Log...");
+	AXLLogFormatter axl_sensor_log_formatter;
+	FsLog axl_sensor_log(&lfs_file_system, "AXL", 1024*1024);
+	axl_sensor_log.set_log_formatter(&axl_sensor_log_formatter);
+
 	DEBUG_TRACE("Configuration store...");
 	LFSConfigurationStore store(lfs_file_system);
 	configuration_store = &store;
@@ -323,6 +328,15 @@ int main()
 		static GPSService gps_service(m8q_gnss, &fs_sensor_log);
 	} catch (...) {
 		DEBUG_TRACE("GPS M8Q not detected");
+	}
+
+	DEBUG_TRACE("MS5803...");
+	try {
+		static MS5803 ms5803_pressure_sensor;
+		static PressureDetectorService pressure_detector(ms5803_pressure_sensor);
+		static PressureSensorService pressure_sensor(ms5803_pressure_sensor, &pressure_sensor_log);
+	} catch (...) {
+		DEBUG_TRACE("MS5803: not detected");
 	}
 
 	DEBUG_TRACE("LTR303...");
@@ -355,6 +369,14 @@ int main()
 		static CDTSensorService cdt_sensor_service(cdt, &cdt_sensor_log);
 	} catch (...) {
 		DEBUG_TRACE("CDT: not detected");
+	}
+
+	DEBUG_TRACE("BMX160...");
+	try {
+		static BMX160 bmx160;
+		static AXLSensorService axl_sensor_service(bmx160, &axl_sensor_log);
+	} catch (...) {
+		DEBUG_TRACE("BMX160: not detected");
 	}
 
 	DEBUG_TRACE("Entering main SM...");

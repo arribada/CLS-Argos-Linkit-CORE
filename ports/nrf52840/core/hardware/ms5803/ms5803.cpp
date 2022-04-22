@@ -91,7 +91,7 @@ void MS5803LL::read(double& temperature, double& pressure)
 
     // P = (D1 * SENS / 2^21 - OFF) / 2^15
     pressure = (double)((((SENS * D1) >> 21 ) - OFF) >> 15) / 10000.0; // Convert to bar
-    temperature = TEMP / 1000.0;
+    temperature = TEMP / 100.0;
 
     DEBUG_TRACE("MS5803::read: %f bar @ %f deg C", pressure, temperature);
 }

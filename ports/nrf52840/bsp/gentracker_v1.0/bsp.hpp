@@ -37,6 +37,7 @@
 #define LIGHT_DEVICE   	  EXT_I2C_BUS
 #define OEM_PH_DEVICE  	  EXT_I2C_BUS
 #define OEM_RTD_DEVICE 	  EXT_I2C_BUS
+#define BMX160_DEVICE  ONBOARD_I2C_BUS
 
 // I2C bus addresses
 #define MCP4716_I2C_ADDR    0x60
@@ -45,6 +46,7 @@
 #define OEM_PH_DEVICE_ADDR  0x65
 #define OEM_RTD_DEVICE_ADDR 0x68
 #define AD5933_ADDRESS		0x0D
+#define BMX160_ADDRESS  0x69
 
 // Battery voltage ADC gain
 #define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain

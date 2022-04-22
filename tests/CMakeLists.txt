@@ -154,6 +154,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/als_sensor_test.cpp"
     "src/sea_temp_sensor_test.cpp"
     "src/cdt_sensor_test.cpp"
+    "src/axl_sensor_test.cpp"
+    "src/pressure_sensor_test.cpp"
     "src/calibration_test.cpp"
     "src/main.cpp"
     "fakes/nrfx_rtc.c"

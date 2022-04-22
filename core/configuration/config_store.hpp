@@ -236,6 +236,10 @@ protected:
 		/* CDT_SENSOR_DEPTH */ (double)0.0,
 		/* CDT_SENSOR_TEMPERATURE */ (double)0.0,
 		/* EXT_LED_MODE */ BaseLEDMode::ALWAYS,
+		/* AXL_SENSOR_ENABLE */ (bool)false,
+		/* AXL_SENSOR_PERIODIC */ 0U,
+		/* PRESSURE_SENSOR_ENABLE */ (bool)false,
+		/* PRESSURE_SENSOR_PERIODIC */ 0U,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
