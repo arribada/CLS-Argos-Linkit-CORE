@@ -13,6 +13,7 @@ struct __attribute__((packed)) AXLLogEntry {
 			double y;
 			double z;
 			double temperature;
+			bool   wakeup_triggered;
 		};
 		uint8_t data[MAX_LOG_PAYLOAD];
 	};
@@ -21,7 +22,7 @@ struct __attribute__((packed)) AXLLogEntry {
 class AXLLogFormatter : public LogFormatter {
 public:
 	const std::string header() override {
-		return "log_datetime,x,y,z,temperature\r\n";
+		return "log_datetime,x,y,z,wakeup_triggered,temperature\r\n";
 	}
 	const std::string log_entry(const LogEntry& e) override {
 		char entry[512], d1[128];
@@ -34,20 +35,29 @@ public:
 		std::strftime(d1, sizeof(d1), "%d/%m/%Y %H:%M:%S", tm);
 
 		// Convert to CSV
-		snprintf(entry, sizeof(entry), "%s,%f,%f,%f,%f\r\n",
+		snprintf(entry, sizeof(entry), "%s,%f,%f,%f,%u,%f\r\n",
 				d1,
-				log->x, log->y, log->z, log->temperature);
+				log->x, log->y, log->z, log->wakeup_triggered, log->temperature);
 		return std::string(entry);
 	}
 };
 
-enum class AXLSensorPort : unsigned int {
+enum AXLSensorPort : unsigned int {
 	TEMPERATURE,
 	X,
 	Y,
 	Z,
+	WAKEUP_TRIGGERED
 };
 
+enum AXLCalibration : unsigned int {
+	WAKEUP_THRESH,
+	WAKEUP_DURATION
+};
+
+enum AXLEvent : unsigned int {
+	WAKEUP
+};
 
 class AXLSensorService : public SensorService {
 public:
@@ -56,15 +66,32 @@ public:
 private:
 	void read_and_populate_log_entry(LogEntry *e) override {
 		AXLLogEntry *log = (AXLLogEntry *)e;
-		log->x = m_sensor.read((unsigned int)AXLSensorPort::X);
-		log->y = m_sensor.read((unsigned int)AXLSensorPort::Y);
-		log->z = m_sensor.read((unsigned int)AXLSensorPort::Z);
+		log->x = m_sensor.read(AXLSensorPort::X);
+		log->y = m_sensor.read(AXLSensorPort::Y);
+		log->z = m_sensor.read(AXLSensorPort::Z);
+		log->wakeup_triggered = m_sensor.read(AXLSensorPort::WAKEUP_TRIGGERED);
 		log->temperature = m_sensor.read((unsigned int)AXLSensorPort::TEMPERATURE);
 		service_set_log_header_time(log->header, service_current_time());
 	}
-
-	void service_init() override {};
-	void service_term() override {};
+	void service_init() override {
+		// Setup 0.1G threshold and 1 sample duration
+		double g_thresh = service_read_param<double>(ParamID::AXL_SENSOR_WAKEUP_THRESH);
+		unsigned int duration = service_read_param<unsigned int>(ParamID::AXL_SENSOR_WAKEUP_SAMPLES);
+		if (g_thresh && service_is_enabled()) {
+			m_sensor.calibrate(g_thresh, AXLCalibration::WAKEUP_THRESH);
+			m_sensor.calibrate(duration, AXLCalibration::WAKEUP_DURATION);
+			m_sensor.install_event_handler(AXLEvent::WAKEUP, [this]() {
+				DEBUG_TRACE("AXLSensorService::event");
+				LogEntry e;
+				ServiceEventData data = true;
+				read_and_populate_log_entry(&e);
+				service_complete(&data, &e, false);
+			});
+		}
+	};
+	void service_term() override {
+		m_sensor.remove_event_handler(AXLEvent::WAKEUP);
+	};
 	bool service_is_enabled() override {
 		bool enable = service_read_param<bool>(ParamID::AXL_SENSOR_ENABLE);
 		return enable;
@@ -75,7 +102,7 @@ private:
 		return schedule == 0 ? Service::SCHEDULE_DISABLED : schedule;
 	}
 	void service_initiate() override {
-		ServiceEventData data;
+		ServiceEventData data = false;
 		LogEntry e;
 		read_and_populate_log_entry(&e);
 		service_complete(&data, &e);

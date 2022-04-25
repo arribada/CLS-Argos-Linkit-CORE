@@ -108,6 +108,7 @@ TEST(AXLSensor, SchedulingPeriodic)
 		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 2).andReturnValue((double)i+1);
 		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 3).andReturnValue((double)i+2);
 		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 0).andReturnValue((double)i+3);
+		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 4).andReturnValue((double)(i?1:0));
 		fake_timer->increment_counter(period*1000);
 		system_scheduler->run();
 	}
@@ -123,6 +124,7 @@ TEST(AXLSensor, SchedulingPeriodic)
 		CHECK_EQUAL((double)i+1, e.y);
 		CHECK_EQUAL((double)i+2, e.z);
 		CHECK_EQUAL((double)i+3, e.temperature);
+		CHECK_EQUAL((bool)i&1, e.wakeup_triggered);
 	}
 
 	s.stop();

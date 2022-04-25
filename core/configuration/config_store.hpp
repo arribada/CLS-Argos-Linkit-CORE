@@ -219,6 +219,7 @@ protected:
 		/* ARGOS_TCXO_WARMUP_TIME */ 5U,
 		/* DEVICE_DECID */ 0U,
 		/* GNSS_TRIGGER_ON_SURFACED */ (bool)false,
+		/* GNSS_TRIGGER_ON_AXL_WAKEUP */ (bool)false,
 		/* UNDERWATER_DETECT_SOURCE */ BaseUnderwaterDetectSource::SWS,
 		/* UNDERWATER_DETECT_THRESH */ (double)1.1,
 		/* PH_SENSOR_ENABLE */ (bool)false,
@@ -238,6 +239,8 @@ protected:
 		/* EXT_LED_MODE */ BaseLEDMode::ALWAYS,
 		/* AXL_SENSOR_ENABLE */ (bool)false,
 		/* AXL_SENSOR_PERIODIC */ 0U,
+		/* AXL_SENSOR_WAKEUP_THRESHOLD */ (double)0.0,
+		/* AXL_SENSOR_WAKEUP_SAMPLES */ 5U,
 		/* PRESSURE_SENSOR_ENABLE */ (bool)false,
 		/* PRESSURE_SENSOR_PERIODIC */ 0U,
 	}};

@@ -9,6 +9,8 @@
 #include "nrfx_twim.h"
 #include "pmu.hpp"
 #include "error.hpp"
+#include "nrf_irq.hpp"
+
 
 class BMX160LLManager {
 private:
@@ -34,7 +36,9 @@ void BMX160LLManager::unregister_device(uint8_t unique_id) {
 	m_map.erase(unique_id);
 }
 
-BMX160LL::BMX160LL(unsigned int bus, unsigned char addr) : m_bus(bus), m_addr(addr), m_unique_id(BMX160LLManager::register_device(*this)) {
+BMX160LL::BMX160LL(unsigned int bus, unsigned char addr, int wakeup_pin) : m_bus(bus), m_addr(addr), m_irq(NrfIRQ(wakeup_pin)),
+		m_unique_id(BMX160LLManager::register_device(*this)), m_accel_sleep_mode(BMX160_ACCEL_SUSPEND_MODE),
+		m_irq_pending(false) {
 	try {
 		init();
 	} catch(...) {
@@ -146,15 +150,15 @@ void BMX160LL::read_xyz(double& x, double& y, double& z) {
     } data;
     bmx160_get_regs(BMX160_ACCEL_DATA_ADDR, data.buffer, sizeof(data.buffer), &m_bmx160_dev);
 
-    DEBUG_TRACE("BMX160LL::read_xyz: xyz=%d,%d,%d", (int)data.x, (int)data.y, (int)data.z);
-
     // Convert to double precision G-force result on each axis
     x = convert_g_force(16, data.x);
     y = convert_g_force(16, data.y);
     z = convert_g_force(16, data.z);
 
+    DEBUG_TRACE("BMX160LL::read_xyz: xyz=%f,%f,%f", x, y, z);
+
     // Turn accelerometer on so AXL is updated
-    m_bmx160_dev.accel_cfg.power = BMX160_ACCEL_SUSPEND_MODE;
+    m_bmx160_dev.accel_cfg.power = m_accel_sleep_mode;
     bmx160_set_power_mode(&m_bmx160_dev);
 }
 
@@ -181,7 +185,102 @@ double BMX160LL::read_temperature()
     return (double)raw * 0.001953125 + 23;
 }
 
-BMX160::BMX160() : Sensor("AXL"), m_bmx160(BMX160LL(BMX160_DEVICE, BMX160_ADDRESS)), m_last_x(0), m_last_y(0), m_last_z(0) {
+void BMX160LL::set_wakeup_threshold(double thresh) {
+	m_wakeup_threshold = thresh;
+}
+
+void BMX160LL::set_wakeup_duration(double duration) {
+	m_wakeup_duration = duration;
+}
+
+void BMX160LL::enable_wakeup(std::function<void()> func) {
+	// Enable IRQ
+	m_accel_sleep_mode = m_bmx160_dev.accel_cfg.power = BMX160_ACCEL_LOWPOWER_MODE;
+	bmx160_set_power_mode(&m_bmx160_dev);
+	bmx160_int_pin_settg int_pin_settg =
+	{
+		.output_en = 1,
+		.output_mode = 0,
+		.output_type = 1,
+		.edge_ctrl = 0,
+		.input_en = 0,
+		.latch_dur = 1
+	};
+	uint8_t anymotion_thr = (uint8_t)(std::max(255.0, (m_wakeup_threshold * 1000) / 31.25));
+	bmx160_acc_any_mot_int_cfg acc_any_motion_int = {
+		.anymotion_en = 1,
+		.anymotion_x = 1,
+		.anymotion_y = 1,
+		.anymotion_z = 1,
+		.anymotion_dur = (uint8_t)(m_wakeup_duration - 1),
+		.anymotion_data_src = 1,
+		.anymotion_thr = anymotion_thr
+	};
+	bmx160_int_type_cfg int_type_cfg;
+	int_type_cfg.acc_any_motion_int = acc_any_motion_int;
+	bmx160_int_settg int_setting = {
+		.int_channel = BMX160_INT_CHANNEL_1,
+		.int_type = BMX160_ACC_ANY_MOTION_INT,
+		.int_pin_settg = int_pin_settg,
+		.int_type_cfg = int_type_cfg,
+		.fifo_full_int_en = 0,
+		.fifo_WTM_int_en = 0,
+	};
+	bmx160_set_int_config(&int_setting, &m_bmx160_dev);
+	m_irq.enable([this, func]() {
+		if (!m_irq_pending) {
+			m_irq_pending = true;
+			func();
+		}
+	});
+}
+
+void BMX160LL::disable_wakeup() {
+	// Disable IRQ
+	m_irq.disable();
+	m_accel_sleep_mode = m_bmx160_dev.accel_cfg.power = BMX160_ACCEL_SUSPEND_MODE;
+	bmx160_set_power_mode(&m_bmx160_dev);
+	bmx160_int_pin_settg int_pin_settg =
+	{
+		.output_en = 0,
+		.output_mode = 0,
+		.output_type = 1,
+		.edge_ctrl = 0,
+		.input_en = 0,
+		.latch_dur = 1
+	};
+	bmx160_acc_any_mot_int_cfg acc_any_motion_int = {
+		.anymotion_en = 0,
+		.anymotion_x = 0,
+		.anymotion_y = 0,
+		.anymotion_z = 0,
+		.anymotion_dur = 1,
+		.anymotion_data_src = 0,
+		.anymotion_thr = 0
+	};
+	bmx160_int_type_cfg int_type_cfg;
+	int_type_cfg.acc_any_motion_int = acc_any_motion_int;
+	bmx160_int_settg int_setting = {
+		.int_channel = BMX160_INT_CHANNEL_1,
+		.int_type = BMX160_ACC_ANY_MOTION_INT,
+		.int_pin_settg = int_pin_settg,
+		.int_type_cfg = int_type_cfg,
+		.fifo_full_int_en = 0,
+		.fifo_WTM_int_en = 0,
+	};
+	bmx160_set_int_config(&int_setting, &m_bmx160_dev);
+	m_irq.disable();
+}
+
+bool BMX160LL::check_and_clear_wakeup() {
+	InterruptLock lock;
+	bool value = m_irq_pending;
+	m_irq_pending = false;
+	DEBUG_TRACE("BMX160LL::check_and_clear_wakeup: pending=%u", (unsigned int)value);
+	return value;
+}
+
+BMX160::BMX160() : Sensor("AXL"), m_bmx160(BMX160LL(BMX160_DEVICE, BMX160_ADDRESS, BMX160_WAKEUP_PIN)), m_last_x(0), m_last_y(0), m_last_z(0) {
 	DEBUG_TRACE("BMX160::BMX160");
 }
 
@@ -200,10 +299,27 @@ double BMX160::read(unsigned int offset) {
 	case 3: // z
 		return m_last_z;
 		break;
+	case 4: // IRQ pending
+		return (double)m_bmx160.check_and_clear_wakeup();
+		break;
 	default:
 		return 0;
 	}
 }
 
-void BMX160::calibrate(double, unsigned int) {
+void BMX160::calibrate(double value, unsigned int offset) {
+	DEBUG_TRACE("BMX160::calibrate: value=%f offset=%u", value, offset);
+	if (0 == offset) {
+		m_bmx160.set_wakeup_threshold(value);
+	} else if (1 == offset) {
+		m_bmx160.set_wakeup_duration(value);
+	}
 }
+
+void BMX160::install_event_handler(unsigned int, std::function<void()> handler) {
+	m_bmx160.enable_wakeup(handler);
+};
+
+void BMX160::remove_event_handler(unsigned int) {
+	m_bmx160.disable_wakeup();
+};

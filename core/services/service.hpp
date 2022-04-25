@@ -32,6 +32,7 @@ private:
 	bool m_is_started;
 	const char *m_name;
 	bool m_is_underwater;
+	bool m_is_initiated;
 	Scheduler::TaskHandle m_task_period;
 	Scheduler::TaskHandle m_task_timeout;
 	std::function<void(ServiceEvent&)> m_data_notification_callback;
@@ -56,9 +57,10 @@ protected:
 	virtual unsigned int service_next_timeout() = 0;
 	virtual bool service_is_triggered_on_surfaced() = 0;
 	virtual bool service_is_usable_underwater() = 0;
+	virtual bool service_is_triggered_on_event(ServiceEvent&) { return false; }
 
 	// This can be called by underlying service
-	void service_complete(ServiceEventData *event_data = nullptr, void *entry = nullptr);
+	void service_complete(ServiceEventData *event_data = nullptr, void *entry = nullptr, bool reschedule = true);
 	void service_set_log_header_time(LogHeader& header, std::time_t time);
 	std::time_t service_current_time();
 	void service_set_time(std::time_t);

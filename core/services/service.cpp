@@ -79,6 +79,7 @@ void Service::set_logger(Logger *logger) { m_logger = logger; }
 void Service::start(std::function<void(ServiceEvent&)> data_notification_callback) {
 	DEBUG_TRACE("Service::start: service %s started", m_name);
 	m_is_started = true;
+	m_is_initiated = false;
 	m_data_notification_callback = data_notification_callback;
 	service_init();
 	reschedule();
@@ -115,19 +116,24 @@ void Service::notify_underwater_state(bool state) {
 void Service::notify_peer_event(ServiceEvent& event) {
 	if (event.event_source == ServiceIdentifier::UW_SENSOR)
 		notify_underwater_state(std::get<bool>(event.event_data));
+	else if (service_is_triggered_on_event(event)) {
+		reschedule(true);
+	}
 };
 
 bool Service::is_started() {
 	return m_is_started;
 }
 
-void Service::service_complete(ServiceEventData *event_data, void *entry) {
+void Service::service_complete(ServiceEventData *event_data, void *entry, bool shall_reschedule) {
 	DEBUG_TRACE("Service::service_complete: service %s", m_name);
+	m_is_initiated = false;
 	if (m_logger && entry != nullptr)
 		m_logger->write(entry);
 	if (event_data)
 		notify_log_updated(*event_data);
-	reschedule();
+	if (shall_reschedule)
+		reschedule();
 }
 
 void Service::service_set_log_header_time(LogHeader& header, std::time_t time)
@@ -167,34 +173,38 @@ void Service::reschedule(bool immediate) {
 	if (is_started()) {
 		if (service_is_enabled()) {
 			unsigned int next_schedule = immediate ? 0 : service_next_schedule_in_ms();
+			if (!m_is_initiated) {
+				if (next_schedule != SCHEDULE_DISABLED) {
+					DEBUG_TRACE("Service::reschedule: service %s scheduled in %u msecs", m_name, next_schedule);
+					m_task_period = system_scheduler->post_task_prio(
+						[this]() {
+						unsigned int timeout_ms = service_next_timeout();
+						DEBUG_TRACE("Service::reschedule: service %s time out in %u msecs", m_name, timeout_ms);
+						if (timeout_ms) {
+							m_task_timeout = system_scheduler->post_task_prio(
+								[this]() {
+								DEBUG_TRACE("Service::reschedule: service %s timed out", m_name);
+								if (service_cancel())
+									notify_service_inactive();
+								reschedule();
+							}, "ServiceTimeoutPeriod", Scheduler::DEFAULT_PRIORITY, timeout_ms);
+						}
 
-			if (next_schedule != SCHEDULE_DISABLED) {
-				DEBUG_TRACE("Service::reschedule: service %s scheduled in %u msecs", m_name, next_schedule);
-				m_task_period = system_scheduler->post_task_prio(
-					[this]() {
-					unsigned int timeout_ms = service_next_timeout();
-					DEBUG_TRACE("Service::reschedule: service %s time out in %u msecs", m_name, timeout_ms);
-					if (timeout_ms) {
-						m_task_timeout = system_scheduler->post_task_prio(
-							[this]() {
-							DEBUG_TRACE("Service::reschedule: service %s timed out", m_name);
-							if (service_cancel())
-								notify_service_inactive();
+						if (!m_is_underwater) {
+							DEBUG_TRACE("Service::reschedule: service %s active", m_name);
+							m_is_initiated = true;
+							notify_service_active();
+							service_initiate();
+						} else {
+							DEBUG_TRACE("Service::reschedule: service %s can't run underwater, rescheduling", m_name);
 							reschedule();
-						}, "ServiceTimeoutPeriod", Scheduler::DEFAULT_PRIORITY, timeout_ms);
-					}
-
-					if (!m_is_underwater) {
-						DEBUG_TRACE("Service::reschedule: service %s active", m_name);
-						notify_service_active();
-						service_initiate();
-					} else {
-						DEBUG_TRACE("Service::reschedule: service %s can't run underwater, rescheduling", m_name);
-						reschedule();
-					}
-				}, "ServicePeriod", Scheduler::DEFAULT_PRIORITY, next_schedule);
+						}
+					}, "ServicePeriod", Scheduler::DEFAULT_PRIORITY, next_schedule);
+				} else {
+					DEBUG_TRACE("Service::reschedule: service %s schedule currently disabled", m_name);
+				}
 			} else {
-				DEBUG_TRACE("Service::reschedule: service %s schedule currently disabled", m_name);
+				DEBUG_TRACE("Service::reschedule: service %s already initiated", m_name);
 			}
 		} else {
 			DEBUG_TRACE("Service::reschedule: service %s is not enabled", m_name);

@@ -273,3 +273,14 @@ void GPSService::populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time
 {
 	service_set_log_header_time(entry.header, time);
 }
+
+bool GPSService::service_is_triggered_on_event(ServiceEvent& event) {
+	if (event.event_source == ServiceIdentifier::AXL_SENSOR &&
+			event.event_type == ServiceEventType::SERVICE_LOG_UPDATED &&
+			std::get<bool>(event.event_data)) {
+		bool trigger_on_axl = service_read_param<bool>(ParamID::GNSS_TRIGGER_ON_AXL_WAKEUP);
+		return trigger_on_axl;
+	}
+
+	return false;
+}
