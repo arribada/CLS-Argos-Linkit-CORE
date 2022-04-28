@@ -30,6 +30,7 @@ extern OTAFileUpdater *ota_updater;
 extern DTEHandler *dte_handler;
 extern ReedSwitch *reed_switch;
 extern BatteryMonitor *battery_monitor;
+extern BaseDebugMode g_debug_mode;
 
 // FSM initial state -> LEDOff
 FSM_INITIAL_STATE(LEDState, LEDOff);
@@ -208,6 +209,13 @@ void OperationalState::entry() {
 	ServiceManager::startall([this](ServiceEvent& e) {
 		service_event_handler(e);
 	});
+
+	BaseDebugMode debug_mode = configuration_store->read_param<BaseDebugMode>(ParamID::DEBUG_OUTPUT_MODE);
+	if (debug_mode == BaseDebugMode::BLE_NUS) {
+		set_ble_device_name();
+		ble_service->start([](BLEServiceEvent&){ return 0; });
+		g_debug_mode = debug_mode;
+	}
 }
 
 void OperationalState::service_event_handler(ServiceEvent& e) {
@@ -256,6 +264,13 @@ void OperationalState::exit() {
 	led_handle::dispatch<SetLEDOff>({});
 	ServiceManager::stopall();
 	comms_scheduler->stop();
+	BaseDebugMode debug_mode = configuration_store->read_param<BaseDebugMode>(ParamID::DEBUG_OUTPUT_MODE);
+	if (debug_mode == BaseDebugMode::BLE_NUS) {
+		g_debug_mode = BaseDebugMode::UART;
+		ble_service->stop();
+		DEBUG_TRACE("exit: OperationalState: BLE service stopped");
+		PMU::delay_ms(100);
+	}
 }
 
 void ConfigurationState::entry() {
@@ -277,7 +292,7 @@ void ConfigurationState::exit() {
 	led_handle::dispatch<SetLEDOff>({});
 }
 
-void ConfigurationState::set_ble_device_name() {
+void GenTracker::set_ble_device_name() {
 	std::string device_model = configuration_store->read_param<std::string>(ParamID::DEVICE_MODEL);
 #if ARGOS_EXT
 	unsigned int identifier = configuration_store->read_param<unsigned int>(ParamID::DEVICE_DECID);
@@ -285,7 +300,7 @@ void ConfigurationState::set_ble_device_name() {
 	unsigned int identifier = configuration_store->read_param<unsigned int>(ParamID::ARGOS_DECID);
 #endif
 	std::string device_name = device_model + " " + std::to_string(identifier);
-	DEBUG_TRACE("ConfigurationState::set_ble_device_name: %s", device_name.c_str());
+	DEBUG_TRACE("GenTracker::set_ble_device_name: %s", device_name.c_str());
 	ble_service->set_device_name(device_name);
 }
 

@@ -157,7 +157,7 @@ bool BleInterface::write(std::string str)
         err_code = ble_nus_data_send(&m_nus, buffer, &transfer_length, m_conn_handle);
         if (err_code != NRF_ERROR_RESOURCES && err_code != NRF_SUCCESS)
         {
-            DEBUG_ERROR("BleInterface::write: error_code=%08x", err_code);
+            //DEBUG_ERROR("BleInterface::write: error_code=%08x", err_code);
             return false;
         }
 

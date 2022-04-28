@@ -7,7 +7,7 @@
 
 class CDT : public Sensor {
 public:
-	CDT();
+	CDT(unsigned int bus = EXT_I2C_BUS);
 	void calibrate(double, unsigned int) override;
 	double read(unsigned int offset);
 

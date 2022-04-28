@@ -151,4 +151,7 @@ static const BaseMap param_map[] = {
 	// PRESSURE
 	{ "PRESSURE_SENSOR_ENABLE", "PRP01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "PRESSURE_SENSOR_PERIODIC", "PRP02", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+
+	// DEBUG
+	{ "DEBUG_OUTPUT_MODE", "DBP01", BaseEncoding::DEBUGMODE, 0, 0, {}, true, true },
 };

@@ -243,6 +243,7 @@ protected:
 		/* AXL_SENSOR_WAKEUP_SAMPLES */ 5U,
 		/* PRESSURE_SENSOR_ENABLE */ (bool)false,
 		/* PRESSURE_SENSOR_PERIODIC */ 0U,
+		/* DEBUG_OUTPUT_MODE */ BaseDebugMode::UART,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,

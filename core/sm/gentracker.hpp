@@ -19,6 +19,7 @@ public:
 	void react(ErrorEvent const &event);
 	virtual void entry(void);
 	virtual void exit(void);
+	void set_ble_device_name();
 
 	static void kick_watchdog();
 	static void notify_bad_filesystem_error();
@@ -73,7 +74,6 @@ private:
 	void on_ble_inactivity_timeout();
 	void restart_inactivity_timeout();
 	void process_received_data();
-	void set_ble_device_name();
 
 public:
 	void entry() override;

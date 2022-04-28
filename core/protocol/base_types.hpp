@@ -134,6 +134,7 @@ enum class ParamID {
 	AXL_SENSOR_WAKEUP_SAMPLES,
 	PRESSURE_SENSOR_ENABLE,
 	PRESSURE_SENSOR_PERIODIC,
+	DEBUG_OUTPUT_MODE,
 	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
 };
@@ -158,6 +159,7 @@ enum class BaseEncoding {
 	ZONETYPE,
 	MODULATION,
 	UWDETECTSOURCE,
+	DEBUGMODE,
 	KEY_LIST,
 	KEY_VALUE_LIST
 };
@@ -284,6 +286,11 @@ enum class BaseZoneType {
 	CIRCLE = 1
 };
 
+enum class BaseDebugMode {
+	UART,
+	BLE_NUS
+};
+
 enum class BaseArgosModulation {
 	A2,
 	A3,
@@ -341,7 +348,7 @@ using BaseName = std::string;
 using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
 
 // !!! Do not change the ordering of variants and also make sure std::string is the first entry !!!
-using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation, BaseUnderwaterDetectSource>;
+using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation, BaseUnderwaterDetectSource, BaseDebugMode>;
 
 struct BaseMap {
 	BaseName 	   name;

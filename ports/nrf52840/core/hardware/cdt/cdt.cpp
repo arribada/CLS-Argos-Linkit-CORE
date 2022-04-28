@@ -1,8 +1,8 @@
 #include "cdt.hpp"
 #include "debug.hpp"
 
-CDT::CDT() : Sensor("CDT"), m_cal(Calibration("CDT")), m_ms5803(MS5803LL(CDT_MS5803_DEVICE, MS5803_ADDRESS)),
-	m_ad5933(AD5933LL(CDT_AD5933_DEVICE, AD5933_ADDRESS)) {
+CDT::CDT(unsigned int bus) : Sensor("CDT"), m_cal(Calibration("CDT")), m_ms5803(MS5803LL(bus, MS5803_ADDRESS)),
+	m_ad5933(AD5933LL(bus, AD5933_ADDRESS)) {
 	DEBUG_TRACE("CDT::CDT");
 }
 

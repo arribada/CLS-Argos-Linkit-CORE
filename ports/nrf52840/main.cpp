@@ -58,6 +58,7 @@ ReedSwitch *reed_switch;
 DTEHandler *dte_handler;
 RTC *rtc;
 BatteryMonitor *battery_monitor;
+BaseDebugMode g_debug_mode = BaseDebugMode::UART;
 
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
@@ -143,7 +144,11 @@ extern "C" {
 // We have to define this as extern "C" as we are overriding a weak C function
 extern "C" int _write(int file, char *ptr, int len)
 {
-	nrfx_uarte_tx(&BSP::UART_Inits[BSP::UART_1].uarte, reinterpret_cast<const uint8_t *>(ptr), len);
+	if (g_debug_mode == BaseDebugMode::UART)
+		nrfx_uarte_tx(&BSP::UART_Inits[BSP::UART_1].uarte, reinterpret_cast<const uint8_t *>(ptr), len);
+	else if (ble_service && !__get_IPSR()) {
+		ble_service->write(std::string(ptr, len));
+	}
 	return len;
 }
 
@@ -365,10 +370,16 @@ int main()
 
 	DEBUG_TRACE("CDT...");
 	try {
-		static CDT cdt;
+		static CDT cdt(EXT_I2C_BUS);
 		static CDTSensorService cdt_sensor_service(cdt, &cdt_sensor_log);
 	} catch (...) {
-		DEBUG_TRACE("CDT: not detected");
+		DEBUG_TRACE("CDT: not detected on external bus");
+		try {
+			static CDT cdt(ONBOARD_I2C_BUS);
+			static CDTSensorService cdt_sensor_service(cdt, &cdt_sensor_log);
+		} catch (...) {
+			DEBUG_TRACE("CDT: not detected on internal bus");
+		}
 	}
 
 	DEBUG_TRACE("BMX160...");
