@@ -154,6 +154,7 @@ protected:
 		/* ARGOS_RX_COUNTER */ 0U,
 		/* ARGOS_RX_TIME */ 0U,
 		/* GNSS_ASSISTNOW_EN */ (bool)true,
+		/* DEBUG_OUTPUT_MODE */ BaseDebugMode::UART,
 	}};
 	static inline const BaseZone default_zone = {
 		/* version_code */ m_config_version_code_zone,

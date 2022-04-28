@@ -72,12 +72,14 @@ TEST_GROUP(Sm)
 	MockBatteryMonitor *mock_battery_monitor;
 	MockOTAFileUpdater *mock_ota_file_updater;
 	MockBLEService * mock_ble_service;
+	MockConfigurationStore * mock_configuration_store;
 
 	void setup() {
 		main_filesystem = new MockFileSystem;
 		fake_timer = new FakeTimer;
 		system_timer = fake_timer;
-		configuration_store = new MockConfigurationStore;
+		mock_configuration_store = new MockConfigurationStore;
+		configuration_store = mock_configuration_store;
 		location_scheduler = new MockLocationScheduler;
 		comms_scheduler = new MockCommsScheduler;
 		mock_ota_file_updater = new MockOTAFileUpdater;
@@ -106,6 +108,7 @@ TEST_GROUP(Sm)
 		delete comms_scheduler;
 		delete sensor_log;
 		delete system_log;
+		delete mock_configuration_store;
 		delete mock_ble_service;
 		delete mock_ota_file_updater;
 		delete mock_battery_monitor;
@@ -124,7 +127,6 @@ TEST(Sm, CheckBootFileSystemMountOk)
 	mock().expectOneCall("num_entries").onObject(sensor_log).andReturnValue(0);
 	mock().expectOneCall("num_entries").onObject(system_log).andReturnValue(0);
 	mock().expectOneCall("init").onObject(configuration_store);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
@@ -139,7 +141,6 @@ TEST(Sm, CheckBootFileSystemFirstMountFail)
 	mock().expectOneCall("num_entries").onObject(sensor_log).andReturnValue(0);
 	mock().expectOneCall("num_entries").onObject(system_log).andReturnValue(0);
 	mock().expectOneCall("init").onObject(configuration_store);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(-1);
 	mock().expectOneCall("format").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
@@ -176,11 +177,9 @@ TEST(Sm, CheckTransitionToPreOperationalState)
 	mock().expectOneCall("num_entries").onObject(sensor_log).andReturnValue(0);
 	mock().expectOneCall("num_entries").onObject(system_log).andReturnValue(0);
 	mock().expectOneCall("init").onObject(configuration_store);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 	fake_timer->set_counter(1000);
@@ -195,7 +194,6 @@ TEST(Sm, CheckTransitionToOperationalConfigValid)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 
@@ -222,7 +220,6 @@ TEST(Sm, CheckTransitionToOperationalConfigValidBatteryLow)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("kick_watchdog");
 
@@ -250,7 +247,7 @@ TEST(Sm, CheckTransitionToErrorConfigInvalid)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
+	mock_configuration_store->set_is_valid(false);
 	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
@@ -356,7 +353,7 @@ TEST(Sm, CheckTransitionToConfigurationStateAndVerifyOTAUpdateEvents)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
+	mock_configuration_store->set_is_valid(false);
 	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
@@ -412,7 +409,6 @@ TEST(Sm, CheckSWSEventsDispatchedInOperationalState)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 

@@ -93,10 +93,11 @@ void NrfSwitch::update_state(bool state) {
 
 void NrfSwitch::process_event(bool state) {
 	uint64_t now = system_timer->get_counter();
-	//DEBUG_TRACE("NrfSwitch::process_event: state=%u hysteresis=%u timer=%lu", state, m_hysteresis_time_ms, now);
+	DEBUG_TRACE("NrfSwitch::process_event: state=%u hysteresis=%u timer=%lu", state, m_hysteresis_time_ms, now);
 	// Each time we get a new event we trigger the timer to post it after the hysteresis time.
 	// If we receive another event, we cancel the previous task and start a new one.
 	system_timer->cancel_schedule(m_timer_handle);
-	m_timer_handle = system_timer->add_schedule(std::bind(&NrfSwitch::update_state, this, state),
-			now + m_hysteresis_time_ms);
+	m_timer_handle = system_timer->add_schedule([this, state]() {
+		update_state(state);
+	}, now + m_hysteresis_time_ms);
 }

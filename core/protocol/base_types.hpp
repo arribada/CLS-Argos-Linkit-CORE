@@ -82,6 +82,7 @@ enum class ParamID {
 	ARGOS_RX_COUNTER,
 	ARGOS_RX_TIME,
 	GNSS_ASSISTNOW_EN,
+	DEBUG_OUTPUT_MODE,
 	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
 };
@@ -103,6 +104,7 @@ enum class BaseEncoding {
 	GNSSFIXMODE,
 	GNSSDYNMODEL,
 	LEDMODE,
+	DEBUGMODE,
 	KEY_LIST,
 	KEY_VALUE_LIST
 };
@@ -192,6 +194,11 @@ enum class BaseLEDMode {
 	OFF,
 	HRS_24,
 	ALWAYS = 3
+};
+
+enum class BaseDebugMode {
+	UART,
+	BLE_NUS
 };
 
 enum class BaseZoneType : uint8_t {
@@ -290,7 +297,7 @@ using BaseName = std::string;
 using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
 
 // !!! Do not change the ordering of variants and also make sure std::string is the first entry !!!
-using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode>;
+using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseDebugMode>;
 
 struct BaseMap {
 	BaseName 	   name;

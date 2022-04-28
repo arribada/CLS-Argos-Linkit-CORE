@@ -33,6 +33,7 @@ extern DTEHandler *dte_handler;
 extern Switch *saltwater_switch;
 extern ReedSwitch *reed_switch;
 extern BatteryMonitor *battery_monitor;
+extern BaseDebugMode g_debug_mode;
 
 // Macro for determining LED mode state
 #define LED_MODE_GUARD \
@@ -244,6 +245,12 @@ void OperationalState::entry() {
 			comms_scheduler->notify_sensor_log_update();
 		}
 	});
+	BaseDebugMode debug_mode = configuration_store->read_param<BaseDebugMode>(ParamID::DEBUG_OUTPUT_MODE);
+	if (debug_mode == BaseDebugMode::BLE_NUS) {
+		set_ble_device_name();
+		ble_service->start([](BLEServiceEvent&){ return 0; });
+		g_debug_mode = debug_mode;
+	}
 }
 
 void OperationalState::exit() {
@@ -252,6 +259,13 @@ void OperationalState::exit() {
 	location_scheduler->stop();
 	comms_scheduler->stop();
 	saltwater_switch->stop();
+	BaseDebugMode debug_mode = configuration_store->read_param<BaseDebugMode>(ParamID::DEBUG_OUTPUT_MODE);
+	if (debug_mode == BaseDebugMode::BLE_NUS) {
+		g_debug_mode = BaseDebugMode::UART;
+		ble_service->stop();
+		DEBUG_TRACE("exit: OperationalState: BLE service stopped");
+		PMU::delay_ms(100);
+	}
 }
 
 void ConfigurationState::entry() {
@@ -273,11 +287,11 @@ void ConfigurationState::exit() {
 	led_handle::dispatch<SetLEDOff>({});
 }
 
-void ConfigurationState::set_ble_device_name() {
+void GenTracker::set_ble_device_name() {
 	std::string device_model = configuration_store->read_param<std::string>(ParamID::DEVICE_MODEL);
 	unsigned int argos_dec_id = configuration_store->read_param<unsigned int>(ParamID::ARGOS_DECID);
 	std::string device_name = device_model + " " + std::to_string(argos_dec_id);
-	DEBUG_TRACE("ConfigurationState::set_ble_device_name: %s", device_name.c_str());
+	DEBUG_TRACE("GenTracker::set_ble_device_name: %s", device_name.c_str());
 	ble_service->set_device_name(device_name);
 }
 

@@ -71,4 +71,5 @@ static const BaseMap param_map[] = {
 	{ "ARGOS_RX_COUNTER", "ART10", BaseEncoding::UINT, 0U, 0U, {}, true, false },
 	{ "ARGOS_RX_TIME", "ART11", BaseEncoding::UINT, 0U, 0U, {}, true, false },
 	{ "GNSS_ASSISTNOW_EN", "GNP24", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "DEBUG_OUTPUT_MODE", "DBP01", BaseEncoding::DEBUGMODE, 0, 0, {}, true, true },
 };

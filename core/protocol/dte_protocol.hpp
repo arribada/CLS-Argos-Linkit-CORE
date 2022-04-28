@@ -702,6 +702,9 @@ protected:
 	static inline void encode(std::string& output, const BaseLEDMode& value) {
 		encode(output, (unsigned int&)value);
 	}
+	static inline void encode(std::string& output, const BaseDebugMode& value) {
+		encode(output, (unsigned int&)value);
+	}
 	static inline void encode(std::string& output, const std::time_t& value) {
 		char buff[256];
 		auto time = std::gmtime(&value);
@@ -893,6 +896,8 @@ protected:
 	static void validate(const BaseMap &, const BaseArgosPower&) {
 	}
 	static void validate(const BaseMap &, const BaseLEDMode&) {
+	}
+	static void validate(const BaseMap &, const BaseDebugMode&) {
 	}
 public:
 	static std::string encode(DTECommand command, ...) {
@@ -1204,6 +1209,17 @@ private:
 			return BaseLEDMode::HRS_24;
 		} else if (s == "3") {
 			return BaseLEDMode::ALWAYS;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
+	static BaseDebugMode decode_debug_mode(const std::string& s) {
+		if (s == "0") {
+			return BaseDebugMode::UART;
+		} else if (s == "1") {
+			return BaseDebugMode::BLE_NUS;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -1529,6 +1545,13 @@ private:
 							val.push_back(key_value);
 							break;
 						}
+						case BaseEncoding::DEBUGMODE:
+						{
+							BaseDebugMode x = decode_debug_mode(value);
+							key_value.value = x;
+							val.push_back(key_value);
+							break;
+						}
 						case BaseEncoding::KEY_LIST:
 						case BaseEncoding::KEY_VALUE_LIST:
 						default:
@@ -1749,6 +1772,7 @@ public:
 				case BaseEncoding::GNSSFIXMODE:
 				case BaseEncoding::GNSSDYNMODEL:
 				case BaseEncoding::LEDMODE:
+				case BaseEncoding::DEBUGMODE:
 				default:
 					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;

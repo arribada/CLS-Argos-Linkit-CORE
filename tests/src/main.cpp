@@ -37,6 +37,7 @@ RGBLed *status_led;
 MemoryAccess *memory_access;
 RTC *rtc;
 BatteryMonitor *battery_monitor;
+BaseDebugMode g_debug_mode;
 
 MockSupportPlugin mockPlugin;
 
