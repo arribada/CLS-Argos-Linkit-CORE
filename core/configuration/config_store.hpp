@@ -39,6 +39,7 @@ struct GNSSConfig {
 	unsigned int cold_start_retry_period;
 	bool assistnow_enable;
 	bool trigger_on_surfaced;
+	bool assistnow_offline_enable;
 };
 
 struct ArgosConfig {
@@ -244,6 +245,7 @@ protected:
 		/* PRESSURE_SENSOR_ENABLE */ (bool)false,
 		/* PRESSURE_SENSOR_PERIODIC */ 0U,
 		/* DEBUG_OUTPUT_MODE */ BaseDebugMode::UART,
+		/* GNSS_ASSISTNOW_OFFLINE_EN */ (bool)false,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
@@ -497,6 +499,7 @@ public:
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
 			gnss_config.assistnow_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_EN);
 			gnss_config.trigger_on_surfaced = read_param<bool>(ParamID::GNSS_TRIGGER_ON_SURFACED);
+			gnss_config.assistnow_offline_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_OFFLINE_EN);
 
 			if (m_last_config_mode != ConfigMode::LOW_BATTERY) {
 				DEBUG_INFO("ConfigurationStore: LOW_BATTERY mode detected");
@@ -519,6 +522,7 @@ public:
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
 			gnss_config.assistnow_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_EN);
 			gnss_config.trigger_on_surfaced = read_param<bool>(ParamID::GNSS_TRIGGER_ON_SURFACED);
+			gnss_config.assistnow_offline_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_OFFLINE_EN);
 
 			if (m_last_config_mode != ConfigMode::OUT_OF_ZONE) {
 				DEBUG_INFO("ConfigurationStore: OUT_OF_ZONE mode detected");
@@ -542,6 +546,7 @@ public:
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
 			gnss_config.assistnow_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_EN);
 			gnss_config.trigger_on_surfaced = read_param<bool>(ParamID::GNSS_TRIGGER_ON_SURFACED);
+			gnss_config.assistnow_offline_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_OFFLINE_EN);
 
 			if (m_last_config_mode != ConfigMode::NORMAL) {
 				DEBUG_INFO("ConfigurationStore: NORMAL mode detected");

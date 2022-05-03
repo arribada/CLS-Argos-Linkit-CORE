@@ -679,8 +679,23 @@ namespace UBX
         enum Id : uint8_t
         {
             ID_INI_TIME_UTC = 0x40,
+            ID_ANO = 0x20,
             ID_ACK = 0x60,
             ID_DBD = 0x80
+        };
+
+        struct __attribute__((__packed__)) MSG_ANO
+        {
+            uint8_t  type;
+            uint8_t  version;
+            uint8_t  svId;
+            uint8_t  gnssId;
+            uint8_t  year;
+            uint8_t  month;
+            uint8_t  day;
+            uint8_t  reserved1;
+            uint8_t  data[64];
+            uint8_t  reserved2[4];
         };
 
         struct __attribute__((__packed__)) MSG_ACK

@@ -6,7 +6,8 @@
 struct GPSNavSettings {
 	BaseGNSSFixMode  fix_mode;
 	BaseGNSSDynModel dyn_model;
-	bool			 assistnow_enable;
+	bool			 assistnow_autonomous_enable;
+	bool             assistnow_offline_enable;
 };
 
 struct GNSSData {

@@ -154,4 +154,7 @@ static const BaseMap param_map[] = {
 
 	// DEBUG
 	{ "DEBUG_OUTPUT_MODE", "DBP01", BaseEncoding::DEBUGMODE, 0, 0, {}, true, true },
+
+	// GNSS ANO
+	{ "GNSS_ASSISTNOW_OFFLINE_EN", "GNP27", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 };

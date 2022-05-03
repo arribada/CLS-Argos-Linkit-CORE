@@ -108,6 +108,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/protocol"
     "${ROOT_DIR}/core/util"
     "${NRF_DIR}/core/hardware"
+    "${NRF_DIR}/core/hardware/m8q"
     "mocks"
     "fakes"
 )
@@ -157,6 +158,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/axl_sensor_test.cpp"
     "src/pressure_sensor_test.cpp"
     "src/calibration_test.cpp"
+    "src/ubx_ano_test.cpp"
     "src/main.cpp"
     "fakes/nrfx_rtc.c"
     "mocks/mock_gpio.cpp"

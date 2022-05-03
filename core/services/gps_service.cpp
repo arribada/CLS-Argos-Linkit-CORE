@@ -55,7 +55,8 @@ void GPSService::service_initiate() {
 	GPSNavSettings nav_settings = {
 		gnss_config.fix_mode,
 		gnss_config.dyn_model,
-		gnss_config.assistnow_enable
+		gnss_config.assistnow_enable,
+		gnss_config.assistnow_offline_enable
 	};
 
 	m_next_schedule = service_current_time();

@@ -70,10 +70,12 @@ private:
 
 	SendReturnCode fetch_navigation_database();
 	SendReturnCode send_navigation_database();
+	SendReturnCode send_offline_database();
 
 	NrfUARTM8 *m_nrf_uart_m8;
 	bool m_capture_messages;
-	bool m_assistnow_enable;
+	bool m_assistnow_autonomous_enable;
+	bool m_assistnow_offline_enable;
 	std::function<void(GNSSData data)> m_data_notification_callback;
 
 	UBX::NAV::PVT::MSG_PVT m_last_received_pvt;

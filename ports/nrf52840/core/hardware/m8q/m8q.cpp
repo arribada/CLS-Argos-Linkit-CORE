@@ -6,9 +6,10 @@
 #include "error.hpp"
 #include "debug.hpp"
 #include "timeutils.hpp"
-
+#include "ubx_ano.hpp"
 
 extern RTC *rtc;
+extern FileSystem *main_filesystem;
 
 using namespace UBX;
 
@@ -184,7 +185,8 @@ M8QReceiver::M8QReceiver()
     m_navigation_database_len = 0;
     m_rx_buffer.pending = false;
     m_capture_messages = false;
-    m_assistnow_enable = false;
+    m_assistnow_autonomous_enable = false;
+    m_assistnow_offline_enable = false;
     m_state = State::POWERED_OFF;
 }
 
@@ -218,9 +220,8 @@ void M8QReceiver::power_off()
 		disable_nav_pvt_message();
 		disable_nav_status_message();
 		disable_nav_dop_message();
-		if (m_assistnow_enable) {
+		if (m_assistnow_autonomous_enable)
 			fetch_navigation_database();
-		}
 		setup_power_management();
     } else {
     	DEBUG_ERROR("M8QReceiver: power_off: failed to configure UART");
@@ -352,6 +353,66 @@ M8QReceiver::SendReturnCode M8QReceiver::fetch_navigation_database()
     return SendReturnCode::SUCCESS;
 }
 
+M8QReceiver::SendReturnCode M8QReceiver::send_offline_database()
+{
+	try {
+		LFSFile f(main_filesystem, "gps_config.dat", LFS_O_RDONLY);
+		UBXAssistNowOffline ano(f);
+		unsigned int i = 0;
+	    unsigned int retries = 3;
+
+	    while (ano.value()) {
+
+			// Extract MGA-ANO messages
+			UBX::Header *ptr = (UBX::Header *)ano.value();
+			unsigned int send_length = sizeof(UBX::Header) + ptr->msgLength + 2;
+
+		    DEBUG_TRACE("M8QReceiver::send_offline_database: sending MGA-ANO#%u sz=%u retries=%u", i, send_length, retries);
+
+			// Send next MGA-ANO message
+	        m_rx_buffer.pending = false;
+			m_nrf_uart_m8->send((const unsigned char *)ptr, send_length);
+
+			// Wait for the ack, this will only be sent if ackAiding is set in NAVX5
+	        auto start_time = rtc->gettime();
+	        const std::time_t timeout = 1;
+
+	        for (;;)
+	        {
+	            if (m_rx_buffer.pending)
+	            {
+	                UBX::Header *header_ptr = reinterpret_cast<UBX::Header *>(&m_rx_buffer.data[0]);
+	                if (header_ptr->msgClass == UBX::MessageClass::MSG_CLASS_MGA && header_ptr->msgId == UBX::MGA::ID_ACK)
+	                {
+	                    UBX::MGA::MSG_ACK *msg_ack_ptr = reinterpret_cast<UBX::MGA::MSG_ACK *>(&m_rx_buffer.data[sizeof(UBX::Header)]);
+	                    DEBUG_TRACE("GPS MGA-ACK <- infoCode: %u", msg_ack_ptr->infoCode);
+	                	retries = 3;
+	        	        ano.next();
+	        	        i++;
+	                    break;
+	                }
+
+	                m_rx_buffer.pending = false;
+	            }
+
+	            if (rtc->gettime() - start_time >= timeout)
+	            {
+	            	if (--retries == 0) {
+						return SendReturnCode::RESPONSE_TIMEOUT;
+	            	} else {
+	            		break;
+	            	}
+	            }
+	        }
+
+		}
+	} catch (...) {
+		DEBUG_TRACE("M8QReceiver::send_offline_database: unable to process MGA ANO file");
+	}
+
+	return SendReturnCode::SUCCESS;
+}
+
 M8QReceiver::SendReturnCode M8QReceiver::send_navigation_database()
 {
     if (!m_navigation_database_len)
@@ -430,7 +491,8 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
 
     m_data_notification_callback = data_notification_callback;
     m_capture_messages = true;
-    m_assistnow_enable = nav_settings.assistnow_enable;
+    m_assistnow_autonomous_enable = nav_settings.assistnow_autonomous_enable;
+    m_assistnow_offline_enable = nav_settings.assistnow_offline_enable;
 
     // Clear our dop and pvt message containers
     memset(&m_last_received_pvt, 0, sizeof(m_last_received_pvt));
@@ -449,10 +511,15 @@ void M8QReceiver::power_on(const GPSNavSettings& nav_settings,
     ret = setup_lower_power_mode();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_simple_navigation_settings(nav_settings); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = setup_expert_navigation_settings(); if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
-    ret = supply_time_assistance();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
-    if (m_assistnow_enable) {
-		ret = send_navigation_database();         if (ret != SendReturnCode::SUCCESS)
-			DEBUG_WARN("M8QReceiver::power_on: failed to send navigation database");
+    ret = supply_time_assistance();			  if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
+    if (m_assistnow_autonomous_enable) {
+		ret = send_navigation_database();
+		if (ret != SendReturnCode::SUCCESS)
+			DEBUG_WARN("M8QReceiver::power_on: failed to send ANA database");
+    } else if (!m_assistnow_autonomous_enable && m_assistnow_offline_enable && rtc->is_set()) {
+		ret = send_offline_database();
+		if (ret != SendReturnCode::SUCCESS)
+			DEBUG_WARN("M8QReceiver::power_on: failed to send ANO database");
     }
     ret = enable_nav_pvt_message();           if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
     ret = enable_nav_status_message();        if (ret != SendReturnCode::SUCCESS) {goto POWER_ON_FAILURE;}
