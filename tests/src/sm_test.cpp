@@ -479,9 +479,11 @@ TEST(Sm, CheckGNSSWithFixLedTransitions)
 	CHECK_TRUE(ext_status_led->is_flashing());
 
 	// Notify GNSS logged
+	GPSLogEntry log;
+	log.info.valid = 1;
 	mock().expectOneCall("notify_sensor_log_update").onObject(comms_scheduler);
 	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
-	e.event_data = true;
+	e.event_data = log;
 	ServiceManager::inject_event(e);
 	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());
@@ -535,9 +537,11 @@ TEST(Sm, CheckGNSSWithoutFixLedTransitions)
 	CHECK_TRUE(ext_status_led->is_flashing());
 
 	// Notify GNSS logged
+	GPSLogEntry log;
+	log.info.valid = 0;
 	mock().expectOneCall("notify_sensor_log_update").onObject(comms_scheduler);
 	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
-	e.event_data = false;
+	e.event_data = log;
 	ServiceManager::inject_event(e);
 	CHECK_EQUAL((int)RGBLedColor::RED, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());

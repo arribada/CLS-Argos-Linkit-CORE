@@ -60,6 +60,7 @@ protected:
 	virtual bool service_is_triggered_on_event(ServiceEvent&) { return false; }
 
 	// This can be called by underlying service
+	void service_reschedule(bool immediate = false);
 	void service_complete(ServiceEventData *event_data = nullptr, void *entry = nullptr, bool reschedule = true);
 	void service_set_log_header_time(LogHeader& header, std::time_t time);
 	std::time_t service_current_time();

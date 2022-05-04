@@ -125,9 +125,14 @@ bool Service::is_started() {
 	return m_is_started;
 }
 
+void Service::service_reschedule(bool immediate) {
+	reschedule(immediate);
+}
+
 void Service::service_complete(ServiceEventData *event_data, void *entry, bool shall_reschedule) {
 	DEBUG_TRACE("Service::service_complete: service %s", m_name);
 	m_is_initiated = false;
+	notify_service_inactive();
 	if (m_logger && entry != nullptr)
 		m_logger->write(entry);
 	if (event_data)

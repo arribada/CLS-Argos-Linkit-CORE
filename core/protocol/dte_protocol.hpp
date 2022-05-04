@@ -241,7 +241,7 @@ public:
 	static void decode(
 			std::map<uint8_t, AopSatelliteEntry_t>& orbit_params,
 			std::map<uint8_t, AopSatelliteEntry_t>& constellation_status,
-			std::string& data,
+			std::string const& data,
 		BasePassPredict& pass_predict) {
 		unsigned int num_records = 0;
 		pass_predict.num_records = 0;

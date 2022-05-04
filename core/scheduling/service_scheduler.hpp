@@ -3,6 +3,8 @@
 #include <functional>
 #include <variant>
 
+#include "messages.hpp"
+
 enum class ServiceEventType {
 	SERVICE_ACTIVE,
 	SERVICE_INACTIVE,
@@ -14,7 +16,7 @@ enum class ServiceEventType {
 	SENSOR_LOG_UPDATED
 };
 
-using ServiceEventData = std::variant<bool>;
+using ServiceEventData = std::variant<bool,GPSLogEntry>;
 
 enum class ServiceIdentifier : unsigned int {
 	UNKNOWN,

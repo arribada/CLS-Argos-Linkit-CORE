@@ -16,6 +16,7 @@
 #include "reed.hpp"
 #include "ledsm.hpp"
 #include "battery.hpp"
+#include "gps.hpp"
 #include "ble_service.hpp"
 #include "gentracker.hpp"
 
@@ -232,7 +233,7 @@ void OperationalState::service_event_handler(ServiceEvent& e) {
 		if (e.event_type == ServiceEventType::SERVICE_ACTIVE) {
 			led_handle::dispatch<SetLEDGNSSOn>({});
 		} else if (e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
-			if (std::get<bool>(e.event_data))
+			if (std::get<GPSLogEntry>(e.event_data).info.valid)
 				led_handle::dispatch<SetLEDGNSSOffWithFix>({});
 			else
 				led_handle::dispatch<SetLEDGNSSOffWithoutFix>({});

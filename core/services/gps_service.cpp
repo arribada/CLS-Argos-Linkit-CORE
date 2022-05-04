@@ -73,8 +73,8 @@ void GPSService::service_initiate() {
 		);
 	} catch (...) {
 		m_is_active = false;
-		ServiceEventData event_data = false;
 		GPSLogEntry log_entry = invalid_log_entry();
+		ServiceEventData event_data = log_entry;
 		service_complete(&event_data, &log_entry);
 	}
 }
@@ -87,8 +87,8 @@ bool GPSService::service_cancel() {
 
 	if (m_is_active) {
 		m_device.power_off();
-		ServiceEventData event_data = false;
 		GPSLogEntry log_entry = invalid_log_entry();
+		ServiceEventData event_data = log_entry;
 		service_complete(&event_data, &log_entry);
 		m_is_active = false;
 		return true;
@@ -215,7 +215,7 @@ void GPSService::task_process_gnss_data()
     // Notify configuration store that we have a new valid GPS fix
     configuration_store->notify_gps_location(gps_entry);
 
-    ServiceEventData event_data = true;
+    ServiceEventData event_data = gps_entry;
     service_complete(&event_data, &gps_entry);
 }
 
