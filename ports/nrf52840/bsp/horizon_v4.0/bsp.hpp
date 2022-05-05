@@ -49,6 +49,9 @@
 #define ADC_GAIN        (1.0f/6.0f)  // 1/6 gain
 #define RP506_ADC_GAIN  1.67f
 
+// Power on requires reed switch for 3 seconds
+#define POWER_ON_RESET_REQUIRES_REED_SWITCH
+
 namespace BSP
 {
 	///////////////////////////////// GPIO definitions ////////////////////////////////

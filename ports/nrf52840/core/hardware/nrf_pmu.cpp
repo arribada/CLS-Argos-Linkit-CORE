@@ -12,13 +12,24 @@
 
 static uint32_t m_reset_cause = 0;
 
+// Define a spare bit that we can use to detect pseudo power off
+// via GPREGRET
+#define POWER_RESETREAS_PSEUDO_POWER_OFF  0x80000000
+
 void PMU::initialise() {
 #ifdef POWER_CONTROL_PIN
 	GPIOPins::set(BSP::GPIO_POWER_CONTROL);
 #endif
 
 	m_reset_cause = NRF_POWER->RESETREAS;
-	NRF_POWER->RESETREAS = 0xFFFFFFFF;
+	NRF_POWER->RESETREAS = 0xFFFFFFFF; // Clear down
+
+	// Apply pseudo power off flag is GPREGRET is set
+	if (NRF_POWER->GPREGRET)
+		m_reset_cause |= POWER_RESETREAS_PSEUDO_POWER_OFF;
+	else
+		m_reset_cause &= ~POWER_RESETREAS_PSEUDO_POWER_OFF;
+	NRF_POWER->GPREGRET = 0; // Clear down
 	nrf_pwr_mgmt_init();
 
 #ifdef SOFTDEVICE_PRESENT
@@ -33,15 +44,17 @@ void PMU::initialise() {
 	}
 }
 
-void PMU::reset(bool dfu_mode) {
-	if (dfu_mode)
-		sd_power_gpregret_set(0, 0x1);
+void PMU::reset(bool) {
 	sd_nvic_SystemReset();
 }
 
 void PMU::powerdown() {
 #ifdef POWER_CONTROL_PIN
 	GPIOPins::clear(POWER_CONTROL_PIN);
+#else
+	// Mark this as a pseudo power off
+	NRF_POWER->GPREGRET = 0x80;
+	sd_nvic_SystemReset();
 #endif
 	// This is not a real powerdown but rather an infinite sleep
 	for (;;) PMU::run();
@@ -83,7 +96,10 @@ const std::string PMU::reset_cause()
 	else if (m_reset_cause & NRF_POWER_RESETREAS_DOG_MASK)
 		return "WDT Reset";
 	else if (m_reset_cause & NRF_POWER_RESETREAS_SREQ_MASK)
-		return "Soft Reset";
+		if (m_reset_cause & POWER_RESETREAS_PSEUDO_POWER_OFF)
+			return "Pseudo Power On Reset";
+		else
+			return "Soft Reset";
 	else
 		return "Power On Reset";
 }

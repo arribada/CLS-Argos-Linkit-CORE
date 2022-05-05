@@ -139,6 +139,9 @@ TEST(Sm, CheckBootFileSystemMountOk)
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)fake_status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+	CHECK_TRUE(ext_status_led->is_flashing());
+	CHECK_TRUE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckBootFileSystemFirstMountFail)
@@ -197,6 +200,8 @@ TEST(Sm, CheckTransitionToPreOperationalState)
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 	CHECK_FALSE(fake_saltwater_switch->is_started());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckTransitionToOperationalConfigValid)
@@ -222,6 +227,8 @@ TEST(Sm, CheckTransitionToOperationalConfigValid)
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());
 	CHECK_TRUE(location_scheduler->is_started());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 
@@ -248,6 +255,8 @@ TEST(Sm, CheckTransitionToOperationalConfigValidBatteryLow)
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());
 	CHECK_TRUE(location_scheduler->is_started());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 
@@ -273,6 +282,8 @@ TEST(Sm, CheckTransitionToErrorConfigInvalid)
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL((int)RGBLedColor::RED, (int)status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 
 	// Red LED should go off after 5 seconds and then transition to off state with white LED flashing
 	mock().expectOneCall("stop").onObject(mock_battery_monitor).ignoreOtherParameters();
@@ -281,6 +292,8 @@ TEST(Sm, CheckTransitionToErrorConfigInvalid)
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)status_led->get_state());
+	CHECK_TRUE(ext_status_led->is_flashing());
+	CHECK_TRUE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckTransitionToConfigurationState)
@@ -301,6 +314,8 @@ TEST(Sm, CheckTransitionToConfigurationState)
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL((int)RGBLedColor::BLUE, (int)status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckTransitionToOffState)
@@ -319,6 +334,8 @@ TEST(Sm, CheckTransitionToOffState)
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL(50, fake_status_led->m_period);
+	CHECK_TRUE(ext_status_led->is_flashing());
+	CHECK_TRUE(ext_status_led->get_state());
 
 	// Continue to hold for 5 more seconds
 	mock().enable();
@@ -326,6 +343,8 @@ TEST(Sm, CheckTransitionToOffState)
 	fake_timer->set_counter(16000);
 	system_scheduler->run();
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckOffStateCanBeCancelled)
@@ -476,7 +495,7 @@ TEST(Sm, CheckGNSSWithFixLedTransitions)
 	CHECK_EQUAL((int)RGBLedColor::CYAN, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_TRUE(ext_status_led->get_state());
-	CHECK_TRUE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->is_flashing());
 
 	// Notify GNSS logged
 	GPSLogEntry log;
@@ -487,8 +506,8 @@ TEST(Sm, CheckGNSSWithFixLedTransitions)
 	ServiceManager::inject_event(e);
 	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());
-	CHECK_TRUE(ext_status_led->get_state());
-	CHECK_TRUE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
 
 	// Notify GNSS inactive
 	e.event_type = ServiceEventType::SERVICE_INACTIVE;
@@ -534,7 +553,7 @@ TEST(Sm, CheckGNSSWithoutFixLedTransitions)
 	CHECK_EQUAL((int)RGBLedColor::CYAN, (int)status_led->get_state());
 	CHECK_TRUE(ext_status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
-	CHECK_TRUE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->is_flashing());
 
 	// Notify GNSS logged
 	GPSLogEntry log;

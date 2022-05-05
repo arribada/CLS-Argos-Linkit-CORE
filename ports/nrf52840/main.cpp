@@ -155,7 +155,6 @@ extern "C" int _write(int file, char *ptr, int len)
 int main()
 {
 	PMU::initialise();
-	PMU::start_watchdog();
 	GPIOPins::initialise();
 
 #ifdef GPIO_AG_PWR_PIN
@@ -175,10 +174,65 @@ int main()
 
     nrf_log_redirect_init();
 
+    DEBUG_TRACE("Timer...");
+	system_timer = &NrfTimer::get_instance();
+	NrfTimer::get_instance().init();
+
+	DEBUG_TRACE("RGB LED...");
+	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
+	status_led = &nrf_status_led;
+
+#ifdef EXT_LED_PIN
+	DEBUG_TRACE("External LED...");
+	GPIOLed gpio_led(EXT_LED_PIN);
+	ext_status_led = &gpio_led;
+#else
+	ext_status_led = nullptr;
+#endif
+
+    DEBUG_TRACE("Reed switch...");
+    NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS, REED_SWITCH_ACTIVE_STATE);
+
+	DEBUG_TRACE("BLE...");
+    BleInterface::get_instance().init();
+
 	// Check the reed switch is engaged for 3 seconds if this is a power on event
     DEBUG_TRACE("PMU Reset Cause = %s", PMU::reset_cause().c_str());
 
 #ifdef POWER_ON_RESET_REQUIRES_REED_SWITCH
+#ifndef POWER_CONTROL_PIN
+
+    // Turn LEDs off
+    status_led->off();
+	if (ext_status_led)
+		ext_status_led->off();
+
+	if (PMU::reset_cause() == "Power On Reset" ||
+		PMU::reset_cause() == "Pseudo Power On Reset") {
+		volatile bool power_on_ready = false;
+		system_timer->start();
+		Timer::TimerHandle timer_handle;
+		nrf_reed_switch.start([&timer_handle, &power_on_ready](bool state) {
+			DEBUG_TRACE("Reed State: %u", state);
+			system_timer->cancel_schedule(timer_handle);
+			if (state) {
+				status_led->set(RGBLedColor::WHITE);
+				timer_handle = system_timer->add_schedule([&power_on_ready]() {
+					DEBUG_TRACE("Reed switch 3s period elapsed");
+					power_on_ready = true;
+				}, system_timer->get_counter() + 3000);
+			} else {
+				status_led->off();
+			}
+		});
+		while (!power_on_ready) {
+			PMU::run();
+		}
+
+		nrf_reed_switch.stop();
+		system_timer->stop();
+	}
+#else
 	if (PMU::reset_cause() == "Power On Reset") {
 		unsigned int countdown = 3000;
 		DEBUG_TRACE("Enter Power On Reed Switch Check");
@@ -196,7 +250,19 @@ int main()
 		}
 		DEBUG_TRACE("Exiting Power On Reed Switch Check");
 	}
-#endif
+#endif // POWER_CONTROL_PIN
+#endif // POWER_ON_RESET_REQUIRES_REED_SWITCH
+
+	PMU::start_watchdog();
+
+	DEBUG_TRACE("Scheduler...");
+	Scheduler scheduler(system_timer);
+	system_scheduler = &scheduler;
+
+	DEBUG_TRACE("Battery monitor...");
+
+    NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
+    battery_monitor = &nrf_battery_monitor;
 
     // Initialise the I2C driver
 	for (uint32_t i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)
@@ -205,43 +271,12 @@ int main()
 		nrfx_twim_enable(&BSP::I2C_Inits[i].twim);
 	}
 
-    DEBUG_TRACE("Timer...");
-	system_timer = &NrfTimer::get_instance();
-	NrfTimer::get_instance().init();
-
-	DEBUG_TRACE("Scheduler...");
-	Scheduler scheduler(system_timer);
-	system_scheduler = &scheduler;
-
-	DEBUG_TRACE("RGB LED...");
-	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
-	status_led = &nrf_status_led;
-
-#ifdef EXT_LED_PIN
-	DEBUG_TRACE("External LED...");
-	GPIOLed gpio_led(EXT_LED_PIN);
-	ext_status_led = &gpio_led;
-#else
-	ext_status_led = nullptr;
-#endif
-
-	DEBUG_TRACE("Battery monitor...");
-
-    NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
-    battery_monitor = &nrf_battery_monitor;
-
-    DEBUG_TRACE("Reed switch...");
-    NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS, REED_SWITCH_ACTIVE_STATE);
-
     DEBUG_TRACE("Reed gesture...");
 	ReedSwitch reed_gesture_switch(nrf_reed_switch);
 	reed_switch = &reed_gesture_switch;
 
 	DEBUG_TRACE("SWS...");
 	SWSService sws();
-
-	DEBUG_TRACE("BLE...");
-    BleInterface::get_instance().init();
 
 	DEBUG_TRACE("IS25 flash...");
 	Is25Flash is25_flash;
