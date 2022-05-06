@@ -155,6 +155,8 @@ extern "C" int _write(int file, char *ptr, int len)
 int main()
 {
 	PMU::initialise();
+	PMU::start_watchdog();
+	PMU::kick_watchdog();
 	GPIOPins::initialise();
 
 #ifdef GPIO_AG_PWR_PIN
@@ -225,10 +227,26 @@ int main()
 				status_led->off();
 			}
 		});
+
+		Timer::TimerHandle wdog_handle;
+
+		std::function<void()> kick_watchdog = [&wdog_handle,&kick_watchdog]() {
+			wdog_handle = system_timer->add_schedule([&wdog_handle,&kick_watchdog]() {
+				PMU::kick_watchdog();
+				kick_watchdog();
+			}, system_timer->get_counter() + (14 * 60 * 1000));
+		};
+
+		// Kick the watchdog periodically to avoid a WDT reset
+		kick_watchdog();
+
 		while (!power_on_ready) {
 			PMU::run();
 		}
 
+		InterruptLock lock;
+		system_timer->cancel_schedule(wdog_handle);
+		PMU::kick_watchdog();
 		nrf_reed_switch.stop();
 		system_timer->stop();
 	}
@@ -252,8 +270,6 @@ int main()
 	}
 #endif // POWER_CONTROL_PIN
 #endif // POWER_ON_RESET_REQUIRES_REED_SWITCH
-
-	PMU::start_watchdog();
 
 	DEBUG_TRACE("Scheduler...");
 	Scheduler scheduler(system_timer);
