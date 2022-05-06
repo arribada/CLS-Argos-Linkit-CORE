@@ -14,6 +14,9 @@ public:
 				withParameter("dl_msg_id", dl_msg_id).
 				withParameter("exec_report", exec_report);
 	}
+	void stop_send() override {
+		mock().actualCall("stop_send").onObject(this);
+	}
 	void start_receive(const ArticMode mode) override {
 		mock().actualCall("start_receive").onObject(this).withParameter("mode", (unsigned int)mode);
 	}
@@ -25,6 +28,9 @@ public:
 	}
 	void set_tcxo_warmup_time(const unsigned int time) override {
 		mock().actualCall("set_tcxo_warmup_time").onObject(this).withParameter("time", time);
+	}
+	void set_tx_power(const BaseArgosPower power) override {
+		mock().actualCall("set_tx_power").onObject(this).withParameter("power", (unsigned int)power);
 	}
 	unsigned int get_cumulative_receive_time() override {
 		return mock().actualCall("get_cumulative_receive_time").onObject(this).returnUnsignedIntValue();

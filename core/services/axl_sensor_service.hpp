@@ -109,6 +109,5 @@ private:
 	}
 	bool service_cancel() override { return false; }
 	unsigned int service_next_timeout() override { return 0; }
-	bool service_is_triggered_on_surfaced() override { return false; }
 	bool service_is_usable_underwater() override { return true; }
 };

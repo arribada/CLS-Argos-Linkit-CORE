@@ -298,6 +298,23 @@ enum class BaseArgosModulation {
 	A4
 };
 
+static const char *argos_modulation_to_string(BaseArgosModulation m) {
+	switch (m) {
+	case BaseArgosModulation::A2:
+		return "A2";
+		break;
+	case BaseArgosModulation::A3:
+		return "A3";
+		break;
+	case BaseArgosModulation::A4:
+		return "A4";
+		break;
+	default:
+		return "UNKNOWN";
+		break;
+	}
+}
+
 #define MAX_AOP_SATELLITE_ENTRIES		40
 
 struct BasePassPredict {

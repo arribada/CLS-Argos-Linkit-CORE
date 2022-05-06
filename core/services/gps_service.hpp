@@ -75,9 +75,9 @@ protected:
 	void service_initiate() override;
 	bool service_cancel() override;
 	unsigned int service_next_timeout() override;
-	bool service_is_triggered_on_surfaced() override;
+	bool service_is_triggered_on_surfaced(bool &) override;
 	bool service_is_usable_underwater() override;
-	bool service_is_triggered_on_event(ServiceEvent&) override;
+	bool service_is_triggered_on_event(ServiceEvent&, bool&) override;
 
 private:
 	GPSDevice&   m_device;

@@ -13,8 +13,4 @@ private:
 	bool service_is_enabled() override { return false; }
 	unsigned int service_next_schedule_in_ms() override { return Service::SCHEDULE_DISABLED; }
 	void service_initiate() override {}
-	bool service_cancel() override { return false; }
-	unsigned int service_next_timeout() override { return 0; }
-	bool service_is_triggered_on_surfaced() override { return false; }
-	bool service_is_usable_underwater() override { return false; }
 };

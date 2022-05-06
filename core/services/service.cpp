@@ -32,11 +32,6 @@ void ServiceManager::stopall() {
 		p.second.stop();
 }
 
-void ServiceManager::notify_underwater_state(bool state) {
-	for (auto const& p : m_map)
-		p.second.notify_underwater_state(state);
-}
-
 void ServiceManager::notify_peer_event(ServiceEvent& event) {
 	for (auto const& p : m_map) {
 		if (p.second.get_service_id() != event.event_source)
@@ -64,6 +59,7 @@ Service::Service(ServiceIdentifier service_id, const char *name, Logger *logger)
 	m_is_underwater = false;
 	m_service_id = service_id;
 	m_logger = logger;
+	m_last_schedule = Service::SCHEDULE_DISABLED;
 	m_unique_id = ServiceManager::add(*this);
 }
 
@@ -81,6 +77,7 @@ void Service::start(std::function<void(ServiceEvent&)> data_notification_callbac
 	m_is_started = true;
 	m_is_initiated = false;
 	m_data_notification_callback = data_notification_callback;
+	m_is_scheduled = false;
 	service_init();
 	reschedule();
 }
@@ -90,10 +87,16 @@ void Service::stop() {
 	if (m_is_started) {
 		m_is_started = false;
 		deschedule();
-		if (service_cancel())
+		if (service_cancel()) {
+			m_is_initiated = false;
 			notify_service_inactive();
+		}
 		service_term();
 	}
+}
+
+unsigned int Service::get_last_schedule() {
+	return m_last_schedule;
 }
 
 void Service::notify_underwater_state(bool state) {
@@ -102,22 +105,26 @@ void Service::notify_underwater_state(bool state) {
 		return; // Don't care since the sensor can be used underwater
 	m_is_underwater = state;
 	if (m_is_underwater) {
+		deschedule();
 		if (service_cancel()) {
+			m_is_initiated = false;
 			notify_service_inactive();
-			reschedule();
 		}
 	} else {
-		if (service_is_triggered_on_surfaced())
-			reschedule(true);
+		bool immediate;
+		if (service_is_triggered_on_surfaced(immediate))
+			reschedule(immediate);
 	}
 }
 
 // May also be overridden in child class to receive peer service events
 void Service::notify_peer_event(ServiceEvent& event) {
+	DEBUG_TRACE("Service::notify_peer_event");
+	bool immediate = true;
 	if (event.event_source == ServiceIdentifier::UW_SENSOR)
 		notify_underwater_state(std::get<bool>(event.event_data));
-	else if (service_is_triggered_on_event(event)) {
-		reschedule(true);
+	else if (service_is_triggered_on_event(event, immediate)) {
+		reschedule(immediate);
 	}
 };
 
@@ -127,6 +134,10 @@ bool Service::is_started() {
 
 void Service::service_reschedule(bool immediate) {
 	reschedule(immediate);
+}
+
+bool Service::service_is_scheduled() {
+	return m_is_scheduled;
 }
 
 void Service::service_complete(ServiceEventData *event_data, void *entry, bool shall_reschedule) {
@@ -172,6 +183,10 @@ uint16_t Service::service_get_voltage() {
 	return battery_monitor->get_voltage();
 }
 
+bool Service::service_is_battery_level_low() {
+	return configuration_store->is_battery_level_low();
+}
+
 void Service::reschedule(bool immediate) {
 	DEBUG_TRACE("Service::reschedule: service %s", m_name);
 	deschedule();
@@ -181,6 +196,8 @@ void Service::reschedule(bool immediate) {
 			if (!m_is_initiated) {
 				if (next_schedule != SCHEDULE_DISABLED) {
 					DEBUG_TRACE("Service::reschedule: service %s scheduled in %u msecs", m_name, next_schedule);
+					m_is_scheduled = true;
+					m_last_schedule = next_schedule;
 					m_task_period = system_scheduler->post_task_prio(
 						[this]() {
 						unsigned int timeout_ms = service_next_timeout();
@@ -189,8 +206,10 @@ void Service::reschedule(bool immediate) {
 							m_task_timeout = system_scheduler->post_task_prio(
 								[this]() {
 								DEBUG_TRACE("Service::reschedule: service %s timed out", m_name);
-								if (service_cancel())
+								if (service_cancel()) {
+									m_is_initiated = false;
 									notify_service_inactive();
+								}
 								reschedule();
 							}, "ServiceTimeoutPeriod", Scheduler::DEFAULT_PRIORITY, timeout_ms);
 						}
@@ -201,8 +220,8 @@ void Service::reschedule(bool immediate) {
 							notify_service_active();
 							service_initiate();
 						} else {
-							DEBUG_TRACE("Service::reschedule: service %s can't run underwater, rescheduling", m_name);
-							reschedule();
+							DEBUG_TRACE("Service::reschedule: service %s can't run underwater", m_name);
+							//reschedule();
 						}
 					}, "ServicePeriod", Scheduler::DEFAULT_PRIORITY, next_schedule);
 				} else {
@@ -222,6 +241,8 @@ void Service::reschedule(bool immediate) {
 void Service::deschedule() {
 	system_scheduler->cancel_task(m_task_timeout);
 	system_scheduler->cancel_task(m_task_period);
+	m_is_scheduled = false;
+	m_last_schedule = Service::SCHEDULE_DISABLED;
 }
 
 void Service::notify_log_updated(ServiceEventData& data) {

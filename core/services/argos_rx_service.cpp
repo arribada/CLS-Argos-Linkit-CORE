@@ -69,9 +69,12 @@ unsigned int ArgosRxService::service_next_schedule_in_ms() {
 		SAT_UPLK_OFF,
 		&next_pass)) {
 		m_next_timeout = 1000 * next_pass.duration;
-		unsigned int offset_ms = 1000 * (next_pass.epoch - start_time);
-		DEBUG_INFO("ArgosRxService::service_next_schedule_in_ms: new DL RX window in %u ms duration %u ms", offset_ms, m_next_timeout);
-		return offset_ms;
+		DEBUG_INFO("ArgosRxService::service_next_schedule_in_ms: new DL RX window: epoch = %u now = %u duration = %u", next_pass.epoch, start_time, next_pass.duration);
+		if (next_pass.epoch <= (uint64_t)start_time) {
+			return 0;
+		} else {
+			return 1000 * (next_pass.epoch - start_time);
+		}
 	}
 
 	DEBUG_WARN("ArgosRxService::service_next_schedule_in_ms: failed to find DL RX window");
@@ -80,12 +83,14 @@ unsigned int ArgosRxService::service_next_schedule_in_ms() {
 }
 
 void ArgosRxService::service_initiate() {
+	DEBUG_TRACE("ArgosRxService::service_initiate");
 	m_artic.start_receive(ArticMode::A3);
 }
 
 bool ArgosRxService::service_cancel() {
 	m_artic.stop_receive();
 	unsigned int t = m_artic.get_cumulative_receive_time();
+	DEBUG_TRACE("ArgosRxService::service_cancel: pending=%u", t ? true : false);
 	if (t) {
 		configuration_store->increment_rx_time(t);
 		configuration_store->save_params();
@@ -96,14 +101,6 @@ bool ArgosRxService::service_cancel() {
 
 unsigned int ArgosRxService::service_next_timeout() {
 	return m_next_timeout;
-}
-
-bool ArgosRxService::service_is_triggered_on_surfaced() {
-	return false;
-}
-
-bool ArgosRxService::service_is_usable_underwater() {
-	return false;
 }
 
 void ArgosRxService::notify_peer_event(ServiceEvent& e) {
@@ -122,11 +119,14 @@ void ArgosRxService::notify_peer_event(ServiceEvent& e) {
 			if (is_first_location)
 				service_reschedule();
 		}
+	} else {
+		Service::notify_peer_event(e);
 	}
 }
 
-bool ArgosRxService::service_is_triggered_on_event(ServiceEvent&) {
-	return false;
+bool ArgosRxService::service_is_triggered_on_surfaced(bool& immediate) {
+	immediate = false;
+	return true;
 }
 
 void ArgosRxService::react(ArticEventRxPacket const& e) {

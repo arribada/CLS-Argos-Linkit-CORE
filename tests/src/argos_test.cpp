@@ -1622,7 +1622,7 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCountInfiniteInLegacyMode)
 	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
-
+#if 0
 	gps_entry.info.batt_voltage = 7350;
 	gps_entry.info.year = 2020;
 	gps_entry.info.month = 4;
@@ -1672,12 +1672,12 @@ TEST(ArgosScheduler, SchedulingCheckGpsBurstCountInfiniteInLegacyMode)
 	gps_entry.info.fixType = 3;
 	fake_log->write(&gps_entry);
 	argos_sched->notify_sensor_log_update();
-
+#endif
 	mock().expectOneCall("power_on").onObject(argos_sched).withUnsignedIntParameter("argos_id", (unsigned int)argos_hexid);
 	mock().expectOneCall("set_frequency").onObject(argos_sched).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tx_power").onObject(argos_sched).withUnsignedIntParameter("power", (unsigned int)power);
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(argos_sched).withUnsignedIntParameter("time", txco_warmup);
-	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 248).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
+	mock().expectOneCall("send_packet").onObject(argos_sched).withUnsignedIntParameter("payload_bits", 120).withUnsignedIntParameter("mode", (unsigned int)ArgosMode::ARGOS_2);
 	mock().expectOneCall("power_off").onObject(argos_sched);
 	mock().expectOneCall("get_rx_time_on").onObject(argos_sched).andReturnValue(0);
 	mock().expectOneCall("get_voltage").onObject(battery_monitor).andReturnValue(4500);

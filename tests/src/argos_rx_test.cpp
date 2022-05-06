@@ -50,7 +50,7 @@ TEST_GROUP(ArgosRxService)
 		delete mock_artic;
 	}
 
-	void inject_gps_location(ArgosRxService& s, double longitude, double latitude) {
+	void inject_gps_location(double longitude, double latitude) {
 		ServiceEvent e;
 		GPSLogEntry log;
 		log.info.valid = 1;
@@ -59,7 +59,15 @@ TEST_GROUP(ArgosRxService)
 		e.event_source = ServiceIdentifier::GNSS_SENSOR;
 		e.event_type = ServiceEventType::SENSOR_LOG_UPDATED;
 		e.event_data = log;
-		s.notify_peer_event(e);
+		ServiceManager::notify_peer_event(e);
+	}
+
+	void notify_underwater_state(bool state) {
+		ServiceEvent e;
+		e.event_type = ServiceEventType::SENSOR_LOG_UPDATED,
+		e.event_data = state,
+		e.event_source = ServiceIdentifier::UW_SENSOR;
+		ServiceManager::notify_peer_event(e);
 	}
 };
 
@@ -101,7 +109,7 @@ TEST(ArgosRxService, BasicDownlinkReceive)
 	std::time_t t = 1580083200;
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
-	inject_gps_location(service, 11.8768, -33.8232);
+	inject_gps_location(11.8768, -33.8232);
 
 	t += 24050;
 	fake_rtc->settime(t);
@@ -165,4 +173,178 @@ TEST(ArgosRxService, BasicDownlinkReceive)
 	unsigned int rx_time = configuration_store->read_param<unsigned int>(ParamID::ARGOS_RX_TIME);
 	CHECK_EQUAL(10, rx_time);
 
+}
+
+TEST(ArgosRxService, CancelledOnUnderwaterAndRescheduledOnSurfaced)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	unsigned int rx_aop_update_period = 0U;
+
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_RX_AOP_UPDATE_PERIOD, rx_aop_update_period);
+
+	// Sample configuration provided with prepass library V3.4
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		1,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+		}
+	};
+
+	// Write ARGOS_AOP_DATE
+	std::time_t last_aop = 0;
+	fake_config_store->write_param(ParamID::ARGOS_AOP_DATE, last_aop);
+	fake_config_store->write_pass_predict(pass_predict);
+
+	ArgosRxService service(*mock_artic);
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	service.start(nullptr);
+
+	std::time_t t = 1580083200;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	inject_gps_location(11.8768, -33.8232);
+
+	t += 24050;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+
+	mock().expectOneCall("start_receive").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A3);
+	system_scheduler->run();
+
+	t += 100;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+
+	mock().expectOneCall("stop_receive").onObject(mock_artic);
+	mock().expectOneCall("get_cumulative_receive_time").onObject(mock_artic).andReturnValue(100);
+	notify_underwater_state(true);
+
+	t += 100;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	notify_underwater_state(false);
+
+	mock().expectOneCall("start_receive").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A3);
+	system_scheduler->run();
+}
+
+
+TEST(ArgosRxService, StillRunsIfSurfacedBeforeSchedule)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	unsigned int rx_aop_update_period = 0U;
+
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_RX_AOP_UPDATE_PERIOD, rx_aop_update_period);
+
+	// Sample configuration provided with prepass library V3.4
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		1,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+		}
+	};
+
+	// Write ARGOS_AOP_DATE
+	std::time_t last_aop = 0;
+	fake_config_store->write_param(ParamID::ARGOS_AOP_DATE, last_aop);
+	fake_config_store->write_pass_predict(pass_predict);
+
+	ArgosRxService service(*mock_artic);
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	service.start(nullptr);
+
+	std::time_t t = 1580083200;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	inject_gps_location(11.8768, -33.8232);
+
+	mock().expectOneCall("stop_receive").onObject(mock_artic);
+	mock().expectOneCall("get_cumulative_receive_time").onObject(mock_artic).andReturnValue(0);
+	notify_underwater_state(true);
+	notify_underwater_state(false);
+
+	t += 24050;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+
+	mock().expectOneCall("start_receive").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A3);
+	system_scheduler->run();
+}
+
+
+TEST(ArgosRxService, DeferredIfUnderwaterWhenScheduled)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	unsigned int rx_aop_update_period = 0U;
+
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_RX_AOP_UPDATE_PERIOD, rx_aop_update_period);
+
+	// Sample configuration provided with prepass library V3.4
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		1,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+		}
+	};
+
+	// Write ARGOS_AOP_DATE
+	std::time_t last_aop = 0;
+	fake_config_store->write_param(ParamID::ARGOS_AOP_DATE, last_aop);
+	fake_config_store->write_pass_predict(pass_predict);
+
+	ArgosRxService service(*mock_artic);
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	service.start(nullptr);
+
+	std::time_t t = 1580083200;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	inject_gps_location(11.8768, -33.8232);
+
+	mock().expectOneCall("stop_receive").onObject(mock_artic);
+	mock().expectOneCall("get_cumulative_receive_time").onObject(mock_artic).andReturnValue(0);
+	notify_underwater_state(true);
+
+#if 1
+	t += 24050;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	//mock().expectOneCall("start_receive").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A3);
+	system_scheduler->run();
+#endif
+
+	//notify_underwater_state(false);
 }

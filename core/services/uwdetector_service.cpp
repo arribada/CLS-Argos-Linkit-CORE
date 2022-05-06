@@ -65,16 +65,6 @@ unsigned int UWDetectorService::service_next_schedule_in_ms() {
 		return m_current_state ? m_period_underwater_ms : m_period_surface_ms;
 }
 
-bool UWDetectorService::service_cancel() { return false; }
-
-unsigned int UWDetectorService::service_next_timeout() {
-	return 0;
-};
-
-bool UWDetectorService::service_is_triggered_on_surfaced() {
-	return false;
-};
-
 bool UWDetectorService::service_is_usable_underwater() {
 	return true;
 }

@@ -19,8 +19,4 @@ private:
 	virtual bool service_is_enabled() = 0;
 	virtual unsigned int service_next_schedule_in_ms() = 0;
 	virtual void service_initiate() = 0;
-	virtual bool service_cancel() = 0;
-	virtual unsigned int service_next_timeout() = 0;
-	virtual bool service_is_triggered_on_surfaced() = 0;
-	virtual bool service_is_usable_underwater() = 0;
 };

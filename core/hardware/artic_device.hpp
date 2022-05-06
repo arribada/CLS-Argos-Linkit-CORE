@@ -43,6 +43,9 @@ class ArticDevice {
 private:
 	std::list<ArticEventListener*> m_listeners;
 
+protected:
+	unsigned int m_device_identifier;
+
 public:
 	virtual ~ArticDevice() {}
 	void subscribe(ArticEventListener& m) {
@@ -58,9 +61,12 @@ public:
 	}
 	virtual void send(const ArticMode mode, const ArticPacket& packet, const unsigned int size_bits) = 0;
 	virtual void send_ack(const ArticMode mode, const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report) = 0;
+	virtual void stop_send() = 0;
 	virtual void start_receive(const ArticMode mode) = 0;
 	virtual void stop_receive() = 0;
 	virtual void set_frequency(const double freq) = 0;
 	virtual void set_tcxo_warmup_time(const unsigned int time) = 0;
+	virtual void set_tx_power(const BaseArgosPower power) = 0;
 	virtual unsigned int get_cumulative_receive_time() = 0;
+	void set_device_identifier(unsigned int x) { m_device_identifier = x; }
 };

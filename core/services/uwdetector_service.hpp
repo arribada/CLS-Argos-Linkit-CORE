@@ -37,8 +37,5 @@ private:
 	void service_term() override;
 	unsigned int service_next_schedule_in_ms() override;
 	void service_initiate() override;
-	bool service_cancel() override;
-	unsigned int service_next_timeout() override;
-	bool service_is_triggered_on_surfaced() override;
 	bool service_is_usable_underwater() override;
 };

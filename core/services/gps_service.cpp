@@ -104,17 +104,16 @@ unsigned int GPSService::service_next_timeout() {
 	return timeout * MS_PER_SEC;
 }
 
-bool GPSService::service_is_triggered_on_surfaced() {
+bool GPSService::service_is_triggered_on_surfaced(bool& immediate) {
 	GNSSConfig gnss_config;
 	configuration_store->get_gnss_configuration(gnss_config);
-	return gnss_config.trigger_on_surfaced;
+	immediate = gnss_config.trigger_on_surfaced;
+	return true;
 }
 
 bool GPSService::service_is_usable_underwater() {
 	return false;
 }
-
-
 
 GPSLogEntry GPSService::invalid_log_entry()
 {
@@ -275,11 +274,12 @@ void GPSService::populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time
 	service_set_log_header_time(entry.header, time);
 }
 
-bool GPSService::service_is_triggered_on_event(ServiceEvent& event) {
+bool GPSService::service_is_triggered_on_event(ServiceEvent& event, bool& immediate) {
 	if (event.event_source == ServiceIdentifier::AXL_SENSOR &&
 			event.event_type == ServiceEventType::SERVICE_LOG_UPDATED &&
 			std::get<bool>(event.event_data)) {
 		bool trigger_on_axl = service_read_param<bool>(ParamID::GNSS_TRIGGER_ON_AXL_WAKEUP);
+		immediate = trigger_on_axl;
 		return trigger_on_axl;
 	}
 
