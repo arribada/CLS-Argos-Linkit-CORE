@@ -158,7 +158,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/interface
     ${PROJ_DIR}/core/filesystem
     ${PROJ_DIR}/core/scheduling
-    ${PROJ_DIR}/core/hardware/artic_r2
+    ${PROJ_DIR}/core/hardware/artic_sat
     ${PROJ_DIR}/core/hardware/m8q
     ${PROJ_DIR}/core/hardware/ms5803
     ${PROJ_DIR}/core/hardware/ad5933
@@ -224,6 +224,8 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/sm/ledsm.cpp
     ${CORE_DIR}/services/service.cpp
     ${CORE_DIR}/services/gps_service.cpp
+    ${CORE_DIR}/services/argos_tx_service.cpp
+    ${CORE_DIR}/services/argos_rx_service.cpp
     ${CORE_DIR}/services/uwdetector_service.cpp
     ${CORE_DIR}/logging/logger.cpp
     ${CORE_DIR}/util/haversine.cpp
@@ -238,8 +240,8 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/ltr_303/ltr_303.cpp
     ${PROJ_DIR}/core/hardware/oem_ph/oem_ph.cpp
     ${PROJ_DIR}/core/hardware/oem_rtd/oem_rtd.cpp
-    ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
-    ${PROJ_DIR}/core/hardware/artic_r2/pa_driver.cpp
+    ${PROJ_DIR}/core/hardware/artic_sat/artic_sat.cpp
+    ${PROJ_DIR}/core/hardware/artic_sat/pa_driver.cpp
     ${PROJ_DIR}/core/hardware/m8q/m8q.cpp
     ${PROJ_DIR}/core/hardware/m8q/nrf_uart_m8.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp

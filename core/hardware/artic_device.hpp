@@ -45,6 +45,7 @@ private:
 
 protected:
 	unsigned int m_device_identifier;
+	unsigned int m_idle_timeout_ms;
 
 public:
 	virtual ~ArticDevice() {}
@@ -69,4 +70,5 @@ public:
 	virtual void set_tx_power(const BaseArgosPower power) = 0;
 	virtual unsigned int get_cumulative_receive_time() = 0;
 	void set_device_identifier(unsigned int x) { m_device_identifier = x; }
+	void set_idle_timeout(unsigned int x) { m_idle_timeout_ms = x; }
 };

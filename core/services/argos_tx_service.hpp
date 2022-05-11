@@ -71,7 +71,7 @@ public:
 
 		// Find first eligible slot for transmission
 		unsigned int max_msg_index = m_retrieve_index + span;
-		unsigned int retrieve_index;
+		unsigned int retrieve_index = 0;
 		unsigned int eligible = 0;
 		std::optional<unsigned int> first_eligible;
 		while (m_retrieve_index < max_msg_index && !eligible) {
@@ -224,6 +224,7 @@ protected:
 	void service_initiate() override;
 	bool service_cancel() override;
 	bool service_is_triggered_on_surfaced(bool &immediate) override;
+	bool service_is_active_on_initiate() override;
 
 private:
 	ArticDevice& m_artic;
@@ -234,6 +235,7 @@ private:
 	std::function<void()> m_scheduled_task;
 	ArticMode m_scheduled_mode;
 
+	void react(ArticEventTxStarted const &) override;
 	void react(ArticEventTxComplete const &) override;
 	void react(ArticEventDeviceError const &) override;
 

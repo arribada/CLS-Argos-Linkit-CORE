@@ -99,8 +99,12 @@ unsigned int Service::get_last_schedule() {
 	return m_last_schedule;
 }
 
+bool Service::is_underwater_deferred() {
+	return m_is_underwater;
+}
+
 void Service::notify_underwater_state(bool state) {
-	DEBUG_TRACE("Service::notify_underwater_state: service %s notify UW %u", m_name, state);
+	//DEBUG_TRACE("Service::notify_underwater_state: service %s notify UW %u", m_name, state);
 	if (service_is_usable_underwater())
 		return; // Don't care since the sensor can be used underwater
 	m_is_underwater = state;
@@ -119,7 +123,7 @@ void Service::notify_underwater_state(bool state) {
 
 // May also be overridden in child class to receive peer service events
 void Service::notify_peer_event(ServiceEvent& event) {
-	DEBUG_TRACE("Service::notify_peer_event");
+	//DEBUG_TRACE("Service::notify_peer_event");
 	bool immediate = true;
 	if (event.event_source == ServiceIdentifier::UW_SENSOR)
 		notify_underwater_state(std::get<bool>(event.event_data));
@@ -165,6 +169,10 @@ void Service::service_set_log_header_time(LogHeader& header, std::time_t time)
     header.hours = hour;
     header.minutes = min;
     header.seconds = sec;
+}
+
+void Service::service_active() {
+	notify_service_active();
 }
 
 std::time_t Service::service_current_time() {
@@ -217,11 +225,11 @@ void Service::reschedule(bool immediate) {
 						if (!m_is_underwater) {
 							DEBUG_TRACE("Service::reschedule: service %s active", m_name);
 							m_is_initiated = true;
-							notify_service_active();
+							if (service_is_active_on_initiate())
+								notify_service_active();
 							service_initiate();
 						} else {
 							DEBUG_TRACE("Service::reschedule: service %s can't run underwater", m_name);
-							//reschedule();
 						}
 					}, "ServicePeriod", Scheduler::DEFAULT_PRIORITY, next_schedule);
 				} else {

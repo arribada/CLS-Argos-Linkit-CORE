@@ -29,6 +29,8 @@ void ArgosTxService::service_init() {
 	m_artic.subscribe(*this);
 	m_sched.reset(argos_config.argos_id);
 	m_gps_depth_pile.clear();
+	if (argos_config.cert_tx_enable)
+		m_artic.set_idle_timeout(10000);
 	m_is_first_tx = true;
 }
 
@@ -107,6 +109,10 @@ void ArgosTxService::service_initiate() {
 	m_is_first_tx = false;
 	m_is_tx_pending = true;
 	m_scheduled_task();
+}
+
+bool ArgosTxService::service_is_active_on_initiate() {
+	return false;
 }
 
 bool ArgosTxService::service_cancel() {
@@ -214,6 +220,10 @@ void ArgosTxService::process_doppler_burst() {
 	ArticPacket packet = ArgosPacketBuilder::build_doppler_packet(service_get_voltage(), service_is_battery_level_low(), size_bits);
 	DEBUG_TRACE("ArgosTxService::process_doppler_burst: mode=A2 data=%s sz=%u", Binascii::hexlify(packet).c_str(), size_bits);
 	m_artic.send(ArticMode::A2, packet, size_bits);
+}
+
+void ArgosTxService::react(ArticEventTxStarted const&) {
+	service_active();
 }
 
 void ArgosTxService::react(ArticEventTxComplete const&) {

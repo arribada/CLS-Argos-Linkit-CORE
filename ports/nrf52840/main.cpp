@@ -7,6 +7,8 @@
 #include "gps_service.hpp"
 #include "pressure_sensor_service.hpp"
 #include "axl_sensor_service.hpp"
+#include "argos_tx_service.hpp"
+#include "argos_rx_service.hpp"
 #include "sys_log.hpp"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
@@ -27,7 +29,7 @@
 #include "reed.hpp"
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
-#include "artic.hpp"
+#include "artic_sat.hpp"
 #include "is25_flash.hpp"
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
@@ -48,7 +50,6 @@ FileSystem *main_filesystem;
 ConfigurationStore *configuration_store;
 BLEService *ble_service;
 OTAFileUpdater *ota_updater;
-ServiceScheduler *comms_scheduler;
 MemoryAccess *memory_access;
 Timer *system_timer;
 Scheduler *system_scheduler;
@@ -374,8 +375,13 @@ int main()
 	ota_updater = &ota_flash_file_updater;
 
 	DEBUG_TRACE("Artic R2...");
-	ArticTransceiver artic_transceiver;
-	comms_scheduler = &artic_transceiver;
+	try {
+		static ArticSat artic;
+		static ArgosTxService argos_tx_service(artic);
+		static ArgosRxService argos_rx_service(artic);
+	} catch (...) {
+		DEBUG_TRACE("Artic R2 not detected");
+	}
 
 	DEBUG_TRACE("GPS M8Q ...");
 	try {

@@ -27,6 +27,7 @@ public:
 	virtual void notify_peer_event(ServiceEvent& event);
 	bool is_started();
 	unsigned int get_last_schedule();
+	bool is_underwater_deferred();
 
 private:
 	bool m_is_started;
@@ -61,11 +62,13 @@ protected:
 	virtual bool service_is_triggered_on_surfaced(bool&) { return false; }
 	virtual bool service_is_usable_underwater() { return false; }
 	virtual bool service_is_triggered_on_event(ServiceEvent&, bool&) { return false; }
+	virtual bool service_is_active_on_initiate() { return true; }
 
 	// This can be called by underlying service
 	bool service_is_scheduled();
 	void service_reschedule(bool immediate = false);
 	void service_complete(ServiceEventData *event_data = nullptr, void *entry = nullptr, bool reschedule = true);
+	void service_active();
 	void service_set_log_header_time(LogHeader& header, std::time_t time);
 	std::time_t service_current_time();
 	void service_set_time(std::time_t);

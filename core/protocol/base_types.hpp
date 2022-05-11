@@ -233,6 +233,44 @@ static inline const char *argos_power_to_string(BaseArgosPower power) {
 	return "UNKNOWN";
 }
 
+static unsigned int argos_power_to_integer(BaseArgosPower power) {
+	switch (power) {
+	case BaseArgosPower::POWER_40_MW:
+		return 40;
+		break;
+	case BaseArgosPower::POWER_500_MW:
+		return 500;
+		break;
+	case BaseArgosPower::POWER_200_MW:
+		return 200;
+		break;
+	case BaseArgosPower::POWER_3_MW:
+		return 3;
+		break;
+	case BaseArgosPower::POWER_5_MW:
+		return 5;
+		break;
+	case BaseArgosPower::POWER_50_MW:
+		return 50;
+		break;
+	case BaseArgosPower::POWER_350_MW:
+		return 350;
+		break;
+	case BaseArgosPower::POWER_750_MW:
+		return 750;
+		break;
+	case BaseArgosPower::POWER_1000_MW:
+		return 1000;
+		break;
+	case BaseArgosPower::POWER_1500_MW:
+		return 1500;
+		break;
+	default:
+		return 0;
+		break;
+	}
+}
+
 enum class BaseArgosDepthPile {
 	DEPTH_PILE_1 = 1,
 	DEPTH_PILE_2,

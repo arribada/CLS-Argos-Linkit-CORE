@@ -24,7 +24,6 @@
 extern FileSystem *main_filesystem;
 extern Scheduler *system_scheduler;
 extern Timer *system_timer;
-extern ServiceScheduler *comms_scheduler;
 extern ConfigurationStore *configuration_store;
 extern BLEService *ble_service;
 extern OTAFileUpdater *ota_updater;
@@ -203,10 +202,6 @@ void OperationalState::entry() {
 	DEBUG_INFO("entry: OperationalState");
 	led_handle::dispatch<SetLEDOff>({});
 
-	comms_scheduler->start([this](ServiceEvent& e) {
-		service_event_handler(e);
-	});
-
 	ServiceManager::startall([this](ServiceEvent& e) {
 		service_event_handler(e);
 	});
@@ -224,12 +219,7 @@ void OperationalState::service_event_handler(ServiceEvent& e) {
 	// Notify event to all peer services
 	ServiceManager::notify_peer_event(e);
 
-	// Legacy service event handling for comms scheduler
-	if (e.event_source == ServiceIdentifier::UW_SENSOR) {
-		comms_scheduler->notify_underwater_state(std::get<bool>(e.event_data));
-		return;
-	}
-	else if (e.event_source == ServiceIdentifier::GNSS_SENSOR) {
+	if (e.event_source == ServiceIdentifier::GNSS_SENSOR) {
 		if (e.event_type == ServiceEventType::SERVICE_ACTIVE) {
 			led_handle::dispatch<SetLEDGNSSOn>({});
 		} else if (e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
@@ -237,7 +227,6 @@ void OperationalState::service_event_handler(ServiceEvent& e) {
 				led_handle::dispatch<SetLEDGNSSOffWithFix>({});
 			else
 				led_handle::dispatch<SetLEDGNSSOffWithoutFix>({});
-			comms_scheduler->notify_sensor_log_update();
 		}
 		return;
 	}
@@ -249,14 +238,6 @@ void OperationalState::service_event_handler(ServiceEvent& e) {
 		else if (e.event_type == ServiceEventType::SERVICE_INACTIVE) {
 			led_handle::dispatch<SetLEDArgosTXComplete>({});
 		}
-	} else if (e.event_source == ServiceIdentifier::UNKNOWN) {
-		// Legacy event handling
-		if (e.event_type == ServiceEventType::ARGOS_TX_START) {
-			led_handle::dispatch<SetLEDArgosTX>({});
-		}
-		else if (e.event_type == ServiceEventType::ARGOS_TX_END) {
-			led_handle::dispatch<SetLEDArgosTXComplete>({});
-		}
 	}
 }
 
@@ -264,7 +245,6 @@ void OperationalState::exit() {
 	DEBUG_INFO("exit: OperationalState");
 	led_handle::dispatch<SetLEDOff>({});
 	ServiceManager::stopall();
-	comms_scheduler->stop();
 	BaseDebugMode debug_mode = configuration_store->read_param<BaseDebugMode>(ParamID::DEBUG_OUTPUT_MODE);
 	if (debug_mode == BaseDebugMode::BLE_NUS) {
 		g_debug_mode = BaseDebugMode::UART;
