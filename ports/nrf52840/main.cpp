@@ -89,6 +89,7 @@ extern "C" void HardFault_Handler() {
 		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
 		nrf_delay_ms(50);
+		PMU::kick_watchdog();
 #endif
 	}
 }
@@ -112,6 +113,7 @@ extern "C" void MemoryManagement_Handler(void)
 		GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
 		nrf_delay_ms(50);
+		PMU::kick_watchdog();
 #endif
 	}
 }
@@ -136,6 +138,7 @@ extern "C" {
 			GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
 			GPIOPins::clear(BSP::GPIO::GPIO_LED_BLUE);
 			nrf_delay_ms(50);
+			PMU::kick_watchdog();
 		}
 #endif
 	}

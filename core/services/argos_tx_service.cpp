@@ -29,9 +29,15 @@ void ArgosTxService::service_init() {
 	m_artic.subscribe(*this);
 	m_sched.reset(argos_config.argos_id);
 	m_gps_depth_pile.clear();
+	m_is_first_tx = true;
+
+	// Set the idle timeout depending on the configuration settings
+	// i) In certification mode, keep powered on for 10 seconds in idle
+	// ii) In normal operation, keep powered on for 1 second in idle
 	if (argos_config.cert_tx_enable)
 		m_artic.set_idle_timeout(10000);
-	m_is_first_tx = true;
+	else
+		m_artic.set_idle_timeout(1000);
 }
 
 void ArgosTxService::service_term() {
