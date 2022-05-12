@@ -183,7 +183,7 @@ private:
 	void initiate_rx();
 
 	// State machine functionality
-	void state_machine();
+	void state_machine(bool use_scheduler=true);
 	void state_starting();
 	void state_starting_enter();
 	void state_starting_exit();
@@ -235,6 +235,7 @@ private:
 	void power_off();
 	void power_on();
 	void power_off_immediate();
+	void detect_dsp_present();
 
 public:
 	ArticSat(unsigned int idle_shutdown_timeout_ms = 1000);

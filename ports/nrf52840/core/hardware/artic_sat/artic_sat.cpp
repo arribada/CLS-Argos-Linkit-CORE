@@ -453,10 +453,32 @@ ArticSat::ArticSat(unsigned int idle_shutdown_ms) {
     m_tcxo_warmup_time = DEFAULT_TCXO_WARMUP_TIME_SECONDS;
 	GPIOPins::clear(SAT_RESET);
 	GPIOPins::clear(SAT_PWR_EN);
+    detect_dsp_present();
 }
 
 ArticSat::~ArticSat() {
 	power_off_immediate();
+}
+
+void ArticSat::detect_dsp_present() {
+
+	DEBUG_TRACE("ArticSat::detect_dsp_present");
+
+	// We run the state machine iteratively until we either reach a desired terminal state
+	ARTIC_STATE_CHANGE(stopped, starting);
+	while (m_state != ArticSatState::error && m_state != ArticSatState::send_firmware_image)
+	{
+		state_machine(false);
+		PMU::delay_ms(m_next_delay);
+	}
+
+	if (m_state == ArticSatState::error)
+	{
+		ARTIC_STATE_CHANGE(idle, stopped);
+		throw ErrorCode::ARTIC_DSP_NOT_PRESENT;
+	} else {
+		ARTIC_STATE_CHANGE(idle, stopped);
+	}
 }
 
 void ArticSat::power_on()
@@ -478,7 +500,7 @@ void ArticSat::power_on()
     state_machine();
 }
 
-void ArticSat::state_machine() {
+void ArticSat::state_machine(bool use_scheduler) {
 
 	// Assume no delay between state machine invocations
 	m_next_delay = 0;
@@ -535,7 +557,7 @@ void ArticSat::state_machine() {
 		break;
 	}
 
-	if (!ARTIC_STATE_EQUAL(stopped)) {
+	if (use_scheduler && !ARTIC_STATE_EQUAL(stopped)) {
 		// Invoke ourselves again if we are not stopped
 		//DEBUG_TRACE("ArticSat::state_machine: reschedule in %u ms", m_next_delay);
 		m_task = system_scheduler->post_task_prio([this]() {
