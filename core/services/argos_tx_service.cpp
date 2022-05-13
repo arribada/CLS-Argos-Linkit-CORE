@@ -237,6 +237,12 @@ void ArgosTxService::react(ArticEventTxStarted const&) {
 }
 
 void ArgosTxService::react(ArticEventTxComplete const&) {
+	// Increment TX counter
+	configuration_store->increment_tx_counter();
+
+	// Save configuration params
+	configuration_store->save_params();
+
 	m_sched.notify_tx_complete();
 	service_complete();
 }
