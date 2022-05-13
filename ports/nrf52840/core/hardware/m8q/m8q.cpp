@@ -810,7 +810,7 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_power_management()
         .extintInactivityMs = 0
     };
 
-#if 0 == NO_GPS_POWER_REG
+#if 1 == NO_GPS_POWER_REG
 	// Configure EXT_INT pin for power management
     cfg_msg_cfg_pm2.flags |= CFG::PM2::FLAGS_EXTINTWAKE | CFG::PM2::FLAGS_EXTINTBACKUP;
 #endif

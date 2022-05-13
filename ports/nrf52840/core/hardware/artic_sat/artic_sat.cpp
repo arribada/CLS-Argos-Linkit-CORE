@@ -13,7 +13,6 @@
 #include "binascii.hpp"
 #include "crc8.hpp"
 #include "crc16.hpp"
-#include "rtc.hpp"
 #include "artic_sat.hpp"
 
 #include "nrf_delay.h"
@@ -63,7 +62,6 @@ static constexpr const char *const status_string[] =
 
 extern Scheduler *system_scheduler;
 extern Timer *system_timer;
-extern RTC *rtc;
 
 
 static_assert(ARRAY_SIZE(status_string) == TOTAL_NUMBER_STATUS_FLAG);
@@ -688,7 +686,7 @@ void ArticSat::state_dsp_reset() {
 			DEBUG_ERROR("ArticSat::state_machine: DSP reset failed");
 			ARTIC_STATE_CHANGE(dsp_reset, error);
 		} else
-			m_next_delay = SAT_ARTIC_DELAY_BOOT_MS;
+			m_next_delay = SAT_ARTIC_DELAY_RESET_MS;
 	}
 }
 
