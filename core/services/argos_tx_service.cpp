@@ -336,6 +336,7 @@ ArticPacket ArgosPacketBuilder::build_short_packet(GPSLogEntry* gps_entry,
 			PACK_BITS(INVALID_ALTITUDE, packet, base_pos, 8);
 		}
 	} else {
+		DEBUG_TRACE("ArgosPacketBuilder::build_short_packet: lat/lon no fix");
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);
 		PACK_BITS(0xFF, packet, base_pos, 7);
@@ -409,6 +410,7 @@ ArticPacket ArgosPacketBuilder::build_long_packet(std::vector<GPSLogEntry*> &gps
 		PACK_BITS((unsigned int)gspeed, packet, base_pos, 7);
 		DEBUG_TRACE("ArgosPacketBuilder::build_long_packet: speed=%u", (unsigned int)gspeed);
 	} else {
+		DEBUG_TRACE("ArgosPacketBuilder::build_long_packet: lat/lon[0] no fix");
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
 		PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);
 		PACK_BITS(0xFF, packet, base_pos, 7);
