@@ -70,7 +70,7 @@ public:
 		DEBUG_TRACE("ArgosDepthPile: retrieve: slot=%u/%u span=%u occupancy=%u", m_retrieve_index % max_index, max_index-1, span, m_entry.size());
 
 		// Find first eligible slot for transmission
-		unsigned int max_msg_index = m_retrieve_index + span;
+		unsigned int max_msg_index = m_retrieve_index + max_index;
 		unsigned int retrieve_index = 0;
 		unsigned int eligible = 0;
 		std::optional<unsigned int> first_eligible;

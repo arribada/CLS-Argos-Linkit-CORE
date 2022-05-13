@@ -69,7 +69,7 @@ unsigned int ArgosRxService::service_next_schedule_in_ms() {
 		SAT_UPLK_OFF,
 		&next_pass)) {
 		m_next_timeout = 1000 * next_pass.duration;
-		DEBUG_INFO("ArgosRxService::service_next_schedule_in_ms: new DL RX window: epoch = %u now = %u duration = %u", next_pass.epoch, start_time, next_pass.duration);
+		DEBUG_INFO("ArgosRxService::service_next_schedule_in_ms: new DL RX window: epoch = %u now = %llu duration = %u", (unsigned int)next_pass.epoch, start_time, (unsigned int)next_pass.duration);
 		if (next_pass.epoch <= (uint64_t)start_time) {
 			return 0;
 		} else {
