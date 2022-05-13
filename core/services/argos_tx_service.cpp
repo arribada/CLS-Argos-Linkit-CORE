@@ -201,7 +201,6 @@ void ArgosTxService::process_time_sync_burst() {
 	} else {
 		// No eligible entries for transmission in the depth pile, so send a doppler burst instead
 		DEBUG_WARN("ArgosTxService::process_time_sync_burst: no entries eligible in depth pile");
-		process_doppler_burst();
 	}
 }
 
@@ -220,7 +219,6 @@ void ArgosTxService::process_gnss_burst() {
 	} else {
 		// No eligible entries for transmission in the depth pile, so send a doppler burst instead
 		DEBUG_WARN("ArgosTxService::process_gnss_burst: no entries eligible in depth pile");
-		process_doppler_burst();
 	}
 }
 
@@ -434,8 +432,12 @@ ArticPacket ArgosPacketBuilder::build_long_packet(std::vector<GPSLogEntry*> &gps
 
 	// Subsequent GPS entries
 	for (unsigned int i = 1; i < MAX_GPS_ENTRIES_IN_PACKET; i++) {
-		if (gps_entries.size() <= i || 0 == gps_entries[i]->info.valid) {
-			DEBUG_TRACE("ArgosPacketBuilder::build_long_packet: gps_entries[%u] not present/no fix");
+		if (gps_entries.size() <= i) {
+			DEBUG_TRACE("ArgosPacketBuilder::build_long_packet: lat/lon[%u] not present", i);
+			PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
+			PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);
+		} else if (0 == gps_entries[i]->info.valid) {
+			DEBUG_TRACE("ArgosPacketBuilder::build_long_packet: lat/lon[%u] no fix", i);
 			PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
 			PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);
 		} else {
@@ -471,6 +473,7 @@ ArticPacket ArgosPacketBuilder::build_gnss_packet(std::vector<GPSLogEntry*> &v,
 		BaseDeltaTimeLoc delta_time_loc,
 		unsigned int &size_bits) {
 	if (v.size() > 1) {
+		std::reverse(v.begin(), v.end()); // Puts entries into chronological order
 		size_bits = LONG_PACKET_BITS;
 		return build_long_packet(v, is_out_of_zone, is_low_battery, delta_time_loc);
 	} else {
