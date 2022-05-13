@@ -135,10 +135,10 @@ bool ArgosTxService::service_is_triggered_on_surfaced(bool &immediate) {
 }
 
 void ArgosTxService::notify_peer_event(ServiceEvent& e) {
-	DEBUG_TRACE("ArgosTxService::notify_peer_event");
+	DEBUG_TRACE("ArgosTxService::notify_peer_event: (%u,%u)", e.event_source, e.event_type);
 
 	if (e.event_source == ServiceIdentifier::GNSS_SENSOR &&
-		e.event_type == ServiceEventType::SENSOR_LOG_UPDATED)
+		e.event_type == ServiceEventType::SERVICE_LOG_UPDATED)
 	{
 		GPSLogEntry& entry = std::get<GPSLogEntry>(e.event_data);
 		ArgosConfig argos_config;
@@ -154,12 +154,16 @@ void ArgosTxService::notify_peer_event(ServiceEvent& e) {
 		if (entry.info.valid) {
 			DEBUG_TRACE("ArgosTxService::notify_peer_event: updated GPS location");
 			m_sched.set_last_location(entry.info.lon, entry.info.lat);
-			if (!service_is_scheduled()) {
-				// Reschedule service if we have no existing schedule which may be necessary
-				// in the situation that the GPS location was not known in prepass mode
-				service_reschedule();
-			}
 		}
+
+		// Reschedule the service
+		if (!service_is_scheduled()) {
+			DEBUG_TRACE("ArgosTxService::notify_peer_event: rescheduling as no existing schedule");
+			// Reschedule service if we have no existing schedule which may be necessary
+			// in the situation that the GPS location was not known in prepass mode
+			service_reschedule();
+		}
+
 	} else if (e.event_source == ServiceIdentifier::UW_SENSOR) {
 		if (std::get<bool>(e.event_data) == false) {
 			ArgosConfig argos_config;

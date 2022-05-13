@@ -106,7 +106,7 @@ unsigned int ArgosRxService::service_next_timeout() {
 void ArgosRxService::notify_peer_event(ServiceEvent& e) {
 
 	if (e.event_source == ServiceIdentifier::GNSS_SENSOR &&
-		e.event_type == ServiceEventType::SENSOR_LOG_UPDATED)
+		e.event_type == ServiceEventType::SERVICE_LOG_UPDATED)
 	{
 		// Update location information if we got a valid fix
 		GPSLogEntry& gps = std::get<GPSLogEntry>(e.event_data);
@@ -119,9 +119,9 @@ void ArgosRxService::notify_peer_event(ServiceEvent& e) {
 			if (is_first_location)
 				service_reschedule();
 		}
-	} else {
-		Service::notify_peer_event(e);
 	}
+
+	Service::notify_peer_event(e);
 }
 
 bool ArgosRxService::service_is_triggered_on_surfaced(bool& immediate) {

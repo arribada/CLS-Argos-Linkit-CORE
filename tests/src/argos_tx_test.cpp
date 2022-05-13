@@ -78,14 +78,14 @@ TEST_GROUP(ArgosTxService)
 		GPSLogEntry log = make_gps_location(longitude, latitude, t);
 
 		e.event_source = ServiceIdentifier::GNSS_SENSOR;
-		e.event_type = ServiceEventType::SENSOR_LOG_UPDATED;
+		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
 		e.event_data = log;
 		ServiceManager::notify_peer_event(e);
 	}
 
 	void notify_underwater_state(bool state) {
 		ServiceEvent e;
-		e.event_type = ServiceEventType::SENSOR_LOG_UPDATED,
+		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED,
 		e.event_data = state,
 		e.event_source = ServiceIdentifier::UW_SENSOR;
 		ServiceManager::notify_peer_event(e);
