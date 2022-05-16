@@ -29,62 +29,16 @@ bool ArgosRxService::service_is_enabled() {
 }
 
 unsigned int ArgosRxService::service_next_schedule_in_ms() {
-	if (!m_is_last_location_known) {
-		DEBUG_TRACE("ArgosRxService::service_next_schedule_in_ms: can't schedule as last location is not known");
-		return Service::SCHEDULE_DISABLED;
-	}
-
 	ArgosConfig argos_config;
 	configuration_store->get_argos_configuration(argos_config);
-
-	std::time_t start_time = service_current_time();
-	std::time_t stop_time = start_time + (std::time_t)(24 * SECONDS_PER_HOUR);
-	struct tm *p_tm = std::gmtime(&start_time);
-	struct tm tm_start = *p_tm;
-	p_tm = std::gmtime(&stop_time);
-	struct tm tm_stop = *p_tm;
-
-	DEBUG_INFO("ArgosRxService::service_next_schedule_in_ms: searching window start=%llu stop=%llu", start_time, stop_time);
-
 	BasePassPredict& pass_predict = configuration_store->read_pass_predict();
-	PredictionPassConfiguration_t config = {
-		(float)m_last_latitude,
-		(float)m_last_longitude,
-		{ (uint16_t)(1900 + tm_start.tm_year), (uint8_t)(tm_start.tm_mon + 1), (uint8_t)tm_start.tm_mday, (uint8_t)tm_start.tm_hour, (uint8_t)tm_start.tm_min, (uint8_t)tm_start.tm_sec },
-		{ (uint16_t)(1900 + tm_stop.tm_year), (uint8_t)(tm_stop.tm_mon + 1), (uint8_t)tm_stop.tm_mday, (uint8_t)tm_stop.tm_hour, (uint8_t)tm_stop.tm_min, (uint8_t)tm_stop.tm_sec },
-        (float)argos_config.prepass_min_elevation,        //< Minimum elevation of passes [0, 90]
-		(float)argos_config.prepass_max_elevation,        //< Maximum elevation of passes  [maxElevation >= < minElevation]
-		(float)argos_config.prepass_min_duration / 60.0f,  //< Minimum duration (minutes)
-		argos_config.prepass_max_passes,                  //< Maximum number of passes per satellite (#)
-		(float)argos_config.prepass_linear_margin / 60.0f, //< Linear time margin (in minutes/6months)
-		argos_config.prepass_comp_step                    //< Computation step (seconds)
-	};
-	SatelliteNextPassPrediction_t next_pass;
-
-	if (PREVIPASS_compute_next_pass_with_status(
-    	&config,
-		pass_predict.records,
-		pass_predict.num_records,
-		SAT_DNLK_ON_WITH_A3,
-		SAT_UPLK_OFF,
-		&next_pass)) {
-		m_next_timeout = 1000 * next_pass.duration;
-		DEBUG_INFO("ArgosRxService::service_next_schedule_in_ms: new DL RX window: epoch = %u now = %llu duration = %u", (unsigned int)next_pass.epoch, start_time, (unsigned int)next_pass.duration);
-		if (next_pass.epoch <= (uint64_t)start_time) {
-			return 0;
-		} else {
-			return 1000 * (next_pass.epoch - start_time);
-		}
-	}
-
-	DEBUG_WARN("ArgosRxService::service_next_schedule_in_ms: failed to find DL RX window");
-
-	return Service::SCHEDULE_DISABLED;
+	std::time_t now = service_current_time();
+	return m_sched.schedule(argos_config, pass_predict, now, m_timeout, m_mode);
 }
 
 void ArgosRxService::service_initiate() {
-	DEBUG_TRACE("ArgosRxService::service_initiate");
-	m_artic.start_receive(ArticMode::A3);
+	DEBUG_INFO("ArgosRxService::service_initiate: starting RX");
+	m_artic.start_receive(m_mode);
 }
 
 bool ArgosRxService::service_cancel() {
@@ -92,6 +46,7 @@ bool ArgosRxService::service_cancel() {
 	unsigned int t = m_artic.get_cumulative_receive_time();
 	DEBUG_TRACE("ArgosRxService::service_cancel: pending=%u", t ? true : false);
 	if (t) {
+		DEBUG_INFO("ArgosRxService::service_cancel: stopped RX");
 		configuration_store->increment_rx_time(t);
 		configuration_store->save_params();
 		return true;
@@ -100,7 +55,7 @@ bool ArgosRxService::service_cancel() {
 }
 
 unsigned int ArgosRxService::service_next_timeout() {
-	return m_next_timeout;
+	return m_timeout;
 }
 
 void ArgosRxService::notify_peer_event(ServiceEvent& e) {
@@ -112,12 +67,15 @@ void ArgosRxService::notify_peer_event(ServiceEvent& e) {
 		GPSLogEntry& gps = std::get<GPSLogEntry>(e.event_data);
 		if (gps.info.valid) {
 			DEBUG_TRACE("ArgosRxService::notify_peer_event: updated GPS location");
-			bool is_first_location = !m_is_last_location_known;
-			m_is_last_location_known = true;
-			m_last_longitude = gps.info.lon;
-			m_last_latitude = gps.info.lat;
-			if (is_first_location)
-				service_reschedule();
+			m_sched.set_location(gps.info.lon, gps.info.lat);
+			service_reschedule();
+		}
+	} else if (e.event_source == ServiceIdentifier::UW_SENSOR) {
+		if (std::get<bool>(e.event_data) == false) {
+			ArgosConfig argos_config;
+			configuration_store->get_argos_configuration(argos_config);
+			std::time_t earliest_schedule = service_current_time() + argos_config.dry_time_before_tx;
+			m_sched.set_earliest_schedule(earliest_schedule);
 		}
 	}
 
@@ -208,7 +166,7 @@ void ArgosRxService::update_pass_predict(BasePassPredict& new_pass_predict) {
 
 	// Check if we received a sufficient number of records
 	if (num_updated_records == new_pass_predict.num_records && num_updated_records >= existing_pass_predict.num_records) {
-		DEBUG_INFO("ArgosRxService::update_pass_predict: RX_OFF: committing %u AOP records", num_updated_records);
+		DEBUG_INFO("ArgosRxService::update_pass_predict: committing %u AOP records", num_updated_records);
 		configuration_store->write_pass_predict(existing_pass_predict);
 		std::time_t new_aop_time = service_current_time();
 		configuration_store->write_param(ParamID::ARGOS_AOP_DATE, new_aop_time);
@@ -218,4 +176,91 @@ void ArgosRxService::update_pass_predict(BasePassPredict& new_pass_predict) {
 		service_cancel();
 		service_complete();
 	}
+}
+
+ArgosRxScheduler::ArgosRxScheduler() : m_earliest_schedule(0) {
+	m_location.reset();
+}
+
+unsigned int ArgosRxScheduler::schedule(ArgosConfig& argos_config, BasePassPredict& pass_predict, std::time_t now, unsigned int &timeout, ArticMode& mode) {
+	if (!m_location.has_value()) {
+		DEBUG_TRACE("ArgosRxService::schedule: can't schedule as last location/time is not known");
+		return Service::SCHEDULE_DISABLED;
+	}
+
+	// Update earliest schedule according to configuration and current time
+	set_earliest_schedule(argos_config.last_aop_update + (SECONDS_PER_DAY * argos_config.argos_rx_aop_update_period));
+	set_earliest_schedule(now);
+
+	std::time_t start_time = m_earliest_schedule;
+	std::time_t stop_time = start_time + (std::time_t)SECONDS_PER_DAY;
+	struct tm *p_tm = std::gmtime(&start_time);
+	struct tm tm_start = *p_tm;
+	p_tm = std::gmtime(&stop_time);
+	struct tm tm_stop = *p_tm;
+
+	DEBUG_TRACE("ArgosRxService::service_next_schedule_in_ms: searching window start=%llu stop=%llu", start_time, stop_time);
+
+	PredictionPassConfiguration_t pp_config = {
+		(float)m_location.value().latitude,
+		(float)m_location.value().longitude,
+		{ (uint16_t)(1900 + tm_start.tm_year), (uint8_t)(tm_start.tm_mon + 1), (uint8_t)tm_start.tm_mday, (uint8_t)tm_start.tm_hour, (uint8_t)tm_start.tm_min, (uint8_t)tm_start.tm_sec },
+		{ (uint16_t)(1900 + tm_stop.tm_year), (uint8_t)(tm_stop.tm_mon + 1), (uint8_t)tm_stop.tm_mday, (uint8_t)tm_stop.tm_hour, (uint8_t)tm_stop.tm_min, (uint8_t)tm_stop.tm_sec },
+        (float)argos_config.prepass_min_elevation,        //< Minimum elevation of passes [0, 90]
+		(float)argos_config.prepass_max_elevation,        //< Maximum elevation of passes  [maxElevation >= < minElevation]
+		(float)argos_config.prepass_min_duration / 60.0f,  //< Minimum duration (minutes)
+		argos_config.prepass_max_passes,                  //< Maximum number of passes per satellite (#)
+		(float)argos_config.prepass_linear_margin / 60.0f, //< Linear time margin (in minutes/6months)
+		argos_config.prepass_comp_step                    //< Computation step (seconds)
+	};
+	SatelliteNextPassPrediction_t next_pass;
+
+	while (PREVIPASS_compute_next_pass_with_status(
+    	&pp_config,
+		pass_predict.records,
+		pass_predict.num_records,
+		SAT_DNLK_ON_WITH_A3,
+		SAT_UPLK_OFF,
+		&next_pass)) {
+
+		// Set initial start/end points based on this discovered window
+		std::time_t start = start_time, end = next_pass.epoch + next_pass.duration;
+
+		// Advance to at least the prepass epoch position
+		start = std::max((std::time_t)next_pass.epoch, start);
+
+		DEBUG_TRACE("ArgosRxScheduler::schedule_prepass: sat=%01x dl=%u e=%llu t=%llu [%llu %llu %llu]",
+					(unsigned int)next_pass.satHexId,
+					(unsigned int)next_pass.downlinkStatus,
+					m_earliest_schedule,
+					now,
+					start_time,
+					next_pass.epoch,
+					end);
+
+		// Check we don't schedule off the end of the computed window
+		if ((start + ARGOS_RX_MARGIN_MSECS) < end) {
+			// We're good to go for this schedule, compute relative delay until the epoch arrives
+			DEBUG_TRACE("ArgosRxScheduler::schedule_prepass: scheduled for %llu seconds from now", start - now);
+			mode = ArticMode::A3;
+			timeout = (end - start) * MSECS_PER_SECOND;
+			return start - now;
+		} else {
+			break;
+		}
+	}
+
+	DEBUG_ERROR("ArgosRxService::schedule: failed to find DL RX window");
+	return Service::SCHEDULE_DISABLED;
+}
+
+void ArgosRxScheduler::set_earliest_schedule(std::time_t t) {
+	if (t > m_earliest_schedule) {
+		DEBUG_TRACE("ArgosRxScheduler::set_earliest_schedule: new earliest: %llu", t);
+		m_earliest_schedule = t;
+	}
+}
+
+void ArgosRxScheduler::set_location(double lon, double lat) {
+	m_location = Location(lon, lat);
 }

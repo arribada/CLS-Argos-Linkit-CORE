@@ -78,7 +78,7 @@ TEST(ArgosRxService, BasicDownlinkReceive)
 	unsigned int argos_hexid = 0x01234567U;
 	unsigned int lb_threshold = 0U;
 	bool lb_en = false;
-	unsigned int rx_aop_update_period = 0U;
+	unsigned int rx_aop_update_period = 1U;
 
 	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
 	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
@@ -106,12 +106,12 @@ TEST(ArgosRxService, BasicDownlinkReceive)
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	service.start(nullptr);
 
-	std::time_t t = 1580083200;
+	std::time_t t = 1632009600;
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 	inject_gps_location(11.8768, -33.8232);
 
-	t += 24050;
+	t += service.get_last_schedule();
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 
@@ -172,7 +172,6 @@ TEST(ArgosRxService, BasicDownlinkReceive)
 	// Check RX time
 	unsigned int rx_time = configuration_store->read_param<unsigned int>(ParamID::ARGOS_RX_TIME);
 	CHECK_EQUAL(10, rx_time);
-
 }
 
 TEST(ArgosRxService, CancelledOnUnderwaterAndRescheduledOnSurfaced)
@@ -235,6 +234,9 @@ TEST(ArgosRxService, CancelledOnUnderwaterAndRescheduledOnSurfaced)
 	fake_timer->set_counter(t*1000);
 	notify_underwater_state(false);
 
+	t += 1;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
 	mock().expectOneCall("start_receive").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A3);
 	system_scheduler->run();
 }
