@@ -396,12 +396,57 @@ int main()
 	}
 
 	DEBUG_TRACE("MS58xx...");
-	try {
-		static MS58xx ms58xx_pressure_sensor;
-		static PressureDetectorService pressure_detector(ms58xx_pressure_sensor);
-		static PressureSensorService pressure_sensor(ms58xx_pressure_sensor, &pressure_sensor_log);
-	} catch (...) {
-		DEBUG_TRACE("MS58xx: not detected");
+	MS58xxLL *ms58xx_devices[BSP::I2C_TOTAL_NUMBER];
+	for (unsigned int i = 0; i < BSP::I2C_TOTAL_NUMBER; i++) {
+		static unsigned int i2caddr[2] = { MS5803_ADDRESS, MS5837_ADDRESS };
+		static std::string variant[2] = { MS5803_VARIANT, MS5837_VARIANT };
+		for (unsigned int j = 0; j < 2; j++) {
+			try {
+				ms58xx_devices[i] = new MS58xxLL(i, i2caddr[j], variant[j]);
+				DEBUG_TRACE("MS58xx: found on i2cbus=%u i2caddr=0x%02x", i, i2caddr[j]);
+				break;
+			} catch (...) {
+				DEBUG_TRACE("MS58xx: not detected on i2cbus=%u i2caddr=0x%02x", i, i2caddr[j]);
+				ms58xx_devices[i] = nullptr;
+			}
+		}
+	}
+
+	DEBUG_TRACE("AD5933...");
+	AD5933LL *ad5933_devices[BSP::I2C_TOTAL_NUMBER];
+	for (unsigned int i = 0; i < BSP::I2C_TOTAL_NUMBER; i++) {
+		try {
+			ad5933_devices[i] = new AD5933LL(i, AD5933_ADDRESS);
+			DEBUG_TRACE("AD5933: found on i2cbus=%u i2caddr=0x%02x", i, AD5933_ADDRESS);
+		} catch (...) {
+			DEBUG_TRACE("AD5933: not detected on i2cbus=%u i2caddr=0x%02x", i, AD5933_ADDRESS);
+			ad5933_devices[i] = nullptr;
+		}
+	}
+
+	bool cdt_present = false;
+	bool standalone_pressure = false;
+	// Iterate twice to allows flags to be set
+	for (unsigned int x = 0; x < 2; x++) {
+		// Check available devices on each bus
+		for (unsigned int i = 0; i < BSP::I2C_TOTAL_NUMBER; i++) {
+			//DEBUG_TRACE("cdt=%u press=%u bus=%u ad5933=%p ms58xx=%p", cdt_present, standalone_pressure, i, ad5933_devices[i], ms58xx_devices[i]);
+			if (!cdt_present && ad5933_devices[i] && ms58xx_devices[i]) {
+				DEBUG_TRACE("CDT on bus %u...", i);
+				cdt_present = true;
+				static CDT cdt(*ms58xx_devices[i], *ad5933_devices[i]);
+				static CDTSensorService cdt_sensor_service(cdt, &cdt_sensor_log);
+			} else if (!standalone_pressure && ms58xx_devices[i]) {
+				DEBUG_TRACE("Standalone Pressure Sensor on bus %u...", i);
+				standalone_pressure = true;
+				static MS58xx ms58xx_pressure_sensor(*ms58xx_devices[i]);
+				static PressureDetectorService pressure_detector(ms58xx_pressure_sensor);
+				static PressureSensorService pressure_sensor(ms58xx_pressure_sensor, &pressure_sensor_log);
+			}
+		}
+
+		if (standalone_pressure && cdt_present)
+			break;
 	}
 
 	DEBUG_TRACE("LTR303...");
@@ -426,20 +471,6 @@ int main()
 		static SeaTempSensorService rtd_sensor_service(rtd, &rtd_sensor_log);
 	} catch (...) {
 		DEBUG_TRACE("OEM RTD: not detected");
-	}
-
-	DEBUG_TRACE("CDT...");
-	try {
-		static CDT cdt(EXT_I2C_BUS);
-		static CDTSensorService cdt_sensor_service(cdt, &cdt_sensor_log);
-	} catch (...) {
-		DEBUG_TRACE("CDT: not detected on external bus");
-		try {
-			static CDT cdt(ONBOARD_I2C_BUS);
-			static CDTSensorService cdt_sensor_service(cdt, &cdt_sensor_log);
-		} catch (...) {
-			DEBUG_TRACE("CDT: not detected on internal bus");
-		}
 	}
 
 	DEBUG_TRACE("BMX160...");

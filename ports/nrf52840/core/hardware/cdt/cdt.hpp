@@ -1,20 +1,20 @@
 #pragma once
 
-#include "../ms58xx/ms58xx.hpp"
+#include "ms58xx.hpp"
 #include "sensor.hpp"
 #include "calibration.hpp"
 #include "ad5933.hpp"
 
 class CDT : public Sensor {
 public:
-	CDT(unsigned int bus = EXT_I2C_BUS);
+	CDT(MS58xxLL& ms58xx, AD5933LL& ad5933);
 	void calibrate(double, unsigned int) override;
 	double read(unsigned int offset);
 
 private:
 	Calibration m_cal;
-	MS58xxLL m_ms58xx;
-	AD5933LL m_ad5933;
+	MS58xxLL& m_ms58xx;
+	AD5933LL& m_ad5933;
 	double m_last_temperature;
 	double m_last_pressure;
 

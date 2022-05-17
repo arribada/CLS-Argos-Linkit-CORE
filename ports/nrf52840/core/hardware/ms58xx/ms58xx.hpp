@@ -46,7 +46,7 @@ private:
 
 class MS58xx : public Sensor {
 public:
-	MS58xx() : Sensor("PRS"), m_ms58xx(MS58xxLL(MS5803_DEVICE, MS5803_ADDRESS, MS5803_VARIANT)) {}
+	MS58xx(MS58xxLL& ms58xx) : Sensor("PRS"), m_ms58xx(ms58xx) {}
 	void calibrate(double, unsigned int) override {};
 	double read(unsigned int channel = 0) {
 		if (0 == channel) {
@@ -61,6 +61,5 @@ public:
 private:
 	double m_last_pressure;
 	double m_last_temperature;
-
-	MS58xxLL m_ms58xx;
+	MS58xxLL& m_ms58xx;
 };

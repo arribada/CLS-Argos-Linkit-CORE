@@ -1,9 +1,7 @@
 #include "cdt.hpp"
 #include "debug.hpp"
 
-CDT::CDT(unsigned int bus) : Sensor("CDT"), m_cal(Calibration("CDT")), m_ms58xx(MS58xxLL(bus, MS5837_ADDRESS, MS5837_VARIANT)),
-	m_ad5933(AD5933LL(bus, AD5933_ADDRESS)) {
-	DEBUG_TRACE("CDT::CDT");
+CDT::CDT(MS58xxLL& ms58xx, AD5933LL& ad5933) : Sensor("CDT"), m_cal(Calibration("CDT")), m_ms58xx(ms58xx), m_ad5933(ad5933) {
 }
 
 double CDT::read(unsigned int offset) {
