@@ -71,6 +71,7 @@ protected:
 	void service_active();
 	void service_set_log_header_time(LogHeader& header, std::time_t time);
 	std::time_t service_current_time();
+	bool service_is_time_known();
 	void service_set_time(std::time_t);
 	uint16_t service_get_voltage();
 	bool service_is_battery_level_low();

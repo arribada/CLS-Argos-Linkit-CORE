@@ -146,6 +146,8 @@ bool Service::service_is_scheduled() {
 
 void Service::service_complete(ServiceEventData *event_data, void *entry, bool shall_reschedule) {
 	DEBUG_TRACE("Service::service_complete: service %s", m_name);
+	if (!m_is_initiated)
+		DEBUG_WARN("Service::service_complete: service %s completed without being initiated", m_name);
 	m_is_initiated = false;
 	notify_service_inactive();
 	if (m_logger && entry != nullptr)
@@ -177,6 +179,10 @@ void Service::service_active() {
 
 std::time_t Service::service_current_time() {
 	return rtc->gettime();
+}
+
+bool Service::service_is_time_known() {
+	return rtc->is_set();
 }
 
 uint64_t Service::service_current_timer() {

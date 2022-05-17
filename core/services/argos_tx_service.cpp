@@ -78,6 +78,9 @@ unsigned int ArgosTxService::service_next_schedule_in_ms() {
 					return m_sched.schedule_legacy(argos_config, now);
 				}
 				return Service::SCHEDULE_DISABLED;
+			} else if (!service_is_time_known()) {
+				DEBUG_TRACE("ArgosTxService::service_next_schedule_in_ms: can't schedule as GNSS_EN and RTC not set");
+				return Service::SCHEDULE_DISABLED;
 			}
 			if (m_gps_depth_pile.eligible() == 0) {
 				DEBUG_TRACE("ArgosTxService::service_next_schedule_in_ms: depth pile has no eligible entries");
@@ -231,10 +234,12 @@ void ArgosTxService::process_doppler_burst() {
 }
 
 void ArgosTxService::react(ArticEventTxStarted const&) {
+	DEBUG_TRACE("ArgosTxService::react: ArticEventTxStarted");
 	service_active();
 }
 
 void ArgosTxService::react(ArticEventTxComplete const&) {
+	DEBUG_TRACE("ArgosTxService::react: ArticEventTxComplete");
 	// Increment TX counter
 	configuration_store->increment_tx_counter();
 
@@ -246,6 +251,7 @@ void ArgosTxService::react(ArticEventTxComplete const&) {
 }
 
 void ArgosTxService::react(ArticEventDeviceError const&) {
+	DEBUG_TRACE("ArgosTxService::react: ArticEventDeviceError");
 	service_cancel();
 	service_complete();
 }
