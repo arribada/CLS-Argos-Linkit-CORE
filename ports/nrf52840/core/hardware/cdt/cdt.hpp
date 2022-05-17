@@ -1,9 +1,9 @@
 #pragma once
 
+#include "../ms58xx/ms58xx.hpp"
 #include "sensor.hpp"
 #include "calibration.hpp"
 #include "ad5933.hpp"
-#include "ms5803.hpp"
 
 class CDT : public Sensor {
 public:
@@ -13,7 +13,7 @@ public:
 
 private:
 	Calibration m_cal;
-	MS5803LL m_ms5803;
+	MS58xxLL m_ms58xx;
 	AD5933LL m_ad5933;
 	double m_last_temperature;
 	double m_last_pressure;

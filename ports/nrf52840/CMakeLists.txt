@@ -160,7 +160,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/scheduling
     ${PROJ_DIR}/core/hardware/artic_sat
     ${PROJ_DIR}/core/hardware/m8q
-    ${PROJ_DIR}/core/hardware/ms5803
+    ${PROJ_DIR}/core/hardware/ms58xx
     ${PROJ_DIR}/core/hardware/ad5933
     ${PROJ_DIR}/core/hardware/ltr_303
     ${PROJ_DIR}/core/hardware/oem_ph
@@ -232,7 +232,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/filesystem/ota_flash_file_updater.cpp
     ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
-    ${PROJ_DIR}/core/hardware/ms5803/ms5803.cpp
+    ${PROJ_DIR}/core/hardware/ms58xx/ms58xx.cpp
     ${PROJ_DIR}/core/hardware/ad5933/ad5933.cpp
     ${PROJ_DIR}/core/hardware/bmx160/bmx160.cpp
     ${PROJ_DIR}/core/hardware/bmx160/bmx160.c

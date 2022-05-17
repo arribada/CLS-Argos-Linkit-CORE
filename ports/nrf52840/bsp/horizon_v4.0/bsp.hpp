@@ -30,6 +30,8 @@
 
 // I2C device mappings
 #define MS5803_DEVICE  ONBOARD_I2C_BUS
+#define MS5803_VARIANT "MS5803_14BA"
+#define MS5837_VARIANT "MS5837_30BA"
 #define LIGHT_DEVICE   EXT_I2C_BUS
 #define OEM_PH_DEVICE  EXT_I2C_BUS
 #define OEM_RTD_DEVICE EXT_I2C_BUS
@@ -39,6 +41,7 @@
 
 // Device addresses
 #define MS5803_ADDRESS	0x77
+#define MS5837_ADDRESS	0x76
 #define AD5933_ADDRESS  0x0D
 #define LIGHT_DEVICE_ADDR   0x29
 #define OEM_PH_DEVICE_ADDR  0x65

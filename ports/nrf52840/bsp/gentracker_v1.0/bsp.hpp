@@ -35,19 +35,22 @@
 #define CDT_AD5933_DEVICE EXT_I2C_BUS
 #define MCP4716_DEVICE    ONBOARD_I2C_BUS
 #define MS5803_DEVICE     ONBOARD_I2C_BUS
+#define MS5803_VARIANT    "MS5803_14BA"
+#define MS5837_VARIANT    "MS5837_30BA"
 #define LIGHT_DEVICE   	  EXT_I2C_BUS
 #define OEM_PH_DEVICE  	  EXT_I2C_BUS
 #define OEM_RTD_DEVICE 	  EXT_I2C_BUS
-#define BMX160_DEVICE  ONBOARD_I2C_BUS
+#define BMX160_DEVICE     ONBOARD_I2C_BUS
 
 // I2C bus addresses
 #define MCP4716_I2C_ADDR    0x60
 #define MS5803_ADDRESS      0x77
+#define MS5837_ADDRESS	    0x76
 #define LIGHT_DEVICE_ADDR   0x29
 #define OEM_PH_DEVICE_ADDR  0x65
 #define OEM_RTD_DEVICE_ADDR 0x68
 #define AD5933_ADDRESS		0x0D
-#define BMX160_ADDRESS  0x69
+#define BMX160_ADDRESS      0x69
 
 // Battery voltage ADC gain
 #define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain

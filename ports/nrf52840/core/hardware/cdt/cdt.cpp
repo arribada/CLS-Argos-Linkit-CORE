@@ -1,7 +1,7 @@
 #include "cdt.hpp"
 #include "debug.hpp"
 
-CDT::CDT(unsigned int bus) : Sensor("CDT"), m_cal(Calibration("CDT")), m_ms5803(MS5803LL(bus, MS5803_ADDRESS)),
+CDT::CDT(unsigned int bus) : Sensor("CDT"), m_cal(Calibration("CDT")), m_ms58xx(MS58xxLL(bus, MS5837_ADDRESS, MS5837_VARIANT)),
 	m_ad5933(AD5933LL(bus, AD5933_ADDRESS)) {
 	DEBUG_TRACE("CDT::CDT");
 }
@@ -12,7 +12,7 @@ double CDT::read(unsigned int offset) {
 		return read_calibrated_conductivity();
 		break;
 	case 1:
-		m_ms5803.read(m_last_temperature, m_last_pressure);
+		m_ms58xx.read(m_last_temperature, m_last_pressure);
 		return m_last_pressure;
 		break;
 	case 2:

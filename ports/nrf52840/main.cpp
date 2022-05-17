@@ -34,12 +34,12 @@
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
 #include "m8q.hpp"
-#include "ms5803.hpp"
 #include "ltr_303.hpp"
 #include "oem_ph.hpp"
 #include "oem_rtd.hpp"
 #include "cdt.hpp"
 #include "bmx160.hpp"
+#include "ms58xx.hpp"
 #include "fs_log.hpp"
 #include "nrfx_twim.h"
 #include "gpio_led.hpp"
@@ -395,13 +395,13 @@ int main()
 		DEBUG_TRACE("GPS M8Q not detected");
 	}
 
-	DEBUG_TRACE("MS5803...");
+	DEBUG_TRACE("MS58xx...");
 	try {
-		static MS5803 ms5803_pressure_sensor;
-		static PressureDetectorService pressure_detector(ms5803_pressure_sensor);
-		static PressureSensorService pressure_sensor(ms5803_pressure_sensor, &pressure_sensor_log);
+		static MS58xx ms58xx_pressure_sensor;
+		static PressureDetectorService pressure_detector(ms58xx_pressure_sensor);
+		static PressureSensorService pressure_sensor(ms58xx_pressure_sensor, &pressure_sensor_log);
 	} catch (...) {
-		DEBUG_TRACE("MS5803: not detected");
+		DEBUG_TRACE("MS58xx: not detected");
 	}
 
 	DEBUG_TRACE("LTR303...");

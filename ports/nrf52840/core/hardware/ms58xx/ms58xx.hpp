@@ -1,19 +1,21 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
+#include <string>
 #include "sensor.hpp"
 #include "bsp.hpp"
 #include "error.hpp"
 
-class MS5803LL {
+class MS58xxLL {
 public:
-	MS5803LL(unsigned int bus, unsigned char address);
+	MS58xxLL(unsigned int bus, unsigned char address, std::string variant);
 	void read(double& temperature, double& pressure);
 
 private:
 	unsigned int m_bus;
 	unsigned char m_addr;
-	enum MS5803Command : uint8_t {
+	enum MS58xxCommand : uint8_t {
 		RESET       = (0x1E), // ADC reset command
 		PROM        = (0xA0), // PROM location
 		ADC_READ    = (0x00), // ADC read command
@@ -25,8 +27,15 @@ private:
 		ADC_1024    = (0x04), // ADC resolution=1024
 		ADC_2048    = (0x06), // ADC resolution=2048
 		ADC_4096    = (0x08), // ADC resolution=4096
+		ADC_8192    = (0x0A), // ADC resolution=8192
 	};
-	uint16_t m_coefficients[8];
+	uint16_t C[8];
+	std::function<void(const int32_t, const int32_t, const uint16_t *, double&, double&)>  m_convert;
+	MS58xxCommand m_resolution;
+	unsigned int m_prom_size;
+	unsigned int m_crc_offset;
+	unsigned int m_crc_mask;
+	unsigned int m_crc_shift;
 
 	void send_command(uint8_t command);
 	void read_coeffs();
@@ -35,13 +44,13 @@ private:
 };
 
 
-class MS5803 : public Sensor {
+class MS58xx : public Sensor {
 public:
-	MS5803() : Sensor("PRS"), m_ms5803(MS5803LL(MS5803_DEVICE, MS5803_ADDRESS)) {}
+	MS58xx() : Sensor("PRS"), m_ms58xx(MS58xxLL(MS5803_DEVICE, MS5803_ADDRESS, MS5803_VARIANT)) {}
 	void calibrate(double, unsigned int) override {};
 	double read(unsigned int channel = 0) {
 		if (0 == channel) {
-			m_ms5803.read(m_last_temperature, m_last_pressure);
+			m_ms58xx.read(m_last_temperature, m_last_pressure);
 			return m_last_pressure;
 		} else if (1 == channel) {
 			return m_last_temperature;
@@ -53,5 +62,5 @@ private:
 	double m_last_pressure;
 	double m_last_temperature;
 
-	MS5803LL m_ms5803;
+	MS58xxLL m_ms58xx;
 };
