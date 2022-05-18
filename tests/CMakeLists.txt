@@ -128,6 +128,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/services/uwdetector_service.cpp"
     "${ROOT_DIR}/core/hardware/reed.cpp"
     "${ROOT_DIR}/core/hardware/sensor.cpp"
+    "${ROOT_DIR}/core/protocol/dte_commands.cpp"
+    "${ROOT_DIR}/core/protocol/dte_params.cpp"
     "${ROOT_DIR}/core/sm/gentracker.cpp"
     "${ROOT_DIR}/core/sm/ledsm.cpp"
     "${ROOT_DIR}/core/logging/logger.cpp"

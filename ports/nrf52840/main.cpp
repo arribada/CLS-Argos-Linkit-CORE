@@ -43,6 +43,7 @@
 #include "fs_log.hpp"
 #include "nrfx_twim.h"
 #include "gpio_led.hpp"
+#include "heap.h"
 
 
 FileSystem *main_filesystem;
@@ -140,6 +141,29 @@ extern "C" {
 			nrf_delay_ms(50);
 			PMU::kick_watchdog();
 		}
+#endif
+	}
+}
+
+extern "C" void OutOfMemory_Handler() {
+	for (;;)
+	{
+#if BUILD_TYPE==Release
+		PMU::reset(false);
+#else
+		// Out of heap memory occurred
+#ifdef GPIO_LED_REG
+		GPIOPins::set(GPIO_LED_REG);
+#endif
+		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
+		GPIOPins::clear(BSP::GPIO::GPIO_LED_GREEN);
+		GPIOPins::clear(BSP::GPIO::GPIO_LED_BLUE);
+		nrf_delay_ms(50);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+		nrf_delay_ms(50);
+		PMU::kick_watchdog();
 #endif
 	}
 }

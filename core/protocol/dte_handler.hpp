@@ -85,7 +85,7 @@ public:
 
 		// Build up a list of all implemented parameters
 		std::vector<ParamID> params;
-		for (unsigned int i = 0; i < sizeof(param_map)/sizeof(BaseMap); i++) {
+		for (unsigned int i = 0; i < param_map_size; i++) {
 			if (param_map[i].is_implemented) {
 				params.push_back(static_cast<ParamID>(i));
 			}
@@ -125,7 +125,7 @@ public:
 		// Check special case where params is zero length => retrieve all parameter key types
 		if (params.size() == 0) {
 			// Extract all parameter keys
-			for (unsigned int i = 0; i < sizeof(param_map)/sizeof(BaseMap); i++) {
+			for (unsigned int i = 0; i < param_map_size; i++) {
 				if (param_map[i].is_implemented &&
 					param_map[i].key[2] == 'P')
 					params.push_back((ParamID)i);
@@ -154,7 +154,7 @@ public:
 		// Check special case where params is zero length => retrieve all technical key types
 		if (params.size() == 0) {
 			// Extract all parameter keys
-			for (unsigned int i = 0; i < sizeof(param_map)/sizeof(BaseMap); i++) {
+			for (unsigned int i = 0; i < param_map_size; i++) {
 				if (param_map[i].is_implemented &&
 					param_map[i].key[2] == 'T')
 					params.push_back((ParamID)i);
