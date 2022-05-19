@@ -70,7 +70,7 @@ void ArgosRxService::notify_peer_event(ServiceEvent& e) {
 			m_sched.set_location(gps.info.lon, gps.info.lat);
 			service_reschedule();
 		}
-	} else if (e.event_source == ServiceIdentifier::UW_SENSOR) {
+	} else if (e.event_source == ServiceIdentifier::UW_SENSOR && e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
 		if (std::get<bool>(e.event_data) == false) {
 			ArgosConfig argos_config;
 			configuration_store->get_argos_configuration(argos_config);

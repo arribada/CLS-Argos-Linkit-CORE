@@ -104,9 +104,9 @@ bool Service::is_underwater_deferred() {
 }
 
 void Service::notify_underwater_state(bool state) {
-	//DEBUG_TRACE("Service::notify_underwater_state: service %s notify UW %u", m_name, state);
 	if (service_is_usable_underwater())
 		return; // Don't care since the sensor can be used underwater
+	//DEBUG_TRACE("Service::notify_underwater_state: service %s notify UW %u", m_name, state);
 	m_is_underwater = state;
 	if (m_is_underwater) {
 		deschedule();
@@ -123,9 +123,9 @@ void Service::notify_underwater_state(bool state) {
 
 // May also be overridden in child class to receive peer service events
 void Service::notify_peer_event(ServiceEvent& event) {
-	//DEBUG_TRACE("Service::notify_peer_event");
+	//DEBUG_TRACE("Service::notify_peer_event: src=%u type=%u", (unsigned int)event.event_source, (unsigned int)event.event_type);
 	bool immediate = true;
-	if (event.event_source == ServiceIdentifier::UW_SENSOR)
+	if (event.event_source == ServiceIdentifier::UW_SENSOR && event.event_type == ServiceEventType::SERVICE_LOG_UPDATED)
 		notify_underwater_state(std::get<bool>(event.event_data));
 	else if (service_is_triggered_on_event(event, immediate)) {
 		reschedule(immediate);

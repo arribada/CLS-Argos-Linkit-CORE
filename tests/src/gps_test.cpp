@@ -86,12 +86,12 @@ TEST_GROUP(GPSService)
 		increment_time_ms(min * 60 * 1000);
 	}
 
-	void notify_underwater_state(Service &s, bool state) {
+	void notify_underwater_state(bool state) {
 		ServiceEvent e;
-		e.event_type = ServiceEventType::SENSOR_LOG_UPDATED,
+		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED,
 		e.event_data = state,
 		e.event_source = ServiceIdentifier::UW_SENSOR;
-		s.notify_peer_event(e);
+		ServiceManager::notify_peer_event(e);
 	}
 
 	uint64_t m_current_ms;
@@ -754,7 +754,7 @@ TEST(GPSService, GNSSInterruptedByUnderwaterEvent)
 
 	// Now fire an underwater event before we get GPS lock
 	mock().expectOneCall("power_off").onObject(mock_m8q);
-	notify_underwater_state(s, true);
+	notify_underwater_state(true);
 }
 
 
@@ -788,7 +788,7 @@ TEST(GPSService, GNSSIgnoredAfterUnderwaterEvent)
 	s.start();
 
 	// Now fire an underwater event before we schedule
-	notify_underwater_state(s, true);
+	notify_underwater_state(true);
 
 	// We're expecting the device to turn on at 27/01/2020 00:00:30 - remain off
 	increment_time_s(FIRST_AQPERIOD);
@@ -800,7 +800,7 @@ TEST(GPSService, GNSSIgnoredAfterUnderwaterEvent)
 	increment_time_s(60);
 
 	// Now fire a surfaced event - next time will power on
-	notify_underwater_state(s, false);
+	notify_underwater_state(false);
 
 	// Next schedule attempt will be at 00:03:00 - power on
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
@@ -851,7 +851,7 @@ TEST(GPSService, GNSSNoPeriodicTriggerOnSurfaceEvent)
 	increment_time_s(1000);
 
 	// Now fire a surfaced event - next time will power on
-	notify_underwater_state(s, false);
+	notify_underwater_state(false);
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(1);
 

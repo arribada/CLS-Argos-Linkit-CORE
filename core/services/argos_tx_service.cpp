@@ -167,7 +167,7 @@ void ArgosTxService::notify_peer_event(ServiceEvent& e) {
 			service_reschedule();
 		}
 
-	} else if (e.event_source == ServiceIdentifier::UW_SENSOR) {
+	} else if (e.event_source == ServiceIdentifier::UW_SENSOR && e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
 		if (std::get<bool>(e.event_data) == false) {
 			ArgosConfig argos_config;
 			configuration_store->get_argos_configuration(argos_config);
