@@ -19,7 +19,6 @@ public:
 	}
 
 	unsigned int service_next_schedule_in_ms() override {
-		return 60 * 1000;
 		// Run every 12 hours
 		return 12 * 3600 * 1000;
 	}
