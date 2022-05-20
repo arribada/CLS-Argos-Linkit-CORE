@@ -4,7 +4,7 @@
 #include <optional>
 #include "inplace_function.hpp"
 
-#define MAX_NUM_TIMERS 32
+#define MAX_NUM_TIMERS 48
 
 #ifndef INPLACE_FUNCTION_SIZE_TIMER
 #define INPLACE_FUNCTION_SIZE_TIMER 48

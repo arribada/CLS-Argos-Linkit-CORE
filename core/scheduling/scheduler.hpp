@@ -10,7 +10,7 @@
 #include "etl/list.h"
 #include "etl/vector.h"
 
-#define MAX_NUM_TASKS 32
+#define MAX_NUM_TASKS 48
 
 #ifndef INPLACE_FUNCTION_SIZE_SCHEDULER
 #define INPLACE_FUNCTION_SIZE_SCHEDULER 12
