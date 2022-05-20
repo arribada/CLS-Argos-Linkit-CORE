@@ -809,7 +809,7 @@ class DTEDecoder {
 private:
 	static const DTECommandMap* lookup_command(const std::string& command_str, bool is_req) {
 		unsigned int start = is_req ? 0 : (unsigned int)DTECommand::__NUM_REQ;
-		unsigned int end = is_req ? (unsigned int)DTECommand::__NUM_REQ : sizeof(command_map)/sizeof(DTECommandMap);
+		unsigned int end = is_req ? (unsigned int)DTECommand::__NUM_REQ : command_map_size;
 		for (unsigned int i = start; i < end; i++) {
 			if (command_map[i].name == command_str) {
 				//std::cout << "command: " << command_str << " match: " << command_map[i].name << "\n";
@@ -821,7 +821,7 @@ private:
 	}
 
 	static ParamID lookup_key(const std::string& key) {
-		auto end = sizeof(param_map) / sizeof(BaseMap);
+		auto end = param_map_size;
 		for (unsigned int i = 0; i < end; i++) {
 			if (param_map[i].key == key) {
 				return static_cast<ParamID>(i);

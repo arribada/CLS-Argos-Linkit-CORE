@@ -31,6 +31,7 @@ enum class ServiceIdentifier : unsigned int {
 	SEA_TEMP_SENSOR,
 	PH_SENSOR,
 	AXL_SENSOR,
+	MEMORY_MONITOR
 };
 
 struct ServiceEvent {

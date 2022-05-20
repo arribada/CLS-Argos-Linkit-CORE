@@ -156,6 +156,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/scheduling
     ${PROJ_DIR}/core/hardware
     ${PROJ_DIR}/core/interface
+    ${PROJ_DIR}/core/memmang
     ${PROJ_DIR}/core/filesystem
     ${PROJ_DIR}/core/scheduling
     ${PROJ_DIR}/core/hardware/artic_sat
@@ -206,7 +207,6 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_ble.c
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_soc.c
     ${SDK_ROOT}/components/libraries/crc32/crc32.c
-    ${SDK_ROOT}/modules/nrfx/mdk/gcc_startup_nrf52840.S
     ${SDK_ROOT}/modules/nrfx/mdk/system_nrf52840.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
@@ -230,6 +230,8 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/logging/logger.cpp
     ${CORE_DIR}/util/haversine.cpp
     ${CORE_DIR}/filesystem/ota_flash_file_updater.cpp
+    ${CORE_DIR}/protocol/dte_commands.cpp
+    ${CORE_DIR}/protocol/dte_params.cpp
     ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
     ${PROJ_DIR}/core/hardware/ms58xx/ms58xx.cpp
@@ -254,8 +256,14 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/nrf_battery_mon.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
     ${PROJ_DIR}/core/interface/ble_stm_ota.c
+    ${PROJ_DIR}/core/memmang/heap_4.c
+    ${PROJ_DIR}/core/memmang/heap_mem.c
+    ${PROJ_DIR}/core/memmang/bindings.c
+    ${PROJ_DIR}/core/memmang/bindings.cpp
+    ${PROJ_DIR}/core/memmang/memmang.cpp
     ${PROJ_DIR}/core/scheduling/interrupt_lock.cpp
     ${PROJ_DIR}/drivers/nrf_log_redirect/nrf_log_redirect.c
+    ${PROJ_DIR}/gcc_startup_nrf52840.S
     ${PROJ_DIR}/main.cpp
 )
 
@@ -282,8 +290,9 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     NRF_SD_BLE_API_VERSION=7
     S140
     SOFTDEVICE_PRESENT
-    __HEAP_SIZE=8192
+    __HEAP_SIZE=0 # Use configTOTAL_HEAP_SIZE instead
     __STACK_SIZE=131072
+    configTOTAL_HEAP_SIZE=32768
     DEVICE_MODEL_NAME="${DEVICE_MODEL}"s
     #LFS_YES_TRACE
     #BATTERY_NOT_FITTED
@@ -294,6 +303,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     FW_APP_VERSION_STR_C="${FW_APP_VERSION}"
     #WORKAROUND_ALLCAST_CONSTELLATION_STATUS_ENCODING_BUG
     _XOPEN_SOURCE=700 # Enables strptime() usage
+    __STARTUP_FILL_STACK
 )
 
 target_compile_options(${TARGET_NAME} PRIVATE
