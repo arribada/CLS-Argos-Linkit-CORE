@@ -44,6 +44,7 @@
 #include "nrfx_twim.h"
 #include "gpio_led.hpp"
 #include "heap.h"
+#include "memory_monitor_service.hpp"
 
 
 FileSystem *main_filesystem;
@@ -504,6 +505,9 @@ int main()
 	} catch (...) {
 		DEBUG_TRACE("BMX160: not detected");
 	}
+
+	DEBUG_TRACE("Memory monitor...");
+	MemoryMonitorService memory_monitor_service;
 
 	DEBUG_TRACE("Entering main SM...");
 
