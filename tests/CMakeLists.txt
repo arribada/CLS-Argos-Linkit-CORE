@@ -109,6 +109,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/util"
     "${NRF_DIR}/core/hardware"
     "${NRF_DIR}/core/hardware/m8q"
+    "${NRF_DIR}/core/memmang"
     "mocks"
     "fakes"
 )
@@ -166,6 +167,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/argos_rx_test.cpp"
     "src/argos_tx_test.cpp"
     "src/main.cpp"
+    "fakes/memmang.cpp"
     "fakes/nrfx_rtc.c"
     "mocks/mock_gpio.cpp"
     "mocks/mock_pmu.cpp"
