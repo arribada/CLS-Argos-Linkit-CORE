@@ -91,8 +91,6 @@ static void read_ms5803_14bar(const int32_t D1, const int32_t D2, const uint16_t
     int64_t OFF, SENS, T2, OFF2, SENS2;
 
     /* Calculate first order coefficients */
-	DEBUG_TRACE("D1=%ld D2=%ld", D1, D2);
-
     // Difference between actual and reference temperature
     // dT = D2 - C5 * 2^8
     dT = D2 - ((int32_t)C[5] << 8);
@@ -169,7 +167,6 @@ static void read_ms5837_02bar(const int32_t D1, const int32_t D2, const uint16_t
     int64_t OFF, SENS, T2, OFF2, SENS2;
 
     /* Calculate first order coefficients */
-	DEBUG_TRACE("D1=%ld D2=%ld", D1, D2);
 
     // Difference between actual and reference temperature
     // dT = D2 - C5 * 2^8
