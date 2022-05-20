@@ -7,7 +7,7 @@ class MockTimer : public Timer {
 public:
 
 	uint64_t get_counter() override { return 0; }
-	TimerHandle add_schedule(std::function<void()> const &, uint64_t) override { Timer::TimerHandle handle; return handle; }
+	TimerHandle add_schedule(stdext::inplace_function<void(), INPLACE_FUNCTION_SIZE_TIMER> const &, uint64_t) override { Timer::TimerHandle handle; return handle; }
 	void cancel_schedule(TimerHandle &) override {
 		mock().actualCall("cancel_schedule").onObject(this);
 	}

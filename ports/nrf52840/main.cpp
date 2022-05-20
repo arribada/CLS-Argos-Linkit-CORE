@@ -44,6 +44,8 @@
 #include "nrfx_twim.h"
 #include "gpio_led.hpp"
 #include "heap.h"
+#include "etl/error_handler.h"
+#include "memory_monitor_service.hpp"
 
 
 FileSystem *main_filesystem;
@@ -168,6 +170,32 @@ extern "C" void OutOfMemory_Handler() {
 	}
 }
 
+void etl_error_handler(const etl::exception& e)
+{
+	DEBUG_TRACE("ETL error: %s in %s : %u", e.what(), e.file_name(), e.line_number());
+
+	for (;;)
+	{
+#if BUILD_TYPE==Release
+		PMU::reset(false);
+#else
+		// ETL error occurred
+#ifdef GPIO_LED_REG
+		GPIOPins::set(GPIO_LED_REG);
+#endif
+		GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+		nrf_delay_ms(200);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+		nrf_delay_ms(200);
+		PMU::kick_watchdog();
+#endif
+	}
+}
+
 // Redirect std::cout and printf output to debug UART
 // We have to define this as extern "C" as we are overriding a weak C function
 extern "C" int _write(int file, char *ptr, int len)
@@ -186,6 +214,8 @@ int main()
 	PMU::start_watchdog();
 	PMU::kick_watchdog();
 	GPIOPins::initialise();
+
+	etl::error_handler::set_callback<etl_error_handler>();
 
 #ifdef GPIO_AG_PWR_PIN
 	// Current backfeeds from 3V3 -> i2c pullups -> BMX160 -> GPIO_AG_PWR
@@ -504,6 +534,9 @@ int main()
 	} catch (...) {
 		DEBUG_TRACE("BMX160: not detected");
 	}
+
+	DEBUG_TRACE("Memory monitor...");
+	MemoryMonitorService memory_monitor_service;
 
 	DEBUG_TRACE("Entering main SM...");
 

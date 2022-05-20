@@ -1,4 +1,3 @@
-#include <atomic>
 #include <cstdint>
 #include "nrf_timer.hpp"
 #include "nrf_delay.h"
@@ -6,6 +5,7 @@
 #include "interrupt_lock.hpp"
 #include "bsp.hpp"
 #include "debug.hpp"
+#include "etl/list.h"
 
 // Do not change this value without considering the impact to the macros below
 static constexpr uint16_t RTC_TIMER_PRESCALER = 32;
@@ -22,14 +22,17 @@ static constexpr uint32_t MILLISECONDS_PER_OVERFLOW = TICKS_TO_MS(TICKS_PER_OVER
 static volatile uint32_t g_overflows_occured;
 static volatile uint64_t g_stamp64;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnull-dereference"
 struct Schedule
 {
-    std::function<void()> m_func;
+    stdext::inplace_function<void(), INPLACE_FUNCTION_SIZE_TIMER> m_func;
     std::optional<unsigned int> m_id;
     uint64_t m_target_ticks;
 };
+#pragma GCC diagnostic pop
 
-static std::list<Schedule> g_schedules;
+static etl::list<Schedule, MAX_NUM_TIMERS> g_schedules;
 static unsigned int g_unique_id;
 
 // Return current 64 bit tick count
@@ -150,7 +153,7 @@ uint64_t NrfTimer::get_counter()
     return uptime;
 }
 
-Timer::TimerHandle NrfTimer::add_schedule(std::function<void()> const &task_func, uint64_t target_count_ms)
+Timer::TimerHandle NrfTimer::add_schedule(stdext::inplace_function<void(), INPLACE_FUNCTION_SIZE_TIMER> const &task_func, uint64_t target_count_ms)
 {
     // Create a schedule for this task
     Schedule schedule;

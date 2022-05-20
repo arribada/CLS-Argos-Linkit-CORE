@@ -19,7 +19,6 @@
 #include "gps.hpp"
 #include "ble_service.hpp"
 #include "gentracker.hpp"
-#include "heap.h"
 
 // These contexts must be created before the FSM is initialised
 extern FileSystem *main_filesystem;
@@ -84,34 +83,6 @@ void GenTracker::notify_bad_filesystem_error() {
 	dispatch(event);
 }
 
-void GenTracker::print_heap_usage() {
-	HeapStats_t heap_stats;
-    vPortGetHeapStats(&heap_stats);
-
-    DEBUG_TRACE("MEMORY::xAvailableHeapSpaceInBytes:      %d", heap_stats.xAvailableHeapSpaceInBytes);
-    DEBUG_TRACE("MEMORY::xSizeOfLargestFreeBlockInBytes:  %d", heap_stats.xSizeOfLargestFreeBlockInBytes);
-    DEBUG_TRACE("MEMORY::xSizeOfSmallestFreeBlockInBytes: %d", heap_stats.xSizeOfSmallestFreeBlockInBytes);
-    DEBUG_TRACE("MEMORY::xNumberOfFreeBlocks:             %d", heap_stats.xNumberOfFreeBlocks);
-    DEBUG_TRACE("MEMORY::xMinimumEverFreeBytesRemaining:  %d", heap_stats.xMinimumEverFreeBytesRemaining);
-    DEBUG_TRACE("MEMORY::xNumberOfSuccessfulAllocations:  %d", heap_stats.xNumberOfSuccessfulAllocations);
-    DEBUG_TRACE("MEMORY::xNumberOfSuccessfulFrees:        %d", heap_stats.xNumberOfSuccessfulFrees);
-
-	DEBUG_INFO("MEM: %d min, %d free, %d freeblk, %d allocs, %d frees",
-		heap_stats.xMinimumEverFreeBytesRemaining,
-		heap_stats.xAvailableHeapSpaceInBytes,
-		heap_stats.xNumberOfFreeBlocks,
-		heap_stats.xNumberOfSuccessfulAllocations,
-		heap_stats.xNumberOfSuccessfulFrees);
-	
-	system_scheduler->post_task_prio([](){
-			GenTracker::print_heap_usage();
-		},
-		"GenTrackerHeapUsagePrint",
-		Scheduler::DEFAULT_PRIORITY,
-		30 * 60 * 1000);
-
-}
-
 void GenTracker::kick_watchdog() {
 	DEBUG_TRACE("GenTracker::kick_watchdog: calling PMU::kick_watchdog");
 	PMU::kick_watchdog();
@@ -148,13 +119,6 @@ void BootState::entry() {
 
 	// Start battery monitor
 	battery_monitor->start();
-
-	system_scheduler->post_task_prio([](){
-			GenTracker::print_heap_usage();
-		},
-		"GenTrackerHeapUsagePrint",
-		Scheduler::DEFAULT_PRIORITY,
-		100);
 
 	try {
 		// The underlying classes will create the files on the filesystem if they do not

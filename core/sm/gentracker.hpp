@@ -23,7 +23,6 @@ public:
 
 	static void kick_watchdog();
 	static void notify_bad_filesystem_error();
-	static void print_heap_usage();
 };
 
 

@@ -88,12 +88,18 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     # Workaround allcast encoding bug in CLS messages
     #-DWORKAROUND_ALLCAST_CONSTELLATION_STATUS_ENCODING_BUG
  
+    # Increase the inplace_function max sizes for a 64 bit system
+    -DINPLACE_FUNCTION_SIZE_SCHEDULER=1024
+    -DINPLACE_FUNCTION_SIZE_TIMER=1536
+
     # Always output coloured text from GCC
     -fdiagnostics-color=always
 )
 
 # Test related includes
 target_include_directories(${PROJECT_NAME} PRIVATE
+    "${ROOT_DIR}/libraries/etl-20.27.3/include"
+    "${ROOT_DIR}/libraries/inplace_function"
     "${ROOT_DIR}/libraries/littlefs"
     "${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4"
     "${ROOT_DIR}/core/hardware"
@@ -109,6 +115,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/util"
     "${NRF_DIR}/core/hardware"
     "${NRF_DIR}/core/hardware/m8q"
+    "${NRF_DIR}/core/memmang"
     "mocks"
     "fakes"
 )
@@ -166,6 +173,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/argos_rx_test.cpp"
     "src/argos_tx_test.cpp"
     "src/main.cpp"
+    "fakes/memmang.cpp"
     "fakes/nrfx_rtc.c"
     "mocks/mock_gpio.cpp"
     "mocks/mock_pmu.cpp"

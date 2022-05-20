@@ -141,6 +141,8 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}
     ${PROJ_DIR}/drivers/nrf_log_redirect
     ${BOARD_DIR}
+    ${LIB_DIR}/etl-20.27.3/include
+    ${LIB_DIR}/inplace_function
     ${LIB_DIR}/littlefs
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4
     ${CORE_DIR}/ble_services
@@ -207,7 +209,6 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_ble.c
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_soc.c
     ${SDK_ROOT}/components/libraries/crc32/crc32.c
-    ${SDK_ROOT}/modules/nrfx/mdk/gcc_startup_nrf52840.S
     ${SDK_ROOT}/modules/nrfx/mdk/system_nrf52840.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
@@ -261,8 +262,10 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/memmang/heap_mem.c
     ${PROJ_DIR}/core/memmang/bindings.c
     ${PROJ_DIR}/core/memmang/bindings.cpp
+    ${PROJ_DIR}/core/memmang/memmang.cpp
     ${PROJ_DIR}/core/scheduling/interrupt_lock.cpp
     ${PROJ_DIR}/drivers/nrf_log_redirect/nrf_log_redirect.c
+    ${PROJ_DIR}/gcc_startup_nrf52840.S
     ${PROJ_DIR}/main.cpp
 )
 
@@ -289,19 +292,21 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     NRF_SD_BLE_API_VERSION=7
     S140
     SOFTDEVICE_PRESENT
-    __HEAP_SIZE=0 # Using custom heap implementation
-    __STACK_SIZE=131072 # Note: this will include the configTOTAL_HEAP_SIZE value
-    configTOTAL_HEAP_SIZE=32768 # Heap is stored on the stack
+    __HEAP_SIZE=0 # Use configTOTAL_HEAP_SIZE instead
+    __STACK_SIZE=131072
+    configTOTAL_HEAP_SIZE=32768
     DEVICE_MODEL_NAME="${DEVICE_MODEL}"s
     #LFS_YES_TRACE
     #BATTERY_NOT_FITTED
     DEBUG_TO_SYSTEMLOG
+    ETL_LOG_ERRORS
     ARGOS_USE_CRC8
     PREPASS_EMBEDDED
     FW_APP_VERSION_STR="${FW_APP_VERSION}"s
     FW_APP_VERSION_STR_C="${FW_APP_VERSION}"
     #WORKAROUND_ALLCAST_CONSTELLATION_STATUS_ENCODING_BUG
     _XOPEN_SOURCE=700 # Enables strptime() usage
+    __STARTUP_FILL_STACK
 )
 
 target_compile_options(${TARGET_NAME} PRIVATE

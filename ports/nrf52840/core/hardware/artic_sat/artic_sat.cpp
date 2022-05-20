@@ -14,6 +14,7 @@
 #include "crc8.hpp"
 #include "crc16.hpp"
 #include "artic_sat.hpp"
+#include "pmu.hpp"
 
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
