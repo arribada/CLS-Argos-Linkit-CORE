@@ -25,7 +25,10 @@ public:
 	Scheduler(Timer *timer) : m_timer(timer), m_unique_id(0) {}
 	Scheduler(const Scheduler &) = delete;
 	
-	class Task 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnull-dereference"
+
+	class Task
     {
 		friend class Scheduler;
 
@@ -35,6 +38,8 @@ public:
 		unsigned int m_priority;
 		stdext::inplace_function<void(), INPLACE_FUNCTION_SIZE_SCHEDULER> m_func;
     };
+#pragma GCC diagnostic pop
+
 	class TaskHandle
 	{
 		friend class Scheduler;
