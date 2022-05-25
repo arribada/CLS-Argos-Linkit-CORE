@@ -24,6 +24,7 @@ public:
 	}
 
 	bool service_is_enabled() override { return true; }
+	bool service_is_usable_underwater() override { return true; }
 	void service_init() override {}
 	void service_term() override {}
 };
