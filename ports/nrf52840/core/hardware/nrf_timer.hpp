@@ -1,7 +1,5 @@
 #pragma once
 
-#include <list>
-#include <optional>
 #include "timer.hpp"
 
 class NrfTimer final : public Timer {
@@ -16,7 +14,7 @@ public:
 	void uninit();
 
 	uint64_t get_counter() override;
-	TimerHandle add_schedule(std::function<void()> const &task_func, uint64_t target_count) override;
+	TimerHandle add_schedule(stdext::inplace_function<void(), INPLACE_FUNCTION_SIZE_TIMER> const &task_func, uint64_t target_count) override;
 	void cancel_schedule(TimerHandle &handle) override;
 	void start() override;
 	void stop() override;

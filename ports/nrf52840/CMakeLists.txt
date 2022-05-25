@@ -141,6 +141,8 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}
     ${PROJ_DIR}/drivers/nrf_log_redirect
     ${BOARD_DIR}
+    ${LIB_DIR}/etl-20.27.3/include
+    ${LIB_DIR}/inplace_function
     ${LIB_DIR}/littlefs
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4
     ${CORE_DIR}/ble_services
@@ -297,6 +299,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     #LFS_YES_TRACE
     #BATTERY_NOT_FITTED
     DEBUG_TO_SYSTEMLOG
+    ETL_LOG_ERRORS
     ARGOS_USE_CRC8
     PREPASS_EMBEDDED
     FW_APP_VERSION_STR="${FW_APP_VERSION}"s
