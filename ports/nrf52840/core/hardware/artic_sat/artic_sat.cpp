@@ -615,6 +615,11 @@ void ArticSat::state_stopped_enter() {
 	GPIOPins::clear(SAT_RESET);
 	GPIOPins::clear(SAT_PWR_EN);
 
+	// Clear down any leftover flags
+	m_rx_pending = false;
+	m_packet_buffer.clear();
+	m_ack_buffer.clear();
+
 	notify(ArticEventPowerOff({}));
 }
 

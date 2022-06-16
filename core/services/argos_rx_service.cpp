@@ -249,7 +249,7 @@ unsigned int ArgosRxScheduler::schedule(ArgosConfig& argos_config, BasePassPredi
 			DEBUG_INFO("ArgosRxScheduler::schedule_prepass: scheduled for %llu seconds from now", start - now);
 			mode = ArticMode::A3;
 			timeout = (end - start) * MSECS_PER_SECOND;
-			return start - now;
+			return (start - now) * MSECS_PER_SECOND;
 		} else {
 			break;
 		}

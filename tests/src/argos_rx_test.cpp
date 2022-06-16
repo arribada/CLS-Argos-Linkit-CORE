@@ -285,7 +285,7 @@ TEST(ArgosRxService, StillRunsIfSurfacedBeforeSchedule)
 	notify_underwater_state(true);
 	notify_underwater_state(false);
 
-	t += 24050;
+	t += 24050000;
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 
