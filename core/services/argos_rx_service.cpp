@@ -60,7 +60,8 @@ void ArgosRxService::notify_peer_event(ServiceEvent& e) {
 		if (gps.info.valid) {
 			DEBUG_TRACE("ArgosRxService::notify_peer_event: updated GPS location");
 			m_sched.set_location(gps.info.lon, gps.info.lat);
-			service_reschedule();
+			if (!service_is_scheduled())
+				service_reschedule();
 		}
 	} else if (e.event_source == ServiceIdentifier::UW_SENSOR && e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
 		if (std::get<bool>(e.event_data) == false) {
@@ -246,8 +247,8 @@ unsigned int ArgosRxScheduler::schedule(ArgosConfig& argos_config, BasePassPredi
 		// Check we don't schedule off the end of the computed window
 		if ((start + ARGOS_RX_MARGIN_MSECS) < end) {
 			// We're good to go for this schedule, compute relative delay until the epoch arrives
-			DEBUG_INFO("ArgosRxScheduler::schedule_prepass: scheduled for %llu seconds from now", start - now);
 			mode = ArticMode::A3;
+			DEBUG_INFO("ArgosRxScheduler::schedule_prepass: scheduled for %llu secs from now, timeout %u secs", start - now, end - start);
 			timeout = (end - start) * MSECS_PER_SECOND;
 			return (start - now) * MSECS_PER_SECOND;
 		} else {
