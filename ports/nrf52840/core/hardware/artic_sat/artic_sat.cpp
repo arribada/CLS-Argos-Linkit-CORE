@@ -573,7 +573,6 @@ void ArticSat::state_starting_exit() {
 
 void ArticSat::state_starting() {
     m_is_first_tx = true;
-    m_rx_total_time = 0;
 	m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
 	m_pa_driver = new PADriver();
 	ARTIC_STATE_CHANGE(starting, powering_on);
@@ -933,7 +932,9 @@ void ArticSat::state_receiving_enter() {
 }
 
 void ArticSat::state_receiving_exit() {
-	m_rx_total_time += system_timer->get_counter() - m_rx_timer_start;
+	ArticEventRxStopped e;
+	e.rx_time = system_timer->get_counter() - m_rx_timer_start;
+	notify(e);
 }
 
 void ArticSat::state_receiving() {
@@ -1172,9 +1173,11 @@ void ArticSat::start_receive(const ArticMode mode) {
 	power_on();
 }
 
-void ArticSat::stop_receive() {
+bool ArticSat::stop_receive() {
 	DEBUG_TRACE("ArticSat::stop_receive");
+	bool rx_pending = m_rx_pending;
 	m_rx_pending = false;
+	return rx_pending;
 }
 
 void ArticSat::stop_send() {
@@ -1182,12 +1185,6 @@ void ArticSat::stop_send() {
 	m_ack_buffer.clear();
 	m_packet_buffer.clear();
 	m_tx_buffer.clear();
-}
-
-unsigned int ArticSat::get_cumulative_receive_time() {
-	unsigned t = (unsigned int)m_rx_total_time;
-	m_rx_total_time = 0;
-	return t;
 }
 
 void ArticSat::send(const ArticMode mode, const ArticPacket& user_payload, const unsigned int payload_length)

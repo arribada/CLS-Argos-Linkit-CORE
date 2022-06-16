@@ -146,14 +146,14 @@ TEST(ArgosRxService, BasicDownlinkReceive)
 	x = "00000BE40054849848C2442523CDCABCA2C02F014173AFE4";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 
-	mock().expectOneCall("stop_receive").onObject(mock_artic);
-	mock().expectOneCall("get_cumulative_receive_time").onObject(mock_artic).andReturnValue(10);
+	mock().expectOneCall("stop_receive").onObject(mock_artic).andReturnValue(true);
 
 	x = "00000BE400D4849848904D8D33269EAF627189023C5658A5";
 	mock_artic->inject_rx_packet(x, x.size() * 8);
 
-	mock().expectOneCall("stop_receive").onObject(mock_artic);
-	mock().expectOneCall("get_cumulative_receive_time").onObject(mock_artic).andReturnValue(0);
+	mock().expectOneCall("stop_receive").onObject(mock_artic).andReturnValue(true);
+	mock_artic->notify_rx_stopped(10000);
+	mock_artic->notify_off();
 	service.stop();
 
 	// Now check that the records have been updated
@@ -225,8 +225,7 @@ TEST(ArgosRxService, CancelledOnUnderwaterAndRescheduledOnSurfaced)
 	fake_rtc->settime(t);
 	fake_timer->set_counter(t*1000);
 
-	mock().expectOneCall("stop_receive").onObject(mock_artic);
-	mock().expectOneCall("get_cumulative_receive_time").onObject(mock_artic).andReturnValue(100);
+	mock().expectOneCall("stop_receive").onObject(mock_artic).andReturnValue(true);
 	notify_underwater_state(true);
 
 	t += 100;
@@ -282,8 +281,7 @@ TEST(ArgosRxService, StillRunsIfSurfacedBeforeSchedule)
 	fake_timer->set_counter(t*1000);
 	inject_gps_location(11.8768, -33.8232);
 
-	mock().expectOneCall("stop_receive").onObject(mock_artic);
-	mock().expectOneCall("get_cumulative_receive_time").onObject(mock_artic).andReturnValue(0);
+	mock().expectOneCall("stop_receive").onObject(mock_artic).andReturnValue(true);
 	notify_underwater_state(true);
 	notify_underwater_state(false);
 
@@ -336,8 +334,7 @@ TEST(ArgosRxService, DeferredIfUnderwaterWhenScheduled)
 	fake_timer->set_counter(t*1000);
 	inject_gps_location(11.8768, -33.8232);
 
-	mock().expectOneCall("stop_receive").onObject(mock_artic);
-	mock().expectOneCall("get_cumulative_receive_time").onObject(mock_artic).andReturnValue(0);
+	mock().expectOneCall("stop_receive").onObject(mock_artic).andReturnValue(true);
 	notify_underwater_state(true);
 
 #if 1

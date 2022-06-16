@@ -13,7 +13,7 @@
 
 #define ARTIC_STATE_CHANGE(x, y)                     \
 	do {                                             \
-		DEBUG_TRACE("ArticSat::ARTIC_STATE_CHANGE: " #x " -> " #y ); \
+		DEBUG_INFO("ArticSat::ARTIC_STATE_CHANGE: " #x " -> " #y ); \
 		m_state = y;                                 \
 		state_ ## x ##_exit();                       \
 		state_ ## y ##_enter();                      \
@@ -149,8 +149,6 @@ private:
 	unsigned int m_rx_packet_bits;
 	bool         m_rx_pending;
 	uint64_t     m_rx_timer_start;
-	std::time_t  m_rx_stop_time;
-	uint64_t     m_rx_total_time;
 
 	// Support functionality
 	void configure_burst(mem_id_t mode, bool read, uint32_t start_address);
@@ -244,9 +242,8 @@ public:
 	void send_ack(const ArticMode mode, const unsigned int a_dcs, const unsigned int dl_msg_id, const unsigned int exec_report) override;
 	void stop_send() override;
 	void start_receive(const ArticMode mode) override;
-	void stop_receive() override;
+	bool stop_receive() override;
 	void set_frequency(const double freq) override;
 	void set_tcxo_warmup_time(const unsigned int time) override;
 	void set_tx_power(const BaseArgosPower power) override;
-	unsigned int get_cumulative_receive_time() override;
 };

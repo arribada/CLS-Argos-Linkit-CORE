@@ -20,8 +20,8 @@ public:
 	void start_receive(const ArticMode mode) override {
 		mock().actualCall("start_receive").onObject(this).withParameter("mode", (unsigned int)mode);
 	}
-	void stop_receive() override {
-		mock().actualCall("stop_receive").onObject(this);
+	bool stop_receive() override {
+		return mock().actualCall("stop_receive").onObject(this).returnBoolValue();
 	}
 	void set_frequency(const double freq) override {
 		mock().actualCall("set_frequency").onObject(this).withParameter("freq", freq);
@@ -32,13 +32,18 @@ public:
 	void set_tx_power(const BaseArgosPower power) override {
 		mock().actualCall("set_tx_power").onObject(this).withParameter("power", (unsigned int)power);
 	}
-	unsigned int get_cumulative_receive_time() override {
-		return mock().actualCall("get_cumulative_receive_time").onObject(this).returnUnsignedIntValue();
-	}
 	void inject_rx_packet(std::string packet, unsigned int sz) {
 		ArticEventRxPacket e;
 		e.packet = Binascii::unhexlify(packet);
 		e.size_bits = sz;
 		notify(e);
+	}
+	void notify_rx_stopped(unsigned int time_ms) {
+		ArticEventRxStopped e;
+		e.rx_time = time_ms;
+		notify(e);
+	}
+	void notify_off() {
+		notify<ArticEventPowerOff>({});
 	}
 };

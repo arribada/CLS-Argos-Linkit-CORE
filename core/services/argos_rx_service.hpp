@@ -58,9 +58,12 @@ private:
 	ArticMode    m_mode;
 	std::map<uint8_t, AopSatelliteEntry_t> m_orbit_params_map;
 	std::map<uint8_t, AopSatelliteEntry_t> m_constellation_status_map;
+	unsigned int m_cumulative_rx_time;
 
 	void react(ArticEventRxPacket const&) override;
 	void react(ArticEventDeviceError const&) override;
+	void react(ArticEventPowerOff const&) override;
+	void react(ArticEventRxStopped const&) override;
 
 	void update_pass_predict(BasePassPredict& new_pass_predict);
 };

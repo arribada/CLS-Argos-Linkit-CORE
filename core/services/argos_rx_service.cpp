@@ -39,19 +39,11 @@ unsigned int ArgosRxService::service_next_schedule_in_ms() {
 void ArgosRxService::service_initiate() {
 	DEBUG_INFO("ArgosRxService::service_initiate: starting RX");
 	m_artic.start_receive(m_mode);
+	m_cumulative_rx_time = 0;
 }
 
 bool ArgosRxService::service_cancel() {
-	m_artic.stop_receive();
-	unsigned int t = m_artic.get_cumulative_receive_time();
-	DEBUG_TRACE("ArgosRxService::service_cancel: pending=%u", t ? true : false);
-	if (t) {
-		DEBUG_INFO("ArgosRxService::service_cancel: stopped RX");
-		configuration_store->increment_rx_time(t);
-		configuration_store->save_params();
-		return true;
-	}
-	return false;
+	return m_artic.stop_receive();
 }
 
 unsigned int ArgosRxService::service_next_timeout() {
@@ -108,6 +100,19 @@ void ArgosRxService::react(ArticEventRxPacket const& e) {
 void ArgosRxService::react(ArticEventDeviceError const&) {
 	service_cancel();
 	service_complete();
+}
+
+void ArgosRxService::react(ArticEventPowerOff const&) {
+	if (m_cumulative_rx_time) {
+		DEBUG_INFO("ArgosRxService::react: ArticEventPowerOff: cumulative_rx=%u ms", m_cumulative_rx_time);
+		configuration_store->increment_rx_time((m_cumulative_rx_time + 999) / 1000); // Stored in seconds
+		configuration_store->save_params();
+		m_cumulative_rx_time = 0;
+	}
+}
+
+void ArgosRxService::react(ArticEventRxStopped const& e) {
+	m_cumulative_rx_time += e.rx_time;
 }
 
 void ArgosRxService::update_pass_predict(BasePassPredict& new_pass_predict) {
