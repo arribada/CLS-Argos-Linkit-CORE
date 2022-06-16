@@ -167,7 +167,7 @@ void ArgosRxService::update_pass_predict(BasePassPredict& new_pass_predict) {
 		}
 	}
 
-	DEBUG_TRACE("ArgosRxService::update_pass_predict: received=%u required=%u", num_updated_records, existing_pass_predict.num_records);
+	DEBUG_INFO("ArgosRxService::update_pass_predict: received=%u required=%u", num_updated_records, std::max(existing_pass_predict.num_records, new_pass_predict.num_records));
 
 	// Check if we received a sufficient number of records
 	if (num_updated_records == new_pass_predict.num_records && num_updated_records >= existing_pass_predict.num_records) {
@@ -234,7 +234,7 @@ unsigned int ArgosRxScheduler::schedule(ArgosConfig& argos_config, BasePassPredi
 		// Advance to at least the prepass epoch position
 		start = std::max((std::time_t)next_pass.epoch, start);
 
-		DEBUG_TRACE("ArgosRxScheduler::schedule_prepass: sat=%01x dl=%u e=%llu t=%llu [%llu %llu %llu]",
+		DEBUG_INFO("ArgosRxScheduler::schedule_prepass: sat=%01x dl=%u e=%llu t=%llu [%llu %llu %llu]",
 					(unsigned int)next_pass.satHexId,
 					(unsigned int)next_pass.downlinkStatus,
 					m_earliest_schedule,
@@ -246,7 +246,7 @@ unsigned int ArgosRxScheduler::schedule(ArgosConfig& argos_config, BasePassPredi
 		// Check we don't schedule off the end of the computed window
 		if ((start + ARGOS_RX_MARGIN_MSECS) < end) {
 			// We're good to go for this schedule, compute relative delay until the epoch arrives
-			DEBUG_TRACE("ArgosRxScheduler::schedule_prepass: scheduled for %llu seconds from now", start - now);
+			DEBUG_INFO("ArgosRxScheduler::schedule_prepass: scheduled for %llu seconds from now", start - now);
 			mode = ArticMode::A3;
 			timeout = (end - start) * MSECS_PER_SECOND;
 			return start - now;
