@@ -81,7 +81,7 @@ bool ArgosRxService::service_is_triggered_on_surfaced(bool& immediate) {
 }
 
 void ArgosRxService::react(ArticEventRxPacket const& e) {
-	DEBUG_INFO("ArgosScheduler::handle_rx_packet: packet=%s length=%u", Binascii::hexlify(e.packet).c_str(), e.size_bits);
+	DEBUG_INFO("ArgosRxService::react(ArticEventRxPacket): packet=%s length=%u", Binascii::hexlify(e.packet).c_str(), e.size_bits);
 
 	// Increment RX counter
 	configuration_store->increment_rx_counter();
