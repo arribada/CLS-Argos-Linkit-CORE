@@ -1111,7 +1111,7 @@ M8QReceiver::SendReturnCode M8QReceiver::sync_baud_rate()
 {
 #if 0 == NO_GPS_POWER_REG
 	// Power regulator present so just set to initial baud rate
-    //m_nrf_uart_m8->change_baudrate(9600);
+    m_nrf_uart_m8->change_baudrate(9600);
     return SendReturnCode::SUCCESS;
 #else
 

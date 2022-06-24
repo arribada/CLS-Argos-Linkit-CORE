@@ -55,6 +55,12 @@
 // Power on requires reed switch for 3 seconds
 #define POWER_ON_RESET_REQUIRES_REED_SWITCH
 
+// Other options
+#define HW_VERSION_DETECT 0
+#define NO_GPS_POWER_REG  1
+#define NO_ARGOS_PA_GAIN_CTRL 1
+#define ARGOS_EXT 1
+
 namespace BSP
 {
 	///////////////////////////////// GPIO definitions ////////////////////////////////

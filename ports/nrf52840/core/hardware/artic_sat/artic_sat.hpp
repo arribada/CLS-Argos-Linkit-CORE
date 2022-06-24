@@ -13,7 +13,7 @@
 
 #define ARTIC_STATE_CHANGE(x, y)                     \
 	do {                                             \
-		DEBUG_INFO("ArticSat::ARTIC_STATE_CHANGE: " #x " -> " #y ); \
+		DEBUG_TRACE("ArticSat::ARTIC_STATE_CHANGE: " #x " -> " #y ); \
 		m_state = y;                                 \
 		state_ ## x ##_exit();                       \
 		state_ ## y ##_enter();                      \
