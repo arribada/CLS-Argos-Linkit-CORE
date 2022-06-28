@@ -147,7 +147,7 @@ extern "C" {
 	}
 }
 
-extern "C" void OutOfMemory_Handler() {
+extern "C" void vApplicationMallocFailedHook() {
 	for (;;)
 	{
 #if BUILD_TYPE==Release

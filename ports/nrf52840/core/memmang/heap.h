@@ -31,10 +31,10 @@ void vPortGetHeapStats( HeapStats_t *xHeapStats );
 void vTaskSuspendAll( void );
 void xTaskResumeAll( void );
 
-void OutOfMemory_Handler( void );
+void vApplicationMallocFailedHook( void );
 
-#define configASSERT( x ) if (!(x)) { OutOfMemory_Handler(); }
-//#define configASSERT( x ) 
+//#define configASSERT( x ) if (!(x)) { OutOfMemory_Handler(); }
+#define configASSERT( x ) 
 
 //#define traceMALLOC( pv, x ) printf("malloc(%p, %d)\n", pv, x)
 //#define traceFREE( pv, x )   printf("free(%p, %d)\n", pv, x)
@@ -46,6 +46,7 @@ void OutOfMemory_Handler( void );
 #define PRIVILEGED_DATA
 #define mtCOVERAGE_TEST_MARKER()
 #define configSUPPORT_DYNAMIC_ALLOCATION 1
+#define configUSE_MALLOC_FAILED_HOOK 1
 
 #define taskENTER_CRITICAL() vTaskSuspendAll()
 #define taskEXIT_CRITICAL()  xTaskResumeAll()
