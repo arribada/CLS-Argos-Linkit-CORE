@@ -582,10 +582,9 @@ void ArticSat::state_error_enter() {
 	// Dump device status
 	get_and_print_status();
 
-	// The calling code's callback should call "power_off" and
-	// do any necessary cleanup that it needs to otherwise
-	// we will keep invoking the callback!
 	notify(ArticEventDeviceError({}));
+
+	ARTIC_STATE_CHANGE(error, stopped);
 }
 
 void ArticSat::state_error_exit() {
