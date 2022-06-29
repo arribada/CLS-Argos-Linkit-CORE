@@ -282,7 +282,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     S140
     SOFTDEVICE_PRESENT
     __HEAP_SIZE=0 # Use configTOTAL_HEAP_SIZE instead
-    __STACK_SIZE=110000 # Includes configTOTAL_HEAP_SIZE so actual stack size is (__STACK_SIZE - configTOTAL_HEAP_SIZE)
+    __STACK_SIZE=110000
     configTOTAL_HEAP_SIZE=65536
     DEVICE_MODEL_NAME="${DEVICE_MODEL}"s
     #LFS_YES_TRACE
