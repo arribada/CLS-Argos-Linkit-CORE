@@ -6,7 +6,7 @@
 
 class SWSService : public UWDetectorService {
 public:
-	SWSService(unsigned int sched_units = 1) : UWDetectorService(sched_units, 5, 1000) {}
+	SWSService(unsigned int sched_units = 1) : UWDetectorService(sched_units, 5, 1000, "SaltwaterDetector") {}
 
 private:
 	bool detector_state() override {

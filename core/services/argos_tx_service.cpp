@@ -138,7 +138,7 @@ bool ArgosTxService::service_is_triggered_on_surfaced(bool &immediate) {
 }
 
 void ArgosTxService::notify_peer_event(ServiceEvent& e) {
-	DEBUG_TRACE("ArgosTxService::notify_peer_event: (%u,%u)", e.event_source, e.event_type);
+	//DEBUG_TRACE("ArgosTxService::notify_peer_event: (%u,%u)", e.event_source, e.event_type);
 
 	if (e.event_source == ServiceIdentifier::GNSS_SENSOR &&
 		e.event_type == ServiceEventType::SERVICE_LOG_UPDATED)

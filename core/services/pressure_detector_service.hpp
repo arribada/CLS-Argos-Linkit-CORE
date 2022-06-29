@@ -5,7 +5,7 @@
 
 class PressureDetectorService : public UWDetectorService {
 public:
-	PressureDetectorService(Sensor& sensor) : UWDetectorService(), m_driver(sensor) {}
+	PressureDetectorService(Sensor& sensor) : UWDetectorService(1, 1, 0, "PressureDetector"), m_driver(sensor) {}
 
 private:
 	Sensor& m_driver;

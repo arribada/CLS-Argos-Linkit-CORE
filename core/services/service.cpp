@@ -13,18 +13,22 @@ extern BatteryMonitor *battery_monitor;
 
 unsigned int ServiceManager::add(Service& s) {
 	m_map.insert({m_unique_identifier, s});
+	DEBUG_TRACE("ServiceManager::add: service=%s added id=%u", s.get_name(), m_unique_identifier);
 	return m_unique_identifier++;
 }
 
 void ServiceManager::remove(Service& s) {
+	DEBUG_TRACE("ServiceManager::remove: service=%s added", s.get_name());
 	m_map.erase(s.get_unique_id());
 }
 
 
 void ServiceManager::startall(std::function<void(ServiceEvent&)> data_notification_callback) {
 	m_data_notification_callback = data_notification_callback;
-	for (auto const& p : m_map)
+	for (auto const& p : m_map) {
+		DEBUG_TRACE("ServiceManager::startall: starting %s id=%u", p.second.get_name(), p.first);
 		p.second.start(data_notification_callback);
+	}
 }
 
 void ServiceManager::stopall() {
@@ -68,6 +72,7 @@ Service::~Service() {
 }
 
 unsigned int Service::get_unique_id() { return m_unique_id; }
+const char *Service::get_name() { return m_name; }
 ServiceIdentifier Service::get_service_id() { return m_service_id; }
 Logger *Service::get_logger() { return m_logger; }
 void Service::set_logger(Logger *logger) { m_logger = logger; }

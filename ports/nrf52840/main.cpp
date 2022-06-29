@@ -349,9 +349,6 @@ int main()
 	ReedSwitch reed_gesture_switch(nrf_reed_switch);
 	reed_switch = &reed_gesture_switch;
 
-	DEBUG_TRACE("SWS...");
-	SWSService sws();
-
 	DEBUG_TRACE("IS25 flash...");
 	Is25Flash is25_flash;
 	is25_flash.init();
@@ -430,6 +427,9 @@ int main()
 	ble_service = &BleInterface::get_instance();
 	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS, OTA_UPDATE_RESERVED_BLOCKS);
 	ota_updater = &ota_flash_file_updater;
+
+	DEBUG_TRACE("SWS...");
+	SWSService sws;
 
 	DEBUG_TRACE("Artic R2...");
 	try {

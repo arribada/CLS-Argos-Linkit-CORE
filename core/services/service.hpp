@@ -19,6 +19,7 @@ public:
 	Service(ServiceIdentifier service_id, const char *name, Logger *logger = nullptr);
 	virtual ~Service();
 	unsigned int get_unique_id();
+	const char *get_name();
 	ServiceIdentifier get_service_id();
 	Logger *get_logger();
 	void set_logger(Logger *logger);

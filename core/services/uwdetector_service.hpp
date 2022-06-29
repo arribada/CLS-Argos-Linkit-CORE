@@ -8,8 +8,9 @@
 class UWDetectorService : public Service {
 
 public:
-	UWDetectorService(unsigned int sched_units=1, unsigned int iterations=1, unsigned int period_ms=0) :
-		Service(ServiceIdentifier::UW_SENSOR, "UWDetector")	{
+	UWDetectorService(unsigned int sched_units=1, unsigned int iterations=1, unsigned int period_ms=0,
+			const char *name = "UWDetector") :
+		Service(ServiceIdentifier::UW_SENSOR, name)	{
 		m_is_first_time = true;
 		m_current_state = false;
 		m_sched_units = sched_units;
