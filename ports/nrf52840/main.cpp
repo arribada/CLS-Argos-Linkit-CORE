@@ -269,6 +269,11 @@ int main()
 
 	if (PMU::reset_cause() == "Power On Reset" ||
 		PMU::reset_cause() == "Pseudo Power On Reset") {
+		if (PMU::reset_cause() == "Power On Reset")  {
+			// Force GNSS off
+			M8QReceiver m;
+			m.power_off();
+		}
 		volatile bool power_on_ready = false;
 		system_timer->start();
 		Timer::TimerHandle timer_handle;
@@ -443,7 +448,6 @@ int main()
 	DEBUG_TRACE("GPS M8Q ...");
 	try {
 		static M8QReceiver m8q_gnss;
-		m8q_gnss.power_off(); // Forcibly power off
 		static GPSService gps_service(m8q_gnss, &fs_sensor_log);
 	} catch (...) {
 		DEBUG_TRACE("GPS M8Q not detected");

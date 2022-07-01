@@ -465,15 +465,14 @@ void ArticSat::detect_dsp_present() {
 
 	// We run the state machine iteratively until we either reach a desired terminal state
 	ARTIC_STATE_CHANGE(stopped, starting);
-	while (m_state != ArticSatState::error && m_state != ArticSatState::send_firmware_image)
+	while (m_state != ArticSatState::stopped && m_state != ArticSatState::send_firmware_image)
 	{
 		state_machine(false);
 		PMU::delay_ms(m_next_delay);
 	}
 
-	if (m_state == ArticSatState::error)
+	if (m_state == ArticSatState::stopped)
 	{
-		ARTIC_STATE_CHANGE(idle, stopped);
 		throw ErrorCode::ARTIC_DSP_NOT_PRESENT;
 	} else {
 		ARTIC_STATE_CHANGE(idle, stopped);
