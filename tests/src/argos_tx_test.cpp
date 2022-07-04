@@ -134,6 +134,40 @@ TEST(ArgosTxService, DepthPileFillsAndEmpties)
 	CHECK_EQUAL(0, v.size());
 }
 
+TEST(ArgosTxService, DepthPile1)
+{
+	ArgosDepthPile<GPSLogEntry> dp;
+	std::vector<GPSLogEntry*> v;
+	GPSLogEntry e;
+
+	// Load up full depth pile with burst count of 1
+	for (unsigned int i = 0; i < 24; i++) {
+		e.info.day = i;
+		dp.store(e, 1);
+	}
+
+	// Should have 24 eligible entries
+	CHECK_EQUAL(24, dp.eligible());
+
+	// Retrieving the latest entry should not decrement burst counter
+	// for time sync burst case
+	v = dp.retrieve_latest();
+	CHECK_EQUAL(1, v.size());
+	CHECK_EQUAL(24, dp.eligible());
+	CHECK_EQUAL(23, v.at(0)->info.day); // Should be most recent
+
+	// Retrieve depth pile and should be most recent
+	v = dp.retrieve(1);
+	CHECK_EQUAL(1, v.size());
+	CHECK_EQUAL(23, v.at(0)->info.day);
+
+	// Check depth pile returns empty vector
+	v = dp.retrieve_latest();
+	CHECK_EQUAL(0, v.size());
+	v = dp.retrieve(1);
+	CHECK_EQUAL(0, v.size());
+}
+
 TEST(ArgosTxService, DutyCycleCalculation)
 {
 	unsigned int mask;
@@ -792,4 +826,58 @@ TEST(ArgosTxService, TxServiceCancelledDuringTx)
 	fake_timer->set_counter(t);
 	system_scheduler->run();
 	mock_artic->notify(ArticEventTxComplete({}));
+}
+
+
+TEST(ArgosTxService, LegacyTxServiceDepthPile1)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	BaseArgosPower power = BaseArgosPower::POWER_1000_MW;
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	unsigned int tr_nom = 10;
+	bool time_sync_en = false;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, time_sync_en);
+
+	ArgosTxService serv(*mock_artic);
+
+	std::time_t t = 1652105502000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	mock().expectOneCall("set_tx_power").onObject(mock_artic).withUnsignedIntParameter("power", (unsigned int)power);
+	serv.start();
+
+	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(11.8768, -33.8232, t);
+	system_scheduler->run();
+
+	// Subsequent TX will be short packets
+	for (unsigned int i = 0; i < 10; i++) {
+		mock().expectOneCall("send").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A2).
+				withUnsignedIntParameter("size_bits", 120);
+
+		t += serv.get_last_schedule();
+		fake_rtc->settime(t/1000);
+		fake_timer->set_counter(t);
+		system_scheduler->run();
+
+		mock_artic->notify(ArticEventTxComplete({}));
+	}
 }

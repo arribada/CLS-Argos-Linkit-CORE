@@ -63,6 +63,7 @@ public:
 	}
 
 	std::vector<T*> retrieve(unsigned int depth, unsigned int max_messages=4) {
+		max_messages = std::min(depth, max_messages);
 		unsigned int max_index = (depth + (max_messages-1)) / max_messages;
 		unsigned int span = std::min(max_messages, (unsigned int)m_entry.size());
 		std::vector<T*> v;
