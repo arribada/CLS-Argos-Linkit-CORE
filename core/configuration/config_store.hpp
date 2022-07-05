@@ -86,7 +86,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0C;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0D;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
@@ -168,7 +168,7 @@ protected:
 		/* ARGOS_TX_JITTER_EN */ (bool)true,
 		/* ARGOS_RX_EN */ (bool)true,
 		/* ARGOS_RX_MAX_WINDOW */ 15U*60U,
-		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 30U,
+		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 90U,
 		/* ARGOS_RX_COUNTER */ 0U,
 		/* ARGOS_RX_TIME */ 0U,
 #if 0 == NO_GPS_POWER_REG
@@ -219,7 +219,7 @@ protected:
 		/* BATT_VOLTAGE */ (double)0,
 		/* ARGOS_TCXO_WARMUP_TIME */ 5U,
 		/* DEVICE_DECID */ 0U,
-		/* GNSS_TRIGGER_ON_SURFACED */ (bool)false,
+		/* GNSS_TRIGGER_ON_SURFACED */ (bool)true,
 		/* GNSS_TRIGGER_ON_AXL_WAKEUP */ (bool)false,
 		/* UNDERWATER_DETECT_SOURCE */ BaseUnderwaterDetectSource::SWS,
 		/* UNDERWATER_DETECT_THRESH */ (double)1.1,

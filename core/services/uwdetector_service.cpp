@@ -33,7 +33,7 @@ void UWDetectorService::service_initiate() {
 		m_sample_iteration = 0;
 
 		if (new_state != m_current_state || m_is_first_time) {
-			DEBUG_TRACE("UWDetector::sample_detector: state changed");
+			DEBUG_INFO("UWDetector::sample_detector: state changed: state=%u", (unsigned int)new_state);
 			m_is_first_time = false;
 			m_current_state = new_state;
 			ServiceEventData event = new_state;

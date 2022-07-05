@@ -427,10 +427,9 @@ public:
 	}
 
 	bool is_battery_level_low() override {
-		auto lb_en = read_param<bool>(ParamID::LB_EN);
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();
-		return (lb_en && m_battery_level <= lb_threshold);
+		return (m_battery_level <= lb_threshold);
 	}
 
 };
