@@ -42,11 +42,14 @@ public:
 	ALSSensorService(Sensor& sensor, Logger *logger = nullptr) : SensorService(sensor, ServiceIdentifier::ALS_SENSOR, "ALS", logger) {}
 
 private:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 	void read_and_populate_log_entry(LogEntry *e) override {
 		ALSLogEntry *log = (ALSLogEntry *)e;
 		log->lumens = m_sensor.read();
 		service_set_log_header_time(log->header, service_current_time());
 	}
+#pragma GCC diagnostic pop
 
 	void service_init() override {};
 	void service_term() override {};

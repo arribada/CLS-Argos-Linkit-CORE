@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "filesystem.hpp"
 #include "calibration.hpp"
 

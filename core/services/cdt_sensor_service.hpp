@@ -55,6 +55,8 @@ public:
 	CDTSensorService(Sensor& sensor, Logger *logger) : SensorService(sensor, ServiceIdentifier::CDT_SENSOR, "CDT", logger) {}
 
 private:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 	void read_and_populate_log_entry(LogEntry *e) override {
 		CDTLogEntry *log = (CDTLogEntry *)e;
 		log->conductivity = m_sensor.read((unsigned int)CDTSensorPort::CONDUCTIVITY);
@@ -62,6 +64,7 @@ private:
 		log->temperature = m_sensor.read((unsigned int)CDTSensorPort::TEMPERATURE);
 		service_set_log_header_time(log->header, service_current_time());
 	}
+#pragma GCC diagnostic pop
 
 	void service_init() override {};
 	void service_term() override {};

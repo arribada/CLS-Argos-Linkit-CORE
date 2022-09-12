@@ -44,11 +44,14 @@ public:
 
 private:
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 	void read_and_populate_log_entry(LogEntry *e) override {
 		PHLogEntry *ph = (PHLogEntry *)e;
 		ph->ph = m_sensor.read();
 		service_set_log_header_time(ph->header, service_current_time());
 	}
+#pragma GCC diagnostic pop
 
 	void service_init() override {};
 	void service_term() override {};

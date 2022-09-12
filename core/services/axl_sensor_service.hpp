@@ -64,6 +64,8 @@ public:
 	AXLSensorService(Sensor& sensor, Logger *logger = nullptr) : SensorService(sensor, ServiceIdentifier::AXL_SENSOR, "AXL", logger) {}
 
 private:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 	void read_and_populate_log_entry(LogEntry *e) override {
 		AXLLogEntry *log = (AXLLogEntry *)e;
 		log->x = m_sensor.read(AXLSensorPort::X);
@@ -73,6 +75,8 @@ private:
 		log->temperature = m_sensor.read((unsigned int)AXLSensorPort::TEMPERATURE);
 		service_set_log_header_time(log->header, service_current_time());
 	}
+#pragma GCC diagnostic pop
+
 	void service_init() override {
 		// Setup 0.1G threshold and 1 sample duration
 		double g_thresh = service_read_param<double>(ParamID::AXL_SENSOR_WAKEUP_THRESH);

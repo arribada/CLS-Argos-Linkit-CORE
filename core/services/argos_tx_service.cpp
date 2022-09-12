@@ -547,16 +547,17 @@ ArticPacket ArgosPacketBuilder::build_doppler_packet(unsigned int batt_voltage, 
 
 // ArgosTxScheduler
 
-ArgosTxScheduler::ArgosTxScheduler() : m_last_schedule_abs({}),
-		 m_curr_schedule_abs({}),
-		m_earliest_schedule({}),
+ArgosTxScheduler::ArgosTxScheduler() :
 		m_rand(std::mt19937()) {
+	m_last_schedule_abs.reset();
+	m_curr_schedule_abs.reset();
+	m_earliest_schedule.reset();
 	m_location.reset();
 }
 
 void ArgosTxScheduler::reset(unsigned int seed) {
-	m_earliest_schedule = {};
-	m_last_schedule_abs = {};
+	m_earliest_schedule.reset();
+	m_last_schedule_abs.reset();
 	m_location.reset();
 	m_rand.seed(seed);
 }

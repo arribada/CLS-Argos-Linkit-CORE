@@ -694,7 +694,7 @@ TEST(ArgosTxService, LegacyTxService)
 	}
 }
 
-TEST(ArgosTxService, TxServiceCancelledBeforeTx)
+TEST(ArgosTxService, TxServiceCancelledByUnderwaterBeforeTx)
 {
 	double frequency = 900.22;
 	BaseArgosMode mode = BaseArgosMode::LEGACY;
@@ -880,4 +880,69 @@ TEST(ArgosTxService, LegacyTxServiceDepthPile1)
 
 		mock_artic->notify(ArticEventTxComplete({}));
 	}
+}
+
+TEST(ArgosTxService, UnderwaterFor24HoursBeforeTx)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	BaseArgosPower power = BaseArgosPower::POWER_1000_MW;
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_4;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	unsigned int tr_nom = 10;
+	bool time_sync_en = false;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, time_sync_en);
+
+	ArgosTxService serv(*mock_artic);
+
+	std::time_t t = 1652105502000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	mock().expectOneCall("set_tx_power").onObject(mock_artic).withUnsignedIntParameter("power", (unsigned int)power);
+	serv.start();
+
+	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(11.8768, -33.8232, t);
+	system_scheduler->run();
+
+	// Inject UW event
+	mock().expectOneCall("stop_send").onObject(mock_artic);
+	notify_underwater_state(true);
+
+	// Keep UW for 25 hours
+	t += 50 * 3600 * 1000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+	system_scheduler->run();
+
+	// Inject surfaced event
+	notify_underwater_state(false);
+
+	// Next schedule should be equal to dry time before TX since the last TX was deferred
+	unsigned int dry_time_before_tx = fake_config_store->read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
+	CHECK_EQUAL(dry_time_before_tx*1000, serv.get_last_schedule());
+
+	// Should now transmit
+	mock().expectOneCall("send").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A2).
+			withUnsignedIntParameter("size_bits", 248);
+	t += serv.get_last_schedule();
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+	system_scheduler->run();
 }
