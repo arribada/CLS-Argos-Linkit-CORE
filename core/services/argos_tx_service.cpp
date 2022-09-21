@@ -24,7 +24,6 @@ void ArgosTxService::service_init() {
 	configuration_store->get_argos_configuration(argos_config);
 	m_artic.set_frequency(argos_config.frequency);
 	m_artic.set_tcxo_warmup_time(argos_config.argos_tcxo_warmup_time);
-	m_artic.set_tx_power(argos_config.power);
 	m_artic.set_device_identifier(argos_config.argos_id);
 	m_artic.subscribe(*this);
 	m_sched.reset(argos_config.argos_id);
@@ -185,7 +184,9 @@ void ArgosTxService::process_certification_burst() {
 	configuration_store->get_argos_configuration(argos_config);
 	unsigned int size_bits;
 	ArticPacket packet = ArgosPacketBuilder::build_certification_packet(argos_config.cert_tx_payload, size_bits);
-	DEBUG_INFO("ArgosTxService::process_certification_burst: mode=%s data=%s sz=%u", argos_modulation_to_string(argos_config.cert_tx_modulation), Binascii::hexlify(packet).c_str(), size_bits);
+	DEBUG_INFO("ArgosTxService::process_certification_burst: mode=%s data=%s sz=%u power=%u mW", argos_modulation_to_string(argos_config.cert_tx_modulation), Binascii::hexlify(packet).c_str(), size_bits,
+			argos_power_to_integer(argos_config.power));
+	m_artic.set_tx_power(argos_config.power);
 	m_artic.send((ArticMode)argos_config.cert_tx_modulation, packet, size_bits);
 }
 
@@ -199,7 +200,9 @@ void ArgosTxService::process_time_sync_burst() {
 		ArticPacket packet = ArgosPacketBuilder::build_gnss_packet(v, argos_config.is_out_of_zone, argos_config.is_lb,
 				argos_config.delta_time_loc,
 				size_bits);
-		DEBUG_INFO("ArgosTxService::process_time_sync_burst: mode=A2 data=%s sz=%u", Binascii::hexlify(packet).c_str(), size_bits);
+		DEBUG_INFO("ArgosTxService::process_time_sync_burst: mode=A2 data=%s sz=%u power=%u mW", Binascii::hexlify(packet).c_str(), size_bits,
+				argos_power_to_integer(argos_config.power));
+		m_artic.set_tx_power(argos_config.power);
 		m_artic.send(ArticMode::A2, packet, size_bits);
 	} else {
 		// No eligible entries for transmission in the depth pile, so send a doppler burst instead
@@ -217,7 +220,9 @@ void ArgosTxService::process_gnss_burst() {
 		ArticPacket packet = ArgosPacketBuilder::build_gnss_packet(v, argos_config.is_out_of_zone, argos_config.is_lb,
 				argos_config.delta_time_loc,
 				size_bits);
-		DEBUG_INFO("ArgosTxService::process_gnss_burst: mode=%s data=%s sz=%u", argos_modulation_to_string((BaseArgosModulation)m_scheduled_mode), Binascii::hexlify(packet).c_str(), size_bits);
+		DEBUG_INFO("ArgosTxService::process_gnss_burst: mode=%s data=%s sz=%u power=%u mW", argos_modulation_to_string((BaseArgosModulation)m_scheduled_mode), Binascii::hexlify(packet).c_str(), size_bits,
+				argos_power_to_integer(argos_config.power));
+		m_artic.set_tx_power(argos_config.power);
 		m_artic.send(m_scheduled_mode, packet, size_bits);
 	} else {
 		// No eligible entries for transmission in the depth pile, so send a doppler burst instead
@@ -229,7 +234,11 @@ void ArgosTxService::process_doppler_burst() {
 	DEBUG_TRACE("ArgosTxService::process_doppler_burst");
 	unsigned int size_bits;
 	ArticPacket packet = ArgosPacketBuilder::build_doppler_packet(service_get_voltage(), service_is_battery_level_low(), size_bits);
-	DEBUG_INFO("ArgosTxService::process_doppler_burst: mode=A2 data=%s sz=%u", Binascii::hexlify(packet).c_str(), size_bits);
+	ArgosConfig argos_config;
+	configuration_store->get_argos_configuration(argos_config);
+	DEBUG_INFO("ArgosTxService::process_doppler_burst: mode=A2 data=%s sz=%u power=%u mW", Binascii::hexlify(packet).c_str(), size_bits,
+			argos_power_to_integer(argos_config.power));
+	m_artic.set_tx_power(argos_config.power);
 	m_artic.send(ArticMode::A2, packet, size_bits);
 }
 
