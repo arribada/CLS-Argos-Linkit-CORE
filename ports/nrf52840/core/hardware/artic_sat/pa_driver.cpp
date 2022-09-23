@@ -55,34 +55,34 @@ void MCP47X6::set_output_power(unsigned int mW) {
 	if (mW == 0) {
 		power_down();
 	} else if (mW <= 3) {
-		set_level(2229);
-	} else if (mW <= 5) {
-		set_level(2230);
-	} else if (mW <= 40) {
-		set_level(2242);
-	} else if (mW <= 50) {
-		set_level(2245);
-	} else if (mW <= 200) {
-		set_level(2296);
-	} else if (mW <= 350) {
-		set_level(2347);
-	} else if (mW <= 500) {
-		set_level(2399);
-	} else if (mW <= 750) {
-		set_level(2484);
-	} else if (mW <= 1000) {
 		set_level(2569);
+	} else if (mW <= 5) {
+		set_level(2570);
+	} else if (mW <= 40) {
+		set_level(2589);
+	} else if (mW <= 50) {
+		set_level(2595);
+	} else if (mW <= 200) {
+		set_level(2678);
+	} else if (mW <= 350) {
+		set_level(2761);
+	} else if (mW <= 500) {
+		set_level(2844);
+	} else if (mW <= 750) {
+		set_level(2983);
+	} else if (mW <= 1000) {
+		set_level(3121);
 	} else {
-		set_level(2739);
+		set_level(3398);
 	}
 }
 
 void MCP47X6::set_vref(uint8_t vref) {
-	m_config_reg = (m_config_reg & MCP47X6_VREF_MASK) | (vref & !MCP47X6_VREF_MASK);
+	m_config_reg = (m_config_reg & MCP47X6_VREF_MASK) | (vref & ~MCP47X6_VREF_MASK);
 }
 
 void MCP47X6::set_gain(uint8_t gain) {
-	m_config_reg = (m_config_reg & MCP47X6_GAIN_MASK) | (gain & !MCP47X6_GAIN_MASK);
+	m_config_reg = (m_config_reg & MCP47X6_GAIN_MASK) | (gain & ~MCP47X6_GAIN_MASK);
 }
 
 void MCP47X6::set_level(uint16_t level) {
