@@ -98,7 +98,8 @@ void MCP47X6::set_level(uint16_t level) {
 
 void MCP47X6::power_down() {
 	uint8_t xfer[1];
-	xfer[0] = m_config_reg | MCP47X6_CMD_VOLCONFIG;
+	DEBUG_TRACE("MCP47X6::power_down: Shutdown DAC");
+	xfer[0] = m_config_reg | MCP47X6_CMD_VOLCONFIG | MCP47X6_PWRDN_500K;
 	nrfx_err_t error = nrfx_twim_tx(&BSP::I2C_Inits[MCP4716_DEVICE].twim, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
     if (error != NRFX_SUCCESS)
         throw ErrorCode::I2C_COMMS_ERROR;
@@ -108,7 +109,7 @@ MCP47X6::MCP47X6() {
 	m_config_reg = 0;
 	set_vref(MCP47X6_VREF_VDD);
 	set_gain(MCP47X6_GAIN_1X);
-	set_level(0);
+	set_output_power(0);
 }
 
 MCP47X6::~MCP47X6() {
