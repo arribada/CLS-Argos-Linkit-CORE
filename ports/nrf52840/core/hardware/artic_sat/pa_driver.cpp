@@ -52,9 +52,24 @@ void RFPA133::set_output_power(unsigned int mW) {
 }
 
 void MCP47X6::set_output_power(unsigned int mW) {
+
 	if (mW == 0) {
 		power_down();
-	} else if (mW <= 3) {
+		return;
+	}
+
+	// Try to look up from the calibration file
+	try {
+		unsigned int dac_value = (unsigned int)m_cal.read(mW);
+		DEBUG_TRACE("MCP47X6::set_output_power: using calibration value %u @ %u mW", dac_value, mW);
+		set_level(dac_value);
+		return;
+	} catch (...) {
+		DEBUG_TRACE("MCP47X6::set_output_power: missing calibration point @ %u mW", mW);
+	}
+
+	// Use defaults where no calibration file is present
+	if (mW <= 3) {
 		set_level(2569);
 	} else if (mW <= 5) {
 		set_level(2570);
@@ -74,6 +89,16 @@ void MCP47X6::set_output_power(unsigned int mW) {
 		set_level(3121);
 	} else {
 		set_level(3398);
+	}
+}
+
+void MCP47X6::calibration_write(const double value, const unsigned int offset) {
+	if (offset == 0) { // 0=>reset
+		m_cal.reset();
+	} else if (offset == 1) { // 1=>save
+		m_cal.save();
+	} else { // DAC value for given power in mW
+		m_cal.write(offset, value);
 	}
 }
 
@@ -105,8 +130,7 @@ void MCP47X6::power_down() {
         throw ErrorCode::I2C_COMMS_ERROR;
 }
 
-MCP47X6::MCP47X6() {
-	m_config_reg = 0;
+MCP47X6::MCP47X6() : Calibratable("MCP47X6"), m_cal(Calibration("MCP47X6")), m_config_reg(0) {
 	set_vref(MCP47X6_VREF_VREFPIN);
 	set_gain(MCP47X6_GAIN_1X);
 	set_output_power(0);

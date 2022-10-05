@@ -233,6 +233,31 @@ static inline const char *argos_power_to_string(BaseArgosPower power) {
 	return "UNKNOWN";
 }
 
+
+static BaseArgosPower argos_integer_to_power(unsigned int power) {
+	if (power == 3)
+		return  BaseArgosPower::POWER_3_MW;
+	if (power == 40)
+		return BaseArgosPower::POWER_40_MW;
+	if (power == 200)
+		return BaseArgosPower::POWER_200_MW;
+	if (power == 500)
+		return BaseArgosPower::POWER_500_MW;
+	if (power == 5)
+		return BaseArgosPower::POWER_5_MW;
+	if (power == 50)
+		return BaseArgosPower::POWER_50_MW;
+	if (power == 350)
+		return BaseArgosPower::POWER_350_MW;
+	if (power == 750)
+		return BaseArgosPower::POWER_750_MW;
+	if (power == 1000)
+		return BaseArgosPower::POWER_1000_MW;
+	if (power == 1500)
+		return BaseArgosPower::POWER_1500_MW;
+	return BaseArgosPower::POWER_3_MW;
+}
+
 static unsigned int argos_power_to_integer(BaseArgosPower power) {
 	switch (power) {
 	case BaseArgosPower::POWER_40_MW:

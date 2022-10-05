@@ -36,6 +36,7 @@ MemoryAccess *memory_access;
 RTC *rtc;
 BatteryMonitor *battery_monitor;
 BaseDebugMode g_debug_mode;
+ArticDevice *artic_device;
 
 MockSupportPlugin mockPlugin;
 

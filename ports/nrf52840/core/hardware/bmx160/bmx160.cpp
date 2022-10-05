@@ -307,7 +307,7 @@ double BMX160::read(unsigned int offset) {
 	}
 }
 
-void BMX160::calibrate(double value, unsigned int offset) {
+void BMX160::calibration_write(const double value, const unsigned int offset) {
 	DEBUG_TRACE("BMX160::calibrate: value=%f offset=%u", value, offset);
 	if (0 == offset) {
 		m_bmx160.set_wakeup_threshold(value);

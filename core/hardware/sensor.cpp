@@ -1,6 +1,6 @@
 #include "sensor.hpp"
 
-Sensor::Sensor(const char *name) {
+Sensor::Sensor(const char *name) : Calibratable(name) {
 	SensorManager::add(*this, name);
 }
 

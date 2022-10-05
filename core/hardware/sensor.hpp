@@ -4,14 +4,15 @@
 #include <map>
 #include <string>
 
+#include "calibration.hpp"
+
 class Sensor;
 
 
-class Sensor {
+class Sensor : public Calibratable {
 public:
 	Sensor(const char *name = "Sensor");
 	virtual ~Sensor();
-	virtual void calibrate(double value, unsigned int offset) = 0;
 	virtual double read(unsigned int port = 0) = 0;
 	virtual void install_event_handler(unsigned int, std::function<void()>) {}
 	virtual void remove_event_handler(unsigned int) {}

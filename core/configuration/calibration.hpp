@@ -7,6 +7,46 @@
 
 extern FileSystem *main_filesystem;
 
+
+class Calibratable;
+
+
+class CalibratableManager {
+private:
+	static inline std::map<std::string, Calibratable&> m_map;
+
+public:
+	static void add(Calibratable& s, const char *name) {
+		if (m_map.count(std::string(name)))
+			throw; // Don't allow duplicate keys
+		m_map.insert({std::string(name), s});
+	}
+	static void remove(Calibratable& s) {
+		for (auto const &p : m_map) {
+			if (&p.second == &s) {
+				m_map.erase(p.first);
+				return;
+			}
+		}
+		throw; // Don't allow a remove that doesn't exist
+	}
+	static Calibratable &find_by_name(const char *name) {
+		return m_map.at(std::string(name));
+	}
+};
+
+class Calibratable {
+public:
+	Calibratable(const char *name = "Calibratable") {
+		CalibratableManager::add(*this, name);
+	}
+	virtual ~Calibratable() {
+		CalibratableManager::remove(*this);
+	}
+	virtual void calibration_write(const double, const unsigned int) {};
+	virtual void calibration_read(double &, const unsigned int) {};
+};
+
 class Calibration {
 public:
 	Calibration(const char *name) : m_has_changed(false) {
@@ -25,7 +65,7 @@ public:
 		return m_map.at(offset);
 	}
 	void write(unsigned int offset, double value) {
-		m_map.insert({offset, value});
+		m_map[offset] = value;
 		m_has_changed = true;
 	}
 	void reset() {
@@ -51,7 +91,7 @@ private:
 				break;
 			if (f.read(&value, sizeof(value)) != sizeof(value))
 				break;
-			m_map.insert({offset, value});
+			m_map[offset] = value;
 		}
 	}
 

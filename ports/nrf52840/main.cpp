@@ -63,6 +63,7 @@ DTEHandler *dte_handler;
 RTC *rtc;
 BatteryMonitor *battery_monitor;
 BaseDebugMode g_debug_mode = BaseDebugMode::UART;
+ArticDevice *artic_device;
 
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
@@ -441,6 +442,7 @@ int main()
 		static ArticSat artic;
 		static ArgosTxService argos_tx_service(artic);
 		static ArgosRxService argos_rx_service(artic);
+		artic_device = &artic;
 	} catch (...) {
 		DEBUG_TRACE("Artic R2 not detected");
 	}

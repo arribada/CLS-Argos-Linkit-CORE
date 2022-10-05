@@ -8,7 +8,6 @@ class LTR303 : public Sensor
 public:
 	LTR303();
 	double read(unsigned int gain = 1) override;
-	void calibrate(double, unsigned int) override {};
 
 private:
     void readReg(uint8_t reg, uint8_t *data, size_t len);

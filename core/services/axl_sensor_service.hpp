@@ -82,8 +82,8 @@ private:
 		double g_thresh = service_read_param<double>(ParamID::AXL_SENSOR_WAKEUP_THRESH);
 		unsigned int duration = service_read_param<unsigned int>(ParamID::AXL_SENSOR_WAKEUP_SAMPLES);
 		if (g_thresh && service_is_enabled()) {
-			m_sensor.calibrate(g_thresh, AXLCalibration::WAKEUP_THRESH);
-			m_sensor.calibrate(duration, AXLCalibration::WAKEUP_DURATION);
+			m_sensor.calibration_write(g_thresh, AXLCalibration::WAKEUP_THRESH);
+			m_sensor.calibration_write(duration, AXLCalibration::WAKEUP_DURATION);
 			m_sensor.install_event_handler(AXLEvent::WAKEUP, [this]() {
 				DEBUG_TRACE("AXLSensorService::event");
 				LogEntry e;

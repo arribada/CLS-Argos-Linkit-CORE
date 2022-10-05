@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 
+#include "calibration.hpp"
+
 class PAInterface {
 public:
 	virtual ~PAInterface() {}
@@ -32,7 +34,7 @@ public:
 	void set_output_power(unsigned int mW) override;
 };
 
-class MCP47X6 : public PAInterface {
+class MCP47X6 : public PAInterface, public Calibratable {
 private:
 	// Programmable Gain definitions
 	static inline const uint8_t MCP47X6_GAIN_MASK = 0xFE;
@@ -59,7 +61,9 @@ private:
 	static inline const uint8_t MCP47X6_CMD_VOLCONFIG  = 0x80;
 	static inline const uint8_t MCP47X6_CMD_ALL        = 0x60;
 
+	Calibration m_cal;
 	uint8_t m_config_reg;
+
 	void set_vref(uint8_t vref);
 	void set_gain(uint8_t gain);
 	void set_level(uint16_t level);
@@ -69,4 +73,5 @@ public:
 	MCP47X6();
 	~MCP47X6();
 	void set_output_power(unsigned int mW) override;
+	void calibration_write(const double value, const unsigned int offset) override;
 };

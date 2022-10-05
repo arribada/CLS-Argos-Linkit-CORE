@@ -21,7 +21,7 @@ double CDT::read(unsigned int offset) {
 	}
 }
 
-void CDT::calibrate(double value, unsigned int offset) {
+void CDT::calibration_write(const double value, const unsigned int offset) {
 	if (0 == offset) {
 		DEBUG_TRACE("CDT::calibrate: reset calibration");
 		m_cal.reset();

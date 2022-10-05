@@ -219,7 +219,7 @@ const DTECommandMap command_map[] = {
 				.key = "",
 				.encoding = BaseEncoding::UINT,
 				.min_value = 0U,
-				.max_value = 5U,
+				.max_value = 6U,
 				.permitted_values = {},
 				.is_implemented = false,
 				.is_writable = false
@@ -240,6 +240,63 @@ const DTECommandMap command_map[] = {
 				.encoding = BaseEncoding::FLOAT,
 				.min_value = 0.0,
 				.max_value = 0.0,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			}
+		}
+	},
+	{
+		.name = "SATTX",
+		.command = DTECommand::ARGOSTX_REQ,
+		.prototype =
+		{
+			{
+				.name = "modulation",
+				.key = "",
+				.encoding = BaseEncoding::UINT,
+				.min_value = 0U,
+				.max_value = 2U,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			},
+			{
+				.name = "power",
+				.key = "",
+				.encoding = BaseEncoding::UINT,
+				.min_value = 0U,
+				.max_value = 0U,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			},
+			{
+				.name = "freq",
+				.key = "",
+				.encoding = BaseEncoding::FLOAT,
+				.min_value = 0.0,
+				.max_value = 0.0,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			},
+			{
+				.name = "size",
+				.key = "",
+				.encoding = BaseEncoding::UINT,
+				.min_value = 0U,
+				.max_value = 0U,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			},
+			{
+				.name = "tcxo_warmup",
+				.key = "",
+				.encoding = BaseEncoding::UINT,
+				.min_value = 0U,
+				.max_value = 0U,
 				.permitted_values = {},
 				.is_implemented = false,
 				.is_writable = false
@@ -427,6 +484,13 @@ const DTECommandMap command_map[] = {
 	{
 		.name = "SCALW",
 		.command = DTECommand::SCALW_RESP,
+		.prototype =
+		{
+		}
+	},
+	{
+		.name = "SATTX",
+		.command = DTECommand::ARGOSTX_RESP,
 		.prototype =
 		{
 		}

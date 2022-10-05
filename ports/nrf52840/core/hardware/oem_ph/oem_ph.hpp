@@ -9,7 +9,7 @@ class OEM_PH_Sensor : public Sensor
 public:
 	OEM_PH_Sensor();
 	double read(unsigned int) override;
-	void calibrate(double calibration_data, unsigned int calibration_offset) override;
+	void calibration_write(const double, const unsigned int) override;
 
 private:
 

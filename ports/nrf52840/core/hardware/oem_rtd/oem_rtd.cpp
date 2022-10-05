@@ -66,7 +66,7 @@ double OEM_RTD_Sensor::read(unsigned int)
     return (double)reading_u32 / 1000.0;
 }
 
-void OEM_RTD_Sensor::calibrate(double, unsigned int calibration_offset)
+void OEM_RTD_Sensor::calibration_write(const double, const unsigned int calibration_offset)
 {
 	// We always calibrate to 0C based on ice melting in water temperature
 	writeReg<uint32_t>(RegAddr::CALIBRATION, 0U);

@@ -8,8 +8,9 @@ class MockSensor : public Sensor {
 
 public:
 	MockSensor(const char *name = "Mock") : Sensor(name) {}
-	void calibrate(double value, unsigned int offset) override {
-		mock().actualCall("calibrate").onObject(this).withParameter("value", value).withParameter("offset", offset);
+
+	void calibration_write(const double value, const unsigned int offset) override {
+		mock().actualCall("calibration_write").onObject(this).withParameter("value", value).withParameter("offset", offset);
 	}
 
 	double read(unsigned int port) override {

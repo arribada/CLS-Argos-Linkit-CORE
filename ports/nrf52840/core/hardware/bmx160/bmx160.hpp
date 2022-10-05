@@ -44,7 +44,7 @@ private:
 class BMX160 : public Sensor {
 public:
 	BMX160();
-	void calibrate(double, unsigned int) override;
+	void calibration_write(const double, const unsigned int) override;
 	double read(unsigned int offset) override;
 	void install_event_handler(unsigned int, std::function<void()>) override;
 	void remove_event_handler(unsigned int) override;

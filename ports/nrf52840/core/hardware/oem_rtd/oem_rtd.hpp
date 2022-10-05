@@ -8,7 +8,7 @@ class OEM_RTD_Sensor : public Sensor
 public:
 	OEM_RTD_Sensor();
 	double read(unsigned int) override;
-	void calibrate(double calibration_data, unsigned int calibration_offset) override;
+	void calibration_write(const double calibration_data, const unsigned int calibration_offset) override;
 
 private:
 

@@ -446,7 +446,7 @@ ArticSat::ArticSat(unsigned int idle_shutdown_ms) {
     m_ack_buffer.clear();
     m_packet_buffer.clear();
     m_rx_pending = false;
-	m_pa_driver = nullptr;
+	m_pa_driver = new PADriver;
     m_nrf_spim = nullptr;
     m_state = ArticSatState::stopped;
     m_tcxo_warmup_time = DEFAULT_TCXO_WARMUP_TIME_SECONDS;
@@ -457,6 +457,7 @@ ArticSat::ArticSat(unsigned int idle_shutdown_ms) {
 
 ArticSat::~ArticSat() {
 	power_off_immediate();
+	delete m_pa_driver;
 }
 
 void ArticSat::detect_dsp_present() {
@@ -573,7 +574,6 @@ void ArticSat::state_starting_exit() {
 void ArticSat::state_starting() {
     m_is_first_tx = true;
 	m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
-	m_pa_driver = new PADriver();
 	ARTIC_STATE_CHANGE(starting, powering_on);
 }
 
@@ -597,10 +597,6 @@ void ArticSat::state_stopped_enter() {
 	// Cleanup the SPIM instance
 	delete m_nrf_spim;
     m_nrf_spim = nullptr; // Invalidate this pointer so if we call this function again it doesn't call delete on an invalid pointer
-
-    // Cleanup PA driver
-    delete m_pa_driver;
-    m_pa_driver = nullptr;
 
 	// FIXME: should this be moved into the NrfSPIM driver?
 	nrf_gpio_cfg_output(BSP::SPI_Inits[SPI_SATELLITE].config.ss_pin);

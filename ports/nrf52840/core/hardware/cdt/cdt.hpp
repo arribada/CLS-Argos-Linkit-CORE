@@ -2,13 +2,12 @@
 
 #include "ms58xx.hpp"
 #include "sensor.hpp"
-#include "calibration.hpp"
 #include "ad5933.hpp"
 
 class CDT : public Sensor {
 public:
 	CDT(MS58xxLL& ms58xx, AD5933LL& ad5933);
-	void calibrate(double, unsigned int) override;
+	void calibration_write(const double, const unsigned int) override;
 	double read(unsigned int offset);
 
 private:

@@ -47,7 +47,6 @@ private:
 class MS58xx : public Sensor {
 public:
 	MS58xx(MS58xxLL& ms58xx) : Sensor("PRS"), m_ms58xx(ms58xx) {}
-	void calibrate(double, unsigned int) override {};
 	double read(unsigned int channel = 0) {
 		if (0 == channel) {
 			m_ms58xx.read(m_last_temperature, m_last_pressure);

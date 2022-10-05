@@ -71,7 +71,7 @@ double OEM_PH_Sensor::read(unsigned int)
     return (double)reading_u32 / 1000.0;
 }
 
-void OEM_PH_Sensor::calibrate(double calibration_data, unsigned int calibration_offset)
+void OEM_PH_Sensor::calibration_write(const double calibration_data, const unsigned int calibration_offset)
 {
     // Calibration_offset
 	// 0 = Reset all calibration values

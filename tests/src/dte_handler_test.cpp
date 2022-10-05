@@ -16,6 +16,7 @@
 
 #include "mock_sensor.hpp"
 #include "mock_logger.hpp"
+#include "mock_artic_device.hpp"
 #include "previpass.h"
 #include "binascii.hpp"
 
@@ -30,6 +31,8 @@ extern FileSystem *main_filesystem;
 extern ConfigurationStore *configuration_store;
 extern MemoryAccess *memory_access;
 extern BatteryMonitor *battery_monitor;
+extern ArticDevice *artic_device;
+
 
 TEST_GROUP(DTEHandler)
 {
@@ -43,6 +46,7 @@ TEST_GROUP(DTEHandler)
 	FakeBatteryMonitor *fake_battery_monitor;
 	GPSLogFormatter gps_log_formatter;
 	SysLogFormatter sys_log_formatter;
+	MockArticDevice *mock_artic;
 
 	void setup() {
 		ram_flash = new RamFlash(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
@@ -59,6 +63,8 @@ TEST_GROUP(DTEHandler)
 		mock_system_log->set_log_formatter(&sys_log_formatter);
 		mock_sensor_log = new MockLog("sensor.log");
 		mock_sensor_log->set_log_formatter(&gps_log_formatter);
+		mock_artic = new MockArticDevice;
+		artic_device = mock_artic;
 		dte_handler = new DTEHandler();
 		fake_battery_monitor = new FakeBatteryMonitor();
 		battery_monitor = fake_battery_monitor;
@@ -67,6 +73,7 @@ TEST_GROUP(DTEHandler)
 	}
 
 	void teardown() {
+		delete mock_artic;
 		delete dte_handler;
 		delete mock_sensor_log;
 		delete mock_system_log;
@@ -475,7 +482,7 @@ TEST(DTEHandler, SCALW_REQ)
 
 	// Invoke AXL sensor
 	MockSensor s1("AXL");
-	mock().expectOneCall("calibrate").onObject(&s1).withDoubleParameter("value", 0.0).withUnsignedIntParameter("offset", 0U);
+	mock().expectOneCall("calibration_write").onObject(&s1).withDoubleParameter("value", 0.0).withUnsignedIntParameter("offset", 0U);
 
 	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 0U, 0U, 0.0);
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
@@ -485,7 +492,7 @@ TEST(DTEHandler, SCALW_REQ)
 
 	// Invoke PRS sensor
 	MockSensor s2("PRS");
-	mock().expectOneCall("calibrate").onObject(&s2).withDoubleParameter("value", 1.0).withUnsignedIntParameter("offset", 0U);
+	mock().expectOneCall("calibration_write").onObject(&s2).withDoubleParameter("value", 1.0).withUnsignedIntParameter("offset", 0U);
 
 	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 1U, 0U, 1.0);
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
@@ -495,11 +502,30 @@ TEST(DTEHandler, SCALW_REQ)
 
 	// Invoke PRS sensor
 	MockSensor s3("ALS");
-	mock().expectOneCall("calibrate").onObject(&s3).withDoubleParameter("value", 2.0).withUnsignedIntParameter("offset", 0U);
+	mock().expectOneCall("calibration_write").onObject(&s3).withDoubleParameter("value", 2.0).withUnsignedIntParameter("offset", 0U);
 
 	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 2U, 0U, 2.0);
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
 	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
 	CHECK_TRUE(DTECommand::SCALW_RESP == command);
 	CHECK_TRUE((unsigned int)DTEError::OK == error_code);
+}
+
+TEST(DTEHandler, ARGOSTX_REQ)
+{
+	DTECommand command;
+	std::string req;
+	std::string resp;
+	std::vector<ParamID> params;
+	std::vector<ParamValue> param_values;
+	std::vector<BaseType> arg_list;
+
+	unsigned int error_code;
+	req = DTEEncoder::encode(DTECommand::ARGOSTX_REQ, (unsigned int)ArticMode::A2, 350U, 900.11, 15U, 5U);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5U);
+	mock().expectOneCall("set_tx_power").onObject(mock_artic).withUnsignedIntParameter("power", (unsigned int)BaseArgosPower::POWER_350_MW);
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", 900.11);
+	mock().expectOneCall("send").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A2).withUnsignedIntParameter("size_bits", 120U);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
 }
