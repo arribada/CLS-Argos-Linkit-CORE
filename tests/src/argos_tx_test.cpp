@@ -552,7 +552,7 @@ TEST(ArgosTxService, TimeSyncBurstPosFix)
 	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
-	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 }
 
@@ -605,7 +605,7 @@ TEST(ArgosTxService, TimeSyncBurstNoPosFix)
 	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
-	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 }
 
@@ -673,10 +673,10 @@ TEST(ArgosTxService, LegacyTxService)
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
 
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 
 	// Subsequent TX will be long packets
@@ -731,10 +731,10 @@ TEST(ArgosTxService, LegacyTxLowBattery)
 	// Force LB state
 	fake_config_store->set_battery_level(10U);
 
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 
 	// Subsequent TX will be short packets (depth pile 1 in LB mode)
@@ -787,10 +787,10 @@ TEST(ArgosTxService, LegacyTxOutOfZone)
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
 
-	inject_gps_location(11.8768, -33.8232);
-	inject_gps_location(11.8768, -33.8232);
-	inject_gps_location(11.8768, -33.8232);
-	inject_gps_location(11.8768, -33.8232);
+	inject_gps_location(1, 11.8768, -33.8232);
+	inject_gps_location(1, 11.8768, -33.8232);
+	inject_gps_location(1, 11.8768, -33.8232);
+	inject_gps_location(1, 11.8768, -33.8232);
 	system_scheduler->run();
 
 	// Subsequent TX will be short packets (depth pile 1 in OOZ mode)
@@ -841,10 +841,10 @@ TEST(ArgosTxService, TxServiceCancelledByUnderwaterBeforeTx)
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
 
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 
 	// Inject UW event
@@ -906,10 +906,10 @@ TEST(ArgosTxService, TxServiceCancelledDuringTx)
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
 
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 
 	mock().expectOneCall("set_tx_power").onObject(mock_artic).withUnsignedIntParameter("power", (unsigned int)power);
@@ -977,10 +977,10 @@ TEST(ArgosTxService, LegacyTxServiceDepthPile1)
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
 
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 
 	// Subsequent TX will be short packets
@@ -1030,10 +1030,10 @@ TEST(ArgosTxService, UnderwaterFor24HoursBeforeTx)
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
 
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
-	inject_gps_location(11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 
 	// Inject UW event
