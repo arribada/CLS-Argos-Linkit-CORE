@@ -142,6 +142,7 @@ public:
 	static inline const unsigned int INVALID_ALTITUDE	 = 255;
 	static inline const unsigned int REF_BATT_MV	 	 = 2700;
 	static inline const unsigned int LON_LAT_RESOLUTION  = 10000;
+	static inline const int NEG_LON_LAT_RESOLUTION  = -10000;
 	static inline const unsigned int MAX_GPS_ENTRIES_IN_PACKET = 4;
 
 	static unsigned int convert_altitude(double x);

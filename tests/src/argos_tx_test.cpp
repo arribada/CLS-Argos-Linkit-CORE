@@ -77,9 +77,9 @@ TEST_GROUP(ArgosTxService)
 		return log;
 	}
 
-	void inject_gps_location(bool is_valid=true, double longitude=0, double latitude=0, std::time_t t=0) {
+	void inject_gps_location(bool is_valid=true, double longitude=0, double latitude=0, std::time_t t=0, bool is_3d_fix = false, int32_t hMSL=0, int32_t gSpeed=0, uint16_t batt=4200) {
 		ServiceEvent e;
-		GPSLogEntry log = make_gps_location(is_valid, longitude, latitude, t);
+		GPSLogEntry log = make_gps_location(is_valid, longitude, latitude, t, is_3d_fix, hMSL, gSpeed, batt);
 
 		e.event_source = ServiceIdentifier::GNSS_SENSOR;
 		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
@@ -641,7 +641,7 @@ TEST(ArgosTxService, TimeSyncBurstNoPosOrTimeFix)
 	system_scheduler->run();
 }
 
-TEST(ArgosTxService, LegacyTxService)
+TEST(ArgosTxService, LegacyTxServiceInv)
 {
 	double frequency = 900.22;
 	BaseArgosMode mode = BaseArgosMode::LEGACY;
@@ -665,7 +665,7 @@ TEST(ArgosTxService, LegacyTxService)
 
 	ArgosTxService serv(*mock_artic);
 
-	std::time_t t = 1652105502000;
+	std::time_t t = 1665137726000;
 	fake_rtc->settime(t/1000);
 	fake_timer->set_counter(t);
 
@@ -673,17 +673,17 @@ TEST(ArgosTxService, LegacyTxService)
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
 
-	inject_gps_location(1, 11.8768, -33.8232, t);
-	inject_gps_location(1, 11.8768, -33.8232, t);
-	inject_gps_location(1, 11.8768, -33.8232, t);
-	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, -2.117964, 51.376382, t/1000, false, 0, 162, 4424);
+	//inject_gps_location(1, 11.8768, -33.8232, t);
+	//inject_gps_location(1, 11.8768, -33.8232, t);
+	//inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 
 	// Subsequent TX will be long packets
-	for (unsigned int i = 0; i < 10; i++) {
+	for (unsigned int i = 0; i < 1; i++) {
 		mock().expectOneCall("set_tx_power").onObject(mock_artic).withUnsignedIntParameter("power", (unsigned int)power);
 		mock().expectOneCall("send").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A2).
-				withUnsignedIntParameter("size_bits", 248);
+				withUnsignedIntParameter("size_bits", 120);
 
 		t += serv.get_last_schedule();
 		fake_rtc->settime(t/1000);

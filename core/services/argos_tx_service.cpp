@@ -279,14 +279,14 @@ unsigned int ArgosPacketBuilder::convert_latitude(double x) {
 	if (x >= 0)
 		return x * LON_LAT_RESOLUTION;
 	else
-		return ((unsigned int)((x - 0.00005) * -LON_LAT_RESOLUTION)) | 1<<20; // -ve: bit 20 is sign
+		return ((unsigned int)((x - 0.00005) * NEG_LON_LAT_RESOLUTION)) | 1<<20; // -ve: bit 20 is sign
 }
 
 unsigned int ArgosPacketBuilder::convert_longitude(double x) {
 	if (x >= 0)
 		return x * LON_LAT_RESOLUTION;
 	else
-		return ((unsigned int)((x - 0.00005) * -LON_LAT_RESOLUTION)) | 1<<21; // -ve: bit 21 is sign
+		return ((unsigned int)((x - 0.00005) * NEG_LON_LAT_RESOLUTION)) | 1<<21; // -ve: bit 21 is sign
 }
 
 unsigned int ArgosPacketBuilder::convert_heading(double x) {
@@ -316,12 +316,12 @@ ArticPacket ArgosPacketBuilder::build_short_packet(GPSLogEntry* gps_entry,
 	uint16_t year;
 	uint8_t month, day, hour, min, sec;
 	convert_datetime_to_epoch(gps_entry->info.schedTime, year, month, day, hour, min, sec);
-	PACK_BITS(gps_entry->info.day, packet, base_pos, 5);
+	PACK_BITS(day, packet, base_pos, 5);
 
 	DEBUG_TRACE("ArgosPacketBuilder::build_short_packet: day=%u", (unsigned int)day);
-	PACK_BITS(gps_entry->info.hour, packet, base_pos, 5);
+	PACK_BITS(hour, packet, base_pos, 5);
 	DEBUG_TRACE("ArgosPacketBuilder::build_short_packet: hour=%u", (unsigned int)hour);
-	PACK_BITS(gps_entry->info.min, packet, base_pos, 6);
+	PACK_BITS(min, packet, base_pos, 6);
 	DEBUG_TRACE("ArgosPacketBuilder::build_short_packet: min=%u", (unsigned int)min);
 
 	if (gps_entry->info.valid) {
@@ -333,7 +333,7 @@ ArticPacket ArgosPacketBuilder::build_short_packet(GPSLogEntry* gps_entry,
 		DEBUG_TRACE("ArgosPacketBuilder::build_short_packet: lon=%u (%lf)", lon, gps_entry->info.lon);
 		unsigned int gspeed = convert_speed((double)gps_entry->info.gSpeed);
 		PACK_BITS((unsigned int)gspeed, packet, base_pos, 7);
-		DEBUG_TRACE("ArgosPacketBuilder::build_short_packet: speed=%u", (unsigned int)gspeed);
+		DEBUG_TRACE("ArgosPacketBuilder::build_short_packet: speed=%u (%lf)", (unsigned int)gspeed, (double)gps_entry->info.gSpeed);
 
 		// OUTOFZONE_FLAG
 		PACK_BITS(is_out_of_zone, packet, base_pos, 1);
