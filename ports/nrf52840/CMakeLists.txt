@@ -162,6 +162,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/oem_rtd
     ${PROJ_DIR}/core/hardware/cdt
     ${PROJ_DIR}/core/hardware/bmx160
+    ${PROJ_DIR}/core/hardware/stwlc68_otp
 )
 
 target_sources(${TARGET_NAME} PRIVATE
@@ -238,7 +239,10 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/oem_rtd/oem_rtd.cpp
     ${PROJ_DIR}/core/hardware/artic_sat/artic_sat.cpp
     ${PROJ_DIR}/core/hardware/artic_sat/pa_driver.cpp
-    ${PROJ_DIR}/core/hardware/m8q/m8q.cpp
+	${PROJ_DIR}/core/hardware/m8q/m8q.cpp
+    ${PROJ_DIR}/core/hardware/stwlc68_otp/otphal.c
+    ${PROJ_DIR}/core/hardware/stwlc68_otp/otp_chip_info.c
+    ${PROJ_DIR}/core/hardware/stwlc68_otp/stwlc68.cpp
     ${PROJ_DIR}/core/hardware/m8q/nrf_uart_m8.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp

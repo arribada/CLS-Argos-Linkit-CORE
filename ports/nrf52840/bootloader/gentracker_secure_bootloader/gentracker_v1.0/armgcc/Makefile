@@ -4,6 +4,7 @@ OUTPUT_DIRECTORY := _build
 
 PROJ_DIR := ../..
 SDK_ROOT := ../../../../drivers/nRF5_SDK_17.0.2
+EXT_DIR  := ../../../..
 
 $(OUTPUT_DIRECTORY)/$(TARGETS).out: \
   LINKER_SCRIPT  := secure_bootloader_gcc_nrf52.ld
@@ -58,6 +59,7 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_usbd.c \
   ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c \
   ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c \
+  ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_twim.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_ecc.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_ecdsa.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_hash.c \
@@ -95,7 +97,10 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_ecdsa.c \
   $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_eddsa.c \
   $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_hash.c \
-  $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_hmac.c
+  $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_hmac.c \
+  $(EXT_DIR)/core/hardware/stwlc68_otp/otphal.c \
+  $(EXT_DIR)/core/hardware/stwlc68_otp/otp_prog.c \
+  $(EXT_DIR)/core/hardware/stwlc68_otp/otp_chip_info.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -154,6 +159,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/queue \
   $(SDK_ROOT)/components/libraries/mutex \
   $(SDK_ROOT)/components/libraries/ringbuf \
+  $(EXT_DIR)/core/hardware/stwlc68_otp \
 
 # Libraries common to all targets
 LIB_FILES += \

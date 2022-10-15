@@ -13,6 +13,7 @@
 #include "timeutils.hpp"
 #include "pmu.hpp"
 #include "sensor.hpp"
+#include "wchg.hpp"
 
 #define MAX_CONFIG_ITEMS  (unsigned int)ParamID::__PARAM_SIZE
 #define LB_EXIT_DELTA          5
@@ -82,6 +83,7 @@ enum class ConfigMode {
 	LOW_BATTERY,
 	OUT_OF_ZONE
 };
+
 
 class ConfigurationStore {
 
@@ -246,6 +248,7 @@ protected:
 		/* PRESSURE_SENSOR_PERIODIC */ 0U,
 		/* DEBUG_OUTPUT_MODE */ BaseDebugMode::UART,
 		/* GNSS_ASSISTNOW_OFFLINE_EN */ (bool)false,
+		/* WCHG_STATUS */ ""s,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
@@ -392,6 +395,14 @@ public:
 					m_params.at((unsigned)param_id) = s.read(2);
 				} catch (...) {
 					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::WCHG_STATUS) {
+				try {
+					WirelessCharger& s = WirelessChargerManager::get_instance();
+					m_params.at((unsigned)param_id) = s.get_chip_status();
+				} catch (...) {
+					m_params.at((unsigned)param_id) = "UNKNOWN";
 				}
 				b_is_valid = true;
 			} else {

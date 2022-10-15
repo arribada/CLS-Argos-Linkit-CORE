@@ -5599,6 +5599,25 @@
 
 // </e>
 
+// <e> NRFX_TWIM_ENABLED - nrfx_twim - TWIM peripheral driver
+//==========================================================
+#ifndef NRFX_TWIM_ENABLED
+#define NRFX_TWIM_ENABLED 1
+#endif
+// <q> NRFX_TWIM0_ENABLED  - Enable TWIM0 instance
+
+
+#ifndef NRFX_TWIM0_ENABLED
+#define NRFX_TWIM0_ENABLED 0
+#endif
+
+// <q> NRFX_TWIM1_ENABLED  - Enable TWIM1 instance
+
+
+#ifndef NRFX_TWIM1_ENABLED
+#define NRFX_TWIM1_ENABLED 1
+#endif
+
 
 // <<< end of configuration section >>>
 #endif //SDK_CONFIG_H

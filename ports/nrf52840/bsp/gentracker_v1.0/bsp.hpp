@@ -51,6 +51,7 @@
 #define OEM_RTD_DEVICE_ADDR 0x68
 #define AD5933_ADDRESS		0x0D
 #define BMX160_ADDRESS      0x69
+#define STWLC68_ADDRESS		0x61
 
 // Battery voltage ADC gain
 #define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain

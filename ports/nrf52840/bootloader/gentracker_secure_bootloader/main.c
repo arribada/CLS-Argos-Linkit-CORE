@@ -61,7 +61,10 @@
 #include "nrf_bootloader_info.h"
 #include "nrf_delay.h"
 #include "nrfx_uarte.h"
+#include "nrfx_twim.h"
 #include "nrf_log_redirect.h"
+#include "otp.h"
+#include "otphal.h"
 
 static void on_error(void)
 {
@@ -168,6 +171,25 @@ static const UART_InitTypeDefAndInst UART_Inits[] =
 	}
 };
 
+typedef struct
+{
+    nrfx_twim_t twim;
+    nrfx_twim_config_t twim_config;
+} I2C_InitTypeDefAndInst_t;
+
+static const I2C_InitTypeDefAndInst_t I2C_Inits[] = {
+	{
+		.twim = NRFX_TWIM_INSTANCE(1),
+		{
+			.scl = NRF_GPIO_PIN_MAP(0, 15),
+			.sda = NRF_GPIO_PIN_MAP(0, 27),
+			.frequency = NRF_TWIM_FREQ_400K,
+			.interrupt_priority = 6,
+			.hold_bus_uninit = 0, // Hold pull up state on gpio pins after uninit <0 = Disabled, 1 = Enabled>
+        }
+    }
+};
+
 // Redirect printf output to debug UART
 // We have to define this as extern "C" as we are overriding a weak C function
 int _write(int file, char *ptr, int len)
@@ -207,6 +229,14 @@ int main(void)
 	nrf_log_redirect_init();
 
     NRF_LOG_INFO("Inside main");
+
+	// Initialise TWIM for wireless charger programming
+    nrfx_twim_init(&I2C_Inits[0].twim, &I2C_Inits[0].twim_config, NULL, NULL);
+    nrfx_twim_enable(&I2C_Inits[0].twim);
+    otphal_init(&I2C_Inits[0].twim, NRF_GPIO_PIN_MAP(0, 17), 0x61);
+    otp_program();
+    nrfx_twim_disable(&I2C_Inits[0].twim);
+    nrfx_twim_uninit(&I2C_Inits[0].twim);
 
     // Check for and apply any external flash updates before entering main bootloader
     ext_flash_update();

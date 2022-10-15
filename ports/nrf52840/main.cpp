@@ -44,6 +44,7 @@
 #include "nrfx_twim.h"
 #include "gpio_led.hpp"
 #include "heap.h"
+#include "stwlc68.hpp"
 #include "etl/error_handler.h"
 #include "memory_monitor_service.hpp"
 
@@ -64,6 +65,7 @@ RTC *rtc;
 BatteryMonitor *battery_monitor;
 BaseDebugMode g_debug_mode = BaseDebugMode::UART;
 ArticDevice *artic_device;
+
 
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
@@ -256,6 +258,9 @@ int main()
 
 	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
+
+	DEBUG_TRACE("STWLC68...");
+    STWLC68::get_instance().init();
 
 	// Check the reed switch is engaged for 3 seconds if this is a power on event
     DEBUG_TRACE("PMU Reset Cause = %s", PMU::reset_cause().c_str());

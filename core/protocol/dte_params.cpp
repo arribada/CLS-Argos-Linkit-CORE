@@ -150,6 +150,9 @@ const BaseMap param_map[] = {
 
 	// GNSS ANO
 	{ "GNSS_ASSISTNOW_OFFLINE_EN", "GNP27", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+
+	// WCHG_STATUS
+	{ "WCHG_STATUS", "WCG01", BaseEncoding::TEXT, "", "", {}, true, false },
 };
 
 const size_t param_map_size = sizeof(param_map) / sizeof(param_map[0]);
