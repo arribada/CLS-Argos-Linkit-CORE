@@ -63,6 +63,7 @@
 #include "nrfx_uarte.h"
 #include "nrfx_twim.h"
 #include "nrf_log_redirect.h"
+#include "nrf_gpio.h"
 #include "otp.h"
 #include "otphal.h"
 
@@ -183,7 +184,7 @@ static const I2C_InitTypeDefAndInst_t I2C_Inits[] = {
 		{
 			.scl = NRF_GPIO_PIN_MAP(0, 15),
 			.sda = NRF_GPIO_PIN_MAP(0, 27),
-			.frequency = NRF_TWIM_FREQ_400K,
+			.frequency = NRF_TWIM_FREQ_100K,
 			.interrupt_priority = 6,
 			.hold_bus_uninit = 0, // Hold pull up state on gpio pins after uninit <0 = Disabled, 1 = Enabled>
         }
@@ -233,7 +234,11 @@ int main(void)
 	// Initialise TWIM for wireless charger programming
     nrfx_twim_init(&I2C_Inits[0].twim, &I2C_Inits[0].twim_config, NULL, NULL);
     nrfx_twim_enable(&I2C_Inits[0].twim);
+    nrf_gpio_cfg(NRF_GPIO_PIN_MAP(0, 17), NRF_GPIO_PIN_DIR_INPUT, NRF_GPIO_PIN_INPUT_CONNECT,
+    		NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
     otphal_init(&I2C_Inits[0].twim, NRF_GPIO_PIN_MAP(0, 17), 0x61);
+    struct chip_info chip_info;
+    get_chip_info(&chip_info);
     otp_program();
     nrfx_twim_disable(&I2C_Inits[0].twim);
     nrfx_twim_uninit(&I2C_Inits[0].twim);
