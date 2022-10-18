@@ -74,6 +74,7 @@ struct chip_info {
 
 int otp_program(void);
 int get_chip_info(struct chip_info *info);
+int is_otp_programmed(void);
 
 
 #endif /* OTP_H */

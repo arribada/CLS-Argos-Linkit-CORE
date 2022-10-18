@@ -68,3 +68,21 @@ int get_chip_info(struct chip_info *info)
     
     return OK;
 }
+
+#define OTP_CFG_VERSION_ID 0xDA11
+#define OTP_PATCH_VERSION_ID 0x3657
+
+int is_otp_programmed(void) {
+	int err;
+	struct chip_info info;
+
+	if((err = get_chip_info(&info)) < OK) {
+        return -1;
+    }
+
+    if ((info.config_id != OTP_CFG_VERSION_ID) || (info.patch_id != OTP_PATCH_VERSION_ID)) {
+        return -2;
+    }
+
+    return 0;
+}

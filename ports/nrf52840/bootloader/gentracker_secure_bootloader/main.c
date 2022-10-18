@@ -194,6 +194,14 @@ static const I2C_InitTypeDefAndInst_t I2C_Inits[] = {
         }
     }
 };
+
+static void i2c_reset(void) {
+    nrfx_twim_disable(&I2C_Inits[0].twim);
+    nrfx_twim_uninit(&I2C_Inits[0].twim);
+    nrfx_twim_init(&I2C_Inits[0].twim, &I2C_Inits[0].twim_config, NULL, NULL);
+    nrfx_twim_enable(&I2C_Inits[0].twim);
+}
+
 #endif
 
 // Redirect printf output to debug UART
@@ -244,10 +252,18 @@ int main(void)
     nrfx_twim_enable(&I2C_Inits[0].twim);
     nrf_gpio_cfg(NRF_GPIO_PIN_MAP(0, 17), NRF_GPIO_PIN_DIR_INPUT, NRF_GPIO_PIN_INPUT_CONNECT,
     		NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    otphal_init(&I2C_Inits[0].twim, NRF_GPIO_PIN_MAP(0, 17), 0x61);
-    struct chip_info chip_info;
-    get_chip_info(&chip_info);
-    otp_program();
+    otphal_init(&I2C_Inits[0].twim, NRF_GPIO_PIN_MAP(0, 17), 0x61, i2c_reset);
+    int rc = is_otp_programmed();
+    if (rc == -2) {
+    	printf("OTP version mismatch...trying programming...\n");
+    	led_yellow();
+    	rc = otp_program();
+    	if (rc == 0)
+    		led_green();
+    	else
+    		led_red();
+    	nrf_delay_ms(2000);
+    }
     nrfx_twim_disable(&I2C_Inits[0].twim);
     nrfx_twim_uninit(&I2C_Inits[0].twim);
 #endif
