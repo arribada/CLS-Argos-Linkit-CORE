@@ -93,7 +93,7 @@ static int system_reset()
     
     cmd[0] = SYSTEM_RESET_VALUE;
     hw_i2c_write(SYSREG_RESET_REG, cmd, 1);
-    otphal_sleep_ms(10*GENERAL_WAITTIME);
+    otphal_sleep_ms(GENERAL_WAITTIME);
     
     uint8_t read_buff[2] = {0x00, 0x00};
     if((err = hw_i2c_read(FW_VERSION_HW_REG , read_buff, 2)) < OK) {        
