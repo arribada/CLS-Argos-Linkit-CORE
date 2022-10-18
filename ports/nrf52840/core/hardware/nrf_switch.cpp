@@ -79,6 +79,10 @@ void NrfSwitch::start(std::function<void(bool)> func) {
 	m_is_started = true;
 }
 
+bool NrfSwitch::get_state() {
+	return GPIOPins::value(m_pin) == m_active_state;
+}
+
 void NrfSwitch::stop() {
 	if (!m_is_started)
 		return;

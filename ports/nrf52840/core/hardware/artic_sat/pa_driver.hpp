@@ -14,6 +14,7 @@ public:
 	PADriver();
 	~PADriver();
 	void set_output_power(unsigned int mW) override;
+	static void shutdown();
 
 private:
 	PAInterface *m_interface;
@@ -25,6 +26,7 @@ public:
 	DummyPA() {}
 	void set_output_power(unsigned int) override {
 	}
+	static void shutdown() {}
 };
 
 
@@ -32,6 +34,7 @@ class RFPA133 : public PAInterface {
 public:
 	RFPA133();
 	void set_output_power(unsigned int mW) override;
+	static void shutdown();
 };
 
 class MCP47X6 : public PAInterface, public Calibratable {
@@ -74,4 +77,5 @@ public:
 	~MCP47X6();
 	void set_output_power(unsigned int mW) override;
 	void calibration_write(const double value, const unsigned int offset) override;
+	static void shutdown();
 };

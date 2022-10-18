@@ -66,6 +66,7 @@ BatteryMonitor *battery_monitor;
 BaseDebugMode g_debug_mode = BaseDebugMode::UART;
 ArticDevice *artic_device;
 
+static bool m_is_debug_init = false;
 
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
@@ -203,12 +204,28 @@ void etl_error_handler(const etl::exception& e)
 // We have to define this as extern "C" as we are overriding a weak C function
 extern "C" int _write(int file, char *ptr, int len)
 {
-	if (g_debug_mode == BaseDebugMode::UART)
+	if (g_debug_mode == BaseDebugMode::UART && m_is_debug_init)
 		nrfx_uarte_tx(&BSP::UART_Inits[BSP::UART_1].uarte, reinterpret_cast<const uint8_t *>(ptr), len);
 	else if (ble_service && !__get_IPSR()) {
 		ble_service->write(std::string(ptr, len));
 	}
 	return len;
+}
+
+static void i2c_init(void) {
+	for (uint32_t i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)
+	{
+		nrfx_twim_init(&BSP::I2C_Inits[i].twim, &BSP::I2C_Inits[i].twim_config, nullptr, nullptr);
+		nrfx_twim_enable(&BSP::I2C_Inits[i].twim);
+	}
+}
+
+static void i2c_term(void) {
+	for (uint32_t i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)
+	{
+		nrfx_twim_disable(&BSP::I2C_Inits[i].twim);
+		nrfx_twim_uninit(&BSP::I2C_Inits[i].twim);
+	}
 }
 
 int main()
@@ -227,6 +244,7 @@ int main()
 #endif
 
 	nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
+	m_is_debug_init = true;
     setvbuf(stdout, NULL, _IONBF, 0);
 
 	rtc = &NrfRTC::get_instance();
@@ -259,6 +277,10 @@ int main()
 	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
 
+	DEBUG_TRACE("IS25 flash...");
+	Is25Flash is25_flash;
+	is25_flash.init();
+
 	// Check the reed switch is engaged for 3 seconds if this is a power on event
     DEBUG_TRACE("PMU Reset Cause = %s", PMU::reset_cause().c_str());
 
@@ -277,14 +299,30 @@ int main()
 			// Force GNSS off
 			M8QReceiver m;
 			m.power_off();
+
+			// Force Artic PA off
+			i2c_init();
+			ArticSat::shutdown();
+			i2c_term();
 		}
 
 		// De-initialize UART to save power
-		//nrfx_uarte_uninit(&BSP::UART_Inits[BSP::UART_1].uarte);
+		m_is_debug_init = false;
+		nrfx_uarte_uninit(&BSP::UART_Inits[BSP::UART_1].uarte);
 
 		volatile bool power_on_ready = false;
 		system_timer->start();
 		Timer::TimerHandle timer_handle;
+
+		// Check if switch starting state is active
+		if (nrf_reed_switch.get_state()) {
+			status_led->set(RGBLedColor::WHITE);
+			timer_handle = system_timer->add_schedule([&power_on_ready]() {
+				DEBUG_TRACE("Reed switch 3s period elapsed");
+				power_on_ready = true;
+			}, system_timer->get_counter() + 3000);
+		}
+
 		nrf_reed_switch.start([&timer_handle, &power_on_ready](bool state) {
 			system_timer->cancel_schedule(timer_handle);
 			if (state) {
@@ -322,7 +360,8 @@ int main()
 		system_timer->stop();
 
 		// Re-initialize UART
-		//nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
+		nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
+		m_is_debug_init = true;
 
 	}
 #else
@@ -362,21 +401,12 @@ int main()
     NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
     battery_monitor = &nrf_battery_monitor;
 
-    // Initialise the I2C driver
-	for (uint32_t i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)
-	{
-	    DEBUG_TRACE("I2C #%u...", (unsigned int)i);
-		nrfx_twim_init(&BSP::I2C_Inits[i].twim, &BSP::I2C_Inits[i].twim_config, nullptr, nullptr);
-		nrfx_twim_enable(&BSP::I2C_Inits[i].twim);
-	}
+    // Initialise the I2C drivers
+    i2c_init();
 
     DEBUG_TRACE("Reed gesture...");
 	ReedSwitch reed_gesture_switch(nrf_reed_switch);
 	reed_switch = &reed_gesture_switch;
-
-	DEBUG_TRACE("IS25 flash...");
-	Is25Flash is25_flash;
-	is25_flash.init();
 
 	DEBUG_TRACE("LFS filesystem...");
 	LFSFileSystem lfs_file_system(&is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);

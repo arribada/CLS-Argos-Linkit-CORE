@@ -460,6 +460,12 @@ ArticSat::~ArticSat() {
 	delete m_pa_driver;
 }
 
+void ArticSat::shutdown(void) {
+	GPIOPins::clear(SAT_RESET);
+	GPIOPins::clear(SAT_PWR_EN);
+	PADriver::shutdown();
+}
+
 void ArticSat::detect_dsp_present() {
 
 	DEBUG_TRACE("ArticSat::detect_dsp_present");

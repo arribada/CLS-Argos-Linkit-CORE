@@ -18,6 +18,7 @@ public:
 	~NrfSwitch();
 	void start(std::function<void(bool)> func) override;
 	void stop() override;
+	bool get_state();
 
 	friend class NrfSwitchManager;
 };

@@ -246,4 +246,5 @@ public:
 	void set_frequency(const double freq) override;
 	void set_tcxo_warmup_time(const unsigned int time) override;
 	void set_tx_power(const BaseArgosPower power) override;
+	static void shutdown(void);
 };

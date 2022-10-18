@@ -25,6 +25,17 @@ PADriver::~PADriver() {
 	delete m_interface;
 }
 
+void PADriver::shutdown(void) {
+#if NO_ARGOS_PA_GAIN_CTRL == 1
+	DummyPA::shutdown();
+#else
+	try {
+		MCP47X6::shutdown();
+	} catch (...) {
+		RFPA133::shutdown();
+	}
+#endif
+}
 
 void PADriver::set_output_power(unsigned int mW) {
 	m_interface->set_output_power(mW);
@@ -49,6 +60,20 @@ void RFPA133::set_output_power(unsigned int mW) {
 		GPIOPins::set(BSP::GPIO::GPIO_G8_33);
 		GPIOPins::set(BSP::GPIO::GPIO_G16_33);
 	}
+}
+
+void RFPA133::shutdown(void) {
+	GPIOPins::clear(BSP::GPIO::GPIO_G8_33);
+	GPIOPins::clear(BSP::GPIO::GPIO_G16_33);
+}
+
+void MCP47X6::shutdown(void) {
+	uint8_t xfer[1];
+	DEBUG_TRACE("MCP47X6::power_down: Shutdown DAC");
+	xfer[0] = MCP47X6_CMD_VOLCONFIG | MCP47X6_PWRDN_500K;
+	nrfx_err_t error = nrfx_twim_tx(&BSP::I2C_Inits[MCP4716_DEVICE].twim, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
+    if (error != NRFX_SUCCESS)
+        throw ErrorCode::I2C_COMMS_ERROR;
 }
 
 void MCP47X6::set_output_power(unsigned int mW) {
