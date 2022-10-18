@@ -259,14 +259,11 @@ int main()
 	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
 
-	DEBUG_TRACE("STWLC68...");
-    STWLC68::get_instance().init();
-
 	// Check the reed switch is engaged for 3 seconds if this is a power on event
     DEBUG_TRACE("PMU Reset Cause = %s", PMU::reset_cause().c_str());
 
 #ifdef POWER_ON_RESET_REQUIRES_REED_SWITCH
-#ifndef POWER_CONTROL_PIN
+#ifdef PSEUDO_POWER_OFF
 
     // Turn LEDs off
     status_led->off();
@@ -275,18 +272,23 @@ int main()
 
 	if (PMU::reset_cause() == "Power On Reset" ||
 		PMU::reset_cause() == "Pseudo Power On Reset") {
+
 		if (PMU::reset_cause() == "Power On Reset")  {
 			// Force GNSS off
 			M8QReceiver m;
 			m.power_off();
 		}
+
+		// De-initialize UART to save power
+		//nrfx_uarte_uninit(&BSP::UART_Inits[BSP::UART_1].uarte);
+
 		volatile bool power_on_ready = false;
 		system_timer->start();
 		Timer::TimerHandle timer_handle;
 		nrf_reed_switch.start([&timer_handle, &power_on_ready](bool state) {
-			DEBUG_TRACE("Reed State: %u", state);
 			system_timer->cancel_schedule(timer_handle);
 			if (state) {
+				DEBUG_TRACE("Reed State: %u", state);
 				status_led->set(RGBLedColor::WHITE);
 				timer_handle = system_timer->add_schedule([&power_on_ready]() {
 					DEBUG_TRACE("Reed switch 3s period elapsed");
@@ -318,6 +320,10 @@ int main()
 		PMU::kick_watchdog();
 		nrf_reed_switch.stop();
 		system_timer->stop();
+
+		// Re-initialize UART
+		//nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
+
 	}
 #else
 	if (PMU::reset_cause() == "Power On Reset") {
@@ -340,6 +346,13 @@ int main()
 #endif // POWER_CONTROL_PIN
 #endif // POWER_ON_RESET_REQUIRES_REED_SWITCH
 
+#if HAS_WCHG
+	DEBUG_TRACE("STWLC68...");
+    STWLC68::get_instance().init();
+#else
+	DEBUG_TRACE("STWLC68 not included");
+#endif
+
 	DEBUG_TRACE("Scheduler...");
 	Scheduler scheduler(system_timer);
 	system_scheduler = &scheduler;
@@ -352,6 +365,7 @@ int main()
     // Initialise the I2C driver
 	for (uint32_t i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)
 	{
+	    DEBUG_TRACE("I2C #%u...", (unsigned int)i);
 		nrfx_twim_init(&BSP::I2C_Inits[i].twim, &BSP::I2C_Inits[i].twim_config, nullptr, nullptr);
 		nrfx_twim_enable(&BSP::I2C_Inits[i].twim);
 	}

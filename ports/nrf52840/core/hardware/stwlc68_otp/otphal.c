@@ -21,17 +21,17 @@ void otphal_sleep_ms(uint32_t ms) {
 }
 
 int otphal_i2c_write(uint8_t* data, int data_length) {
-	printf("otphal_i2c_write:nrfx_twim_tx\n");
+	//printf("otphal_i2c_write:nrfx_twim_tx\n");
 	if (nrfx_twim_tx(m_twim_instance, m_i2c_slave_addr, data, data_length, false) != NRFX_SUCCESS)
 		return -1;
 	return 0;
 }
 
 int otphal_i2c_write_read(uint8_t* cmd, int cmd_length, uint8_t* read_data, int count) {
-	printf("otphal_i2c_write_read:nrfx_twim_tx\n");
+	//printf("otphal_i2c_write_read:nrfx_twim_tx\n");
 	if (nrfx_twim_tx(m_twim_instance, m_i2c_slave_addr, cmd, cmd_length, true) != NRFX_SUCCESS)
 		return -1;
-	printf("otphal_i2c_write_read:nrfx_twim_rx\n");
+	//printf("otphal_i2c_write_read:nrfx_twim_rx\n");
 	if (nrfx_twim_rx(m_twim_instance, m_i2c_slave_addr, read_data, count) != NRFX_SUCCESS)
 		return -1;
 	return 0;

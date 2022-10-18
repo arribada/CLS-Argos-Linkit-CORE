@@ -22,10 +22,13 @@ if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE)
     set(MODEL_UW 0)
     set(MODEL_CORE 0)
     set(DEVICE_MODEL "Linkit ${MODEL}")
+    set(HAS_WCHG 0)
     if(${MODEL} MATCHES SB)
         set(MODEL_SB 1)
+	    set(HAS_WCHG 1)
     elseif(${MODEL} MATCHES UW)
         set(MODEL_UW 1)
+	    set(HAS_WCHG 1)
     elseif(${MODEL} MATCHES CORE)
         set(MODEL_CORE 1)
     endif()
@@ -41,6 +44,7 @@ if(${BOARD} MATCHES HORIZON)
     set(MODEL_SB 0)
     set(MODEL_UW 0)
     set(MODEL_CORE 1)
+    set(HAS_WCHG 0)
     set(BOOTLOADER "bootloader/gentracker_secure_bootloader/horizon_v4.0/armgcc/_build/horizon_bootloader_v4_linkit_merged.hex")
 elseif(${BOARD} MATCHES LINKIT)
     set(TARGET_NAME ${PROJECT_NAME}_${MODEL}_board)
@@ -240,9 +244,6 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/artic_sat/artic_sat.cpp
     ${PROJ_DIR}/core/hardware/artic_sat/pa_driver.cpp
 	${PROJ_DIR}/core/hardware/m8q/m8q.cpp
-    ${PROJ_DIR}/core/hardware/stwlc68_otp/otphal.c
-    ${PROJ_DIR}/core/hardware/stwlc68_otp/otp_chip_info.c
-    ${PROJ_DIR}/core/hardware/stwlc68_otp/stwlc68.cpp
     ${PROJ_DIR}/core/hardware/m8q/nrf_uart_m8.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp
@@ -265,9 +266,18 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/main.cpp
 )
 
+if (HAS_WCHG)
+        target_sources(${TARGET_NAME} PRIVATE
+		    ${PROJ_DIR}/core/hardware/stwlc68_otp/otphal.c
+		    ${PROJ_DIR}/core/hardware/stwlc68_otp/otp_chip_info.c
+		    ${PROJ_DIR}/core/hardware/stwlc68_otp/stwlc68.cpp
+        )
+endif()
+
 target_compile_definitions(${TARGET_NAME} PRIVATE
     Release=0
     Debug=1
+    HAS_WCHG=${HAS_WCHG}
     MODEL_SB=${MODEL_SB}
     MODEL_UW=${MODEL_UW}
     MODEL_CORE=${MODEL_CORE}

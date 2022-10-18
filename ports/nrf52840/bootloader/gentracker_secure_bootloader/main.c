@@ -64,8 +64,11 @@
 #include "nrfx_twim.h"
 #include "nrf_log_redirect.h"
 #include "nrf_gpio.h"
+
+#ifdef HAS_WCHG_OTP
 #include "otp.h"
 #include "otphal.h"
+#endif
 
 static void on_error(void)
 {
@@ -83,23 +86,23 @@ static void on_error(void)
 
 static void led_yellow(void)
 {
-    bsp_board_led_off(BSP_BOARD_LED_0);
-    bsp_board_led_off(BSP_BOARD_LED_1);
-    bsp_board_led_on(BSP_BOARD_LED_2);
+    bsp_board_led_on(BSP_BOARD_LED_0);
+    bsp_board_led_on(BSP_BOARD_LED_1);
+    bsp_board_led_off(BSP_BOARD_LED_2);
 }
 
 static void led_green(void)
 {
-    bsp_board_led_on(BSP_BOARD_LED_0);
-    bsp_board_led_off(BSP_BOARD_LED_1);
-    bsp_board_led_on(BSP_BOARD_LED_2);
+    bsp_board_led_off(BSP_BOARD_LED_0);
+    bsp_board_led_on(BSP_BOARD_LED_1);
+    bsp_board_led_off(BSP_BOARD_LED_2);
 }
 
 static void led_red(void)
 {
-    bsp_board_led_off(BSP_BOARD_LED_0);
-    bsp_board_led_on(BSP_BOARD_LED_1);
-    bsp_board_led_on(BSP_BOARD_LED_2);
+    bsp_board_led_on(BSP_BOARD_LED_0);
+    bsp_board_led_off(BSP_BOARD_LED_1);
+    bsp_board_led_off(BSP_BOARD_LED_2);
 }
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
@@ -172,6 +175,7 @@ static const UART_InitTypeDefAndInst UART_Inits[] =
 	}
 };
 
+#ifdef HAS_WCHG_OTP
 typedef struct
 {
     nrfx_twim_t twim;
@@ -190,6 +194,7 @@ static const I2C_InitTypeDefAndInst_t I2C_Inits[] = {
         }
     }
 };
+#endif
 
 // Redirect printf output to debug UART
 // We have to define this as extern "C" as we are overriding a weak C function
@@ -209,8 +214,10 @@ int main(void)
     // Initialise LEDs
     bsp_board_init(BSP_INIT_LEDS);
 
+#ifdef POWER_CONTROL
     // Power control on
-    bsp_board_led_on(BSP_BOARD_LED_3);
+    bsp_board_led_off(BSP_BOARD_LED_3);
+#endif
 
     // Must happen before flash protection is applied, since it edits a protected page.
     nrf_bootloader_mbr_addrs_populate();
@@ -231,6 +238,7 @@ int main(void)
 
     NRF_LOG_INFO("Inside main");
 
+#ifdef HAS_WCHG_OTP
 	// Initialise TWIM for wireless charger programming
     nrfx_twim_init(&I2C_Inits[0].twim, &I2C_Inits[0].twim_config, NULL, NULL);
     nrfx_twim_enable(&I2C_Inits[0].twim);
@@ -242,6 +250,7 @@ int main(void)
     otp_program();
     nrfx_twim_disable(&I2C_Inits[0].twim);
     nrfx_twim_uninit(&I2C_Inits[0].twim);
+#endif
 
     // Check for and apply any external flash updates before entering main bootloader
     ext_flash_update();

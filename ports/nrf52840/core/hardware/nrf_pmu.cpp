@@ -49,7 +49,7 @@ void PMU::reset(bool) {
 }
 
 void PMU::powerdown() {
-#ifdef POWER_CONTROL_PIN
+#if defined(POWER_CONTROL_PIN) && !defined(PSEUDO_POWEROFF)
 	GPIOPins::clear(POWER_CONTROL_PIN);
 #else
 	// Mark this as a pseudo power off

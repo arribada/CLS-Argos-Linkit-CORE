@@ -54,6 +54,7 @@
 
 // Power on requires reed switch for 3 seconds
 #define POWER_ON_RESET_REQUIRES_REED_SWITCH
+#define PSEUDO_POWER_OFF
 
 // Other options
 #define HW_VERSION_DETECT 0
