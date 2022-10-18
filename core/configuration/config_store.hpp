@@ -402,7 +402,7 @@ public:
 					WirelessCharger& s = WirelessChargerManager::get_instance();
 					m_params.at((unsigned)param_id) = s.get_chip_status();
 				} catch (...) {
-					m_params.at((unsigned)param_id) = "UNKNOWN";
+					m_params.at((unsigned)param_id) = "NOTFITTED";
 				}
 				b_is_valid = true;
 			} else {

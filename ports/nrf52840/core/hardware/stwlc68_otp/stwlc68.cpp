@@ -16,7 +16,7 @@ std::string STWLC68::get_chip_status() {
 	STWLC68ChipInfo chip_info;
 	int ret = get_chip_info(&chip_info);
 	if (ret == OK) {
-		return "CHIP_ID=" + std::to_string(chip_info.chip_id) + "CHIP_REV=" + std::to_string(chip_info.chip_revision);
+		return "CHIP_ID:" + std::to_string(chip_info.chip_id) + " CHIP_REV:" + std::to_string(chip_info.chip_revision);
 	} else {
 		return "UNDETECTED";
 	}
