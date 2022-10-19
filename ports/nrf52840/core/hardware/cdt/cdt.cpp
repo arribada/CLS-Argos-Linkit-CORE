@@ -46,6 +46,10 @@ void CDT::calibration_write(const double value, const unsigned int offset) {
 	}
 }
 
+void CDT::calibration_save(bool force) {
+	m_cal.save(force);
+}
+
 double CDT::read_calibrated_conductivity() {
 	double gain_factor, CA, CB, CC;
 	try {

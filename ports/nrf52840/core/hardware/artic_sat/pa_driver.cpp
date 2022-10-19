@@ -127,6 +127,10 @@ void MCP47X6::calibration_write(const double value, const unsigned int offset) {
 	}
 }
 
+void MCP47X6::calibration_save(bool force) {
+	m_cal.save(force);
+}
+
 void MCP47X6::set_vref(uint8_t vref) {
 	m_config_reg = (m_config_reg & MCP47X6_VREF_MASK) | (vref & ~MCP47X6_VREF_MASK);
 }

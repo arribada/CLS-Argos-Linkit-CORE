@@ -77,5 +77,6 @@ public:
 	~MCP47X6();
 	void set_output_power(unsigned int mW) override;
 	void calibration_write(const double value, const unsigned int offset) override;
+	void calibration_save(bool force) override;
 	static void shutdown();
 };

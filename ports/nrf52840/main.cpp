@@ -271,6 +271,10 @@ int main()
 	ext_status_led = nullptr;
 #endif
 
+	// Ext LED off
+	if (ext_status_led)
+		ext_status_led->off();
+
     DEBUG_TRACE("Reed switch...");
     NrfSwitch nrf_reed_switch(BSP::GPIO::GPIO_REED_SW, REED_SWITCH_DEBOUNCE_TIME_MS, REED_SWITCH_ACTIVE_STATE);
 
@@ -286,11 +290,6 @@ int main()
 
 #ifdef POWER_ON_RESET_REQUIRES_REED_SWITCH
 #ifdef PSEUDO_POWER_OFF
-
-    // Turn LEDs off
-    status_led->off();
-	if (ext_status_led)
-		ext_status_led->off();
 
 	if (PMU::reset_cause() == "Power On Reset" ||
 		PMU::reset_cause() == "Pseudo Power On Reset") {
@@ -321,6 +320,9 @@ int main()
 				DEBUG_TRACE("Reed switch 3s period elapsed");
 				power_on_ready = true;
 			}, system_timer->get_counter() + 3000);
+		} else {
+		    // Turn status LED off
+		    status_led->off();
 		}
 
 		nrf_reed_switch.start([&timer_handle, &power_on_ready](bool state) {

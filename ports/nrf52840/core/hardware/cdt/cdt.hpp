@@ -8,6 +8,7 @@ class CDT : public Sensor {
 public:
 	CDT(MS58xxLL& ms58xx, AD5933LL& ad5933);
 	void calibration_write(const double, const unsigned int) override;
+	void calibration_save(bool force) override;
 	double read(unsigned int offset);
 
 private:

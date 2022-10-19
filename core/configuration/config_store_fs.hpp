@@ -6,6 +6,7 @@
 #include "debug.hpp"
 #include "battery.hpp"
 #include "dte_params.hpp"
+#include "calibration.hpp"
 
 
 extern BatteryMonitor *battery_monitor;
@@ -367,6 +368,10 @@ private:
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_protected_config: saved protected params to config.data");
 	}
 
+	void save_calibration_data() {
+		CalibratableManager::save_all(true);
+	}
+
 public:
 	LFSConfigurationStore(FileSystem &filesystem) : m_is_pass_predict_valid(false), m_is_config_valid(false), m_filesystem(filesystem) {}
 
@@ -410,6 +415,7 @@ public:
 		m_filesystem.format();
 		m_filesystem.mount();
 		serialize_protected_config(); // Recover "protected" parameters
+		save_calibration_data();
 		m_is_config_valid = false;
 		m_is_pass_predict_valid = false;
 	}

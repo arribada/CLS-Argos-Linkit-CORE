@@ -137,6 +137,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/hardware/sensor.cpp"
     "${ROOT_DIR}/core/protocol/dte_commands.cpp"
     "${ROOT_DIR}/core/protocol/dte_params.cpp"
+    "${ROOT_DIR}/core/configuration/calibration.cpp"
     "${ROOT_DIR}/core/sm/gentracker.cpp"
     "${ROOT_DIR}/core/sm/ledsm.cpp"
     "${ROOT_DIR}/core/logging/logger.cpp"

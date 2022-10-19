@@ -2,6 +2,7 @@
 
 #include "dte_protocol.hpp"
 #include "fake_battery_mon.hpp"
+#include "calibration.hpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
@@ -226,6 +227,64 @@ TEST(ConfigStore, CheckFactoryResetRetainsProtectedParams)
 	// Check default value has been restored
 	CHECK_EQUAL(dec_id, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
 	CHECK_EQUAL(hex_id, store->read_param<unsigned int>(ParamID::ARGOS_HEXID));
+
+	delete store;
+}
+
+class DummyCalibration : public Calibratable {
+public:
+	DummyCalibration(const char *name) : Calibratable(name), m_cal(Calibration(name)) {}
+	void calibration_write(const double value, const unsigned int offset) override {
+		m_cal.write(offset, value);
+	}
+	void calibration_read(double &value, const unsigned int offset) override {
+		value = m_cal.read(offset);
+	}
+	void calibration_save(bool force) override {
+		m_cal.save(force);
+	}
+private:
+	Calibration m_cal;
+};
+
+TEST(ConfigStore, CheckFactoryResetRetainsCalibrationData)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	{
+		// Add calibration objects
+		DummyCalibration cal("CAL");
+
+		// Add data to calibration
+		cal.calibration_write(1.0, 1);
+		cal.calibration_write(2.0, 2);
+		cal.calibration_write(3.0, 3);
+
+		// Factory reset
+		store->factory_reset();
+	}
+
+	// Delete the object and recreate a new one
+	delete store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();  // This will read in the partially saved file
+
+	{
+		// Create calibration object
+		DummyCalibration cal("CAL");
+		double value;
+
+		// Check calibration points were retained
+		cal.calibration_read(value, 1);
+		CHECK_EQUAL(1.0, value);
+		cal.calibration_read(value, 2);
+		CHECK_EQUAL(2.0, value);
+		cal.calibration_read(value, 3);
+		CHECK_EQUAL(3.0, value);
+	}
 
 	delete store;
 }

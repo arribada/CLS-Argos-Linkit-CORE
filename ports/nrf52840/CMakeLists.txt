@@ -231,6 +231,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/filesystem/ota_flash_file_updater.cpp
     ${CORE_DIR}/protocol/dte_commands.cpp
     ${CORE_DIR}/protocol/dte_params.cpp
+    ${CORE_DIR}/configuration/calibration.cpp
     ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
     ${PROJ_DIR}/core/hardware/ms58xx/ms58xx.cpp
