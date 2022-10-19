@@ -6,12 +6,12 @@
 
 class SWSService : public UWDetectorService {
 public:
-	SWSService(unsigned int sched_units = 1) : UWDetectorService(sched_units, 5, 1000, "SaltwaterDetector") {}
+	SWSService() : UWDetectorService("SaltwaterDetector") {}
 
 private:
 	bool detector_state() override {
 		GPIOPins::set(SWS_ENABLE_PIN);
-		PMU::delay_ms(1); // Wait a while to allow for any water capacitance (this value is a total guess)
+		PMU::delay_ms(m_enable_sample_delay); // Wait a while to allow for any water capacitance (this value is a total guess)
 		bool new_state = GPIOPins::value(SWS_SAMPLE_PIN);
 		GPIOPins::clear(SWS_ENABLE_PIN);
 		return new_state;

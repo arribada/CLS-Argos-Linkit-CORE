@@ -8,29 +8,28 @@
 class UWDetectorService : public Service {
 
 public:
-	UWDetectorService(unsigned int sched_units=1, unsigned int iterations=1, unsigned int period_ms=0,
-			const char *name = "UWDetector") :
+	UWDetectorService(const char *name = "UWDetector") :
 		Service(ServiceIdentifier::UW_SENSOR, name)	{
 		m_is_first_time = true;
 		m_current_state = false;
-		m_sched_units = sched_units;
-		m_iterations = iterations;
-		m_period_ms = period_ms;
 	}
 	virtual ~UWDetectorService() {}
 
 protected:
 	double m_activation_threshold;
+	unsigned int m_enable_sample_delay;
 
 private:
 	bool m_is_first_time;
 	bool m_current_state;
+	bool m_pending_state;
 	unsigned int m_period_underwater_ms;
 	unsigned int m_period_surface_ms;
 	unsigned int m_sample_iteration;
-	unsigned int m_sched_units;
-	unsigned int m_iterations;
-	unsigned int m_period_ms;
+	unsigned int m_max_samples;
+	unsigned int m_sample_gap;
+	unsigned int m_min_dry_samples;
+	unsigned int m_dry_count;
 
 	virtual bool detector_state() { return false; };
 	virtual bool service_is_enabled() = 0;

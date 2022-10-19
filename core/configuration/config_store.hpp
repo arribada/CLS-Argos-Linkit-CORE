@@ -249,6 +249,10 @@ protected:
 		/* DEBUG_OUTPUT_MODE */ BaseDebugMode::UART,
 		/* GNSS_ASSISTNOW_OFFLINE_EN */ (bool)false,
 		/* WCHG_STATUS */ ""s,
+		/* UW_MAX_SAMPLES */ 5U,
+		/* UW_MIN_DRY_SAMPLES */ 1U,
+		/* UW_SAMPLE_GAP */ 1000U,
+		/* UW_PIN_SAMPLE_DELAY */ 1U,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
