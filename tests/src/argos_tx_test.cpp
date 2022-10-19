@@ -740,7 +740,7 @@ TEST(ArgosTxService, LegacyTxLowBattery)
 	// Subsequent TX will be short packets (depth pile 1 in LB mode)
 	for (unsigned int i = 0; i < 10; i++) {
 		mock().expectOneCall("set_tx_power").onObject(mock_artic).
-				withUnsignedIntParameter("power", (unsigned int)BaseArgosPower::POWER_500_MW);
+				withUnsignedIntParameter("power", (unsigned int)BaseArgosPower::POWER_350_MW);
 		mock().expectOneCall("send").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A2).
 				withUnsignedIntParameter("size_bits", 120);
 
@@ -796,7 +796,7 @@ TEST(ArgosTxService, LegacyTxOutOfZone)
 	// Subsequent TX will be short packets (depth pile 1 in OOZ mode)
 	for (unsigned int i = 0; i < 10; i++) {
 		mock().expectOneCall("set_tx_power").onObject(mock_artic).
-				withUnsignedIntParameter("power", (unsigned int)BaseArgosPower::POWER_200_MW);
+				withUnsignedIntParameter("power", (unsigned int)BaseArgosPower::POWER_350_MW);
 		mock().expectOneCall("send").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A2).
 				withUnsignedIntParameter("size_bits", 120);
 

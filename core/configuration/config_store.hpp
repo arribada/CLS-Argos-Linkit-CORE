@@ -88,7 +88,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0D;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0E;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
@@ -103,7 +103,7 @@ protected:
 		/* AOP_STATUS */ 0U,
 		/* ARGOS_AOP_DATE */ static_cast<std::time_t>(1633646474U),
 		/* ARGOS_FREQ */ 401.65,
-		/* ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
+		/* ARGOS_POWER */ BaseArgosPower::POWER_350_MW,
 		/* TR_NOM */ 60U,
 
 #if ARGOS_EXT
@@ -142,7 +142,7 @@ protected:
 		/* SAMPLING_UNDER_FREQ */ 60U,
 		/* LB_EN */ (bool)false,
 		/* LB_TRESHOLD */ 10U,
-		/* LB_ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
+		/* LB_ARGOS_POWER */ BaseArgosPower::POWER_350_MW,
 		/* TR_LB */ 240U,
 		/* LB_ARGOS_MODE */ BaseArgosMode::LEGACY,
 		/* LB_ARGOS_DUTY_CYCLE */ 0U,
@@ -187,9 +187,9 @@ protected:
 		/* ZONE_ACTIVATION_DATE */ static_cast<std::time_t>(1577836800U), // 01/01/2020 00:00:00
 		/* ZONE_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 #if MODEL_SB
-		/* ZONE_ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
+		/* ZONE_ARGOS_POWER */ BaseArgosPower::POWER_350MW,
 #else
-		/* ZONE_ARGOS_POWER */ BaseArgosPower::POWER_200_MW,
+		/* ZONE_ARGOS_POWER */ BaseArgosPower::POWER_350_MW,
 #endif
 
 #if MODEL_SB

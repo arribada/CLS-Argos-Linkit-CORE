@@ -301,7 +301,7 @@ TEST(ConfigStore, CheckDefaultZoneSettings)
 	CHECK_TRUE(store->read_param<bool>(ParamID::ZONE_ENABLE_ACTIVATION_DATE));
 	CHECK_TRUE(store->read_param<std::time_t>(ParamID::ZONE_ACTIVATION_DATE) == (std::time_t)1577836800U);
 	CHECK_TRUE(store->read_param<BaseArgosDepthPile>(ParamID::ZONE_ARGOS_DEPTH_PILE) == BaseArgosDepthPile::DEPTH_PILE_1);
-	CHECK_TRUE(store->read_param<BaseArgosPower>(ParamID::ZONE_ARGOS_POWER) == BaseArgosPower::POWER_200_MW);
+	CHECK_TRUE(store->read_param<BaseArgosPower>(ParamID::ZONE_ARGOS_POWER) == BaseArgosPower::POWER_350_MW);
 	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_ARGOS_REPETITION_SECONDS) == 240);
 	CHECK_TRUE(store->read_param<BaseArgosMode>(ParamID::ZONE_ARGOS_MODE) == BaseArgosMode::LEGACY);
 	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_ARGOS_DUTY_CYCLE) == 0xFFFFFFU);
