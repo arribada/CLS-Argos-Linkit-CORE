@@ -1,7 +1,7 @@
 #include "ms58xx.hpp"
 
 #include "bsp.hpp"
-#include "nrfx_twim.h"
+#include "nrf_i2c.hpp"
 #include "error.hpp"
 #include "pmu.hpp"
 #include "debug.hpp"
@@ -268,8 +268,7 @@ void MS58xxLL::read(double& temperature, double& pressure) {
 
 void MS58xxLL::send_command(uint8_t command)
 {
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[m_bus].twim, m_addr, (const uint8_t *)&command, sizeof(command), false))
-        throw ErrorCode::I2C_COMMS_ERROR;
+	NrfI2C::write(m_bus, m_addr, (const uint8_t *)&command, sizeof(command), false);
 }
 
 void MS58xxLL::read_coeffs()
@@ -285,8 +284,7 @@ void MS58xxLL::read_coeffs()
         uint8_t read_buffer[2];
 
         send_command((uint8_t)MS58xxCommand::PROM | (i * 2));
-        if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[m_bus].twim, m_addr, read_buffer, 2))
-            throw ErrorCode::I2C_COMMS_ERROR;
+        NrfI2C::read(m_bus, m_addr, read_buffer, 2);
         C[i] = (uint16_t) (((uint16_t)read_buffer[0] << 8) + read_buffer[1]);
     }
 }
@@ -298,8 +296,7 @@ uint32_t MS58xxLL::sample_adc(uint8_t measurement)
     PMU::delay_ms(10);
     send_command((uint8_t)MS58xxCommand::ADC_READ);
     uint8_t read_buffer[3];
-    if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[m_bus].twim, m_addr, read_buffer, 3))
-        throw ErrorCode::I2C_COMMS_ERROR;
+    NrfI2C::read(m_bus, m_addr, read_buffer, 3);
     return ((uint32_t)read_buffer[0] << 16) + ((uint32_t)read_buffer[1] << 8) + read_buffer[2];
 }
 

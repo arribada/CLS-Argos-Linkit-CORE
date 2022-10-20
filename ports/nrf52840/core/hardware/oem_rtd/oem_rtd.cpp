@@ -1,7 +1,7 @@
 #include <array>
 #include <stdint.h>
 #include "oem_rtd.hpp"
-#include "nrfx_twim.h"
+#include "nrf_i2c.hpp"
 #include "bsp.hpp"
 #include "error.hpp"
 #include "gpio.hpp"
@@ -21,8 +21,7 @@ void OEM_RTD_Sensor::writeReg(RegAddr address, T value)
     for (size_t i = 0; i < sizeof(T); ++i)
         buffer.data()[i + 1] = ((uint8_t *)(&value))[sizeof(T) - 1 - i];
 
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[OEM_RTD_DEVICE].twim, OEM_RTD_DEVICE_ADDR, buffer.data(), buffer.size(), false))
-        throw ErrorCode::I2C_COMMS_ERROR;
+    NrfI2C::write(OEM_RTD_DEVICE, OEM_RTD_DEVICE_ADDR, buffer.data(), buffer.size(), false);
 }
 
 template <typename T>
@@ -31,11 +30,8 @@ T OEM_RTD_Sensor::readReg(RegAddr address)
     T big_endian;
     T little_endian;
 
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[OEM_RTD_DEVICE].twim, OEM_RTD_DEVICE_ADDR, (const uint8_t *)&address, sizeof(address), false))
-        throw ErrorCode::I2C_COMMS_ERROR;
-    
-    if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[OEM_RTD_DEVICE].twim, OEM_RTD_DEVICE_ADDR, (uint8_t *)&big_endian, sizeof(T)))
-        throw ErrorCode::I2C_COMMS_ERROR;
+    NrfI2C::write(OEM_RTD_DEVICE, OEM_RTD_DEVICE_ADDR, (const uint8_t *)&address, sizeof(address), false);
+    NrfI2C::read(OEM_RTD_DEVICE, OEM_RTD_DEVICE_ADDR, (uint8_t *)&big_endian, sizeof(T));
     
     // Reverse the endianness
     for (size_t i = 0; i < sizeof(T); ++i)

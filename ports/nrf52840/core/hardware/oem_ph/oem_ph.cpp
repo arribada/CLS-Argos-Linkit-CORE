@@ -1,7 +1,7 @@
 #include <array>
 #include <stdint.h>
 #include "oem_ph.hpp"
-#include "nrfx_twim.h"
+#include "nrf_i2c.hpp"
 #include "bsp.hpp"
 #include "error.hpp"
 #include "gpio.hpp"
@@ -24,9 +24,7 @@ void OEM_PH_Sensor::writeReg(RegAddr address, T value)
         buffer[i + 1] = ((uint8_t *)(&value))[sizeof(T) - 1 - i];
 
     //DEBUG_TRACE("OEM_PH_Sensor::writeReg(%02x)=%s", (unsigned int)address, Binascii::hexlify(std::string((char *)buffer, sizeof(T) + 1)).c_str());
-
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[OEM_PH_DEVICE].twim, OEM_PH_DEVICE_ADDR, buffer, sizeof(T) + 1, false))
-        throw ErrorCode::I2C_COMMS_ERROR;
+    NrfI2C::write(OEM_PH_DEVICE, OEM_PH_DEVICE_ADDR, buffer, sizeof(T) + 1, false);
 }
 
 template <typename T>
@@ -35,13 +33,10 @@ T OEM_PH_Sensor::readReg(RegAddr address)
 	uint8_t buffer[4];
 	T little_endian = 0;
 
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[OEM_PH_DEVICE].twim, OEM_PH_DEVICE_ADDR, (const uint8_t *)&address, sizeof(address), false))
-        throw ErrorCode::I2C_COMMS_ERROR;
-    
-    if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[OEM_PH_DEVICE].twim, OEM_PH_DEVICE_ADDR, (uint8_t *)buffer, sizeof(T)))
-        throw ErrorCode::I2C_COMMS_ERROR;
-    
-    // Reverse the endianness
+	NrfI2C::write(OEM_PH_DEVICE, OEM_PH_DEVICE_ADDR, (const uint8_t *)&address, sizeof(address), false);
+	NrfI2C::read(OEM_PH_DEVICE, OEM_PH_DEVICE_ADDR, (uint8_t *)buffer, sizeof(T));
+
+	// Reverse the endianness
     for (size_t i = 0; i < sizeof(T); ++i)
         ((uint8_t *)(&little_endian))[i] = buffer[sizeof(T) - 1 - i];
 

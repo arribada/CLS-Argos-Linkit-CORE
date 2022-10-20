@@ -253,6 +253,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/nrf_switch.cpp
     ${PROJ_DIR}/core/hardware/nrf_irq.cpp
     ${PROJ_DIR}/core/hardware/nrf_battery_mon.cpp
+    ${PROJ_DIR}/core/hardware/nrf_i2c.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
     ${PROJ_DIR}/core/interface/ble_stm_ota.c
     ${PROJ_DIR}/core/memmang/heap_4.c

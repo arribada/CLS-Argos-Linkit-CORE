@@ -2,7 +2,7 @@
 #include "error.hpp"
 #include "bsp.hpp"
 #include "gpio.hpp"
-#include "nrfx_twim.h"
+#include "nrf_i2c.hpp"
 #include "debug.hpp"
 
 
@@ -71,9 +71,7 @@ void MCP47X6::shutdown(void) {
 	uint8_t xfer[1];
 	DEBUG_TRACE("MCP47X6::power_down: Shutdown DAC");
 	xfer[0] = MCP47X6_CMD_VOLCONFIG | MCP47X6_PWRDN_500K;
-	nrfx_err_t error = nrfx_twim_tx(&BSP::I2C_Inits[MCP4716_DEVICE].twim, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
-    if (error != NRFX_SUCCESS)
-        throw ErrorCode::I2C_COMMS_ERROR;
+	NrfI2C::write(MCP4716_DEVICE, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
 }
 
 void MCP47X6::set_output_power(unsigned int mW) {
@@ -145,18 +143,14 @@ void MCP47X6::set_level(uint16_t level) {
 	xfer[0] = (m_config_reg | MCP47X6_CMD_VOLALL) & MCP47X6_PWRDN_MASK;
 	xfer[1] = (uint8_t)(level >> 4);
 	xfer[2] = (uint8_t)(level << 4);
-	nrfx_err_t error = nrfx_twim_tx(&BSP::I2C_Inits[MCP4716_DEVICE].twim, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
-    if (error != NRFX_SUCCESS)
-        throw ErrorCode::I2C_COMMS_ERROR;
+	NrfI2C::write(MCP4716_DEVICE, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
 }
 
 void MCP47X6::power_down() {
 	uint8_t xfer[1];
 	DEBUG_TRACE("MCP47X6::power_down: Shutdown DAC");
 	xfer[0] = m_config_reg | MCP47X6_CMD_VOLCONFIG | MCP47X6_PWRDN_500K;
-	nrfx_err_t error = nrfx_twim_tx(&BSP::I2C_Inits[MCP4716_DEVICE].twim, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
-    if (error != NRFX_SUCCESS)
-        throw ErrorCode::I2C_COMMS_ERROR;
+	NrfI2C::write(MCP4716_DEVICE, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
 }
 
 MCP47X6::MCP47X6() : Calibratable("MCP47X6"), m_cal(Calibration("MCP47X6")), m_config_reg(0) {

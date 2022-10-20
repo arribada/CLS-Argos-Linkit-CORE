@@ -29,7 +29,6 @@
 #define BMX160_WAKEUP_PIN  BSP::GPIO::GPIO_INT1_AG
 
 // I2C device mappings
-#define MS5803_DEVICE  ONBOARD_I2C_BUS
 #define MS5803_VARIANT "MS5803_14BA"
 #define MS5837_VARIANT "MS5837_30BA"
 #define LIGHT_DEVICE   EXT_I2C_BUS
@@ -61,6 +60,9 @@
 #define NO_GPS_POWER_REG  1
 #define NO_ARGOS_PA_GAIN_CTRL 1
 #define ARGOS_EXT 1
+
+// If Artic board is detected then don't allow EXT I2C bus to be used
+#define ARTIC_I2C_BUS_CONFLICT EXT_I2C_BUS
 
 namespace BSP
 {

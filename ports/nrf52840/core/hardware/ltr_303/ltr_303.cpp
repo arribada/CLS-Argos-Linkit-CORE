@@ -9,15 +9,14 @@
 #include "error.hpp"
 #include "gpio.hpp"
 #include "nrf_delay.h"
+#include "nrf_i2c.hpp"
 #include "error.hpp"
 
 
 void LTR303::readReg(uint8_t reg, uint8_t *data, size_t len)
 {
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[LIGHT_DEVICE].twim, LIGHT_DEVICE_ADDR, &reg, sizeof(reg), true))
-        throw ErrorCode::I2C_COMMS_ERROR;
-    if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[LIGHT_DEVICE].twim, LIGHT_DEVICE_ADDR, data, len))
-        throw ErrorCode::I2C_COMMS_ERROR;
+	NrfI2C::write(LIGHT_DEVICE, LIGHT_DEVICE_ADDR, &reg, sizeof(reg), true);
+	NrfI2C::read(LIGHT_DEVICE, LIGHT_DEVICE_ADDR, data, len);
 }
 
 void LTR303::writeReg(uint8_t address, uint8_t value)
@@ -26,8 +25,7 @@ void LTR303::writeReg(uint8_t address, uint8_t value)
     buffer[0] = address;
     buffer[1] = value;
 
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[LIGHT_DEVICE].twim, LIGHT_DEVICE_ADDR, buffer.data(), buffer.size(), false))
-        throw ErrorCode::I2C_COMMS_ERROR;
+    NrfI2C::write(LIGHT_DEVICE, LIGHT_DEVICE_ADDR, buffer.data(), buffer.size(), false);
 }
 
 LTR303::LTR303() : Sensor("ALS") {

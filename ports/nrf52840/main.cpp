@@ -41,7 +41,7 @@
 #include "bmx160.hpp"
 #include "ms58xx.hpp"
 #include "fs_log.hpp"
-#include "nrfx_twim.h"
+#include "nrf_i2c.hpp"
 #include "gpio_led.hpp"
 #include "heap.h"
 #include "stwlc68.hpp"
@@ -212,21 +212,6 @@ extern "C" int _write(int file, char *ptr, int len)
 	return len;
 }
 
-static void i2c_init(void) {
-	for (uint32_t i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)
-	{
-		nrfx_twim_init(&BSP::I2C_Inits[i].twim, &BSP::I2C_Inits[i].twim_config, nullptr, nullptr);
-		nrfx_twim_enable(&BSP::I2C_Inits[i].twim);
-	}
-}
-
-static void i2c_term(void) {
-	for (uint32_t i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)
-	{
-		nrfx_twim_disable(&BSP::I2C_Inits[i].twim);
-		nrfx_twim_uninit(&BSP::I2C_Inits[i].twim);
-	}
-}
 
 int main()
 {
@@ -300,9 +285,9 @@ int main()
 			m.power_off();
 
 			// Force Artic PA off
-			i2c_init();
+			NrfI2C::init();
 			ArticSat::shutdown();
-			i2c_term();
+			NrfI2C::uninit();
 		}
 
 		// De-initialize UART to save power
@@ -404,7 +389,7 @@ int main()
     battery_monitor = &nrf_battery_monitor;
 
     // Initialise the I2C drivers
-    i2c_init();
+    NrfI2C::init();
 
     DEBUG_TRACE("Reed gesture...");
 	ReedSwitch reed_gesture_switch(nrf_reed_switch);
@@ -494,6 +479,10 @@ int main()
 		static ArgosTxService argos_tx_service(artic);
 		static ArgosRxService argos_rx_service(artic);
 		artic_device = &artic;
+#ifdef ARTIC_I2C_BUS_CONFLICT
+		// We need to mark the I2C bus as disabled since the pins now in use
+		NrfI2C::disable(ARTIC_I2C_BUS_CONFLICT);
+#endif
 	} catch (...) {
 		DEBUG_TRACE("Artic R2 not detected");
 	}
