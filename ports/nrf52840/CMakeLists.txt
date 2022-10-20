@@ -218,7 +218,6 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/hal/nrf_nvmc.c
     ${CORE_DIR}/hardware/sensor.cpp
     ${CORE_DIR}/hardware/reed.cpp
-    ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/sm/ledsm.cpp
     ${CORE_DIR}/services/service.cpp
