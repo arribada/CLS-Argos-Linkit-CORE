@@ -8,6 +8,7 @@
 #include "nrf_power.h"
 #include "nrf_sdh.h"
 #include "nrfx_twim.h"
+#include "debug.hpp"
 #include <string>
 
 static uint32_t m_reset_cause = 0;
@@ -49,13 +50,19 @@ void PMU::reset(bool) {
 }
 
 void PMU::powerdown() {
-#if defined(POWER_CONTROL_PIN) && !defined(PSEUDO_POWEROFF)
+#if defined(POWER_CONTROL_PIN)
+	DEBUG_TRACE("Attempt power off using power pin");
 	GPIOPins::clear(POWER_CONTROL_PIN);
-#else
+	PMU::delay_ms(1000); // If power on pin is connected then allow time for it to take effect
+#endif
+
+#if defined(PSEUDO_POWER_OFF)
+	DEBUG_TRACE("Pseudo power off (soft reset)");
 	// Mark this as a pseudo power off
 	NRF_POWER->GPREGRET = 0x80;
 	sd_nvic_SystemReset();
 #endif
+
 	// This is not a real powerdown but rather an infinite sleep
 	for (;;) PMU::run();
 }
