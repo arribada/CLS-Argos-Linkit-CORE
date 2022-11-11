@@ -276,8 +276,13 @@ int main()
 #ifdef POWER_ON_RESET_REQUIRES_REED_SWITCH
 #ifdef PSEUDO_POWER_OFF
 
-	if (PMU::reset_cause() == "Power On Reset" ||
-		PMU::reset_cause() == "Pseudo Power On Reset") {
+	NrfI2C::init();
+	bool is_linkit_v3 = PMU::hardware_version() == "LinkIt V3";
+	NrfI2C::uninit();
+
+	if ((is_linkit_v3 && PMU::reset_cause() == "Pseudo Power On Reset") ||
+		(!is_linkit_v3 && (PMU::reset_cause() == "Power On Reset" ||
+				PMU::reset_cause() == "Pseudo Power On Reset"))) {
 
 		if (PMU::reset_cause() == "Power On Reset")  {
 			// Force GNSS off

@@ -123,9 +123,9 @@ const std::string PMU::hardware_version()
 	uint8_t xfer;
 	nrfx_err_t error = nrfx_twim_rx(&BSP::I2C_Inits[MCP4716_DEVICE].twim, MCP4716_I2C_ADDR, &xfer, sizeof(xfer));
     if (error == NRFX_SUCCESS)
-    	return "LinkIt V2";
+    	return "LinkIt V3";
     else
-    	return "LinkIt V1";
+    	return "LinkIt V1/V2";
 #else
     return "Unknown";
 #endif
