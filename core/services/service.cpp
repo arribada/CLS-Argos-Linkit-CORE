@@ -82,7 +82,7 @@ void Service::start(std::function<void(ServiceEvent&)> data_notification_callbac
 	m_is_started = true;
 	m_is_initiated = false;
 	m_data_notification_callback = data_notification_callback;
-	m_is_scheduled = false;
+	m_last_schedule = Service::SCHEDULE_DISABLED;
 	service_init();
 	reschedule();
 }
@@ -115,10 +115,9 @@ void Service::notify_underwater_state(bool state) {
 	m_is_underwater = state;
 	if (m_is_underwater) {
 		deschedule();
-		if (service_cancel()) {
-			m_is_initiated = false;
+		m_is_initiated = false;
+		if (service_cancel())
 			notify_service_inactive();
-		}
 	} else {
 		bool immediate;
 		if (service_is_triggered_on_surfaced(immediate))
@@ -146,7 +145,7 @@ void Service::service_reschedule(bool immediate) {
 }
 
 bool Service::service_is_scheduled() {
-	return m_is_scheduled;
+	return m_last_schedule != Service::SCHEDULE_DISABLED;
 }
 
 void Service::service_complete(ServiceEventData *event_data, void *entry, bool shall_reschedule) {
@@ -215,7 +214,6 @@ void Service::reschedule(bool immediate) {
 			if (!m_is_initiated) {
 				if (next_schedule != SCHEDULE_DISABLED) {
 					DEBUG_TRACE("Service::reschedule: service %s scheduled in %u msecs", m_name, next_schedule);
-					m_is_scheduled = true;
 					m_last_schedule = next_schedule;
 					m_task_period = system_scheduler->post_task_prio(
 						[this]() {
@@ -260,7 +258,6 @@ void Service::reschedule(bool immediate) {
 void Service::deschedule() {
 	system_scheduler->cancel_task(m_task_timeout);
 	system_scheduler->cancel_task(m_task_period);
-	m_is_scheduled = false;
 	m_last_schedule = Service::SCHEDULE_DISABLED;
 }
 

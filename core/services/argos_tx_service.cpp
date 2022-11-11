@@ -29,6 +29,7 @@ void ArgosTxService::service_init() {
 	m_sched.reset(argos_config.argos_id);
 	m_gps_depth_pile.clear();
 	m_is_first_tx = true;
+	m_is_tx_pending = false;
 
 	// Set the idle timeout depending on the configuration settings
 	// i) In certification mode, keep powered on for 10 seconds in idle
@@ -207,6 +208,7 @@ void ArgosTxService::process_time_sync_burst() {
 	} else {
 		// No eligible entries for transmission in the depth pile, so send a doppler burst instead
 		DEBUG_WARN("ArgosTxService::process_time_sync_burst: no entries eligible in depth pile");
+		service_complete();
 	}
 }
 
@@ -227,6 +229,7 @@ void ArgosTxService::process_gnss_burst() {
 	} else {
 		// No eligible entries for transmission in the depth pile, so send a doppler burst instead
 		DEBUG_WARN("ArgosTxService::process_gnss_burst: no entries eligible in depth pile");
+		service_complete();
 	}
 }
 

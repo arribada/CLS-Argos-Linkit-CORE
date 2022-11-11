@@ -847,18 +847,18 @@ TEST(ArgosTxService, TxServiceCancelledByUnderwaterBeforeTx)
 	inject_gps_location(1, 11.8768, -33.8232, t);
 	system_scheduler->run();
 
+	CHECK_FALSE(Service::SCHEDULE_DISABLED == serv.get_last_schedule());
+
 	// Inject UW event
 	mock().expectOneCall("stop_send").onObject(mock_artic);
 	notify_underwater_state(true);
 
-	// Should result in no transmission
-	t += serv.get_last_schedule();
-	fake_rtc->settime(t/1000);
-	fake_timer->set_counter(t);
-	system_scheduler->run();
+	CHECK_TRUE(Service::SCHEDULE_DISABLED == serv.get_last_schedule());
 
 	// Inject surfaced event
 	notify_underwater_state(false);
+
+	CHECK_FALSE(Service::SCHEDULE_DISABLED == serv.get_last_schedule());
 
 	// Next schedule should be equal to dry time before TX since the last TX was deferred
 	unsigned int dry_time_before_tx = fake_config_store->read_param<unsigned int>(ParamID::DRY_TIME_BEFORE_TX);
@@ -1061,4 +1061,164 @@ TEST(ArgosTxService, UnderwaterFor24HoursBeforeTx)
 	fake_rtc->settime(t/1000);
 	fake_timer->set_counter(t);
 	system_scheduler->run();
+}
+
+
+TEST(ArgosTxService, PassPredictTogglingLowBattery)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	BaseArgosPower power = BaseArgosPower::POWER_1000_MW;
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_4;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 20U;
+	bool lb_en = true;
+	unsigned int tr_nom = 10;
+	bool time_sync_en = false;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, time_sync_en);
+
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		7,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+			{ 0x9, 3, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 33, 39 }, 7195.632f, 98.7141f, 344.177f, -25.340f, 101.3600f, 0.00f },
+			{ 0xB, 7, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 23, 29, 29 }, 7194.917f, 98.7183f, 330.404f, -25.336f, 101.3449f, 0.00f },
+			{ 0x5, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 23, 50, 6 }, 7180.549f, 98.7298f, 289.399f, -25.260f, 101.0419f, -1.78f },
+			{ 0x8, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 22, 12, 6 }, 7226.170f, 99.0661f, 343.180f, -25.499f, 102.0039f, -1.80f },
+			{ 0xC, 6, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 52 }, 7226.509f, 99.1913f, 291.936f, -25.500f, 102.0108f, -1.98f },
+			{ 0xD, 4, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 53 }, 7160.246f, 98.5358f, 118.029f, -25.154f, 100.6148f, 0.00f }
+		}
+	};
+
+	fake_config_store->write_pass_predict(pass_predict);
+
+	ArgosTxService serv(*mock_artic);
+
+	std::time_t t = 1652105502000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	serv.start();
+
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	system_scheduler->run();
+
+	// Run for 10 transmissions
+	for (unsigned int i = 0; i < 10; i++) {
+
+		if (i & 1) {
+			// Force LB state
+			fake_config_store->set_battery_level(10U);
+			mock().expectOneCall("set_tx_power").onObject(mock_artic).ignoreOtherParameters();
+			mock().expectOneCall("send").onObject(mock_artic).ignoreOtherParameters();
+		} else {
+			fake_config_store->set_battery_level(100U);
+			mock().expectOneCall("set_tx_power").onObject(mock_artic).ignoreOtherParameters();
+			mock().expectOneCall("send").onObject(mock_artic).ignoreOtherParameters();
+		}
+
+		inject_gps_location(1, 11.8768, -33.8232, t);
+
+		t += serv.get_last_schedule();
+		fake_rtc->settime(t/1000);
+		fake_timer->set_counter(t);
+		system_scheduler->run();
+
+		mock_artic->notify(ArticEventTxComplete({}));
+
+	}
+}
+
+TEST(ArgosTxService, DepthPileNoEligibleEntries)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	BaseArgosPower power = BaseArgosPower::POWER_1000_MW;
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_4;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 20U;
+	bool lb_en = true;
+	unsigned int tr_nom = 10;
+	bool time_sync_en = false;
+	unsigned int n_try = 3;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::NTRY_PER_MESSAGE, n_try);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, time_sync_en);
+
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		7,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+			{ 0x9, 3, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 33, 39 }, 7195.632f, 98.7141f, 344.177f, -25.340f, 101.3600f, 0.00f },
+			{ 0xB, 7, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 23, 29, 29 }, 7194.917f, 98.7183f, 330.404f, -25.336f, 101.3449f, 0.00f },
+			{ 0x5, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 23, 50, 6 }, 7180.549f, 98.7298f, 289.399f, -25.260f, 101.0419f, -1.78f },
+			{ 0x8, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 22, 12, 6 }, 7226.170f, 99.0661f, 343.180f, -25.499f, 102.0039f, -1.80f },
+			{ 0xC, 6, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 52 }, 7226.509f, 99.1913f, 291.936f, -25.500f, 102.0108f, -1.98f },
+			{ 0xD, 4, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 53 }, 7160.246f, 98.5358f, 118.029f, -25.154f, 100.6148f, 0.00f }
+		}
+	};
+
+	fake_config_store->write_pass_predict(pass_predict);
+
+	ArgosTxService serv(*mock_artic);
+
+	std::time_t t = 1652105502000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	serv.start();
+
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	system_scheduler->run();
+
+	// Run for 10 transmissions
+	for (unsigned int i = 0; i < 4; i++) {
+
+		if (i < n_try) {
+			mock().expectOneCall("set_tx_power").onObject(mock_artic).ignoreOtherParameters();
+			mock().expectOneCall("send").onObject(mock_artic).ignoreOtherParameters();
+		}
+
+		t += serv.get_last_schedule();
+		fake_rtc->settime(t/1000);
+		fake_timer->set_counter(t);
+		system_scheduler->run();
+
+		if (i < n_try) {
+			mock_artic->notify(ArticEventTxComplete({}));
+		}
+	}
+
+	CHECK_TRUE(Service::SCHEDULE_DISABLED == serv.get_last_schedule());
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	CHECK_FALSE(Service::SCHEDULE_DISABLED == serv.get_last_schedule());
 }

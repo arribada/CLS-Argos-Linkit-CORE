@@ -35,7 +35,6 @@ private:
 	const char *m_name;
 	bool m_is_underwater;
 	bool m_is_initiated;
-	bool m_is_scheduled;
 	Scheduler::TaskHandle m_task_period;
 	Scheduler::TaskHandle m_task_timeout;
 	std::function<void(ServiceEvent&)> m_data_notification_callback;
