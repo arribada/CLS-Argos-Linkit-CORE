@@ -125,7 +125,7 @@ const std::string PMU::hardware_version()
     if (error == NRFX_SUCCESS)
     	return "LinkIt V3";
     else
-    	return "LinkIt V1/V2";
+    	return "LinkIt V1";
 #else
     return "Unknown";
 #endif
