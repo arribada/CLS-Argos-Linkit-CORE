@@ -59,7 +59,7 @@ NrfSwitch::NrfSwitch(int pin, unsigned int hysteresis_time_ms, bool active_state
 	// Initialise the library if it is not yet initialised
 	if (!nrfx_gpiote_is_init())
 		nrfx_gpiote_init();
-	m_is_started = false;
+	m_is_paused = true;
 	m_current_state = -1; // Unknown state to start with (will force a trigger on any event)
 }
 
@@ -68,15 +68,8 @@ NrfSwitch::~NrfSwitch() {
 }
 
 void NrfSwitch::start(std::function<void(bool)> func) {
-	if (m_is_started)
-		return;
 	Switch::start(func);
-	NrfSwitchManager::add(BSP::GPIO_Inits[m_pin].pin_number, this);
-	if (NRFX_SUCCESS != nrfx_gpiote_in_init(BSP::GPIO_Inits[m_pin].pin_number, &BSP::GPIO_Inits[m_pin].gpiote_in_config, nrfx_gpiote_in_event_handler)) {
-		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
-	}
-	nrfx_gpiote_in_event_enable(BSP::GPIO_Inits[m_pin].pin_number, true);
-	m_is_started = true;
+	resume();
 }
 
 bool NrfSwitch::get_state() {
@@ -84,14 +77,8 @@ bool NrfSwitch::get_state() {
 }
 
 void NrfSwitch::stop() {
-	if (!m_is_started)
-		return;
-	system_timer->cancel_schedule(m_timer_handle);
-	nrfx_gpiote_in_event_disable(BSP::GPIO_Inits[m_pin].pin_number);
-	nrfx_gpiote_in_uninit(BSP::GPIO_Inits[m_pin].pin_number);
-	NrfSwitchManager::remove(BSP::GPIO_Inits[m_pin].pin_number);
 	Switch::stop();
-	m_is_started = false;
+	pause();
 }
 
 void NrfSwitch::update_state(bool state) {
@@ -99,7 +86,8 @@ void NrfSwitch::update_state(bool state) {
 	// Call state change handler if state has changed
 	if (state != m_current_state) {
 		m_current_state = state;
-		m_state_change_handler(state);
+		if (m_state_change_handler)
+			m_state_change_handler(state);
 	}
 }
 
@@ -112,4 +100,24 @@ void NrfSwitch::process_event(bool state) {
 	m_timer_handle = system_timer->add_schedule([this, state]() {
 		update_state(state == m_active_state);
 	}, now + m_hysteresis_time_ms);
+}
+
+void NrfSwitch::pause() {
+	if (m_is_paused) return;
+	system_timer->cancel_schedule(m_timer_handle);
+	nrfx_gpiote_in_event_disable(BSP::GPIO_Inits[m_pin].pin_number);
+	nrfx_gpiote_in_uninit(BSP::GPIO_Inits[m_pin].pin_number);
+	NrfSwitchManager::remove(BSP::GPIO_Inits[m_pin].pin_number);
+	m_is_paused = true;
+	update_state(false);  // Force state to "off" when paused
+}
+
+void NrfSwitch::resume() {
+	if (!m_is_paused) return;
+	NrfSwitchManager::add(BSP::GPIO_Inits[m_pin].pin_number, this);
+	if (NRFX_SUCCESS != nrfx_gpiote_in_init(BSP::GPIO_Inits[m_pin].pin_number, &BSP::GPIO_Inits[m_pin].gpiote_in_config, nrfx_gpiote_in_event_handler)) {
+		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
+	}
+	nrfx_gpiote_in_event_enable(BSP::GPIO_Inits[m_pin].pin_number, true);
+	m_is_paused = false;
 }

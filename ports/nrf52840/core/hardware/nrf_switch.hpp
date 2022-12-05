@@ -8,7 +8,6 @@ class NrfSwitchManager;
 class NrfSwitch : public Switch {
 private:
 	Timer::TimerHandle m_timer_handle;
-	bool m_is_started;
 
 	void process_event(bool state);
 	void update_state(bool state);
@@ -19,6 +18,8 @@ public:
 	void start(std::function<void(bool)> func) override;
 	void stop() override;
 	bool get_state();
+	void pause() override;
+	void resume() override;
 
 	friend class NrfSwitchManager;
 };

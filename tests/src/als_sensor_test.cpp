@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "../../core/services/als_sensor_service.hpp"
+#include "als_sensor_service.hpp"
 #include "mock_sensor.hpp"
 #include "fake_config_store.hpp"
 #include "fake_logger.hpp"

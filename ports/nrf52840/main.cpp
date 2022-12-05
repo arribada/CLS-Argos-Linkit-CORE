@@ -47,6 +47,7 @@
 #include "stwlc68.hpp"
 #include "etl/error_handler.h"
 #include "memory_monitor_service.hpp"
+#include "dive_mode_service.hpp"
 
 
 FileSystem *main_filesystem;
@@ -588,6 +589,12 @@ int main()
 
 	DEBUG_TRACE("Memory monitor...");
 	MemoryMonitorService memory_monitor_service;
+
+#ifdef WCHG_INTB_PIN
+	DEBUG_TRACE("Dive mode monitor...");
+	NrfIRQ wchg_irq(WCHG_INTB_PIN);
+	DiveModeService dive_mode_service(nrf_reed_switch, wchg_irq);
+#endif
 
 	DEBUG_TRACE("Entering main SM...");
 

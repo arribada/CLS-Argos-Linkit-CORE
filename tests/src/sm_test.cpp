@@ -101,7 +101,7 @@ TEST_GROUP(Sm)
 		fake_ext_status_led = new FakeLed("EXT_STATUS");
 		ext_status_led = fake_ext_status_led;
 		fake_saltwater_switch = new FakeSWS;
-		dummy_switch = new FakeSwitch(0, 0);
+		dummy_switch = new FakeSwitch();
 		fake_reed_switch = new FakeReedSwitch(*dummy_switch);
 		reed_switch = fake_reed_switch;
 	}

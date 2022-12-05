@@ -159,6 +159,10 @@ const BaseMap param_map[] = {
 	{ "UW_MIN_DRY_SAMPLES", "UNP06", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
 	{ "UW_SAMPLE_GAP", "UNP07", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
 	{ "UW_PIN_SAMPLE_DELAY", "UNP08", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
+
+	// Dive mode
+	{ "UW_DIVE_MODE_ENABLE", "UNP12", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "UW_DIVE_MODE_START_TIME", "UNP13", BaseEncoding::UINT, 0U, 0xFFFFFFFFU, {}, true, true },
 };
 
 const size_t param_map_size = sizeof(param_map) / sizeof(param_map[0]);

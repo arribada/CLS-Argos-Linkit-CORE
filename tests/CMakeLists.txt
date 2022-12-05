@@ -173,6 +173,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/ubx_ano_test.cpp"
     "src/argos_rx_test.cpp"
     "src/argos_tx_test.cpp"
+    "src/dive_mode_test.cpp"
     "src/main.cpp"
     "fakes/memmang.cpp"
     "fakes/nrfx_rtc.c"
