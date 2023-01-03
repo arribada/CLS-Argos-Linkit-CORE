@@ -20,6 +20,7 @@ public:
 	void stop() override;
 
 private:
+	uint64_t m_start_ticks;
 	// Prevent copies to enforce this as a singleton
     NrfTimer() {}
     NrfTimer(NrfTimer const&)        = delete;

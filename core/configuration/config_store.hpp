@@ -253,8 +253,8 @@ protected:
 		/* UW_MIN_DRY_SAMPLES */ 1U,
 		/* UW_SAMPLE_GAP */ 1000U,
 		/* UW_PIN_SAMPLE_DELAY */ 1U,
-		/* UW_DIVE_MODE_ENABLE */ (bool)false,
-		/* UW_DIVE_MODE_START_TIME */ 60U,
+		/* UW_DIVE_MODE_ENABLE */ (bool)true,
+		/* UW_DIVE_MODE_START_TIME */ 0U,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,

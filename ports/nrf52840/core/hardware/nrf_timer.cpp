@@ -13,8 +13,8 @@ static constexpr uint16_t RTC_TIMER_PRESCALER = 32;
 // Note we can't get the 1000 Hz (1ms period) we'd like so we will get as close as we can:
 // The RTC clock is 32768 Hz and the prescaler is 33 which yields 992.969696969697 Hz
 // The following macros will converts between milliseconds and ticks using integer arithmetic
-#define TICKS_TO_MS(ticks)  ((ticks) * 1000000ULL) / 992969ULL;
-#define MS_TO_TICKS(ms)     ((ms) * 992969ULL) / 1000000ULL;
+#define TICKS_TO_MS(ticks)  (((ticks) * 1000000ULL) / 992969ULL)
+#define MS_TO_TICKS(ms)     (((ms) * 992969ULL) / 1000000ULL)
 
 static constexpr uint32_t TICKS_PER_OVERFLOW = 16777216;
 static constexpr uint32_t MILLISECONDS_PER_OVERFLOW = TICKS_TO_MS(TICKS_PER_OVERFLOW);
@@ -121,6 +121,7 @@ static void rtc_time_keeping_event_handler(drv_rtc_t const * const  p_instance)
 
 void NrfTimer::init()
 {
+	m_start_ticks = 0;
     g_overflows_occured = 0;
     g_stamp64 = 0;
 
@@ -148,7 +149,7 @@ uint64_t NrfTimer::get_counter()
 {
     // Current ticks is not atomic/thread-safe so we need to lock before calling it
     InterruptLock lock;
-    uint64_t uptime = TICKS_TO_MS(current_ticks());
+    uint64_t uptime = TICKS_TO_MS(current_ticks() - m_start_ticks);
 
     return uptime;
 }
@@ -157,7 +158,7 @@ Timer::TimerHandle NrfTimer::add_schedule(stdext::inplace_function<void(), INPLA
 {
     // Create a schedule for this task
     Schedule schedule;
-    uint64_t target_count_ticks = MS_TO_TICKS(target_count_ms);
+    uint64_t target_count_ticks = (MS_TO_TICKS(target_count_ms) + m_start_ticks);
 
     schedule.m_func = task_func;
     schedule.m_target_ticks = target_count_ticks;
@@ -230,6 +231,7 @@ void NrfTimer::cancel_schedule(TimerHandle &handle)
 
 void NrfTimer::start()
 {
+    m_start_ticks = current_ticks();
     drv_rtc_start(&BSP::RTC_Inits[RTC_TIMER].rtc);
 }
 

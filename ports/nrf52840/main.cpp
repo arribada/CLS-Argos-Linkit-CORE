@@ -350,7 +350,10 @@ int main()
 		system_timer->cancel_schedule(wdog_handle);
 		PMU::kick_watchdog();
 		nrf_reed_switch.stop();
+
+		// Forces timer to restart from zero
 		system_timer->stop();
+		system_timer->start();
 
 		// Re-initialize UART
 		nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);

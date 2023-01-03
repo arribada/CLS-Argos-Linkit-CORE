@@ -3,7 +3,7 @@
 
 #include "bsp.hpp"
 #include "ad5933.hpp"
-#include "nrfx_twim.h"
+#include "nrf_i2c.hpp"
 #include "error.hpp"
 #include "pmu.hpp"
 #include "debug.hpp"
@@ -20,11 +20,8 @@ uint8_t AD5933LL::read_reg(const AD5933Register reg)
 {
 	uint8_t value;
 
-	if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[m_bus].twim, m_addr, (const uint8_t *)&reg, sizeof(reg), false))
-        throw ErrorCode::I2C_COMMS_ERROR;
-
-    if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[m_bus].twim, m_addr, (uint8_t *)&value, sizeof(value)))
-        throw ErrorCode::I2C_COMMS_ERROR;
+	NrfI2C::write(m_bus, m_addr, (const uint8_t *)&reg, sizeof(reg), false);
+	NrfI2C::read(m_bus, m_addr, (uint8_t *)&value, sizeof(value));
 
     return value;
 }
@@ -35,8 +32,7 @@ void AD5933LL::write_reg(const AD5933Register reg, uint8_t value)
     buffer[0] = (uint8_t)reg;
     buffer[1] = value;
 
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[m_bus].twim, m_addr, buffer, 2, false))
-        throw ErrorCode::I2C_COMMS_ERROR;
+    NrfI2C::write(m_bus, m_addr, buffer, 2, false);
 }
 
 double AD5933LL::get_iq_magnitude_single_point(unsigned int frequency, unsigned int averaging, VRange vrange)

@@ -77,7 +77,7 @@ unsigned int UWDetectorService::service_next_schedule_in_ms() {
 	if (m_sample_iteration)
 		return m_sample_gap;
 	else
-		return m_current_state ? m_period_underwater_ms : m_period_surface_ms;
+		return m_is_first_time ? 0 : (m_current_state ? m_period_underwater_ms : m_period_surface_ms);
 }
 
 bool UWDetectorService::service_is_usable_underwater() {

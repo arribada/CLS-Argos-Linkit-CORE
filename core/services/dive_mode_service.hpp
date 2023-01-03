@@ -10,27 +10,33 @@ public:
 	enum class DiveState {
 		Idle,
 		StartPending,
-		Engaged,
-		Disengaged
+		Engaged
 	};
 
 	DiveModeService(Switch& reed, IRQ& wchg) : Service(ServiceIdentifier::DIVE_MODE, "DIVE", nullptr),
 		m_reed(reed), m_wchg(wchg), m_dive_state(DiveState::Idle) {}
 
 	void notify_peer_event(ServiceEvent& e) {
-		// Notify intent to start dive mode if the following conditions arise:
-		// 1. UW sensor is active
-		// 2. Dive state is idle
-		// 3. Service is enabled
+
+		// Check for UW event
 		if (e.event_source == ServiceIdentifier::UW_SENSOR &&
 			e.event_type == ServiceEventType::SERVICE_LOG_UPDATED &&
-			std::get<bool>(e.event_data) &&
-			service_is_enabled() &&
-			m_dive_state == DiveState::Idle) {
-			// Enter start pending state and reschedule the service which will call us
-			// back after the dive mode start time period has elapsed
-			m_dive_state = DiveState::StartPending;
-			service_reschedule();
+			service_is_enabled()) {
+
+			// Get UW state (0=>surfaced, 1=>submerged)
+			bool uw_state = std::get<bool>(e.event_data);
+
+			if (uw_state && m_dive_state == DiveState::Idle) {
+				// Enter start pending state and reschedule the service which will call us
+				// back after the dive mode start time period has elapsed
+				DEBUG_INFO("DiveModeService: dive mode start pending");
+				m_dive_state = DiveState::StartPending;
+				service_reschedule();
+			} else if (!uw_state && m_dive_state == DiveState::Engaged) {
+				DEBUG_INFO("DiveModeService: dive mode disengaged by surfacing event");
+				m_dive_state = DiveState::Idle;
+				m_reed.resume();
+			}
 		}
 	}
 
@@ -72,8 +78,8 @@ protected:
 		if (service_is_enabled()) {
 			m_wchg.enable([this]() {
 				if (m_dive_state == DiveState::Engaged) {
-					DEBUG_INFO("DiveModeService: dive mode disengaged");
-					m_dive_state = DiveState::Disengaged;
+					DEBUG_INFO("DiveModeService: dive mode disengaged by WCHG");
+					m_dive_state = DiveState::Idle;
 					m_reed.resume();
 				}
 			});
