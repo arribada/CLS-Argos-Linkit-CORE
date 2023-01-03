@@ -354,9 +354,6 @@ int main()
 		// Re-initialize UART
 		nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
 		m_is_debug_init = true;
-
-		// Stop timer since we restart it in the main state machine
-		system_timer->stop();
 	}
 #else
 	if (PMU::reset_cause() == "Power On Reset") {
