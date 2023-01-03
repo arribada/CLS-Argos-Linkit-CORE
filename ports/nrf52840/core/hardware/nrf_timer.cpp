@@ -232,6 +232,7 @@ void NrfTimer::cancel_schedule(TimerHandle &handle)
 void NrfTimer::start()
 {
     m_start_ticks = current_ticks();
+    DEBUG_TRACE("NrfTimer::start: ticks=%lu", (unsigned long)m_start_ticks);
     drv_rtc_start(&BSP::RTC_Inits[RTC_TIMER].rtc);
 }
 

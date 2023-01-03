@@ -296,13 +296,13 @@ int main()
 			NrfI2C::uninit();
 		}
 
-		// De-initialize UART to save power
-		m_is_debug_init = false;
-		nrfx_uarte_uninit(&BSP::UART_Inits[BSP::UART_1].uarte);
-
 		volatile bool power_on_ready = false;
 		system_timer->start();
 		Timer::TimerHandle timer_handle;
+
+		// De-initialize UART to save power
+		m_is_debug_init = false;
+		nrfx_uarte_uninit(&BSP::UART_Inits[BSP::UART_1].uarte);
 
 		// Check if switch starting state is active
 		if (nrf_reed_switch.get_state()) {
@@ -351,14 +351,12 @@ int main()
 		PMU::kick_watchdog();
 		nrf_reed_switch.stop();
 
-		// Forces timer to restart from zero
-		system_timer->stop();
-		system_timer->start();
-
 		// Re-initialize UART
 		nrfx_uarte_init(&BSP::UART_Inits[BSP::UART_1].uarte, &BSP::UART_Inits[BSP::UART_1].config, nullptr);
 		m_is_debug_init = true;
 
+		// Stop timer since we restart it in the main state machine
+		system_timer->stop();
 	}
 #else
 	if (PMU::reset_cause() == "Power On Reset") {

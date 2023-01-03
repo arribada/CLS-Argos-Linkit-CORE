@@ -39,11 +39,12 @@ unsigned int GPSService::service_next_schedule_in_ms() {
     	return Service::SCHEDULE_DISABLED;
     }
 
-    DEBUG_TRACE("GPSService::reschedule: is_first=%u first_fix=%u cold=%u aqperiod=%u",
-    		(unsigned int)m_is_first_schedule, (unsigned int)m_is_first_fix_found, (unsigned int)gnss_config.cold_start_retry_period, (unsigned int)aq_period);
-
     // Find the next schedule time aligned to UTC 00:00
     std::time_t next_schedule = now - (now % aq_period) + aq_period;
+
+    DEBUG_TRACE("GPSService::reschedule: is_first=%u first_fix=%u cold=%u aqperiod=%u now=%u next=%u",
+    		(unsigned int)m_is_first_schedule, (unsigned int)m_is_first_fix_found, (unsigned int)gnss_config.cold_start_retry_period, (unsigned int)aq_period,
+			(unsigned int)now, (unsigned int)next_schedule);
 
     // Find the time in milliseconds until this schedule
     return (next_schedule - now) * MS_PER_SEC;
