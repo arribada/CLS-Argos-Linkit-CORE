@@ -130,3 +130,28 @@ TEST(DiveMode, DiveModeDisengagedIfServiceStopped)
 	s.stop();
 	CHECK_FALSE(fake_switch.is_paused());
 }
+
+
+TEST(DiveMode, DiveModeRunsMultipleTimes)
+{
+	unsigned int start_period = 10;
+	bool dive_mode_en = true;
+
+	configuration_store->write_param(ParamID::UW_DIVE_MODE_ENABLE, dive_mode_en);
+	configuration_store->write_param(ParamID::UW_DIVE_MODE_START_TIME, start_period);
+
+	DiveModeService s(fake_switch, fake_irq);
+	s.start();
+
+	for (unsigned int i = 0; i < 10; i++) {
+		notify_underwater_state(true);
+		CHECK_EQUAL(1000 * start_period, s.get_last_schedule());
+		advance_time(s.get_last_schedule());
+		CHECK_TRUE(fake_switch.is_paused());
+		notify_underwater_state(false);
+		CHECK_FALSE(fake_switch.is_paused());
+	}
+
+	s.stop();
+	CHECK_FALSE(fake_switch.is_paused());
+}

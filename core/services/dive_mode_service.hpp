@@ -54,13 +54,13 @@ protected:
 			m_dive_state = DiveState::Engaged;
 			m_reed.pause();
 		}
+		service_complete();
 	}
 
 	unsigned int service_next_schedule_in_ms() override {
 		// If dive mode start is pending then return the timer for scheduling
 		// when to engage dive mode
 		if (m_dive_state == DiveState::StartPending) {
-			DEBUG_INFO("DiveModeService: dive mode start pending");
 			return service_read_param<unsigned int>(ParamID::UW_DIVE_MODE_START_TIME) * 1000;
 		} else {
 			return SCHEDULE_DISABLED;
