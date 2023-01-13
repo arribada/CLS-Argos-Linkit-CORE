@@ -41,7 +41,7 @@ void GenTracker::react(tinyfsm::Event const &) { }
 
 void GenTracker::react(ReedSwitchEvent const &event)
 {
-	DEBUG_TRACE("react: ReedSwitchEvent: %u", (int)event.state);
+	DEBUG_INFO("react: ReedSwitchEvent: %u", (int)event.state);
 
 	// Reed switch event handling:
 	// ENGAGE -- engaged LED state
