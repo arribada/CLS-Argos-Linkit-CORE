@@ -255,6 +255,10 @@ void ArgosTxService::react(ArticEventTxComplete const&) {
 	// Increment TX counter
 	configuration_store->increment_tx_counter();
 
+	// Update last TX date time
+	std::time_t t = service_current_time();
+	configuration_store->write_param(ParamID::LAST_TX, t);
+
 	// Save configuration params
 	configuration_store->save_params();
 

@@ -1222,3 +1222,51 @@ TEST(ArgosTxService, DepthPileNoEligibleEntries)
 	inject_gps_location(1, 11.8768, -33.8232, t);
 	CHECK_FALSE(Service::SCHEDULE_DISABLED == serv.get_last_schedule());
 }
+
+
+TEST(ArgosTxService, LastTxIsUpdated)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	BaseArgosPower power = BaseArgosPower::POWER_1000_MW;
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	unsigned int tr_nom = 10;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+
+	ArgosTxService serv(*mock_artic);
+
+	std::time_t t = 1652105502000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	serv.start();
+
+	// First TX is time sync burst
+	mock().expectOneCall("set_tx_power").onObject(mock_artic).withUnsignedIntParameter("power", (unsigned int)power);
+	mock().expectOneCall("send").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A2).
+			withUnsignedIntParameter("size_bits", 120);
+
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	system_scheduler->run();
+
+	mock_artic->notify(ArticEventTxComplete({}));
+
+	std::time_t last_tx = fake_config_store->read_param<std::time_t>(ParamID::LAST_TX);
+	CHECK_EQUAL(1652105502U, (unsigned int)last_tx);
+
+	mock().expectOneCall("stop_send").onObject(mock_artic);
+	serv.stop();
+}
