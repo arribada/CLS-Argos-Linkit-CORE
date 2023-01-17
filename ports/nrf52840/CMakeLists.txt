@@ -126,6 +126,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/libraries/log/src
     ${SDK_ROOT}/components/libraries/experimental_section_vars
     ${SDK_ROOT}/components/libraries/crc32
+    ${SDK_ROOT}/components/libraries/crc16
     ${SDK_ROOT}/components/softdevice/common
     ${SDK_ROOT}/components/softdevice/s140/headers
     ${SDK_ROOT}/components/softdevice/s140/headers/nrf52
@@ -140,6 +141,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${LIB_DIR}/etl-20.27.3/include
     ${LIB_DIR}/inplace_function
     ${LIB_DIR}/littlefs
+    ${LIB_DIR}/CmBacktrace/cm_backtrace
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4
     ${CORE_DIR}/ble_services
     ${CORE_DIR}/hardware
@@ -174,6 +176,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${LIB_DIR}/littlefs/lfs.c
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c
+    ${LIB_DIR}/CmBacktrace/cm_backtrace/cm_backtrace.c
     ${SDK_ROOT}/components/ble/common/ble_advdata.c
     ${SDK_ROOT}/components/ble/ble_advertising/ble_advertising.c
     ${SDK_ROOT}/components/ble/common/ble_conn_state.c
@@ -206,6 +209,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_ble.c
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_soc.c
     ${SDK_ROOT}/components/libraries/crc32/crc32.c
+    ${SDK_ROOT}/components/libraries/crc16/crc16.c
     ${SDK_ROOT}/modules/nrfx/mdk/system_nrf52840.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
@@ -362,9 +366,12 @@ target_compile_options(${TARGET_NAME} PRIVATE
 
     # Optimise for size always
     -Os
+    -g3
 )
 
 set_source_files_properties(${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-switch-enum -Wno-switch")
+
+set_source_files_properties(${LIB_DIR}/CmBacktrace/cm_backtrace/cm_backtrace.c PROPERTIES COMPILE_FLAGS "-Wno-unused-const-variable -Wno-unused-variable")
 
 target_link_options(${TARGET_NAME} PRIVATE
     -L${CMAKE_SOURCE_DIR}/${SDK_ROOT}/modules/nrfx/mdk

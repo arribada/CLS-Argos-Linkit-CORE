@@ -8,10 +8,16 @@
 #include "nrf_power.h"
 #include "nrf_sdh.h"
 #include "nrfx_twim.h"
+#include "cm_backtrace.h"
 #include "debug.hpp"
+#include "crc16.h"
 #include <string>
 
 static uint32_t m_reset_cause = 0;
+
+static __attribute__((section(".noinit"))) volatile uint32_t m_callstack[8];
+static __attribute__((section(".noinit"))) volatile PMULogType m_type;
+static __attribute__((section(".noinit"))) volatile uint16_t m_crc;
 
 // Define a spare bit that we can use to detect pseudo power off
 // via GPREGRET
@@ -83,11 +89,12 @@ void PMU::delay_us(unsigned us)
 
 void PMU::start_watchdog()
 {
-	nrfx_wdt_init(&BSP::WDT_Inits[BSP::WDT].config, nullptr);
+	nrfx_wdt_init(&BSP::WDT_Inits[BSP::WDT].config, PMU::watchdog_handler);
 	// Channel ID is discarded as we don't care which channel ID is allocated
 	nrfx_wdt_channel_id id;
 	nrfx_wdt_channel_alloc(&id);
 	nrfx_wdt_enable();
+	cm_backtrace_init("", "", "");
 }
 
 void PMU::kick_watchdog()
@@ -129,4 +136,52 @@ const std::string PMU::hardware_version()
 #else
     return "Unknown";
 #endif
+}
+
+void PMU::watchdog_handler() {
+	save_stack(PMULogType::WDT);
+}
+
+void PMU::save_stack(PMULogType type) {
+	m_type = type;
+	uint32_t lr = (uint32_t)__builtin_return_address(0);
+	uint32_t sp = (uint32_t)__builtin_frame_address(0);
+	cm_backtrace_fault(lr, sp, (uint32_t *)m_callstack, sizeof(m_callstack) / sizeof(m_callstack[0]));
+	m_crc = crc16_compute((const uint8_t *)m_callstack, sizeof(m_callstack), nullptr);
+}
+
+static const char *reset_type_to_string(PMULogType t) {
+	switch (t) {
+	case PMULogType::WDT:
+		return "WDT";
+	case PMULogType::HARDFAULT:
+		return "HARDFAULT";
+	case PMULogType::ETL:
+		return "ETL";
+	case PMULogType::MMAN:
+		return "MMAN";
+	case PMULogType::STACK:
+		return "STACK";
+	case PMULogType::MALLOC:
+		return "MALLOC";
+	default:
+		return "UNKNOWN";
+	}
+}
+
+void PMU::print_stack() {
+	// Check CRC matches
+	if (m_crc == crc16_compute((const uint8_t *)&m_callstack, sizeof(m_callstack), nullptr))
+	{
+		// Dump the information
+		DEBUG_INFO("PMU post-reset trace available");
+		DEBUG_INFO("PMU reset type: %s", reset_type_to_string(m_type));
+		for (unsigned int i = 0; i < (sizeof(m_callstack) / sizeof(m_callstack[0])); i++)
+			DEBUG_INFO("PMU PC[%u] = %08x", i, (unsigned int)m_callstack[i]);
+	} else {
+		DEBUG_TRACE("PMU post-reset trace unavailable (crc=%04x)", (unsigned int)m_crc);
+	}
+
+	m_crc = 0; // Invalidate CRC
+	memset((void *)&m_callstack, sizeof(m_callstack), 0);
 }

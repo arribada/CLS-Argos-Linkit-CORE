@@ -114,6 +114,7 @@ namespace BSP
 	extern const GPIO_InitTypeDefAndInst_t GPIO_Inits[GPIO_TOTAL_NUMBER];
 
 	// Interrupt priorities (0, 1, 4  are reserved for the softdevice)
+    static constexpr uint8_t INTERRUPT_PRIORITY_WDT       = 2;
     static constexpr uint8_t INTERRUPT_PRIORITY_RTC_1     = 2;
     static constexpr uint8_t INTERRUPT_PRIORITY_RTC_2     = 2;
     static constexpr uint8_t INTERRUPT_PRIORITY_UART_0    = 3;

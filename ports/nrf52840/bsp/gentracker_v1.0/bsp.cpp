@@ -302,7 +302,8 @@ namespace BSP
 			.config =
 			{
 				.behaviour = NRF_WDT_BEHAVIOUR_RUN_SLEEP_HALT,
-				.reload_value = 15 * 60 * 1000   // 15 minutes
+				.reload_value = 15 * 60 * 1000,   // 15 minutes
+				.interrupt_priority = INTERRUPT_PRIORITY_WDT
 			}
     	}
 #endif

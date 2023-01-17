@@ -50,6 +50,9 @@ SECTIONS
 {
     .text :
     {
+    	. = ALIGN(4);
+    	_stext = .;
+
         KEEP(*(.isr_vector))
         *(.text*)
 
@@ -133,7 +136,14 @@ SECTIONS
         . = ALIGN(4);
         __bss_end__ = .;
     } > RAM
-    
+
+    .noinit (NOLOAD) :
+    {
+        . = ALIGN(4);
+        KEEP(*(.noinit*))
+        . = ALIGN(4);
+    } > RAM    
+
     .heap (COPY):
     {
         __HeapBase = .;

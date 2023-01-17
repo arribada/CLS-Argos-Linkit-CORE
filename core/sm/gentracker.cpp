@@ -129,6 +129,7 @@ void BootState::entry() {
 		LoggerManager::show_info();
 		DEBUG_INFO("configuration_store: is_valid=%u", configuration_store->is_valid());
 		DEBUG_INFO("reset cause: %s", PMU::reset_cause().c_str());
+		PMU::print_stack();
 		// Transition to PreOperational state after initialisation
 		system_scheduler->post_task_prio([this](){
 			kick_watchdog();

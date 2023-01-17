@@ -83,6 +83,7 @@ extern "C" void HardFault_Handler() {
 	for (;;)
 	{
 #if BUILD_TYPE==Release
+		PMU::save_stack(PMULogType::HARDFAULT);
 		PMU::reset(false);
 #else
 		// Hardfault occurred
@@ -107,6 +108,7 @@ extern "C" void MemoryManagement_Handler(void)
 	for (;;)
 	{
 #if BUILD_TYPE==Release
+		PMU::save_stack(PMULogType::MMAN);
 		PMU::reset(false);
 #else
 		// Stack overflow detected
@@ -130,6 +132,7 @@ extern "C" {
 	void *__stack_check_guard = (void*)0xDEADBEEF;
 	void __wrap___stack_chk_fail(void) {
 #if BUILD_TYPE==Release
+		PMU::save_stack(PMULogType::STACK);
 		PMU::reset(false);
 #else
 		for (;;)
@@ -156,6 +159,7 @@ extern "C" void vApplicationMallocFailedHook() {
 	for (;;)
 	{
 #if BUILD_TYPE==Release
+		PMU::save_stack(PMULogType::MALLOC);
 		PMU::reset(false);
 #else
 		// Out of heap memory occurred
@@ -182,6 +186,7 @@ void etl_error_handler(const etl::exception& e)
 	for (;;)
 	{
 #if BUILD_TYPE==Release
+		PMU::save_stack(PMULogType::ETL);
 		PMU::reset(false);
 #else
 		// ETL error occurred

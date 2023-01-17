@@ -27,6 +27,9 @@ void PMU::kick_watchdog() {
 	mock().actualCall("kick_watchdog");
 }
 
+void PMU::print_stack() {
+}
+
 const std::string PMU::reset_cause() {
 	return "UNKNOWN";
 }
