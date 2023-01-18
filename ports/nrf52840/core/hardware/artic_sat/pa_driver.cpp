@@ -67,17 +67,10 @@ void RFPA133::shutdown(void) {
 	GPIOPins::clear(BSP::GPIO::GPIO_G16_33);
 }
 
-void MCP47X6::shutdown(void) {
-	uint8_t xfer[1];
-	DEBUG_TRACE("MCP47X6::power_down: Shutdown DAC");
-	xfer[0] = MCP47X6_CMD_VOLCONFIG | MCP47X6_PWRDN_500K;
-	NrfI2C::write(MCP4716_DEVICE, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
-}
-
 void MCP47X6::set_output_power(unsigned int mW) {
 
 	if (mW == 0) {
-		power_down();
+		shutdown();
 		return;
 	}
 
@@ -146,17 +139,17 @@ void MCP47X6::set_level(uint16_t level) {
 	NrfI2C::write(MCP4716_DEVICE, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
 }
 
-void MCP47X6::power_down() {
+void MCP47X6::shutdown(void) {
 	uint8_t xfer[1];
-	DEBUG_TRACE("MCP47X6::power_down: Shutdown DAC");
-	xfer[0] = m_config_reg | MCP47X6_CMD_VOLCONFIG | MCP47X6_PWRDN_500K;
+	DEBUG_TRACE("MCP47X6::shutdown: Shutdown DAC");
+	xfer[0] = MCP47X6_CMD_VOLCONFIG | MCP47X6_PWRDN_500K;
 	NrfI2C::write(MCP4716_DEVICE, MCP4716_I2C_ADDR, xfer, sizeof(xfer), false);
 }
 
 MCP47X6::MCP47X6() : Calibratable("MCP47X6"), m_cal(Calibration("MCP47X6")), m_config_reg(0) {
 	set_vref(MCP47X6_VREF_VREFPIN);
 	set_gain(MCP47X6_GAIN_1X);
-	set_output_power(0);
+	shutdown();
 }
 
 MCP47X6::~MCP47X6() {

@@ -70,7 +70,6 @@ private:
 	void set_vref(uint8_t vref);
 	void set_gain(uint8_t gain);
 	void set_level(uint16_t level);
-	void power_down(void);
 
 public:
 	MCP47X6();
