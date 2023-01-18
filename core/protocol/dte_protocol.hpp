@@ -1058,8 +1058,8 @@ private:
 		int written;
 
 		snprintf(format, sizeof(format), "%%%zu", s.size());
-		strncat(format, fmt + 1, sizeof(format) - strlen(format));
-		strncat(format, "%n", sizeof(format) - strlen(format));
+		strncat(format, fmt + 1, sizeof(format) - strlen(format) - 1);
+		strncat(format, "%n", sizeof(format) - strlen(format) - 1);
 
 		int ret = sscanf(s.c_str(), format, &val, &written);
 		if (ret != 1)
