@@ -380,6 +380,10 @@ void ConfigurationState::process_received_data() {
 				// This is important during a command sequences that can take
 				// a long time to complete (eg DUMPD)
 				restart_inactivity_timeout();
+
+				// We must also kick the watchdog here since the main scheduler
+				// is being deferred
+				PMU::kick_watchdog();
 			}
 
 			if (action == DTEAction::FACTR)
