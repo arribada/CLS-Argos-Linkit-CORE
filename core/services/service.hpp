@@ -29,6 +29,7 @@ public:
 	bool is_started();
 	unsigned int get_last_schedule();
 	bool is_underwater_deferred();
+	bool is_initiated();
 
 private:
 	bool m_is_started;

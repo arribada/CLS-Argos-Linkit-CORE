@@ -99,8 +99,9 @@ void ArgosRxService::react(ArticEventRxPacket const& e) {
 }
 
 void ArgosRxService::react(ArticEventDeviceError const&) {
-	service_cancel();
-	service_complete();
+	DEBUG_TRACE("ArgosRxService::react: ArticEventDeviceError");
+	if (service_cancel())
+		service_complete();
 }
 
 void ArgosRxService::react(ArticEventPowerOff const&) {

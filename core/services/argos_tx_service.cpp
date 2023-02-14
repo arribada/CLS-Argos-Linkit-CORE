@@ -252,6 +252,8 @@ void ArgosTxService::react(ArticEventTxStarted const&) {
 
 void ArgosTxService::react(ArticEventTxComplete const&) {
 	DEBUG_TRACE("ArgosTxService::react: ArticEventTxComplete");
+	m_is_tx_pending = false;
+
 	// Increment TX counter
 	configuration_store->increment_tx_counter();
 
@@ -268,8 +270,8 @@ void ArgosTxService::react(ArticEventTxComplete const&) {
 
 void ArgosTxService::react(ArticEventDeviceError const&) {
 	DEBUG_TRACE("ArgosTxService::react: ArticEventDeviceError");
-	service_cancel();
-	service_complete();
+	if (service_cancel())
+		service_complete();
 }
 
 // ArgosPacketBuilder

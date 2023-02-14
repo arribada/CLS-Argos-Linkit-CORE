@@ -215,7 +215,7 @@ namespace BSP
                 .ss_active_high = false,
                 .irq_priority = INTERRUPT_PRIORITY_SPI_2,
                 .orc = 0xFF, // Over-run character
-                .frequency = NRF_SPIM_FREQ_8M,
+                .frequency = NRF_SPIM_FREQ_1M,
                 .mode = NRF_SPIM_MODE_1,
                 .bit_order = NRF_SPIM_BIT_ORDER_MSB_FIRST
             }

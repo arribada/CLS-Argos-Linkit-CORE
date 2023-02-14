@@ -92,10 +92,10 @@ void Service::stop() {
 	if (m_is_started) {
 		m_is_started = false;
 		deschedule();
-		if (service_cancel()) {
-			m_is_initiated = false;
+		service_cancel();
+		if (m_is_initiated)
 			notify_service_inactive();
-		}
+		m_is_initiated = false;
 		service_term();
 	}
 }
@@ -115,9 +115,10 @@ void Service::notify_underwater_state(bool state) {
 	m_is_underwater = state;
 	if (m_is_underwater) {
 		deschedule();
-		m_is_initiated = false;
-		if (service_cancel())
+		service_cancel();
+		if (m_is_initiated)
 			notify_service_inactive();
+		m_is_initiated = false;
 	} else {
 		bool immediate;
 		if (service_is_triggered_on_surfaced(immediate))
@@ -140,6 +141,10 @@ bool Service::is_started() {
 	return m_is_started;
 }
 
+bool Service::is_initiated() {
+	return m_is_initiated;
+}
+
 void Service::service_reschedule(bool immediate) {
 	reschedule(immediate);
 }
@@ -150,8 +155,10 @@ bool Service::service_is_scheduled() {
 
 void Service::service_complete(ServiceEventData *event_data, void *entry, bool shall_reschedule) {
 	DEBUG_TRACE("Service::service_complete: service %s", m_name);
-	if (!m_is_initiated)
+	if (!m_is_initiated) {
 		DEBUG_WARN("Service::service_complete: service %s completed without being initiated", m_name);
+		return;
+	}
 	m_is_initiated = false;
 	notify_service_inactive();
 	if (m_logger && entry != nullptr)
@@ -223,10 +230,10 @@ void Service::reschedule(bool immediate) {
 							m_task_timeout = system_scheduler->post_task_prio(
 								[this]() {
 								DEBUG_TRACE("Service::reschedule: service %s timed out", m_name);
-								if (service_cancel()) {
-									m_is_initiated = false;
+								service_cancel();
+								if (m_is_initiated)
 									notify_service_inactive();
-								}
+								m_is_initiated = false;
 								reschedule();
 							}, "ServiceTimeoutPeriod", Scheduler::DEFAULT_PRIORITY, timeout_ms);
 						}

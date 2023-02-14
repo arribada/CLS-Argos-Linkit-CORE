@@ -1026,7 +1026,7 @@ void ArticSat::state_transmitting() {
 	} else {
 		if (!m_tx_buffer.size()) {
 			// Abort transmission
-			ARTIC_STATE_CHANGE(transmitting, idle);
+			ARTIC_STATE_CHANGE(transmitting, stopped);
 		} else if (--m_state_counter == 0) {
 			DEBUG_ERROR("ArticSat::state_machine: failed to complete TX");
 			ARTIC_STATE_CHANGE(transmitting, error);
