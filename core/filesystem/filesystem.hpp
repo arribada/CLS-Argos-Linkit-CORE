@@ -193,6 +193,7 @@ public:
 	virtual lfs_ssize_t read(void *buffer, lfs_size_t size) = 0;
 	virtual lfs_ssize_t write(void *buffer, lfs_size_t size) = 0;
 	virtual lfs_soff_t seek(lfs_soff_t off, int whence=LFS_SEEK_SET) = 0;
+	virtual lfs_soff_t tell() = 0;
 	virtual int flush() = 0;
 	virtual lfs_soff_t size() = 0;
 };
@@ -223,6 +224,9 @@ public:
 	}
 	lfs_soff_t seek(lfs_soff_t off, int whence=LFS_SEEK_SET) override {
 		return lfs_file_seek(m_lfs, &m_file, off, whence);
+	}
+	lfs_soff_t tell() override {
+		return lfs_file_tell(m_lfs, &m_file);
 	}
 	int flush() override {
 		return lfs_file_sync(m_lfs, &m_file);
@@ -310,6 +314,10 @@ public:
 	lfs_soff_t seek(lfs_soff_t offset) {
 		m_offset = offset % m_max_size;
 		return LFSFile::seek(m_offset);
+	}
+
+	lfs_soff_t tell() {
+		return (lfs_soff_t)m_offset;
 	}
 };
 

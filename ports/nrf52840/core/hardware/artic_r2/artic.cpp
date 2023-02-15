@@ -14,6 +14,7 @@
 #include "binascii.hpp"
 #include "crc8.hpp"
 #include "crc16.hpp"
+#include "rtc.hpp"
 
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
@@ -62,6 +63,8 @@ static constexpr const char *const status_string[] =
 
 extern Scheduler *system_scheduler;
 extern Timer *system_timer;
+extern RTC *rtc;
+
 
 static_assert(ARRAY_SIZE(status_string) == TOTAL_NUMBER_STATUS_FLAG);
 
@@ -456,8 +459,8 @@ ArticTransceiver::ArticTransceiver() {
     m_nrf_spim = nullptr;
     m_state = ArticTransceiverState::stopped;
     m_tcxo_warmup_time = DEFAULT_TCXO_WARMUP_TIME_SECONDS;
-	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
-	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
+	GPIOPins::clear(SAT_RESET);
+	GPIOPins::clear(SAT_PWR_EN);
 }
 
 void ArticTransceiver::power_on(
@@ -606,8 +609,8 @@ void ArticTransceiver::state_stopped_enter() {
     nrf_gpio_cfg_input(BSP::SPI_Inits[SPI_SATELLITE].config.sck_pin, NRF_GPIO_PIN_PULLDOWN);
 
     // Power down the device
-	GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
-	GPIOPins::clear(BSP::GPIO::GPIO_SAT_EN);
+	GPIOPins::clear(SAT_RESET);
+	GPIOPins::clear(SAT_PWR_EN);
 
 	m_notification_callback(ArgosAsyncEvent::OFF);
 }
@@ -626,8 +629,8 @@ void ArticTransceiver::state_powering_on_exit() {
 }
 
 void ArticTransceiver::state_powering_on() {
-    GPIOPins::set(BSP::GPIO::GPIO_SAT_EN);
-    GPIOPins::set(BSP::GPIO::GPIO_SAT_RESET);
+    GPIOPins::set(SAT_PWR_EN);
+    GPIOPins::set(SAT_RESET);
     ARTIC_STATE_CHANGE(powering_on, reset_assert);
 }
 
@@ -639,7 +642,7 @@ void ArticTransceiver::state_reset_assert_exit() {
 }
 
 void ArticTransceiver::state_reset_assert() {
-    GPIOPins::clear(BSP::GPIO::GPIO_SAT_RESET);
+    GPIOPins::clear(SAT_RESET);
     ARTIC_STATE_CHANGE(reset_assert, reset_deassert);
 }
 
@@ -652,7 +655,7 @@ void ArticTransceiver::state_reset_deassert_exit() {
 }
 
 void ArticTransceiver::state_reset_deassert() {
-    GPIOPins::set(BSP::GPIO::GPIO_SAT_RESET);
+    GPIOPins::set(SAT_RESET);
     ARTIC_STATE_CHANGE(reset_deassert, dsp_reset);
 }
 

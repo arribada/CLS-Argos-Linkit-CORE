@@ -1,4 +1,3 @@
-#include <atomic>
 #include <cstdint>
 #include "nrf_timer.hpp"
 #include "nrf_delay.h"
@@ -6,6 +5,7 @@
 #include "interrupt_lock.hpp"
 #include "bsp.hpp"
 #include "debug.hpp"
+#include "etl/list.h"
 
 // Do not change this value without considering the impact to the macros below
 static constexpr uint16_t RTC_TIMER_PRESCALER = 32;
@@ -13,8 +13,8 @@ static constexpr uint16_t RTC_TIMER_PRESCALER = 32;
 // Note we can't get the 1000 Hz (1ms period) we'd like so we will get as close as we can:
 // The RTC clock is 32768 Hz and the prescaler is 33 which yields 992.969696969697 Hz
 // The following macros will converts between milliseconds and ticks using integer arithmetic
-#define TICKS_TO_MS(ticks)  ((ticks) * 1000000ULL) / 992969ULL;
-#define MS_TO_TICKS(ms)     ((ms) * 992969ULL) / 1000000ULL;
+#define TICKS_TO_MS(ticks)  (((ticks) * 1000000ULL) / 992969ULL)
+#define MS_TO_TICKS(ms)     (((ms) * 992969ULL) / 1000000ULL)
 
 static constexpr uint32_t TICKS_PER_OVERFLOW = 16777216;
 static constexpr uint32_t MILLISECONDS_PER_OVERFLOW = TICKS_TO_MS(TICKS_PER_OVERFLOW);
@@ -22,14 +22,17 @@ static constexpr uint32_t MILLISECONDS_PER_OVERFLOW = TICKS_TO_MS(TICKS_PER_OVER
 static volatile uint32_t g_overflows_occured;
 static volatile uint64_t g_stamp64;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnull-dereference"
 struct Schedule
 {
-    std::function<void()> m_func;
+    stdext::inplace_function<void(), INPLACE_FUNCTION_SIZE_TIMER> m_func;
     std::optional<unsigned int> m_id;
     uint64_t m_target_ticks;
 };
+#pragma GCC diagnostic pop
 
-static std::list<Schedule> g_schedules;
+static etl::list<Schedule, MAX_NUM_TIMERS> g_schedules;
 static unsigned int g_unique_id;
 
 // Return current 64 bit tick count
@@ -118,6 +121,7 @@ static void rtc_time_keeping_event_handler(drv_rtc_t const * const  p_instance)
 
 void NrfTimer::init()
 {
+	m_start_ticks = 0;
     g_overflows_occured = 0;
     g_stamp64 = 0;
 
@@ -145,16 +149,16 @@ uint64_t NrfTimer::get_counter()
 {
     // Current ticks is not atomic/thread-safe so we need to lock before calling it
     InterruptLock lock;
-    uint64_t uptime = TICKS_TO_MS(current_ticks());
+    uint64_t uptime = TICKS_TO_MS(current_ticks() - m_start_ticks);
 
     return uptime;
 }
 
-Timer::TimerHandle NrfTimer::add_schedule(std::function<void()> const &task_func, uint64_t target_count_ms)
+Timer::TimerHandle NrfTimer::add_schedule(stdext::inplace_function<void(), INPLACE_FUNCTION_SIZE_TIMER> const &task_func, uint64_t target_count_ms)
 {
     // Create a schedule for this task
     Schedule schedule;
-    uint64_t target_count_ticks = MS_TO_TICKS(target_count_ms);
+    uint64_t target_count_ticks = (MS_TO_TICKS(target_count_ms) + m_start_ticks);
 
     schedule.m_func = task_func;
     schedule.m_target_ticks = target_count_ticks;
@@ -227,6 +231,8 @@ void NrfTimer::cancel_schedule(TimerHandle &handle)
 
 void NrfTimer::start()
 {
+    m_start_ticks = current_ticks();
+    DEBUG_TRACE("NrfTimer::start: ticks=%lu", (unsigned long)m_start_ticks);
     drv_rtc_start(&BSP::RTC_Inits[RTC_TIMER].rtc);
 }
 

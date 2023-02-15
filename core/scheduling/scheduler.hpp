@@ -1,17 +1,20 @@
 #pragma once
 
-#include <functional>
-#include <algorithm>
 #include <optional>
 #include <memory>
-#include <map>
-#include <list>
 
 #include "interrupt_lock.hpp"
 #include "timer.hpp"
-#include "pmu.hpp"
 #include "debug.hpp"
+#include "inplace_function.hpp"
+#include "etl/list.h"
+#include "etl/vector.h"
 
+#define MAX_NUM_TASKS 48
+
+#ifndef INPLACE_FUNCTION_SIZE_SCHEDULER
+#define INPLACE_FUNCTION_SIZE_SCHEDULER 12
+#endif
 
 class Scheduler {
 
@@ -19,14 +22,13 @@ public:
 	static const unsigned int HIGHEST_PRIORITY = 0;
 	static const unsigned int DEFAULT_PRIORITY = 7;
 
-	static constexpr size_t EXPECTED_MAX_TASKS = 16;
-
-	Scheduler(Timer *timer) : m_timer(timer), m_unique_id(0) {
-		m_timer_schedules.reserve(EXPECTED_MAX_TASKS);
-	}
+	Scheduler(Timer *timer) : m_timer(timer), m_unique_id(0) {}
 	Scheduler(const Scheduler &) = delete;
 	
-	class Task 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnull-dereference"
+
+	class Task
     {
 		friend class Scheduler;
 
@@ -34,8 +36,10 @@ public:
 		const char *m_name;
 		std::optional<unsigned int> m_id;
 		unsigned int m_priority;
-		std::function<void()> m_func;
+		stdext::inplace_function<void(), INPLACE_FUNCTION_SIZE_SCHEDULER> m_func;
     };
+#pragma GCC diagnostic pop
+
 	class TaskHandle
 	{
 		friend class Scheduler;
@@ -50,7 +54,7 @@ public:
 	};
 
 	// Used for queuing a static or free function as a task
-	TaskHandle post_task_prio(std::function<void()> const &task_func, const char *task_name, unsigned int priority = DEFAULT_PRIORITY, unsigned int delay_ms = 0) {
+	TaskHandle post_task_prio(stdext::inplace_function<void(), INPLACE_FUNCTION_SIZE_SCHEDULER> const &task_func, const char *task_name, unsigned int priority = DEFAULT_PRIORITY, unsigned int delay_ms = 0) {
 
 		Task task;
 		task.m_priority = priority;
@@ -92,31 +96,36 @@ public:
 		InterruptLock lock;
 
 		// Check to see if this task is in our immediate task list
-		auto iter = m_tasks.begin();
-		while (iter != m_tasks.end())
+		auto iter_task = m_tasks.begin();
+		while (iter_task != m_tasks.end())
 		{
-			if (iter->m_id == task.m_id)
+			if (iter_task->m_id == task.m_id)
 			{
 #ifdef SCHEDULER_DEBUG
 				DEBUG_TRACE("Scheduler: cancel_task: %s [immediate]", task.m_name);
 #endif
-				iter = m_tasks.erase(iter);
+				iter_task = m_tasks.erase(iter_task);
 				break;
 			}
 			else
-				iter++;
+				iter_task++;
 		}
 
 		// Check if this task is in our deferred task list
 		// If so then cancel the timer scheduler for it
-		auto schedule = m_timer_schedules.find(*task.m_id);
-		if (schedule != m_timer_schedules.end())
+		auto iter_timer = m_timer_schedules.begin();
+		while (iter_timer != m_timer_schedules.end())
 		{
+			if (iter_timer->first == *task.m_id)
+			{
 #ifdef SCHEDULER_DEBUG
 			DEBUG_TRACE("Scheduler: cancel_task: %s [timer]", task.m_name);
 #endif
-			m_timer->cancel_schedule(schedule->second);
-			m_timer_schedules.erase(schedule);
+				m_timer->cancel_schedule(iter_timer->second);
+				iter_timer = m_timer_schedules.erase(iter_timer);
+			}
+			else
+				iter_timer++;
 		}
 
 		// Invalidate the task handle in all cases
@@ -177,9 +186,9 @@ public:
 		}
 
 		// Check if this task is in our deferred task list
-		auto schedule = m_timer_schedules.find(*task.m_id);
-		if (schedule != m_timer_schedules.end())
-			return true;
+		for (auto const& value: m_timer_schedules)
+			if (value.first == *task.m_id)
+				return true;
 
 		return false;
 	}
@@ -212,10 +221,12 @@ private:
 		uint64_t t_sched = m_timer->get_counter() + delay_ms;
 
 		// We do this by setting up our timer to call this function after the delay has elapsed
-		m_timer_schedules[*task.m_id] = m_timer->add_schedule([this, task]() {
-			m_timer_schedules.erase(*task.m_id);
-			this->schedule_now(task);
+		unsigned int id = *task.m_id;
+		Timer::TimerHandle handle = m_timer->add_schedule([this, id, task]() {
+			this->timer_callback_handler(id, task);
 		}, t_sched);
+
+		m_timer_schedules.push_back({id, handle});
 	}
 
 	void schedule_now(Task task) {
@@ -232,8 +243,23 @@ private:
 		m_tasks.insert(iter, task);
 	}
 
-	std::list<Task> m_tasks;
-	std::unordered_map<unsigned int, Timer::TimerHandle> m_timer_schedules;
+	void timer_callback_handler(unsigned int task_id, Task task) {
+		auto iter = m_timer_schedules.begin();
+		while (iter != m_timer_schedules.end())
+		{
+			if (iter->first == task_id)
+			{
+				iter = m_timer_schedules.erase(iter);
+			}
+			else
+				iter++;
+		}
+		
+		schedule_now(task);
+	}
+
+	etl::list<Task, MAX_NUM_TASKS> m_tasks;
+	etl::vector<std::pair<unsigned int, Timer::TimerHandle>, MAX_NUM_TASKS> m_timer_schedules;
 	Timer *m_timer;
 	unsigned int m_unique_id;
 };

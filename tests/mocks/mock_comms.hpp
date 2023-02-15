@@ -13,9 +13,9 @@ public:
 	void stop() {
 		mock().actualCall("stop").onObject(this);
 	}
-	void notify_saltwater_switch_state(bool state) {
-		DEBUG_TRACE("MockCommsScheduler: notify_saltwater_switch_state");
-		mock().actualCall("notify_saltwater_switch_state").onObject(this).withParameter("state", state);
+	void notify_underwater_state(bool state) {
+		DEBUG_TRACE("MockCommsScheduler: notify_underwater_state");
+		mock().actualCall("notify_underwater_state").onObject(this).withParameter("state", state);
 	}
 	void notify_sensor_log_update() {
 		mock().actualCall("notify_sensor_log_update").onObject(this);

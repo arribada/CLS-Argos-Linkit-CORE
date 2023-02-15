@@ -1,5 +1,4 @@
-#ifndef __LEDS_HPP_
-#define __LEDS_HPP_
+#pragma once
 
 class Led {
 public:
@@ -8,7 +7,6 @@ public:
 	virtual void on() = 0;
 	virtual void off() = 0;
 	virtual bool get_state() = 0;
-	virtual void flash() = 0;
+	virtual void flash(unsigned int period_ms) = 0;
+	virtual bool is_flashing() = 0;
 };
-
-#endif // __LEDS_HPP_

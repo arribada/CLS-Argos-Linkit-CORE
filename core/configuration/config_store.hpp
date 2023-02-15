@@ -3,6 +3,8 @@
 #include <array>
 #include <type_traits>
 #include <ctime>
+#include <cmath>
+
 #include "base_types.hpp"
 #include "error.hpp"
 #include "debug.hpp"
@@ -10,7 +12,8 @@
 #include "haversine.hpp"
 #include "timeutils.hpp"
 #include "pmu.hpp"
-
+#include "sensor.hpp"
+#include "wchg.hpp"
 
 #define MAX_CONFIG_ITEMS  (unsigned int)ParamID::__PARAM_SIZE
 #define LB_EXIT_DELTA          5
@@ -36,6 +39,8 @@ struct GNSSConfig {
 	unsigned int min_num_fixes;
 	unsigned int cold_start_retry_period;
 	bool assistnow_enable;
+	bool trigger_on_surfaced;
+	bool assistnow_offline_enable;
 };
 
 struct ArgosConfig {
@@ -79,10 +84,11 @@ enum class ConfigMode {
 	OUT_OF_ZONE
 };
 
+
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0A;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0F;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
@@ -97,13 +103,21 @@ protected:
 		/* AOP_STATUS */ 0U,
 		/* ARGOS_AOP_DATE */ static_cast<std::time_t>(1633646474U),
 		/* ARGOS_FREQ */ 401.65,
-		/* ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
+		/* ARGOS_POWER */ BaseArgosPower::POWER_350_MW,
 		/* TR_NOM */ 60U,
+
+#if ARGOS_EXT
+		/* ARGOS_MODE */ BaseArgosMode::OFF,
+#else
+
 #if MODEL_SB
 		/* ARGOS_MODE */ BaseArgosMode::PASS_PREDICTION,
 #else
 		/* ARGOS_MODE */ BaseArgosMode::LEGACY,
 #endif
+
+#endif // ARGOS_EXT
+
 #if MODEL_SB
 		/* NTRY_PER_MESSAGE */ 6U,
 #else
@@ -128,7 +142,7 @@ protected:
 		/* SAMPLING_UNDER_FREQ */ 60U,
 		/* LB_EN */ (bool)false,
 		/* LB_TRESHOLD */ 10U,
-		/* LB_ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
+		/* LB_ARGOS_POWER */ BaseArgosPower::POWER_350_MW,
 		/* TR_LB */ 240U,
 		/* LB_ARGOS_MODE */ BaseArgosMode::LEGACY,
 		/* LB_ARGOS_DUTY_CYCLE */ 0U,
@@ -156,11 +170,14 @@ protected:
 		/* ARGOS_TX_JITTER_EN */ (bool)true,
 		/* ARGOS_RX_EN */ (bool)true,
 		/* ARGOS_RX_MAX_WINDOW */ 15U*60U,
-		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 30U,
+		/* ARGOS_RX_AOP_UPDATE_PERIOD */ 90U,
 		/* ARGOS_RX_COUNTER */ 0U,
 		/* ARGOS_RX_TIME */ 0U,
+#if 0 == NO_GPS_POWER_REG
 		/* ASSIST_NOW_EN */ (bool)true,
-
+#else
+		/* ASSIST_NOW_EN */ (bool)false,
+#endif
 		/* LB_GNSS_HACCFILT_THR */ 5U,
 		/* LB_NTRY_PER_MESSAGE */ 4U,
 
@@ -170,9 +187,9 @@ protected:
 		/* ZONE_ACTIVATION_DATE */ static_cast<std::time_t>(1577836800U), // 01/01/2020 00:00:00
 		/* ZONE_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
 #if MODEL_SB
-		/* ZONE_ARGOS_POWER */ BaseArgosPower::POWER_500_MW,
+		/* ZONE_ARGOS_POWER */ BaseArgosPower::POWER_350_MW,
 #else
-		/* ZONE_ARGOS_POWER */ BaseArgosPower::POWER_200_MW,
+		/* ZONE_ARGOS_POWER */ BaseArgosPower::POWER_350_MW,
 #endif
 
 #if MODEL_SB
@@ -203,6 +220,41 @@ protected:
 		/* HW_VERSION */ ""s,
 		/* BATT_VOLTAGE */ (double)0,
 		/* ARGOS_TCXO_WARMUP_TIME */ 5U,
+		/* DEVICE_DECID */ 0U,
+		/* GNSS_TRIGGER_ON_SURFACED */ (bool)true,
+		/* GNSS_TRIGGER_ON_AXL_WAKEUP */ (bool)false,
+		/* UNDERWATER_DETECT_SOURCE */ BaseUnderwaterDetectSource::SWS,
+		/* UNDERWATER_DETECT_THRESH */ (double)1.1,
+		/* PH_SENSOR_ENABLE */ (bool)false,
+		/* PH_SENSOR_PERIODIC */ 0U,
+		/* PH_SENSOR_VALUE */ (double)0.0,
+		/* SEA_TEMP_SENSOR_ENABLE */ (bool)false,
+		/* SEA_TEMP_SENSOR_PERIODIC */ 0U,
+		/* SEA_TEMP_SENSOR_VALUE */ (double)0.0,
+		/* ALS_SENSOR_ENABLE */ (bool)false,
+		/* ALS_SENSOR_PERIODIC */ 0U,
+		/* ALS_SENSOR_VALUE */ (double)0.0,
+		/* CDT_SENSOR_ENABLE */ (bool)false,
+		/* CDT_SENSOR_PERIODIC */ 0U,
+		/* CDT_SENSOR_CONDUCTIVITY */ (double)0.0,
+		/* CDT_SENSOR_DEPTH */ (double)0.0,
+		/* CDT_SENSOR_TEMPERATURE */ (double)0.0,
+		/* EXT_LED_MODE */ BaseLEDMode::ALWAYS,
+		/* AXL_SENSOR_ENABLE */ (bool)false,
+		/* AXL_SENSOR_PERIODIC */ 0U,
+		/* AXL_SENSOR_WAKEUP_THRESHOLD */ (double)0.0,
+		/* AXL_SENSOR_WAKEUP_SAMPLES */ 5U,
+		/* PRESSURE_SENSOR_ENABLE */ (bool)false,
+		/* PRESSURE_SENSOR_PERIODIC */ 0U,
+		/* DEBUG_OUTPUT_MODE */ BaseDebugMode::UART,
+		/* GNSS_ASSISTNOW_OFFLINE_EN */ (bool)false,
+		/* WCHG_STATUS */ ""s,
+		/* UW_MAX_SAMPLES */ 5U,
+		/* UW_MIN_DRY_SAMPLES */ 1U,
+		/* UW_SAMPLE_GAP */ 1000U,
+		/* UW_PIN_SAMPLE_DELAY */ 1U,
+		/* UW_DIVE_MODE_ENABLE */ (bool)true,
+		/* UW_DIVE_MODE_START_TIME */ 0U,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
@@ -299,6 +351,65 @@ public:
 			} else if (param_id == ParamID::BATT_VOLTAGE) {
 				update_battery_level();
 				m_params.at((unsigned)param_id) = (double)m_battery_voltage / 1000.0;
+				b_is_valid = true;
+			} else if (param_id == ParamID::DEVICE_DECID) {
+				m_params.at((unsigned)param_id) = (unsigned int)PMU::device_identifier();
+				b_is_valid = true;
+			} else if (param_id == ParamID::ALS_SENSOR_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("ALS");
+					m_params.at((unsigned)param_id) = s.read(1);
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::PH_SENSOR_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("PH");
+					m_params.at((unsigned)param_id) = s.read();
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::SEA_TEMP_SENSOR_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("RTD");
+					m_params.at((unsigned)param_id) = s.read();
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::CDT_SENSOR_CONDUCTIVITY_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("CDT");
+					m_params.at((unsigned)param_id) = s.read(0);
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::CDT_SENSOR_DEPTH_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("CDT");
+					m_params.at((unsigned)param_id) = s.read(1);
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::CDT_SENSOR_TEMPERATURE_VALUE) {
+				try {
+					Sensor& s = SensorManager::find_by_name("CDT");
+					m_params.at((unsigned)param_id) = s.read(2);
+				} catch (...) {
+					m_params.at((unsigned)param_id) = (double)std::nan("");
+				}
+				b_is_valid = true;
+			} else if (param_id == ParamID::WCHG_STATUS) {
+				try {
+					WirelessCharger& s = WirelessChargerManager::get_instance();
+					m_params.at((unsigned)param_id) = s.get_chip_status();
+				} catch (...) {
+					m_params.at((unsigned)param_id) = "NOTFITTED"s;
+				}
 				b_is_valid = true;
 			} else {
 				b_is_valid = is_valid();
@@ -404,6 +515,8 @@ public:
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
 			gnss_config.assistnow_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_EN);
+			gnss_config.trigger_on_surfaced = read_param<bool>(ParamID::GNSS_TRIGGER_ON_SURFACED);
+			gnss_config.assistnow_offline_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_OFFLINE_EN);
 
 			if (m_last_config_mode != ConfigMode::LOW_BATTERY) {
 				DEBUG_INFO("ConfigurationStore: LOW_BATTERY mode detected");
@@ -425,6 +538,8 @@ public:
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
 			gnss_config.assistnow_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_EN);
+			gnss_config.trigger_on_surfaced = read_param<bool>(ParamID::GNSS_TRIGGER_ON_SURFACED);
+			gnss_config.assistnow_offline_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_OFFLINE_EN);
 
 			if (m_last_config_mode != ConfigMode::OUT_OF_ZONE) {
 				DEBUG_INFO("ConfigurationStore: OUT_OF_ZONE mode detected");
@@ -447,6 +562,8 @@ public:
 			gnss_config.min_num_fixes = read_param<unsigned int>(ParamID::GNSS_MIN_NUM_FIXES);
 			gnss_config.cold_start_retry_period = read_param<unsigned int>(ParamID::GNSS_COLD_START_RETRY_PERIOD);
 			gnss_config.assistnow_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_EN);
+			gnss_config.trigger_on_surfaced = read_param<bool>(ParamID::GNSS_TRIGGER_ON_SURFACED);
+			gnss_config.assistnow_offline_enable = read_param<bool>(ParamID::GNSS_ASSISTNOW_OFFLINE_EN);
 
 			if (m_last_config_mode != ConfigMode::NORMAL) {
 				DEBUG_INFO("ConfigurationStore: NORMAL mode detected");

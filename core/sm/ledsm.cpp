@@ -1,8 +1,25 @@
 #include "ledsm.hpp"
 #include "debug.hpp"
+#include "config_store.hpp"
+#include "rgb_led.hpp"
+#include "led.hpp"
 
+extern Led *ext_status_led;
 extern RGBLed *status_led;
 extern Timer *system_timer;
+extern ConfigurationStore *configuration_store;
+
+
+// Macro for determining LED mode state
+#define LED_MODE_GUARD \
+	if (configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::ALWAYS || \
+		(configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::HRS_24 && \
+		 system_timer->get_counter() < (24 * 3600 * 1000)))
+
+#define EXT_LED_MODE_GUARD \
+	if (configuration_store->read_param<BaseLEDMode>(ParamID::EXT_LED_MODE) == BaseLEDMode::ALWAYS || \
+		(configuration_store->read_param<BaseLEDMode>(ParamID::EXT_LED_MODE) == BaseLEDMode::HRS_24 && \
+		 system_timer->get_counter() < (24 * 3600 * 1000)))
 
 
 void LEDOff::entry() {
@@ -11,11 +28,15 @@ void LEDOff::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->off();
+	if (ext_status_led)
+		ext_status_led->off();
 }
 
 void LEDBoot::entry() {
 	DEBUG_TRACE("LEDBoot: entry");
 	status_led->flash(RGBLedColor::WHITE, 125);
+	if (ext_status_led)
+		ext_status_led->flash(125);
 }
 
 void LEDPowerDown::entry() {
@@ -24,6 +45,8 @@ void LEDPowerDown::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->flash(RGBLedColor::WHITE, 50);
+	if (ext_status_led)
+		ext_status_led->flash(50);
 }
 
 void LEDError::entry() {
@@ -32,11 +55,15 @@ void LEDError::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->flash(RGBLedColor::RED);
+	if (ext_status_led)
+		ext_status_led->off();
 }
 
 void LEDPreOperationalPending::entry() {
 	DEBUG_TRACE("LEDPreOperationalPending: entry");
 	status_led->set(RGBLedColor::GREEN);
+	if (ext_status_led)
+		ext_status_led->off();
 }
 
 void LEDPreOperationalError::entry() {
@@ -45,6 +72,8 @@ void LEDPreOperationalError::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->flash(RGBLedColor::RED);
+	if (ext_status_led)
+		ext_status_led->off();
 }
 
 void LEDPreOperationalBatteryNominal::entry() {
@@ -53,6 +82,8 @@ void LEDPreOperationalBatteryNominal::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->flash(RGBLedColor::GREEN);
+	if (ext_status_led)
+		ext_status_led->off();
 }
 
 void LEDPreOperationalBatteryLow::entry() {
@@ -61,11 +92,15 @@ void LEDPreOperationalBatteryLow::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->flash(RGBLedColor::YELLOW);
+	if (ext_status_led)
+		ext_status_led->off();
 }
 
 void LEDConfigPending::entry() {
 	DEBUG_TRACE("LEDConfigPending: entry");
 	status_led->set(RGBLedColor::BLUE);
+	if (ext_status_led)
+		ext_status_led->off();
 }
 
 void LEDConfigNotConnected::entry() {
@@ -74,6 +109,8 @@ void LEDConfigNotConnected::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->flash(RGBLedColor::BLUE);
+	if (ext_status_led)
+		ext_status_led->off();
 }
 
 void LEDConfigConnected::entry() {
@@ -82,6 +119,8 @@ void LEDConfigConnected::entry() {
 		status_led->set(RGBLedColor::WHITE);
 	else
 		status_led->set(RGBLedColor::BLUE);
+	if (ext_status_led)
+		ext_status_led->off();
 }
 
 void LEDGNSSOn::entry() {
@@ -89,53 +128,98 @@ void LEDGNSSOn::entry() {
 	m_is_gnss_on = true;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
-	else
-		status_led->flash(RGBLedColor::CYAN, 1000);
+	else {
+		LED_MODE_GUARD {
+			status_led->flash(RGBLedColor::CYAN, 1000);
+		} else {
+			status_led->off();
+		}
+		EXT_LED_MODE_GUARD {
+			if (ext_status_led)
+				ext_status_led->on();
+		} else {
+			if (ext_status_led)
+				ext_status_led->off();
+		}
+	}
 }
 
 void LEDGNSSOffWithFix::entry() {
 	DEBUG_TRACE("LEDGNSSOffWithFix: entry");
-	m_is_gnss_on = false;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else {
-		status_led->set(RGBLedColor::GREEN);
+		if (m_is_gnss_on) {
+			LED_MODE_GUARD {
+				status_led->set(RGBLedColor::GREEN);
+			} else {
+				status_led->off();
+			}
+			if (ext_status_led)
+				ext_status_led->off();
+		}
 		system_timer->add_schedule([this]() {
-			transit<LEDOff>();
+			if (is_in_state<LEDConfigNotConnected>())
+				transit<LEDConfigNotConnected>();
+			else
+				transit<LEDOff>();
 		}, system_timer->get_counter() + 3000);
 	}
+	m_is_gnss_on = false;
 }
 
 void LEDGNSSOffWithoutFix::entry() {
 	DEBUG_TRACE("LEDGNSSOffWithoutFix: entry");
-	m_is_gnss_on = false;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else {
-		status_led->set(RGBLedColor::RED);
+		if (m_is_gnss_on) {
+			LED_MODE_GUARD {
+				status_led->set(RGBLedColor::RED);
+			} else {
+				status_led->off();
+			}
+			if (ext_status_led)
+				ext_status_led->off();
+		}
 		system_timer->add_schedule([this]() {
-			transit<LEDOff>();
+			if (is_in_state<LEDConfigNotConnected>())
+				transit<LEDConfigNotConnected>();
+			else
+				transit<LEDOff>();
 		}, system_timer->get_counter() + 3000);
 	}
+	m_is_gnss_on = false;
 }
 
 void LEDArgosTX::entry() {
 	DEBUG_TRACE("LEDArgosTX: entry");
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
-	else
-		status_led->set(RGBLedColor::MAGENTA);
+	else {
+		LED_MODE_GUARD {
+			status_led->set(RGBLedColor::MAGENTA);
+		} else {
+			status_led->off();
+		}
+	}
 }
 
 void LEDArgosTXComplete::entry() {
 	DEBUG_TRACE("LEDArgosTXComplete: entry");
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
-	else
+	else {
+		status_led->off();
 		system_timer->add_schedule([this]() {
 			if (m_is_gnss_on)
 				transit<LEDGNSSOn>();
-			else
-				transit<LEDOff>();
+			else {
+				if (is_in_state<LEDConfigNotConnected>())
+					transit<LEDConfigNotConnected>();
+				else
+					transit<LEDOff>();
+			}
 		}, system_timer->get_counter() + 50); // Add 50ms to avoid race condition on timer tick
+	}
 }

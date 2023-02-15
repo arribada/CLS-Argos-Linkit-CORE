@@ -5,6 +5,7 @@
 #include "config_store.hpp"
 #include "service_scheduler.hpp"
 #include "scheduler.hpp"
+#include "service.hpp"
 #include "dte_handler.hpp"
 #include "filesystem.hpp"
 #include "config_store.hpp"
@@ -15,6 +16,7 @@
 #include "reed.hpp"
 #include "ledsm.hpp"
 #include "battery.hpp"
+#include "gps.hpp"
 #include "ble_service.hpp"
 #include "gentracker.hpp"
 
@@ -22,23 +24,13 @@
 extern FileSystem *main_filesystem;
 extern Scheduler *system_scheduler;
 extern Timer *system_timer;
-extern ServiceScheduler *comms_scheduler;
-extern ServiceScheduler *location_scheduler;
-extern Logger *sensor_log;
-extern Logger *system_log;
 extern ConfigurationStore *configuration_store;
 extern BLEService *ble_service;
 extern OTAFileUpdater *ota_updater;
 extern DTEHandler *dte_handler;
-extern Switch *saltwater_switch;
 extern ReedSwitch *reed_switch;
 extern BatteryMonitor *battery_monitor;
-
-// Macro for determining LED mode state
-#define LED_MODE_GUARD \
-	if (configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::ALWAYS || \
-		(configuration_store->read_param<BaseLEDMode>(ParamID::LED_MODE) == BaseLEDMode::HRS_24 && \
-		 system_timer->get_counter() < (24 * 3600 * 1000)))
+extern BaseDebugMode g_debug_mode;
 
 // FSM initial state -> LEDOff
 FSM_INITIAL_STATE(LEDState, LEDOff);
@@ -49,7 +41,7 @@ void GenTracker::react(tinyfsm::Event const &) { }
 
 void GenTracker::react(ReedSwitchEvent const &event)
 {
-	DEBUG_TRACE("react: ReedSwitchEvent: %u", (int)event.state);
+	DEBUG_INFO("react: ReedSwitchEvent: %u", (int)event.state);
 
 	// Reed switch event handling:
 	// ENGAGE -- engaged LED state
@@ -76,8 +68,6 @@ void GenTracker::react(ReedSwitchEvent const &event)
 		transit<OffState>();
 	}
 }
-
-void GenTracker::react(SaltwaterSwitchEvent const &) { }
 
 void GenTracker::react(ErrorEvent const &event) {
 	DEBUG_ERROR("GenTracker::react: ErrorEvent: error_code=%u", event.error_code);
@@ -113,8 +103,7 @@ void BootState::entry() {
 	led_handle::dispatch<SetLEDBoot>({});
 
 	// If we can't mount the filesystem then try to format it first and retry
-	DEBUG_TRACE("mount filesystem");
-	if (main_filesystem->mount() < 0)
+	if (!main_filesystem->is_mounted() && main_filesystem->mount() < 0)
 	{
 		DEBUG_TRACE("format filesystem");
 		if (main_filesystem->format() < 0 || main_filesystem->mount() < 0)
@@ -134,14 +123,13 @@ void BootState::entry() {
 	try {
 		// The underlying classes will create the files on the filesystem if they do not
 		// already yet exist
-		sensor_log->create();
-		system_log->create();
+		LoggerManager::create();
 		configuration_store->init();
 	    DEBUG_INFO("Firmware Version: %s", FW_APP_VERSION_STR_C);
-		DEBUG_INFO("sensor_log: has %u entries", sensor_log->num_entries());
-		DEBUG_INFO("system_log: has %u entries", system_log->num_entries());
+		LoggerManager::show_info();
 		DEBUG_INFO("configuration_store: is_valid=%u", configuration_store->is_valid());
 		DEBUG_INFO("reset cause: %s", PMU::reset_cause().c_str());
+		PMU::print_stack();
 		// Transition to PreOperational state after initialisation
 		system_scheduler->post_task_prio([this](){
 			kick_watchdog();
@@ -211,47 +199,60 @@ void PreOperationalState::exit() {
 	led_handle::dispatch<SetLEDOff>({});
 }
 
-void OperationalState::react(SaltwaterSwitchEvent const &event)
-{
-	DEBUG_INFO("react: SaltwaterSwitchEvent: state=%u", event.state);
-	location_scheduler->notify_saltwater_switch_state(event.state);
-	comms_scheduler->notify_saltwater_switch_state(event.state);
-};
-
 void OperationalState::entry() {
 	DEBUG_INFO("entry: OperationalState");
 	led_handle::dispatch<SetLEDOff>({});
-	saltwater_switch->start([](bool s) { SaltwaterSwitchEvent e; e.state = s; dispatch(e); });
-	comms_scheduler->start([](ServiceEvent& e) {
-		if (e.event_type == ServiceEventType::ARGOS_TX_START) {
-			LED_MODE_GUARD {
-				led_handle::dispatch<SetLEDArgosTX>({});
-			}
-		}
-		else if (e.event_type == ServiceEventType::ARGOS_TX_END)
-			led_handle::dispatch<SetLEDArgosTXComplete>({});
+
+	ServiceManager::startall([this](ServiceEvent& e) {
+		service_event_handler(e);
 	});
-	location_scheduler->start([](ServiceEvent& e) {
-		if (e.event_type == ServiceEventType::GNSS_ON) {
-			LED_MODE_GUARD {
-				led_handle::dispatch<SetLEDGNSSOn>({});
-			}
-		} else {
-			if (std::get<bool>(e.event_data))
+
+	BaseDebugMode debug_mode = configuration_store->read_param<BaseDebugMode>(ParamID::DEBUG_OUTPUT_MODE);
+	if (debug_mode == BaseDebugMode::BLE_NUS) {
+		set_ble_device_name();
+		ble_service->start([](BLEServiceEvent&){ return 0; });
+		g_debug_mode = debug_mode;
+	}
+}
+
+void OperationalState::service_event_handler(ServiceEvent& e) {
+
+	// Notify event to all peer services
+	ServiceManager::notify_peer_event(e);
+
+	if (e.event_source == ServiceIdentifier::GNSS_SENSOR) {
+		if (e.event_type == ServiceEventType::SERVICE_ACTIVE) {
+			led_handle::dispatch<SetLEDGNSSOn>({});
+		} else if (e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+			if (std::get<GPSLogEntry>(e.event_data).info.valid)
 				led_handle::dispatch<SetLEDGNSSOffWithFix>({});
 			else
 				led_handle::dispatch<SetLEDGNSSOffWithoutFix>({});
-			comms_scheduler->notify_sensor_log_update();
 		}
-	});
+		return;
+	}
+	else if (e.event_source == ServiceIdentifier::ARGOS_TX) {
+		// New Argos TX event handling
+		if (e.event_type == ServiceEventType::SERVICE_ACTIVE) {
+			led_handle::dispatch<SetLEDArgosTX>({});
+		}
+		else if (e.event_type == ServiceEventType::SERVICE_INACTIVE) {
+			led_handle::dispatch<SetLEDArgosTXComplete>({});
+		}
+	}
 }
 
 void OperationalState::exit() {
 	DEBUG_INFO("exit: OperationalState");
 	led_handle::dispatch<SetLEDOff>({});
-	location_scheduler->stop();
-	comms_scheduler->stop();
-	saltwater_switch->stop();
+	ServiceManager::stopall();
+	BaseDebugMode debug_mode = configuration_store->read_param<BaseDebugMode>(ParamID::DEBUG_OUTPUT_MODE);
+	if (debug_mode == BaseDebugMode::BLE_NUS) {
+		g_debug_mode = BaseDebugMode::UART;
+		ble_service->stop();
+		DEBUG_TRACE("exit: OperationalState: BLE service stopped");
+		PMU::delay_ms(100);
+	}
 }
 
 void ConfigurationState::entry() {
@@ -273,11 +274,15 @@ void ConfigurationState::exit() {
 	led_handle::dispatch<SetLEDOff>({});
 }
 
-void ConfigurationState::set_ble_device_name() {
+void GenTracker::set_ble_device_name() {
 	std::string device_model = configuration_store->read_param<std::string>(ParamID::DEVICE_MODEL);
-	unsigned int argos_dec_id = configuration_store->read_param<unsigned int>(ParamID::ARGOS_DECID);
-	std::string device_name = device_model + " " + std::to_string(argos_dec_id);
-	DEBUG_TRACE("ConfigurationState::set_ble_device_name: %s", device_name.c_str());
+#if ARGOS_EXT
+	unsigned int identifier = configuration_store->read_param<unsigned int>(ParamID::DEVICE_DECID);
+#else
+	unsigned int identifier = configuration_store->read_param<unsigned int>(ParamID::ARGOS_DECID);
+#endif
+	std::string device_name = device_model + " " + std::to_string(identifier);
+	DEBUG_TRACE("GenTracker::set_ble_device_name: %s", device_name.c_str());
 	ble_service->set_device_name(device_name);
 }
 
@@ -375,6 +380,10 @@ void ConfigurationState::process_received_data() {
 				// This is important during a command sequences that can take
 				// a long time to complete (eg DUMPD)
 				restart_inactivity_timeout();
+
+				// We must also kick the watchdog here since the main scheduler
+				// is being deferred
+				PMU::kick_watchdog();
 			}
 
 			if (action == DTEAction::FACTR)

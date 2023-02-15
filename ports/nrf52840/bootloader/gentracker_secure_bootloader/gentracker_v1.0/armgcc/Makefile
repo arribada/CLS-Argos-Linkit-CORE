@@ -1,11 +1,12 @@
 PROJECT_NAME     := secure_bootloader_usb_mbr_gentracker_v1
-TARGETS          := LinkIt_v1_xxaa
+TARGETS          := cls_bootloader_v1_linkit
 OUTPUT_DIRECTORY := _build
 
 PROJ_DIR := ../..
 SDK_ROOT := ../../../../drivers/nRF5_SDK_17.0.2
+EXT_DIR  := ../../../..
 
-$(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa.out: \
+$(OUTPUT_DIRECTORY)/$(TARGETS).out: \
   LINKER_SCRIPT  := secure_bootloader_gcc_nrf52.ld
 
 # Source files common to all targets
@@ -58,6 +59,7 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_usbd.c \
   ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c \
   ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c \
+  ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_twim.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_ecc.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_ecdsa.c \
   $(SDK_ROOT)/components/libraries/crypto/nrf_crypto_hash.c \
@@ -95,7 +97,10 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_ecdsa.c \
   $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_eddsa.c \
   $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_hash.c \
-  $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_hmac.c
+  $(SDK_ROOT)/components/libraries/crypto/backend/oberon/oberon_backend_hmac.c \
+  $(EXT_DIR)/core/hardware/stwlc68_otp/otphal.c \
+  $(EXT_DIR)/core/hardware/stwlc68_otp/otp_prog.c \
+  $(EXT_DIR)/core/hardware/stwlc68_otp/otp_chip_info.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -154,6 +159,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/queue \
   $(SDK_ROOT)/components/libraries/mutex \
   $(SDK_ROOT)/components/libraries/ringbuf \
+  $(EXT_DIR)/core/hardware/stwlc68_otp \
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -218,12 +224,12 @@ LIB_FILES += -lc -lnosys -lm
 .PHONY: default help
 
 # Default target - first one defined
-default: LinkIt_v1_xxaa
+default: $(TARGETS)
 
 # Print all targets that can be built
 help:
 	@echo following targets are available:
-	@echo		LinkIt_v1_xxaa
+	@echo		$(TARGETS)
 	@echo		flash_mbr
 	@echo		sdk_config - starting external tool for editing sdk_config.h
 	@echo		flash      - flashing binary
@@ -239,12 +245,12 @@ $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
 # Flash the program
 mergehex: default
-	mergehex -m ${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex $(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa.hex -o $(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa_merged.hex
+	mergehex -m ${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex $(OUTPUT_DIRECTORY)/$(TARGETS).hex -o $(OUTPUT_DIRECTORY)/$(TARGETS)_merged.hex
 
 flash: mergehex
-	@echo Flashing: $(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa_merged.hex
+	@echo Flashing: $(OUTPUT_DIRECTORY)/$(TARGETS)_merged.hex
 	nrfjprog -f nrf52 --eraseall
-	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/LinkIt_v1_xxaa_merged.hex --sectoranduicrerase
+	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/$(TARGETS)_merged.hex --sectoranduicrerase
 	nrfjprog -f nrf52 --reset
 
 

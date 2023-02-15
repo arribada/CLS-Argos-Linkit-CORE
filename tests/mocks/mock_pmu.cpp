@@ -27,10 +27,17 @@ void PMU::kick_watchdog() {
 	mock().actualCall("kick_watchdog");
 }
 
+void PMU::print_stack() {
+}
+
 const std::string PMU::reset_cause() {
 	return "UNKNOWN";
 }
 
 const std::string PMU::hardware_version() {
 	return "SIMULATOR";
+}
+
+uint32_t PMU::device_identifier() {
+	return 0x12345678;
 }

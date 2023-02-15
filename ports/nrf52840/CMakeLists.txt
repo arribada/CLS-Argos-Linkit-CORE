@@ -22,24 +22,36 @@ if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE)
     set(MODEL_UW 0)
     set(MODEL_CORE 0)
     set(DEVICE_MODEL "Linkit ${MODEL}")
+    set(HAS_WCHG 0)
     if(${MODEL} MATCHES SB)
         set(MODEL_SB 1)
     elseif(${MODEL} MATCHES UW)
         set(MODEL_UW 1)
+	    set(HAS_WCHG 1)
     elseif(${MODEL} MATCHES CORE)
         set(MODEL_CORE 1)
+	    set(HAS_WCHG 1)
     endif()
 else()
     message(FATAL_ERROR "MODEL must be one of {SB, CORE, UW}")
 endif()
 
 # Append board model to the target name
-if(${BOARD} MATCHES LINKIT)
+if(${BOARD} MATCHES HORIZON)
+    set(TARGET_NAME ${PROJECT_NAME}_horizon_board)
+    set(BOARD_DIR     "${PROJ_DIR}/bsp/horizon_v4.0")
+    set(DEVICE_MODEL "Horizon CORE")
+    set(MODEL_SB 0)
+    set(MODEL_UW 0)
+    set(MODEL_CORE 1)
+    set(HAS_WCHG 0)
+    set(BOOTLOADER "bootloader/gentracker_secure_bootloader/horizon_v4.0/armgcc/_build/horizon_bootloader_v4_linkit_merged.hex")
+elseif(${BOARD} MATCHES LINKIT)
     set(TARGET_NAME ${PROJECT_NAME}_${MODEL}_board)
-    set(BOARD_DIR   "${PROJ_DIR}/bsp/gentracker_v1.0")
-    set(NO_ARGOS_PA_GAIN_CTRL 0)
+    set(BOARD_DIR     "${PROJ_DIR}/bsp/gentracker_v1.0")
+    set(BOOTLOADER "bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/cls_bootloader_v1_linkit_merged.hex")
 else()
-    message(FATAL_ERROR "Board must be LINKIT")
+    message(FATAL_ERROR "Board must be HORIZON or LINKIT")
 endif()
 
 if (DEBUG_LEVEL)
@@ -114,6 +126,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/libraries/log/src
     ${SDK_ROOT}/components/libraries/experimental_section_vars
     ${SDK_ROOT}/components/libraries/crc32
+    ${SDK_ROOT}/components/libraries/crc16
     ${SDK_ROOT}/components/softdevice/common
     ${SDK_ROOT}/components/softdevice/s140/headers
     ${SDK_ROOT}/components/softdevice/s140/headers/nrf52
@@ -125,10 +138,14 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}
     ${PROJ_DIR}/drivers/nrf_log_redirect
     ${BOARD_DIR}
+    ${LIB_DIR}/etl-20.27.3/include
+    ${LIB_DIR}/inplace_function
     ${LIB_DIR}/littlefs
+    ${LIB_DIR}/CmBacktrace/cm_backtrace
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4
     ${CORE_DIR}/ble_services
     ${CORE_DIR}/hardware
+    ${CORE_DIR}/services
     ${CORE_DIR}/configuration
     ${CORE_DIR}/filesystem
     ${CORE_DIR}/interface
@@ -139,10 +156,19 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/scheduling
     ${PROJ_DIR}/core/hardware
     ${PROJ_DIR}/core/interface
+    ${PROJ_DIR}/core/memmang
     ${PROJ_DIR}/core/filesystem
     ${PROJ_DIR}/core/scheduling
-    ${PROJ_DIR}/core/hardware/artic_r2
+    ${PROJ_DIR}/core/hardware/artic_sat
     ${PROJ_DIR}/core/hardware/m8q
+    ${PROJ_DIR}/core/hardware/ms58xx
+    ${PROJ_DIR}/core/hardware/ad5933
+    ${PROJ_DIR}/core/hardware/ltr_303
+    ${PROJ_DIR}/core/hardware/oem_ph
+    ${PROJ_DIR}/core/hardware/oem_rtd
+    ${PROJ_DIR}/core/hardware/cdt
+    ${PROJ_DIR}/core/hardware/bmx160
+    ${PROJ_DIR}/core/hardware/stwlc68_otp
 )
 
 target_sources(${TARGET_NAME} PRIVATE
@@ -150,6 +176,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${LIB_DIR}/littlefs/lfs.c
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c
     ${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c
+    ${LIB_DIR}/CmBacktrace/cm_backtrace/cm_backtrace.c
     ${SDK_ROOT}/components/ble/common/ble_advdata.c
     ${SDK_ROOT}/components/ble/ble_advertising/ble_advertising.c
     ${SDK_ROOT}/components/ble/common/ble_conn_state.c
@@ -182,7 +209,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_ble.c
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_soc.c
     ${SDK_ROOT}/components/libraries/crc32/crc32.c
-    ${SDK_ROOT}/modules/nrfx/mdk/gcc_startup_nrf52840.S
+    ${SDK_ROOT}/components/libraries/crc16/crc16.c
     ${SDK_ROOT}/modules/nrfx/mdk/system_nrf52840.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
@@ -193,19 +220,34 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_gpiote.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_saadc.c
     ${SDK_ROOT}/modules/nrfx/hal/nrf_nvmc.c
-    ${CORE_DIR}/hardware/sws.cpp
+    ${CORE_DIR}/hardware/sensor.cpp
     ${CORE_DIR}/hardware/reed.cpp
-    ${CORE_DIR}/scheduling/argos_scheduler.cpp
     ${CORE_DIR}/sm/gentracker.cpp
     ${CORE_DIR}/sm/ledsm.cpp
-    ${CORE_DIR}/scheduling/gps_scheduler.cpp
+    ${CORE_DIR}/services/service.cpp
+    ${CORE_DIR}/services/gps_service.cpp
+    ${CORE_DIR}/services/argos_tx_service.cpp
+    ${CORE_DIR}/services/argos_rx_service.cpp
+    ${CORE_DIR}/services/uwdetector_service.cpp
+    ${CORE_DIR}/logging/logger.cpp
     ${CORE_DIR}/util/haversine.cpp
     ${CORE_DIR}/filesystem/ota_flash_file_updater.cpp
+    ${CORE_DIR}/protocol/dte_commands.cpp
+    ${CORE_DIR}/protocol/dte_params.cpp
+    ${CORE_DIR}/configuration/calibration.cpp
     ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
-    ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
-    ${PROJ_DIR}/core/hardware/artic_r2/pa_driver.cpp
-    ${PROJ_DIR}/core/hardware/m8q/m8q.cpp
+    ${PROJ_DIR}/core/hardware/ms58xx/ms58xx.cpp
+    ${PROJ_DIR}/core/hardware/ad5933/ad5933.cpp
+    ${PROJ_DIR}/core/hardware/bmx160/bmx160.cpp
+    ${PROJ_DIR}/core/hardware/bmx160/bmx160.c
+    ${PROJ_DIR}/core/hardware/cdt/cdt.cpp
+    ${PROJ_DIR}/core/hardware/ltr_303/ltr_303.cpp
+    ${PROJ_DIR}/core/hardware/oem_ph/oem_ph.cpp
+    ${PROJ_DIR}/core/hardware/oem_rtd/oem_rtd.cpp
+    ${PROJ_DIR}/core/hardware/artic_sat/artic_sat.cpp
+    ${PROJ_DIR}/core/hardware/artic_sat/pa_driver.cpp
+	${PROJ_DIR}/core/hardware/m8q/m8q.cpp
     ${PROJ_DIR}/core/hardware/m8q/nrf_uart_m8.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp
@@ -215,21 +257,37 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/nrf_switch.cpp
     ${PROJ_DIR}/core/hardware/nrf_irq.cpp
     ${PROJ_DIR}/core/hardware/nrf_battery_mon.cpp
+    ${PROJ_DIR}/core/hardware/nrf_i2c.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
     ${PROJ_DIR}/core/interface/ble_stm_ota.c
+    ${PROJ_DIR}/core/memmang/heap_4.c
+    ${PROJ_DIR}/core/memmang/heap_mem.c
+    ${PROJ_DIR}/core/memmang/bindings.c
+    ${PROJ_DIR}/core/memmang/bindings.cpp
+    ${PROJ_DIR}/core/memmang/memmang.cpp
     ${PROJ_DIR}/core/scheduling/interrupt_lock.cpp
     ${PROJ_DIR}/drivers/nrf_log_redirect/nrf_log_redirect.c
+    ${PROJ_DIR}/gcc_startup_nrf52840.S
     ${PROJ_DIR}/main.cpp
 )
+
+if (HAS_WCHG)
+        target_sources(${TARGET_NAME} PRIVATE
+		    ${PROJ_DIR}/core/hardware/stwlc68_otp/otphal.c
+		    ${PROJ_DIR}/core/hardware/stwlc68_otp/otp_chip_info.c
+		    ${PROJ_DIR}/core/hardware/stwlc68_otp/stwlc68.cpp
+        )
+endif()
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
     Release=0
     Debug=1
-    NO_ARGOS_PA_GAIN_CTRL=${NO_ARGOS_PA_GAIN_CTRL}
+    HAS_WCHG=${HAS_WCHG}
     MODEL_SB=${MODEL_SB}
     MODEL_UW=${MODEL_UW}
     MODEL_CORE=${MODEL_CORE}
     BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    #SCHEDULER_DEBUG
     DEBUG_ENABLE=1
     DEBUG_LEVEL=${DEBUG_LEVEL}
     DEBUG_USING_RTC
@@ -242,18 +300,21 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     NRF_SD_BLE_API_VERSION=7
     S140
     SOFTDEVICE_PRESENT
-    __HEAP_SIZE=8192
-    __STACK_SIZE=65536
+    __HEAP_SIZE=0 # Use configTOTAL_HEAP_SIZE instead
+    __STACK_SIZE=110000
+    configTOTAL_HEAP_SIZE=65536
     DEVICE_MODEL_NAME="${DEVICE_MODEL}"s
     #LFS_YES_TRACE
     #BATTERY_NOT_FITTED
     DEBUG_TO_SYSTEMLOG
+    ETL_LOG_ERRORS
     ARGOS_USE_CRC8
     PREPASS_EMBEDDED
     FW_APP_VERSION_STR="${FW_APP_VERSION}"s
     FW_APP_VERSION_STR_C="${FW_APP_VERSION}"
     #WORKAROUND_ALLCAST_CONSTELLATION_STATUS_ENCODING_BUG
     _XOPEN_SOURCE=700 # Enables strptime() usage
+    __STARTUP_FILL_STACK
 )
 
 target_compile_options(${TARGET_NAME} PRIVATE
@@ -305,9 +366,12 @@ target_compile_options(${TARGET_NAME} PRIVATE
 
     # Optimise for size always
     -Os
+    -g3
 )
 
 set_source_files_properties(${LIB_DIR}/prepass/prepass_package_code-PREPAS_V3.4/previpass.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-switch-enum -Wno-switch")
+
+set_source_files_properties(${LIB_DIR}/CmBacktrace/cm_backtrace/cm_backtrace.c PROPERTIES COMPILE_FLAGS "-Wno-unused-const-variable -Wno-unused-variable")
 
 target_link_options(${TARGET_NAME} PRIVATE
     -L${CMAKE_SOURCE_DIR}/${SDK_ROOT}/modules/nrfx/mdk
@@ -377,7 +441,7 @@ add_custom_target(dfu_app
 add_custom_target(merged_hex
                   COMMENT "Create combined bootloader, settings and applications file"
                   COMMAND nrfutil settings generate --family NRF52840 --application ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex --application-version 0 --bootloader-version 1 --bl-settings-version 2 --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ${PROJECT_SOURCE_DIR}/${SDK_ROOT}/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ${PROJECT_SOURCE_DIR}/${PROJ_DIR}/nrfutil_pkg_key.pem ${TARGET_NAME}_settings.hex
-                  COMMAND mergehex -m bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/LinkIt_v1_xxaa_merged.hex ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex -o m1.hex
+                  COMMAND mergehex -m ${BOOTLOADER} ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.hex -o m1.hex
                   COMMAND mergehex -m m1.hex ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_settings.hex -o ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_merged.hex
                   COMMAND rm -f m1.hex
 )

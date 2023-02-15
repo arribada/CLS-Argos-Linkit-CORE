@@ -1,22 +1,23 @@
 #pragma once
 
 #include <array>
-#include "gps_scheduler.hpp"
+
+#include "gps.hpp"
 #include "nrf_uart_m8.hpp"
 #include "ubx.hpp"
 
 
-class M8QReceiver : public GPSScheduler {
+class M8QReceiver : public GPSDevice {
 public:
 	M8QReceiver();
 	~M8QReceiver();
 
-private:
 	// These methods are specific to the chipset and should be implemented by a device-specific subclass
 	void power_off() override;
 	void power_on(const GPSNavSettings& nav_settings,
 			      std::function<void(GNSSData data)> data_notification_callback) override;
 
+private:
 	enum class SendReturnCode
 	{
 		SUCCESS,
@@ -61,15 +62,20 @@ private:
     SendReturnCode disable_nav_pvt_message();
     SendReturnCode disable_nav_dop_message();
 	SendReturnCode disable_nav_status_message();
+	SendReturnCode enter_shutdown_mode();
+	SendReturnCode exit_shutdown_mode();
+	SendReturnCode sync_baud_rate();
 
 	SendReturnCode print_version();
 
 	SendReturnCode fetch_navigation_database();
 	SendReturnCode send_navigation_database();
+	SendReturnCode send_offline_database();
 
 	NrfUARTM8 *m_nrf_uart_m8;
 	bool m_capture_messages;
-	bool m_assistnow_enable;
+	bool m_assistnow_autonomous_enable;
+	bool m_assistnow_offline_enable;
 	std::function<void(GNSSData data)> m_data_notification_callback;
 
 	UBX::NAV::PVT::MSG_PVT m_last_received_pvt;

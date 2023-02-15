@@ -30,7 +30,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     LFS_NO_DEBUG
-    #DEBUG_ENABLE
+    DEBUG_ENABLE
     CPPUTEST
 )
 
@@ -88,12 +88,18 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     # Workaround allcast encoding bug in CLS messages
     #-DWORKAROUND_ALLCAST_CONSTELLATION_STATUS_ENCODING_BUG
  
+    # Increase the inplace_function max sizes for a 64 bit system
+    -DINPLACE_FUNCTION_SIZE_SCHEDULER=1024
+    -DINPLACE_FUNCTION_SIZE_TIMER=1536
+
     # Always output coloured text from GCC
     -fdiagnostics-color=always
 )
 
 # Test related includes
 target_include_directories(${PROJECT_NAME} PRIVATE
+    "${ROOT_DIR}/libraries/etl-20.27.3/include"
+    "${ROOT_DIR}/libraries/inplace_function"
     "${ROOT_DIR}/libraries/littlefs"
     "${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4"
     "${ROOT_DIR}/core/hardware"
@@ -103,10 +109,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/logging"
     "${ROOT_DIR}/core/filesystem"
     "${ROOT_DIR}/core/scheduling"
+    "${ROOT_DIR}/core/services"
     "${ROOT_DIR}/ports/linux"
     "${ROOT_DIR}/core/protocol"
     "${ROOT_DIR}/core/util"
     "${NRF_DIR}/core/hardware"
+    "${NRF_DIR}/core/hardware/m8q"
+    "${NRF_DIR}/core/memmang"
     "mocks"
     "fakes"
 )
@@ -118,12 +127,20 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c"
     "${ROOT_DIR}/core/util/haversine.cpp"
     "${ROOT_DIR}/core/scheduling/argos_scheduler.cpp"
-    "${ROOT_DIR}/core/scheduling/gps_scheduler.cpp"
+    "${ROOT_DIR}/core/services/argos_rx_service.cpp"
+    "${ROOT_DIR}/core/services/argos_tx_service.cpp"
+    "${ROOT_DIR}/core/services/gps_service.cpp"
+    "${ROOT_DIR}/core/services/service.cpp"
     "${ROOT_DIR}/core/filesystem/ota_flash_file_updater.cpp"
-    "${ROOT_DIR}/core/hardware/sws.cpp"
+    "${ROOT_DIR}/core/services/uwdetector_service.cpp"
     "${ROOT_DIR}/core/hardware/reed.cpp"
+    "${ROOT_DIR}/core/hardware/sensor.cpp"
+    "${ROOT_DIR}/core/protocol/dte_commands.cpp"
+    "${ROOT_DIR}/core/protocol/dte_params.cpp"
+    "${ROOT_DIR}/core/configuration/calibration.cpp"
     "${ROOT_DIR}/core/sm/gentracker.cpp"
     "${ROOT_DIR}/core/sm/ledsm.cpp"
+    "${ROOT_DIR}/core/logging/logger.cpp"
     "${LINUX_DIR}/interrupt_lock.cpp"
     "${NRF_DIR}/core/hardware/nrf_switch.cpp"
     "${NRF_DIR}/core/hardware/nrf_battery_mon.cpp"
@@ -146,7 +163,19 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/logger_test.cpp"
     "src/nrf_switch_test.cpp"
     "src/nrf_battery_test.cpp"
+    "src/ph_sensor_test.cpp"
+    "src/als_sensor_test.cpp"
+    "src/sea_temp_sensor_test.cpp"
+    "src/cdt_sensor_test.cpp"
+    "src/axl_sensor_test.cpp"
+    "src/pressure_sensor_test.cpp"
+    "src/calibration_test.cpp"
+    "src/ubx_ano_test.cpp"
+    "src/argos_rx_test.cpp"
+    "src/argos_tx_test.cpp"
+    "src/dive_mode_test.cpp"
     "src/main.cpp"
+    "fakes/memmang.cpp"
     "fakes/nrfx_rtc.c"
     "mocks/mock_gpio.cpp"
     "mocks/mock_pmu.cpp"

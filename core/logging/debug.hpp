@@ -3,22 +3,25 @@
 
 #include "logger.hpp"
 
-#ifdef DEBUG_ENABLE
+class DebugLogger {
+public:
+	static inline Logger *console_log = nullptr;
+	static inline Logger *system_log = nullptr;
+};
 
-extern Logger *console_log;
-extern Logger *system_log;
+#ifdef DEBUG_ENABLE
 
 #if (DEBUG_LEVEL >= 1)
 #ifdef DEBUG_TO_SYSTEMLOG
 #define DEBUG_ERROR(fmt, ...) \
 	do { \
-		if (console_log) console_log->error(fmt, ##__VA_ARGS__); \
-		if (system_log && system_log->is_ready()) system_log->error(fmt, ##__VA_ARGS__); \
+		if (DebugLogger::console_log) DebugLogger::console_log->error(fmt, ##__VA_ARGS__); \
+		if (DebugLogger::system_log && DebugLogger::system_log->is_ready()) DebugLogger::system_log->error(fmt, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define DEBUG_ERROR(fmt, ...) \
 do { \
-	if (console_log) console_log->error(fmt, ##__VA_ARGS__); \
+	if (DebugLogger::console_log) DebugLogger::console_log->error(fmt, ##__VA_ARGS__); \
 } while (0)
 #endif
 #else
@@ -29,13 +32,13 @@ do { \
 #ifdef DEBUG_TO_SYSTEMLOG
 #define DEBUG_WARN(fmt, ...) \
 	do { \
-		if (console_log) console_log->warn(fmt, ##__VA_ARGS__); \
-		if (system_log && system_log->is_ready()) system_log->warn(fmt, ##__VA_ARGS__); \
+		if (DebugLogger::console_log) DebugLogger::console_log->warn(fmt, ##__VA_ARGS__); \
+		if (DebugLogger::system_log && DebugLogger::system_log->is_ready()) DebugLogger::system_log->warn(fmt, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define DEBUG_WARN(fmt, ...) \
 	do { \
-		if (console_log) console_log->warn(fmt, ##__VA_ARGS__); \
+		if (DebugLogger::console_log) DebugLogger::console_log->warn(fmt, ##__VA_ARGS__); \
 	} while (0)
 #endif
 #else
@@ -46,13 +49,13 @@ do { \
 #ifdef DEBUG_TO_SYSTEMLOG
 #define DEBUG_INFO(fmt, ...) \
 	do { \
-		if (console_log) console_log->info(fmt, ##__VA_ARGS__); \
-		if (system_log && system_log->is_ready()) system_log->info(fmt, ##__VA_ARGS__); \
+		if (DebugLogger::console_log) DebugLogger::console_log->info(fmt, ##__VA_ARGS__); \
+		if (DebugLogger::system_log && DebugLogger::system_log->is_ready()) DebugLogger::system_log->info(fmt, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define DEBUG_INFO(fmt, ...) \
 	do { \
-		if (console_log) console_log->info(fmt, ##__VA_ARGS__); \
+		if (DebugLogger::console_log) DebugLogger::console_log->info(fmt, ##__VA_ARGS__); \
 	} while (0)
 #endif
 #else
@@ -64,7 +67,7 @@ do { \
 #if (DEBUG_LEVEL >= 4)
 #define DEBUG_TRACE(fmt, ...) \
 	do { \
-		if (console_log) console_log->trace(fmt, ##__VA_ARGS__); \
+		if (DebugLogger::console_log) DebugLogger::console_log->trace(fmt, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define DEBUG_TRACE(fmt, ...)

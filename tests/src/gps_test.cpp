@@ -1,6 +1,7 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+#include "gps_service.hpp"
 #include "mock_m8q.hpp"
 #include "fake_rtc.hpp"
 #include "fake_config_store.hpp"
@@ -13,39 +14,33 @@
 
 extern Timer *system_timer;
 extern ConfigurationStore *configuration_store;
-extern ServiceScheduler *location_scheduler;
 extern Scheduler *system_scheduler;
-extern Logger *sensor_log;
 extern RTC *rtc;
 extern BatteryMonitor *battery_monitor;
 
 #define FIRST_AQPERIOD		(30)
 
 
-TEST_GROUP(GpsScheduler)
+TEST_GROUP(GPSService)
 {
 	FakeBatteryMonitor *fake_battery_mon;
 	FakeConfigurationStore *fake_config_store;
-	GPSScheduler *gps_sched;
-	MockM8Q *mock_m8q;
 	FakeRTC *fake_rtc;
 	FakeTimer *fake_timer;
 	FakeLog *fake_log;
+	MockM8Q *mock_m8q;
     MockStdFunctionVoidComparator m_comparator_std_func;
     MockGPSNavSettingsComparator  m_comparator_nav;
 
 	void setup() {
 	    mock().installComparator("std::function<void()>", m_comparator_std_func);
 	    mock().installComparator("const GPSNavSettings&", m_comparator_nav);
+		fake_log = new FakeLog("GPS");
 		mock_m8q = new MockM8Q;
-		gps_sched = mock_m8q;
-		location_scheduler = gps_sched;
 		fake_config_store = new FakeConfigurationStore;
 		configuration_store = fake_config_store;
 		fake_battery_mon = new FakeBatteryMonitor;
 		battery_monitor = fake_battery_mon;
-		fake_log = new FakeLog;
-		sensor_log = fake_log;
 		fake_rtc = new FakeRTC;
 		rtc = fake_rtc;
 		fake_timer = new FakeTimer;
@@ -61,9 +56,9 @@ TEST_GROUP(GpsScheduler)
 		delete system_scheduler;
 		delete fake_timer;
 		delete fake_rtc;
-		delete fake_log;
 		delete fake_config_store;
 		delete mock_m8q;
+		delete fake_log;
 	}
 
 	void increment_time_ms(uint64_t ms)
@@ -91,11 +86,19 @@ TEST_GROUP(GpsScheduler)
 		increment_time_ms(min * 60 * 1000);
 	}
 
+	void notify_underwater_state(bool state) {
+		ServiceEvent e;
+		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED,
+		e.event_data = state,
+		e.event_source = ServiceIdentifier::UW_SENSOR;
+		ServiceManager::notify_peer_event(e);
+	}
+
 	uint64_t m_current_ms;
 };
 
 
-TEST(GpsScheduler, GNSSDisabled)
+TEST(GPSService, GNSSDisabled)
 {
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
@@ -121,15 +124,14 @@ TEST(GpsScheduler, GNSSDisabled)
 	BaseGNSSDynModel dyn_model = BaseGNSSDynModel::SEA;
 	fake_config_store->write_param(ParamID::GNSS_DYN_MODEL, dyn_model);
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	increment_time_min(60);
 }
 
-TEST(GpsScheduler, GNSSEnabled10MinutesDloc)
+TEST(GPSService, GNSSEnabled10MinutesDloc)
 {
-	int iterations = 3;
-
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
 	bool gnss_en = true;
@@ -156,7 +158,8 @@ TEST(GpsScheduler, GNSSEnabled10MinutesDloc)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(FIRST_AQPERIOD);
@@ -169,6 +172,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesDloc)
 
 	unsigned int offset = FIRST_AQPERIOD;
 
+	int iterations = 3;
 	for (int i = 0; i < iterations; ++i)
 	{
 		mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
@@ -179,7 +183,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesDloc)
 	}
 }
 
-TEST(GpsScheduler, GNSSEnabled15MinutesDloc)
+TEST(GPSService, GNSSEnabled15MinutesDloc)
 {
 	int iterations = 3;
 
@@ -209,7 +213,8 @@ TEST(GpsScheduler, GNSSEnabled15MinutesDloc)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(FIRST_AQPERIOD);
@@ -232,7 +237,7 @@ TEST(GpsScheduler, GNSSEnabled15MinutesDloc)
 	}
 }
 
-TEST(GpsScheduler, GNSSEnabled30MinutesDloc)
+TEST(GPSService, GNSSEnabled30MinutesDloc)
 {
 	int iterations = 3;
 
@@ -262,7 +267,8 @@ TEST(GpsScheduler, GNSSEnabled30MinutesDloc)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(FIRST_AQPERIOD);
@@ -285,7 +291,7 @@ TEST(GpsScheduler, GNSSEnabled30MinutesDloc)
 	}
 }
 
-TEST(GpsScheduler, GNSSEnabled60MinutesDloc)
+TEST(GPSService, GNSSEnabled60MinutesDloc)
 {
 	int iterations = 3;
 
@@ -315,7 +321,8 @@ TEST(GpsScheduler, GNSSEnabled60MinutesDloc)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(FIRST_AQPERIOD);
@@ -338,7 +345,7 @@ TEST(GpsScheduler, GNSSEnabled60MinutesDloc)
 	}
 }
 
-TEST(GpsScheduler, GNSSEnabled120MinutesDloc)
+TEST(GPSService, GNSSEnabled120MinutesDloc)
 {
 	int iterations = 3;
 
@@ -368,7 +375,8 @@ TEST(GpsScheduler, GNSSEnabled120MinutesDloc)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(FIRST_AQPERIOD);
@@ -391,7 +399,7 @@ TEST(GpsScheduler, GNSSEnabled120MinutesDloc)
 	}
 }
 
-TEST(GpsScheduler, GNSSEnabled10MinutesDlocUTCOffset)
+TEST(GPSService, GNSSEnabled10MinutesDlocUTCOffset)
 {
 	int iterations = 3;
 
@@ -421,7 +429,8 @@ TEST(GpsScheduler, GNSSEnabled10MinutesDlocUTCOffset)
 
 	fake_rtc->settime(1580083500); // 27/01/2020 00:05:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(FIRST_AQPERIOD);
@@ -444,7 +453,7 @@ TEST(GpsScheduler, GNSSEnabled10MinutesDlocUTCOffset)
 	}
 }
 
-TEST(GpsScheduler, GNSSEnabledColdStartTimeoutAndRetryCheck)
+TEST(GPSService, GNSSEnabledColdStartTimeoutAndRetryCheck)
 {
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
@@ -474,7 +483,8 @@ TEST(GpsScheduler, GNSSEnabledColdStartTimeoutAndRetryCheck)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	// We're expecting the device to turn on at 27/01/2020 00:00:30
 
@@ -501,7 +511,7 @@ TEST(GpsScheduler, GNSSEnabledColdStartTimeoutAndRetryCheck)
 	increment_time_s(dloc_arg_nom - (m_current_ms/1000) + 1);
 }
 
-TEST(GpsScheduler, GNSSEnabledNominalTimeoutAfterFirstFix)
+TEST(GPSService, GNSSEnabledNominalTimeoutAfterFirstFix)
 {
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
@@ -529,7 +539,8 @@ TEST(GpsScheduler, GNSSEnabledNominalTimeoutAfterFirstFix)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	// We're expecting the device to turn on at 27/01/2020 00:00:30
 	increment_time_s(FIRST_AQPERIOD - 1);
@@ -565,7 +576,7 @@ TEST(GpsScheduler, GNSSEnabledNominalTimeoutAfterFirstFix)
 
 }
 
-TEST(GpsScheduler, GNSSEnabledWithHdopAndHaccFilter)
+TEST(GPSService, GNSSEnabledWithHdopAndHaccFilter)
 {
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
@@ -597,7 +608,8 @@ TEST(GpsScheduler, GNSSEnabledWithHdopAndHaccFilter)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	// We're expecting the device to turn on at 27/01/2020 00:00:30
 	increment_time_s(FIRST_AQPERIOD - 1);
@@ -622,7 +634,7 @@ TEST(GpsScheduler, GNSSEnabledWithHdopAndHaccFilter)
 	increment_time_s(1);
 }
 
-TEST(GpsScheduler, GNSSEnabledWithHdopAndHaccFilterAndNConsecutiveFixes)
+TEST(GPSService, GNSSEnabledWithHdopAndHaccFilterAndNConsecutiveFixes)
 {
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
@@ -656,7 +668,8 @@ TEST(GpsScheduler, GNSSEnabledWithHdopAndHaccFilterAndNConsecutiveFixes)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	// We're expecting the device to turn on at 27/01/2020 00:00:30
 	increment_time_s(FIRST_AQPERIOD - 1);
@@ -702,7 +715,7 @@ TEST(GpsScheduler, GNSSEnabledWithHdopAndHaccFilterAndNConsecutiveFixes)
 }
 
 
-TEST(GpsScheduler, GNSSInterruptedByUnderwaterEvent)
+TEST(GPSService, GNSSInterruptedByUnderwaterEvent)
 {
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
@@ -730,7 +743,8 @@ TEST(GpsScheduler, GNSSInterruptedByUnderwaterEvent)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	// We're expecting the device to turn on at 27/01/2020 00:00:30
 	increment_time_s(FIRST_AQPERIOD - 1);
@@ -740,11 +754,11 @@ TEST(GpsScheduler, GNSSInterruptedByUnderwaterEvent)
 
 	// Now fire an underwater event before we get GPS lock
 	mock().expectOneCall("power_off").onObject(mock_m8q);
-	mock_m8q->notify_saltwater_switch_state(true);
+	notify_underwater_state(true);
 }
 
 
-TEST(GpsScheduler, GNSSIgnoredAfterUnderwaterEvent)
+TEST(GPSService, GNSSIgnoredAfterUnderwaterEvent)
 {
 	bool lb_en = false;
 	unsigned int lb_threshold = 0U;
@@ -770,10 +784,11 @@ TEST(GpsScheduler, GNSSIgnoredAfterUnderwaterEvent)
 
 	fake_rtc->settime(1580083200); // 27/01/2020 00:00:00
 
-	location_scheduler->start();
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
 
 	// Now fire an underwater event before we schedule
-	mock_m8q->notify_saltwater_switch_state(true);
+	notify_underwater_state(true);
 
 	// We're expecting the device to turn on at 27/01/2020 00:00:30 - remain off
 	increment_time_s(FIRST_AQPERIOD);
@@ -785,9 +800,121 @@ TEST(GpsScheduler, GNSSIgnoredAfterUnderwaterEvent)
 	increment_time_s(60);
 
 	// Now fire a surfaced event - next time will power on
-	mock_m8q->notify_saltwater_switch_state(false);
+	notify_underwater_state(false);
 
 	// Next schedule attempt will be at 00:03:00 - power on
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(60);
+}
+
+
+TEST(GPSService, GNSSNoPeriodicTriggerOnSurfaceEvent)
+{
+	bool lb_en = false;
+	unsigned int lb_threshold = 0U;
+	bool gnss_en = true;
+	unsigned int dloc_arg_nom = 0;
+	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
+	bool gnss_hdopfilt_en = false;
+	unsigned int gnss_hdopfilt_thres = 0;
+	bool underwater_en = true;
+	bool trigger_surface_en = true;
+
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	BaseGNSSFixMode fix_mode = BaseGNSSFixMode::FIX_2D;
+	fake_config_store->write_param(ParamID::GNSS_FIX_MODE, fix_mode);
+	BaseGNSSDynModel dyn_model = BaseGNSSDynModel::SEA;
+	fake_config_store->write_param(ParamID::GNSS_DYN_MODEL, dyn_model);
+	fake_config_store->write_param(ParamID::GNSS_TRIGGER_ON_SURFACED, trigger_surface_en);
+
+	fake_rtc->settime(0);
+
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
+
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(FIRST_AQPERIOD);
+
+	// Send dummy fix
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10);
+
+	mock().expectOneCall("power_off").onObject(mock_m8q);
+	increment_time_s(1000);
+
+	// Now fire a surfaced event - next time will power on
+	notify_underwater_state(false);
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(1);
+
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10);
+
+	mock().expectOneCall("power_off").onObject(mock_m8q);
+	increment_time_s(1);
+}
+
+
+TEST(GPSService, GNSSNoPeriodicTriggerOnAXLWakeupEvent)
+{
+	bool lb_en = false;
+	unsigned int lb_threshold = 0U;
+	bool gnss_en = true;
+	unsigned int dloc_arg_nom = 0;
+	unsigned int gnss_acq_timeout = 60;
+	unsigned int gnss_acq_timeout_cold_start = 60;
+	bool gnss_hdopfilt_en = false;
+	unsigned int gnss_hdopfilt_thres = 0;
+	bool underwater_en = true;
+	bool trigger_axl_en = true;
+
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::GNSS_EN, gnss_en);
+	fake_config_store->write_param(ParamID::DLOC_ARG_NOM, dloc_arg_nom);
+	fake_config_store->write_param(ParamID::GNSS_ACQ_TIMEOUT, gnss_acq_timeout);
+	fake_config_store->write_param(ParamID::GNSS_COLD_ACQ_TIMEOUT, gnss_acq_timeout_cold_start);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_EN, gnss_hdopfilt_en);
+	fake_config_store->write_param(ParamID::GNSS_HDOPFILT_THR, gnss_hdopfilt_thres);
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, underwater_en);
+	BaseGNSSFixMode fix_mode = BaseGNSSFixMode::FIX_2D;
+	fake_config_store->write_param(ParamID::GNSS_FIX_MODE, fix_mode);
+	BaseGNSSDynModel dyn_model = BaseGNSSDynModel::SEA;
+	fake_config_store->write_param(ParamID::GNSS_DYN_MODEL, dyn_model);
+	fake_config_store->write_param(ParamID::GNSS_TRIGGER_ON_AXL_WAKEUP, trigger_axl_en);
+
+	fake_rtc->settime(0);
+
+	GPSService s(*mock_m8q, fake_log);
+	s.start();
+
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(FIRST_AQPERIOD);
+
+	// Send dummy fix
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10);
+
+	mock().expectOneCall("power_off").onObject(mock_m8q);
+	increment_time_s(1000);
+
+	// Now fire an AXL event - next time will power on
+	ServiceEvent e;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	e.event_data = true;
+	e.event_source = ServiceIdentifier::AXL_SENSOR;
+	s.notify_peer_event(e);
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(1);
+
+	mock_m8q->notify_gnss_data(fake_rtc->gettime(), 10, 10);
+
+	mock().expectOneCall("power_off").onObject(mock_m8q);
+	increment_time_s(1);
 }

@@ -1,5 +1,4 @@
-#ifndef __FAKE_LOGGER_HPP_
-#define __FAKE_LOGGER_HPP_
+#pragma once
 
 #include <cstring>
 #include "logger.hpp"
@@ -11,6 +10,8 @@ private:
 	unsigned int m_index;
 
 public:
+
+	FakeLog(const char *name = "Fake") : Logger(name) {}
 
 	void create() {
 		m_index = 0;
@@ -36,5 +37,3 @@ public:
 		return m_index;
 	}
 };
-
-#endif // __FAKE_LOGGER_HPP_

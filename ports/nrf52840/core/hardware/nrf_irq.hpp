@@ -2,13 +2,13 @@
 #include <functional>
 
 #include "scheduler.hpp"
+#include "irq.hpp"
 
 class NrfIRQManager;
 
-class NrfIRQ {
+class NrfIRQ : public IRQ {
 private:
 	int m_pin;
-	std::function<void()> m_func;
 	Scheduler::TaskHandle m_task;
 
 	void process_event();
@@ -16,8 +16,8 @@ private:
 public:
 	NrfIRQ(int pin);
 	~NrfIRQ();
-	void enable(std::function<void()> func);
-	void disable();
+	void enable(std::function<void()> func) override;
+	void disable() override;
 	bool poll();
 
 	friend class NrfIRQManager;

@@ -1,5 +1,4 @@
-#ifndef __FAKE_LED_HPP_
-#define __FAKE_LED_HPP_
+#pragma once
 
 #include "led.hpp"
 #include "debug.hpp"
@@ -17,26 +16,25 @@ public:
 		m_is_flashing = false;
 		m_name = name;
 	}
-	bool get_state() { return m_pin_state; }
-	void on() {
+	bool get_state() override { return m_pin_state || m_is_flashing; }
+	void on() override {
 		DEBUG_TRACE("LED[%s]=on", m_name);
 		m_pin_state = true;
 		m_is_flashing = false;
 	}
-	void off() {
+	void off() override {
 		DEBUG_TRACE("LED[%s]=off", m_name);
 		m_pin_state = false;
 		m_is_flashing = false;
 	}
-	void flash() {
-		DEBUG_TRACE("LED[%s]=flashing", m_name);
+	void flash(unsigned int period) override {
+		(void)period;
+		DEBUG_TRACE("LED[%s]=flashing %u", m_name, period);
 		m_is_flashing = true;
 	}
 
 	// Fake test helper function
-	bool is_flashing() {
+	bool is_flashing() override {
 		return m_is_flashing;
 	}
 };
-
-#endif // __FAKE_LED_HPP_

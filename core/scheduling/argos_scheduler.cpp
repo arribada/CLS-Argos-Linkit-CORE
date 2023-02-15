@@ -71,7 +71,6 @@ extern "C" {
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
 extern RTC       *rtc;
-extern Logger    *sensor_log;
 extern BatteryMonitor *battery_monitor;
 extern Timer          *system_timer;
 
@@ -450,8 +449,14 @@ void ArgosScheduler::notify_sensor_log_update() {
 		GPSLogEntry gps_entry;
 
 		// Read the most recent GPS entry out of the sensor log
-		unsigned int idx = sensor_log->num_entries() - 1;  // Most recent entry in log
-		sensor_log->read(&gps_entry, idx);
+		Logger *logger = LoggerManager::find_by_name("sensor.log");
+		if (logger == nullptr) {
+			DEBUG_ERROR("ArgosScheduler::notify_sensor_log_update: could not access logger");
+			return;
+		}
+
+		unsigned int idx = logger->num_entries() - 1;  // Most recent entry in log
+		logger->read(&gps_entry, idx);
 
 		// Update last known position if the GPS entry is valid (otherwise we preserve the last one)
 		if (gps_entry.info.valid) {
@@ -958,16 +963,16 @@ void ArgosScheduler::update_tx_jitter(int min, int max) {
 	}
 }
 
-void ArgosScheduler::notify_saltwater_switch_state(bool state) {
-	DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state");
+void ArgosScheduler::notify_underwater_state(bool state) {
+	DEBUG_TRACE("ArgosScheduler::notify_underwater_state");
 	if (m_is_running && m_argos_config.underwater_en) {
 		m_switch_state = state;
 		if (!m_switch_state) {
-			DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state: state=0: rescheduling");
+			DEBUG_TRACE("ArgosScheduler::notify_underwater_state: state=0: rescheduling");
 			m_earliest_tx = rtc->gettime() + m_argos_config.dry_time_before_tx;
 			reschedule();
 		} else {
-			DEBUG_TRACE("ArgosScheduler::notify_saltwater_switch_state: state=1: deferring schedule");
+			DEBUG_TRACE("ArgosScheduler::notify_underwater_state: state=1: deferring schedule");
 			deschedule();
 		}
 	}

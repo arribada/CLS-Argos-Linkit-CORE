@@ -169,7 +169,7 @@
  
 
 #ifndef NRF_BL_DFU_ENTER_METHOD_GPREGRET
-#define NRF_BL_DFU_ENTER_METHOD_GPREGRET 1
+#define NRF_BL_DFU_ENTER_METHOD_GPREGRET 0
 #endif
 
 // <q> NRF_BL_DFU_ENTER_METHOD_BUTTONLESS  - Enter DFU mode when the Boolean enter_buttonless_dfu in DFU settings is true.
@@ -5598,6 +5598,25 @@
 // </e>
 
 // </e>
+
+// <e> NRFX_TWIM_ENABLED - nrfx_twim - TWIM peripheral driver
+//==========================================================
+#ifndef NRFX_TWIM_ENABLED
+#define NRFX_TWIM_ENABLED 1
+#endif
+// <q> NRFX_TWIM0_ENABLED  - Enable TWIM0 instance
+
+
+#ifndef NRFX_TWIM0_ENABLED
+#define NRFX_TWIM0_ENABLED 0
+#endif
+
+// <q> NRFX_TWIM1_ENABLED  - Enable TWIM1 instance
+
+
+#ifndef NRFX_TWIM1_ENABLED
+#define NRFX_TWIM1_ENABLED 1
+#endif
 
 
 // <<< end of configuration section >>>

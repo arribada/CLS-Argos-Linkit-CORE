@@ -681,6 +681,8 @@ static int lfs_dir_traverse(lfs_t *lfs,
         lfs_tag_t tag;
         const void *buffer;
         struct lfs_diskoff disk;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
         if (off+lfs_tag_dsize(ptag) < dir->off) {
             off += lfs_tag_dsize(ptag);
             int err = lfs_bd_read(lfs,
@@ -703,7 +705,7 @@ static int lfs_dir_traverse(lfs_t *lfs,
         } else {
             return 0;
         }
-
+#pragma GCC diagnostic pop
         lfs_tag_t mask = LFS_MKTAG(0x7ff, 0, 0);
         if ((mask & tmask & tag) != (mask & tmask & ttag)) {
             continue;
@@ -749,8 +751,11 @@ static int lfs_dir_traverse(lfs_t *lfs,
         } else if (lfs_tag_type3(tag) == LFS_FROM_USERATTRS) {
             for (unsigned i = 0; i < lfs_tag_size(tag); i++) {
                 const struct lfs_attr *a = buffer;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
                 int err = cb(data, LFS_MKTAG(LFS_TYPE_USERATTR + a[i].type,
                         lfs_tag_id(tag) + diff, a[i].size), a[i].buffer);
+#pragma GCC diagnostic pop
                 if (err) {
                     return err;
                 }

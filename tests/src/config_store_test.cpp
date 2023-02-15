@@ -2,6 +2,7 @@
 
 #include "dte_protocol.hpp"
 #include "fake_battery_mon.hpp"
+#include "calibration.hpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
@@ -56,6 +57,8 @@ TEST(ConfigStore, CreateConfigStoreWithDefaultParams)
 	// Check some defaults are correct
 	CHECK_EQUAL(0U, store->read_param<unsigned int>(ParamID::ARGOS_DECID));
 	CHECK_EQUAL(DEVICE_MODEL_NAME, store->read_param<std::string>(ParamID::DEVICE_MODEL));
+	CHECK_EQUAL(0U, (unsigned int)store->read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE));
+	CHECK_EQUAL(1.1, store->read_param<double>(ParamID::UNDERWATER_DETECT_THRESH));
 
 	delete store;
 }
@@ -228,6 +231,64 @@ TEST(ConfigStore, CheckFactoryResetRetainsProtectedParams)
 	delete store;
 }
 
+class DummyCalibration : public Calibratable {
+public:
+	DummyCalibration(const char *name) : Calibratable(name), m_cal(Calibration(name)) {}
+	void calibration_write(const double value, const unsigned int offset) override {
+		m_cal.write(offset, value);
+	}
+	void calibration_read(double &value, const unsigned int offset) override {
+		value = m_cal.read(offset);
+	}
+	void calibration_save(bool force) override {
+		m_cal.save(force);
+	}
+private:
+	Calibration m_cal;
+};
+
+TEST(ConfigStore, CheckFactoryResetRetainsCalibrationData)
+{
+	LFSConfigurationStore *store;
+	store = new LFSConfigurationStore(*main_filesystem);
+
+	store->init();
+
+	{
+		// Add calibration objects
+		DummyCalibration cal("CAL");
+
+		// Add data to calibration
+		cal.calibration_write(1.0, 1);
+		cal.calibration_write(2.0, 2);
+		cal.calibration_write(3.0, 3);
+
+		// Factory reset
+		store->factory_reset();
+	}
+
+	// Delete the object and recreate a new one
+	delete store;
+	store = new LFSConfigurationStore(*main_filesystem);
+	store->init();  // This will read in the partially saved file
+
+	{
+		// Create calibration object
+		DummyCalibration cal("CAL");
+		double value;
+
+		// Check calibration points were retained
+		cal.calibration_read(value, 1);
+		CHECK_EQUAL(1.0, value);
+		cal.calibration_read(value, 2);
+		CHECK_EQUAL(2.0, value);
+		cal.calibration_read(value, 3);
+		CHECK_EQUAL(3.0, value);
+	}
+
+	delete store;
+}
+
 TEST(ConfigStore, CheckDefaultZoneSettings)
 {
 	LFSConfigurationStore *store;
@@ -240,7 +301,7 @@ TEST(ConfigStore, CheckDefaultZoneSettings)
 	CHECK_TRUE(store->read_param<bool>(ParamID::ZONE_ENABLE_ACTIVATION_DATE));
 	CHECK_TRUE(store->read_param<std::time_t>(ParamID::ZONE_ACTIVATION_DATE) == (std::time_t)1577836800U);
 	CHECK_TRUE(store->read_param<BaseArgosDepthPile>(ParamID::ZONE_ARGOS_DEPTH_PILE) == BaseArgosDepthPile::DEPTH_PILE_1);
-	CHECK_TRUE(store->read_param<BaseArgosPower>(ParamID::ZONE_ARGOS_POWER) == BaseArgosPower::POWER_200_MW);
+	CHECK_TRUE(store->read_param<BaseArgosPower>(ParamID::ZONE_ARGOS_POWER) == BaseArgosPower::POWER_350_MW);
 	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_ARGOS_REPETITION_SECONDS) == 240);
 	CHECK_TRUE(store->read_param<BaseArgosMode>(ParamID::ZONE_ARGOS_MODE) == BaseArgosMode::LEGACY);
 	CHECK_TRUE(store->read_param<unsigned int>(ParamID::ZONE_ARGOS_DUTY_CYCLE) == 0xFFFFFFU);

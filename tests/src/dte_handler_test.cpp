@@ -3,7 +3,10 @@
 #include <fstream>
 #include <string>
 
+#include "sys_log.hpp"
 #include "dte_handler.hpp"
+
+#include "gps_service.hpp"
 #include "config_store_fs.hpp"
 #include "fake_memory_access.hpp"
 #include "fake_battery_mon.hpp"
@@ -11,7 +14,10 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+#include "mock_sensor.hpp"
 #include "mock_logger.hpp"
+#include "mock_artic_device.hpp"
+#include "mock_wchg.hpp"
 #include "previpass.h"
 #include "binascii.hpp"
 
@@ -25,9 +31,9 @@
 extern FileSystem *main_filesystem;
 extern ConfigurationStore *configuration_store;
 extern MemoryAccess *memory_access;
-extern Logger *sensor_log;
-extern Logger *system_log;
 extern BatteryMonitor *battery_monitor;
+extern ArticDevice *artic_device;
+
 
 TEST_GROUP(DTEHandler)
 {
@@ -39,6 +45,10 @@ TEST_GROUP(DTEHandler)
 	MockLog *mock_sensor_log;
 	DTEHandler *dte_handler;
 	FakeBatteryMonitor *fake_battery_monitor;
+	GPSLogFormatter gps_log_formatter;
+	SysLogFormatter sys_log_formatter;
+	MockArticDevice *mock_artic;
+	MockWirelessCharger *mock_wchg;
 
 	void setup() {
 		ram_flash = new RamFlash(BLOCK_COUNT, BLOCK_SIZE, PAGE_SIZE);
@@ -51,10 +61,13 @@ TEST_GROUP(DTEHandler)
 		configuration_store = store;
 		fake_memory_access = new FakeMemoryAccess();
 		memory_access = fake_memory_access;
-		mock_system_log = new MockLog;
-		system_log = mock_system_log;
-		mock_sensor_log = new MockLog;
-		sensor_log = mock_sensor_log;
+		mock_system_log = new MockLog("system.log");
+		mock_system_log->set_log_formatter(&sys_log_formatter);
+		mock_sensor_log = new MockLog("sensor.log");
+		mock_sensor_log->set_log_formatter(&gps_log_formatter);
+		mock_artic = new MockArticDevice;
+		artic_device = mock_artic;
+		mock_wchg = new MockWirelessCharger;
 		dte_handler = new DTEHandler();
 		fake_battery_monitor = new FakeBatteryMonitor();
 		battery_monitor = fake_battery_monitor;
@@ -63,6 +76,8 @@ TEST_GROUP(DTEHandler)
 	}
 
 	void teardown() {
+		delete mock_wchg;
+		delete mock_artic;
 		delete dte_handler;
 		delete mock_sensor_log;
 		delete mock_system_log;
@@ -112,7 +127,7 @@ TEST(DTEHandler, PARML_REQ)
 	std::string resp;
 	std::string req = DTEEncoder::encode(DTECommand::PARML_REQ);
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARML#1FD;IDP12,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09,UNP04,PPP01,PPP02,PPP03,PPP04,PPP05,PPP06,GNP09,GNP10,GNP11,GNP20,GNP21,GNP22,GNP23,ARP30,LDP01,ARP31,ARP32,ARP33,ARP34,ART10,ART11,GNP24,LBP10,LBP11,ZOP01,ZOP04,ZOP05,ZOP06,ZOP08,ZOP09,ZOP10,ZOP11,ZOP12,ZOP13,ZOP14,ZOP15,ZOP16,ZOP17,ZOP18,ZOP19,ZOP20,CTP01,CTP02,CTP03,CTP04,IDT04,POT06,ARP35\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARML#2CF;IDP12,IDT06,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09,UNP04,PPP01,PPP02,PPP03,PPP04,PPP05,PPP06,GNP09,GNP10,GNP11,GNP20,GNP21,GNP22,GNP23,ARP30,LDP01,ARP31,ARP32,ARP33,ARP34,ART10,ART11,GNP24,LBP10,LBP11,ZOP01,ZOP04,ZOP05,ZOP06,ZOP08,ZOP09,ZOP10,ZOP11,ZOP12,ZOP13,ZOP14,ZOP15,ZOP16,ZOP17,ZOP18,ZOP19,ZOP20,CTP01,CTP02,CTP03,CTP04,IDT04,POT06,ARP35,IDT10,GNP25,GNP26,UNP10,UNP11,PHP01,PHP02,PHP03,STP01,STP02,STP03,LTP01,LTP02,LTP03,CDP01,CDP02,CDP03,CDP04,CDP05,LDP02,AXP01,AXP02,AXP03,AXP04,PRP01,PRP02,DBP01,GNP27,WCT01,UNP05,UNP06,UNP07,UNP08,UNP12,UNP13\r", resp.c_str());
 }
 
 TEST(DTEHandler, PARMW_REQ)
@@ -129,7 +144,16 @@ TEST(DTEHandler, PARMR_REQ)
 	std::string resp;
 	std::string req = "$PARMR#0D7;IDT06,IDP12,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARMR#173;IDT06=0,IDP12=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,IDP11=FACTORY,ART03=07/10/2021 22:41:14,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=60,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=2,LBP08=1,LBP09=120\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARMR#173;IDT06=0,IDP12=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,IDP11=FACTORY,ART03=07/10/2021 22:41:14,ARP03=300,ARP04=7,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=60,LBP01=0,LBP02=10,LBP03=7,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=2,LBP08=1,LBP09=120\r", resp.c_str());
+}
+
+TEST(DTEHandler, PARMR_WCS_REQ)
+{
+	std::string resp;
+	std::string req = "$PARMR#005;WCT01\r";
+	mock().expectOneCall("get_chip_status").onObject(mock_wchg).andReturnValue("HELLO");
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;PARMR#00B;WCT01=HELLO\r", resp.c_str());
 }
 
 TEST(DTEHandler, STATR_REQ)
@@ -137,15 +161,16 @@ TEST(DTEHandler, STATR_REQ)
 	std::string resp;
 	std::string req = "$STATR#0D7;IDT06,IDP12,IDT02,IDT03,ART01,ART02,POT03,POT05,IDP11,ART03,ARP03,ARP04,ARP05,ARP01,ARP19,ARP18,GNP01,ARP11,ARP16,GNP02,GNP03,GNP05,UNP01,UNP02,UNP03,LBP01,LBP02,LBP03,ARP06,LBP04,LBP05,LBP06,ARP12,LBP07,LBP08,LBP09\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;STATR#173;IDT06=0,IDP12=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,IDP11=FACTORY,ART03=07/10/2021 22:41:14,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=60,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=2,LBP08=1,LBP09=120\r", resp.c_str());
+	STRCMP_EQUAL("$O;STATR#173;IDT06=0,IDP12=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,IDP11=FACTORY,ART03=07/10/2021 22:41:14,ARP03=300,ARP04=7,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=60,LBP01=0,LBP02=10,LBP03=7,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=2,LBP08=1,LBP09=120\r", resp.c_str());
 }
 
 TEST(DTEHandler, STATR_REQ_CheckEmptyRequest)
 {
 	std::string resp;
 	std::string req = "$STATR#000;\r";
+	mock().expectOneCall("get_chip_status").onObject(mock_wchg).andReturnValue("OK");
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;STATR#0A9;IDT06=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,ART03=07/10/2021 22:41:14,ART10=0,ART11=0,IDT04=SIMULATOR,POT06=0\r", resp.c_str());
+	STRCMP_EQUAL("$O;STATR#0C2;IDT06=0,IDT02=SURFACEBOX,IDT03=V0.1,ART01=01/01/1970 00:00:00,ART02=0,POT03=0,POT05=01/01/1970 00:00:00,ART03=07/10/2021 22:41:14,ART10=0,ART11=0,IDT04=SIMULATOR,POT06=0,IDT10=305419896,WCT01=OK\r", resp.c_str());
 }
 
 TEST(DTEHandler, PARMR_REQ_CheckEmptyRequest)
@@ -153,7 +178,7 @@ TEST(DTEHandler, PARMR_REQ_CheckEmptyRequest)
 	std::string resp;
 	std::string req = "$PARMR#000;\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARMR#2D0;IDP12=0,IDP11=FACTORY,ARP03=300,ARP04=4,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=60,LBP01=0,LBP02=10,LBP03=4,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=2,LBP08=1,LBP09=120,UNP04=60,PPP01=15,PPP02=90,PPP03=30,PPP04=1000,PPP05=300,PPP06=10,GNP09=530,GNP10=3,GNP11=0,GNP20=1,GNP21=5,GNP22=1,GNP23=60,ARP30=1,LDP01=1,ARP31=1,ARP32=1,ARP33=900,ARP34=30,GNP24=1,LBP10=5,LBP11=4,ZOP01=1,ZOP04=0,ZOP05=1,ZOP06=01/01/2020 00:00:00,ZOP08=1,ZOP09=3,ZOP10=240,ZOP11=2,ZOP12=16777215,ZOP13=0,ZOP14=3600,ZOP15=2,ZOP16=5,ZOP17=240,ZOP18=-123.392,ZOP19=-48.8752,ZOP20=1000,CTP01=0,CTP02=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,CTP03=0,CTP04=60,ARP35=5\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARMR#3E6;IDP12=0,IDP11=FACTORY,ARP03=300,ARP04=7,ARP05=60,ARP01=2,ARP19=0,ARP18=0,GNP01=1,ARP11=1,ARP16=10,GNP02=1,GNP03=2,GNP05=120,UNP01=0,UNP02=1,UNP03=60,LBP01=0,LBP02=10,LBP03=7,ARP06=240,LBP04=2,LBP05=0,LBP06=1,ARP12=4,LBP07=2,LBP08=1,LBP09=120,UNP04=60,PPP01=15,PPP02=90,PPP03=30,PPP04=1000,PPP05=300,PPP06=10,GNP09=530,GNP10=3,GNP11=0,GNP20=1,GNP21=5,GNP22=1,GNP23=60,ARP30=1,LDP01=1,ARP31=1,ARP32=1,ARP33=900,ARP34=90,GNP24=1,LBP10=5,LBP11=4,ZOP01=1,ZOP04=0,ZOP05=1,ZOP06=01/01/2020 00:00:00,ZOP08=1,ZOP09=7,ZOP10=240,ZOP11=2,ZOP12=16777215,ZOP13=0,ZOP14=4,ZOP15=2,ZOP16=5,ZOP17=240,ZOP18=-123.392,ZOP19=-48.8752,ZOP20=1000,CTP01=0,CTP02=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,CTP03=0,CTP04=60,ARP35=5,GNP25=1,GNP26=0,UNP10=0,UNP11=1.1,PHP01=0,PHP02=0,PHP03=nan,STP01=0,STP02=0,STP03=nan,LTP01=0,LTP02=0,LTP03=nan,CDP01=0,CDP02=0,CDP03=nan,CDP04=nan,CDP05=nan,LDP02=3,AXP01=0,AXP02=0,AXP03=0,AXP04=5,PRP01=0,PRP02=0,DBP01=0,GNP27=0,UNP05=5,UNP06=1,UNP07=1000,UNP08=1,UNP12=1,UNP13=0\r", resp.c_str());
 }
 
 TEST(DTEHandler, PROFW_PROFR_REQ)
@@ -296,7 +321,7 @@ TEST(DTEHandler, DUMPD_REQ_SensorLog)
 	std::vector<ParamValue> param_values;
 	std::vector<BaseType> arg_list;
 	unsigned int error_code;
-	std::string req = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::SENSOR);
+	std::string req = DTEEncoder::encode(DTECommand::DUMPD_REQ, BaseLogDType::GNSS_SENSOR);
 	std::string resp;
 
 	// Empty log file should just output a CSV header
@@ -436,4 +461,85 @@ TEST(DTEHandler, GenerateDefaultPassPredictFile)
 				(double)pp.records[i].semiMajorAxisDriftMeterPerDay
 				);
 	}
+}
+
+TEST(DTEHandler, SCALW_REQ)
+{
+	DTECommand command;
+	std::string req;
+	std::string resp;
+	std::vector<ParamID> params;
+	std::vector<ParamValue> param_values;
+	std::vector<BaseType> arg_list;
+	unsigned int error_code;
+
+	// 0=>AXL
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 0U, 0U, 0.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::INCORRECT_DATA == error_code);
+
+	// 1=>PRS
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 1U, 0U, 0.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::INCORRECT_DATA == error_code);
+
+	// 2=>ALS
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 2U, 0U, 0.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::INCORRECT_DATA == error_code);
+
+	// Invoke AXL sensor
+	MockSensor s1("AXL");
+	mock().expectOneCall("calibration_write").onObject(&s1).withDoubleParameter("value", 0.0).withUnsignedIntParameter("offset", 0U);
+
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 0U, 0U, 0.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::OK == error_code);
+
+	// Invoke PRS sensor
+	MockSensor s2("PRS");
+	mock().expectOneCall("calibration_write").onObject(&s2).withDoubleParameter("value", 1.0).withUnsignedIntParameter("offset", 0U);
+
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 1U, 0U, 1.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::OK == error_code);
+
+	// Invoke PRS sensor
+	MockSensor s3("ALS");
+	mock().expectOneCall("calibration_write").onObject(&s3).withDoubleParameter("value", 2.0).withUnsignedIntParameter("offset", 0U);
+
+	req = DTEEncoder::encode(DTECommand::SCALW_REQ, 2U, 0U, 2.0);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
+	CHECK_TRUE(DTECommand::SCALW_RESP == command);
+	CHECK_TRUE((unsigned int)DTEError::OK == error_code);
+}
+
+TEST(DTEHandler, ARGOSTX_REQ)
+{
+	DTECommand command;
+	std::string req;
+	std::string resp;
+	std::vector<ParamID> params;
+	std::vector<ParamValue> param_values;
+	std::vector<BaseType> arg_list;
+
+	unsigned int error_code;
+	req = DTEEncoder::encode(DTECommand::ARGOSTX_REQ, (unsigned int)ArticMode::A2, 350U, 900.11, 15U, 5U);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5U);
+	mock().expectOneCall("set_tx_power").onObject(mock_artic).withUnsignedIntParameter("power", (unsigned int)BaseArgosPower::POWER_350_MW);
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", 900.11);
+	mock().expectOneCall("send").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A2).withUnsignedIntParameter("size_bits", 120U);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	DTEDecoder::decode(resp, command, error_code, arg_list, params, param_values);
 }

@@ -108,6 +108,41 @@ enum class ParamID {
 	HW_VERSION,
 	BATT_VOLTAGE,
 	ARGOS_TCXO_WARMUP_TIME,
+	DEVICE_DECID,
+	GNSS_TRIGGER_ON_SURFACED,
+	GNSS_TRIGGER_ON_AXL_WAKEUP,
+	UNDERWATER_DETECT_SOURCE,
+	UNDERWATER_DETECT_THRESH,
+	PH_SENSOR_ENABLE,
+	PH_SENSOR_PERIODIC,
+	PH_SENSOR_VALUE,
+	SEA_TEMP_SENSOR_ENABLE,
+	SEA_TEMP_SENSOR_PERIODIC,
+	SEA_TEMP_SENSOR_VALUE,
+	ALS_SENSOR_ENABLE,
+	ALS_SENSOR_PERIODIC,
+	ALS_SENSOR_VALUE,
+	CDT_SENSOR_ENABLE,
+	CDT_SENSOR_PERIODIC,
+	CDT_SENSOR_CONDUCTIVITY_VALUE,
+	CDT_SENSOR_DEPTH_VALUE,
+	CDT_SENSOR_TEMPERATURE_VALUE,
+	EXT_LED_MODE,
+	AXL_SENSOR_ENABLE,
+	AXL_SENSOR_PERIODIC,
+	AXL_SENSOR_WAKEUP_THRESH,
+	AXL_SENSOR_WAKEUP_SAMPLES,
+	PRESSURE_SENSOR_ENABLE,
+	PRESSURE_SENSOR_PERIODIC,
+	DEBUG_OUTPUT_MODE,
+	GNSS_ASSISTNOW_OFFLINE_EN,
+	WCHG_STATUS,
+	UW_MAX_SAMPLES,
+	UW_MIN_DRY_SAMPLES,
+	UW_SAMPLE_GAP,
+	UW_PIN_SAMPLE_DELAY,
+	UW_DIVE_MODE_ENABLE,
+	UW_DIVE_MODE_START_TIME,
 	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
 };
@@ -131,19 +166,34 @@ enum class BaseEncoding {
 	LEDMODE,
 	ZONETYPE,
 	MODULATION,
+	UWDETECTSOURCE,
+	DEBUGMODE,
 	KEY_LIST,
 	KEY_VALUE_LIST
 };
 
+enum class BaseUnderwaterDetectSource {
+	SWS = 0,
+	PRESSURE_SENSOR
+};
+
 enum class BaseLogDType {
 	INTERNAL,
-	SENSOR
+	GNSS_SENSOR,
+	ALS_SENSOR,
+	PH_SENSOR,
+	RTD_SENSOR,
+	CDT_SENSOR
 };
 
 enum class BaseEraseType {
-	SENSOR = 1,
+	GNSS_SENSOR = 1,
 	SYSTEM,
-	SENSOR_AND_SYSTEM
+	ALL,
+	ALS_SENSOR,
+	PH_SENSOR,
+	RTD_SENSOR,
+	CDT_SENSOR
 };
 
 enum class BaseArgosMode {
@@ -188,6 +238,69 @@ static inline const char *argos_power_to_string(BaseArgosPower power) {
 	if (power == BaseArgosPower::POWER_1500_MW)
 		return "1500 mW";
 	return "UNKNOWN";
+}
+
+
+static BaseArgosPower argos_integer_to_power(unsigned int power) {
+	if (power == 3)
+		return  BaseArgosPower::POWER_3_MW;
+	if (power == 40)
+		return BaseArgosPower::POWER_40_MW;
+	if (power == 200)
+		return BaseArgosPower::POWER_200_MW;
+	if (power == 500)
+		return BaseArgosPower::POWER_500_MW;
+	if (power == 5)
+		return BaseArgosPower::POWER_5_MW;
+	if (power == 50)
+		return BaseArgosPower::POWER_50_MW;
+	if (power == 350)
+		return BaseArgosPower::POWER_350_MW;
+	if (power == 750)
+		return BaseArgosPower::POWER_750_MW;
+	if (power == 1000)
+		return BaseArgosPower::POWER_1000_MW;
+	if (power == 1500)
+		return BaseArgosPower::POWER_1500_MW;
+	return BaseArgosPower::POWER_3_MW;
+}
+
+static unsigned int argos_power_to_integer(BaseArgosPower power) {
+	switch (power) {
+	case BaseArgosPower::POWER_40_MW:
+		return 40;
+		break;
+	case BaseArgosPower::POWER_500_MW:
+		return 500;
+		break;
+	case BaseArgosPower::POWER_200_MW:
+		return 200;
+		break;
+	case BaseArgosPower::POWER_3_MW:
+		return 3;
+		break;
+	case BaseArgosPower::POWER_5_MW:
+		return 5;
+		break;
+	case BaseArgosPower::POWER_50_MW:
+		return 50;
+		break;
+	case BaseArgosPower::POWER_350_MW:
+		return 350;
+		break;
+	case BaseArgosPower::POWER_750_MW:
+		return 750;
+		break;
+	case BaseArgosPower::POWER_1000_MW:
+		return 1000;
+		break;
+	case BaseArgosPower::POWER_1500_MW:
+		return 1500;
+		break;
+	default:
+		return 0;
+		break;
+	}
 }
 
 enum class BaseArgosDepthPile {
@@ -244,11 +357,33 @@ enum class BaseZoneType {
 	CIRCLE = 1
 };
 
+enum class BaseDebugMode {
+	UART,
+	BLE_NUS
+};
+
 enum class BaseArgosModulation {
 	A2,
 	A3,
 	A4
 };
+
+static const char *argos_modulation_to_string(BaseArgosModulation m) {
+	switch (m) {
+	case BaseArgosModulation::A2:
+		return "A2";
+		break;
+	case BaseArgosModulation::A3:
+		return "A3";
+		break;
+	case BaseArgosModulation::A4:
+		return "A4";
+		break;
+	default:
+		return "UNKNOWN";
+		break;
+	}
+}
 
 #define MAX_AOP_SATELLITE_ENTRIES		40
 
@@ -301,7 +436,7 @@ using BaseName = std::string;
 using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
 
 // !!! Do not change the ordering of variants and also make sure std::string is the first entry !!!
-using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation>;
+using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation, BaseUnderwaterDetectSource, BaseDebugMode>;
 
 struct BaseMap {
 	BaseName 	   name;

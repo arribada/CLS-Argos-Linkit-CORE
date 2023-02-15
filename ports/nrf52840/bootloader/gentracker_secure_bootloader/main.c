@@ -61,7 +61,14 @@
 #include "nrf_bootloader_info.h"
 #include "nrf_delay.h"
 #include "nrfx_uarte.h"
+#include "nrfx_twim.h"
 #include "nrf_log_redirect.h"
+#include "nrf_gpio.h"
+
+#ifdef HAS_WCHG_OTP
+#include "otp.h"
+#include "otphal.h"
+#endif
 
 static void on_error(void)
 {
@@ -79,23 +86,23 @@ static void on_error(void)
 
 static void led_yellow(void)
 {
-    bsp_board_led_off(BSP_BOARD_LED_0);
-    bsp_board_led_off(BSP_BOARD_LED_1);
-    bsp_board_led_on(BSP_BOARD_LED_2);
+    bsp_board_led_on(BSP_BOARD_LED_0);
+    bsp_board_led_on(BSP_BOARD_LED_1);
+    bsp_board_led_off(BSP_BOARD_LED_2);
 }
 
 static void led_green(void)
 {
-    bsp_board_led_on(BSP_BOARD_LED_0);
-    bsp_board_led_off(BSP_BOARD_LED_1);
-    bsp_board_led_on(BSP_BOARD_LED_2);
+    bsp_board_led_off(BSP_BOARD_LED_0);
+    bsp_board_led_on(BSP_BOARD_LED_1);
+    bsp_board_led_off(BSP_BOARD_LED_2);
 }
 
 static void led_red(void)
 {
-    bsp_board_led_off(BSP_BOARD_LED_0);
-    bsp_board_led_on(BSP_BOARD_LED_1);
-    bsp_board_led_on(BSP_BOARD_LED_2);
+    bsp_board_led_on(BSP_BOARD_LED_0);
+    bsp_board_led_off(BSP_BOARD_LED_1);
+    bsp_board_led_off(BSP_BOARD_LED_2);
 }
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
@@ -168,6 +175,35 @@ static const UART_InitTypeDefAndInst UART_Inits[] =
 	}
 };
 
+#ifdef HAS_WCHG_OTP
+typedef struct
+{
+    nrfx_twim_t twim;
+    nrfx_twim_config_t twim_config;
+} I2C_InitTypeDefAndInst_t;
+
+static const I2C_InitTypeDefAndInst_t I2C_Inits[] = {
+	{
+		.twim = NRFX_TWIM_INSTANCE(1),
+		{
+			.scl = NRF_GPIO_PIN_MAP(0, 15),
+			.sda = NRF_GPIO_PIN_MAP(0, 27),
+			.frequency = NRF_TWIM_FREQ_100K,
+			.interrupt_priority = 6,
+			.hold_bus_uninit = 0, // Hold pull up state on gpio pins after uninit <0 = Disabled, 1 = Enabled>
+        }
+    }
+};
+
+static void i2c_reset(void) {
+    nrfx_twim_disable(&I2C_Inits[0].twim);
+    nrfx_twim_uninit(&I2C_Inits[0].twim);
+    nrfx_twim_init(&I2C_Inits[0].twim, &I2C_Inits[0].twim_config, NULL, NULL);
+    nrfx_twim_enable(&I2C_Inits[0].twim);
+}
+
+#endif
+
 // Redirect printf output to debug UART
 // We have to define this as extern "C" as we are overriding a weak C function
 int _write(int file, char *ptr, int len)
@@ -186,8 +222,10 @@ int main(void)
     // Initialise LEDs
     bsp_board_init(BSP_INIT_LEDS);
 
+#ifdef POWER_CONTROL
     // Power control on
-    bsp_board_led_on(BSP_BOARD_LED_3);
+    bsp_board_led_off(BSP_BOARD_LED_3);
+#endif
 
     // Must happen before flash protection is applied, since it edits a protected page.
     nrf_bootloader_mbr_addrs_populate();
@@ -207,6 +245,28 @@ int main(void)
 	nrf_log_redirect_init();
 
     NRF_LOG_INFO("Inside main");
+
+#ifdef HAS_WCHG_OTP
+	// Initialise TWIM for wireless charger programming
+    nrfx_twim_init(&I2C_Inits[0].twim, &I2C_Inits[0].twim_config, NULL, NULL);
+    nrfx_twim_enable(&I2C_Inits[0].twim);
+    nrf_gpio_cfg(NRF_GPIO_PIN_MAP(0, 17), NRF_GPIO_PIN_DIR_INPUT, NRF_GPIO_PIN_INPUT_CONNECT,
+    		NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
+    otphal_init(&I2C_Inits[0].twim, NRF_GPIO_PIN_MAP(0, 17), 0x61, i2c_reset);
+    int rc = is_otp_programmed();
+    if (rc == -2) {
+    	printf("OTP version mismatch...trying programming...\n");
+    	led_yellow();
+    	rc = otp_program();
+    	if (rc == 0)
+    		led_green();
+    	else
+    		led_red();
+    	nrf_delay_ms(2000);
+    }
+    nrfx_twim_disable(&I2C_Inits[0].twim);
+    nrfx_twim_uninit(&I2C_Inits[0].twim);
+#endif
 
     // Check for and apply any external flash updates before entering main bootloader
     ext_flash_update();

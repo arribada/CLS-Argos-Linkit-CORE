@@ -1,5 +1,4 @@
-#ifndef __MOCK_LOGGER_HPP_
-#define __MOCK_LOGGER_HPP_
+#pragma once
 
 #include <cstring>
 #include "logger.hpp"
@@ -7,6 +6,8 @@
 
 class MockLog : public Logger {
 public:
+
+	MockLog(const char *name = "Mock") : Logger(name) {}
 
 	void create() {
 		mock().actualCall("create").onObject(this);
@@ -33,5 +34,3 @@ public:
 		return mock().actualCall("num_entries").onObject(this).returnIntValue();
 	}
 };
-
-#endif // __MOCK_LOGGER_HPP_

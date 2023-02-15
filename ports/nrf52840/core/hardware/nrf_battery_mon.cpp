@@ -9,12 +9,6 @@
 // ADC constants
 #define ADC_MAX_VALUE (16384)      // 2^14
 #define ADC_REFERENCE (0.6f)       // 0.6v internal reference
-#define ADC_GAIN      (1.0f/3.0f)  // 1/3 gain
-#define RP506_ADC_GAIN (4)
-
-// Battery voltage divider
-#define VOLTAGE_DIV_R1 (1200000) // 1.2M
-#define VOLTAGE_DIV_R2 (560000)  // 560k
 
 // LUT steps from 4.2V down to 3.2V in 0.1V steps
 #define BATT_LUT_ENTRIES 11
@@ -96,6 +90,6 @@ uint16_t NrfBatteryMonitor::get_voltage()
 	return BATT_LUT_MAX_V;
 #else
 	float adc = sample_adc();
-	return adc * RP506_ADC_GAIN;
+	return (uint16_t)(adc * RP506_ADC_GAIN);
 #endif
 }

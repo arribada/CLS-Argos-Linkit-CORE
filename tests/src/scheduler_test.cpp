@@ -123,6 +123,68 @@ TEST(Scheduler, SchedulerPriorityOrdering)
 	CHECK_EQUAL(0, fired[6]);
 }
 
+TEST(Scheduler, SchedulerSamePriorityOrdering)
+{
+    static int order = 0;
+    static int fired[7] = { -1 };
+    scheduler->post_task_prio([]() { printf("fired0\n"); fired[0] = order++; }, "SchedulerPriorityOrdering0");
+    scheduler->post_task_prio([]() { printf("fired1\n"); fired[1] = order++; }, "SchedulerPriorityOrdering1");
+    scheduler->post_task_prio([]() { printf("fired2\n"); fired[2] = order++; }, "SchedulerPriorityOrdering2");
+    scheduler->post_task_prio([]() { printf("fired3\n"); fired[3] = order++; }, "SchedulerPriorityOrdering3");
+    scheduler->post_task_prio([]() { printf("fired4\n"); fired[4] = order++; }, "SchedulerPriorityOrdering4");
+    scheduler->post_task_prio([]() { printf("fired5\n"); fired[5] = order++; }, "SchedulerPriorityOrdering5");
+    scheduler->post_task_prio([]() { printf("fired6\n"); fired[6] = order++; }, "SchedulerPriorityOrdering6");
+    scheduler->run();
+    CHECK_EQUAL(0, fired[0]);
+    CHECK_EQUAL(1, fired[1]);
+    CHECK_EQUAL(2, fired[2]);
+    CHECK_EQUAL(3, fired[3]);
+    CHECK_EQUAL(4, fired[4]);
+    CHECK_EQUAL(5, fired[5]);
+    CHECK_EQUAL(6, fired[6]);
+}
+
+TEST(Scheduler, SchedulerSamePriorityOrderingWithDelay)
+{
+    static int order = 0;
+    static int fired[7] = { -1 };
+    scheduler->post_task_prio([]() { printf("fired0\n"); fired[0] = order++; }, "SchedulerPriorityOrdering0", 0, 10);
+    scheduler->post_task_prio([]() { printf("fired1\n"); fired[1] = order++; }, "SchedulerPriorityOrdering1", 0, 10);
+    scheduler->post_task_prio([]() { printf("fired2\n"); fired[2] = order++; }, "SchedulerPriorityOrdering2", 0, 10);
+    scheduler->post_task_prio([]() { printf("fired3\n"); fired[3] = order++; }, "SchedulerPriorityOrdering3", 0, 10);
+    scheduler->post_task_prio([]() { printf("fired4\n"); fired[4] = order++; }, "SchedulerPriorityOrdering4", 0, 10);
+    scheduler->post_task_prio([]() { printf("fired5\n"); fired[5] = order++; }, "SchedulerPriorityOrdering5", 0, 10);
+    scheduler->post_task_prio([]() { printf("fired6\n"); fired[6] = order++; }, "SchedulerPriorityOrdering6", 0, 10);
+    delay_ms(20);
+    scheduler->run();
+    CHECK_EQUAL(0, fired[0]);
+    CHECK_EQUAL(1, fired[1]);
+    CHECK_EQUAL(2, fired[2]);
+    CHECK_EQUAL(3, fired[3]);
+    CHECK_EQUAL(4, fired[4]);
+    CHECK_EQUAL(5, fired[5]);
+    CHECK_EQUAL(6, fired[6]);
+}
+
+TEST(Scheduler, SchedulerWithRecursion)
+{
+    static int order = 0;
+    scheduler->post_task_prio([]() {
+    	printf("counter0=%u\n", order); order++;
+        scheduler->post_task_prio([]() {
+        	printf("counter0=%u\n", order); order++;
+        }, "SchedulerPriorityOrdering", 0, 10);
+    }, "SchedulerPriorityOrdering", 0, 0);
+    scheduler->post_task_prio([]() { printf("counter1=%u\n", order); order++; }, "SchedulerPriorityOrdering", 0, 0);
+    scheduler->post_task_prio([]() { printf("counter2=%u\n", order); order++; }, "SchedulerPriorityOrdering", 0, 0);
+    scheduler->post_task_prio([]() { printf("counter3=%u\n", order); order++; }, "SchedulerPriorityOrdering", 0, 0);
+    scheduler->post_task_prio([]() { printf("counter4=%u\n", order); order++; }, "SchedulerPriorityOrdering", 0, 0);
+    for (unsigned int i = 0; i < 100; i++) {
+		delay_ms(1);
+		scheduler->run();
+    }
+}
+
 TEST(Scheduler, SchedulerMultithreadedCounting)
 {
 	std::vector<std::thread> threads;

@@ -5,15 +5,17 @@
 #include "fake_reed_switch.hpp"
 #include "fake_rgb_led.hpp"
 #include "fake_timer.hpp"
+#include "fake_sws.hpp"
+#include "fake_led.hpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
 #include "mock_ble_serv.hpp"
-#include "mock_comms.hpp"
 #include "mock_config_store.hpp"
 #include "mock_fs.hpp"
 #include "mock_location.hpp"
+#include "mock_argos_tx.hpp"
 #include "mock_logger.hpp"
 #include "mock_timer.hpp"
 #include "mock_battery_mon.hpp"
@@ -41,18 +43,15 @@ namespace BSP
 }
 
 // These are defined by main.cpp
-extern FileSystem *main_filesystem ;
+extern FileSystem *main_filesystem;
 extern Timer *system_timer;
 extern ConfigurationStore *configuration_store;
-extern ServiceScheduler *location_scheduler;
-extern ServiceScheduler *comms_scheduler;
 extern DTEHandler *dte_handler;
 extern Scheduler *system_scheduler;
-extern Logger *sensor_log;
-extern Logger *system_log;
 extern BLEService *ble_service;
 extern OTAFileUpdater *ota_updater;
 extern RGBLed *status_led;
+extern Led *ext_status_led;
 extern Switch *saltwater_switch;
 extern ReedSwitch *reed_switch;
 extern BatteryMonitor *battery_monitor;
@@ -65,47 +64,54 @@ using fsm_handle = GenTracker;
 TEST_GROUP(Sm)
 {
 	FakeReedSwitch *fake_reed_switch;
-	FakeSwitch *fake_saltwater_switch;
+	FakeSWS *fake_saltwater_switch;
 	FakeSwitch *dummy_switch;
 	FakeRGBLed *fake_status_led;
+	FakeLed *fake_ext_status_led;
 	FakeTimer *fake_timer;
 	MockBatteryMonitor *mock_battery_monitor;
 	MockOTAFileUpdater *mock_ota_file_updater;
 	MockBLEService * mock_ble_service;
+	MockLog *sensor_log;
+	MockLog *system_log;
+	MockLocationScheduler *location_scheduler;
+	MockArgosTxService *comms_scheduler;
+	MockConfigurationStore *mock_config_store;
 
 	void setup() {
 		main_filesystem = new MockFileSystem;
+		system_log = new MockLog("System");
+		sensor_log = new MockLog("GPS");
 		fake_timer = new FakeTimer;
 		system_timer = fake_timer;
-		configuration_store = new MockConfigurationStore;
+		mock_config_store = new MockConfigurationStore;
+		configuration_store = mock_config_store;
 		location_scheduler = new MockLocationScheduler;
-		comms_scheduler = new MockCommsScheduler;
+		comms_scheduler = new MockArgosTxService;
 		mock_ota_file_updater = new MockOTAFileUpdater;
 		ota_updater = mock_ota_file_updater;
 		dte_handler = new DTEHandler;
 		system_scheduler = new Scheduler(system_timer);
-		sensor_log = new MockLog;
-		system_log = new MockLog;
 		mock_ble_service = new MockBLEService;
 		ble_service = mock_ble_service;
 		mock_battery_monitor = new MockBatteryMonitor;
 		battery_monitor = mock_battery_monitor;
 		fake_status_led = new FakeRGBLed("STATUS");
 		status_led = fake_status_led;
-		fake_saltwater_switch = new FakeSwitch(0, 0);
-		saltwater_switch = fake_saltwater_switch;
-		dummy_switch = new FakeSwitch(0, 0);
+		fake_ext_status_led = new FakeLed("EXT_STATUS");
+		ext_status_led = fake_ext_status_led;
+		fake_saltwater_switch = new FakeSWS;
+		dummy_switch = new FakeSwitch();
 		fake_reed_switch = new FakeReedSwitch(*dummy_switch);
 		reed_switch = fake_reed_switch;
 	}
 
 	void teardown() {
 		delete main_filesystem;
-		delete system_scheduler;
 		delete location_scheduler;
+		delete system_scheduler;
 		delete comms_scheduler;
-		delete sensor_log;
-		delete system_log;
+		delete mock_config_store;
 		delete mock_ble_service;
 		delete mock_ota_file_updater;
 		delete mock_battery_monitor;
@@ -114,6 +120,9 @@ TEST_GROUP(Sm)
 		delete dummy_switch;
 		delete fake_saltwater_switch;
 		delete fake_timer;
+		delete sensor_log;
+		delete system_log;
+		delete fake_ext_status_led;
 	}
 };
 
@@ -124,12 +133,15 @@ TEST(Sm, CheckBootFileSystemMountOk)
 	mock().expectOneCall("num_entries").onObject(sensor_log).andReturnValue(0);
 	mock().expectOneCall("num_entries").onObject(system_log).andReturnValue(0);
 	mock().expectOneCall("init").onObject(configuration_store);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_mounted").onObject(main_filesystem).andReturnValue(false);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)fake_status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+	CHECK_TRUE(ext_status_led->is_flashing());
+	CHECK_TRUE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckBootFileSystemFirstMountFail)
@@ -139,7 +151,7 @@ TEST(Sm, CheckBootFileSystemFirstMountFail)
 	mock().expectOneCall("num_entries").onObject(sensor_log).andReturnValue(0);
 	mock().expectOneCall("num_entries").onObject(system_log).andReturnValue(0);
 	mock().expectOneCall("init").onObject(configuration_store);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_mounted").onObject(main_filesystem).andReturnValue(false);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(-1);
 	mock().expectOneCall("format").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
@@ -150,6 +162,7 @@ TEST(Sm, CheckBootFileSystemFirstMountFail)
 
 TEST(Sm, CheckBootFileSystemSecondMountFailAndEnterErrorState)
 {
+	mock().expectOneCall("is_mounted").onObject(main_filesystem).andReturnValue(false);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(-1);
 	mock().expectOneCall("format").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(-1);
@@ -161,6 +174,7 @@ TEST(Sm, CheckBootFileSystemSecondMountFailAndEnterErrorState)
 
 TEST(Sm, CheckBootFileSystemFormatFailAndEnterErrorState)
 {
+	mock().expectOneCall("is_mounted").onObject(main_filesystem).andReturnValue(false);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(-1);
 	mock().expectOneCall("format").onObject(main_filesystem).andReturnValue(-1);
 	fsm_handle::start();
@@ -176,17 +190,18 @@ TEST(Sm, CheckTransitionToPreOperationalState)
 	mock().expectOneCall("num_entries").onObject(sensor_log).andReturnValue(0);
 	mock().expectOneCall("num_entries").onObject(system_log).andReturnValue(0);
 	mock().expectOneCall("init").onObject(configuration_store);
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
+	mock().expectOneCall("is_mounted").onObject(main_filesystem).andReturnValue(false);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 	fake_timer->set_counter(1000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
 	CHECK_FALSE(fake_saltwater_switch->is_started());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckTransitionToOperationalConfigValid)
@@ -195,7 +210,6 @@ TEST(Sm, CheckTransitionToOperationalConfigValid)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 
@@ -206,13 +220,15 @@ TEST(Sm, CheckTransitionToOperationalConfigValid)
 	CHECK_TRUE(status_led->is_flashing());
 
 	// After 5 seconds, transition to operational
-	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
-	mock().expectOneCall("start").onObject(comms_scheduler);
 	fake_timer->set_counter(6000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());
+	CHECK_TRUE(location_scheduler->is_started());
+	CHECK_TRUE(comms_scheduler->is_started());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 
@@ -222,7 +238,6 @@ TEST(Sm, CheckTransitionToOperationalConfigValidBatteryLow)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("kick_watchdog");
 
@@ -233,13 +248,15 @@ TEST(Sm, CheckTransitionToOperationalConfigValidBatteryLow)
 	CHECK_TRUE(status_led->is_flashing());
 
 	// After 5 seconds, transition to operational with yellow LED flashing
-	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
-	mock().expectOneCall("start").onObject(comms_scheduler);
 	fake_timer->set_counter(6000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());
+	CHECK_TRUE(location_scheduler->is_started());
+	CHECK_TRUE(comms_scheduler->is_started());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 
@@ -250,7 +267,7 @@ TEST(Sm, CheckTransitionToErrorConfigInvalid)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
+	mock_config_store->set_is_valid(false);
 	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
@@ -265,6 +282,8 @@ TEST(Sm, CheckTransitionToErrorConfigInvalid)
 	CHECK_TRUE(fsm_handle::is_in_state<ErrorState>());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL((int)RGBLedColor::RED, (int)status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 
 	// Red LED should go off after 5 seconds and then transition to off state with white LED flashing
 	mock().expectOneCall("stop").onObject(mock_battery_monitor).ignoreOtherParameters();
@@ -273,6 +292,8 @@ TEST(Sm, CheckTransitionToErrorConfigInvalid)
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)status_led->get_state());
+	CHECK_TRUE(ext_status_led->is_flashing());
+	CHECK_TRUE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckTransitionToConfigurationState)
@@ -293,6 +314,8 @@ TEST(Sm, CheckTransitionToConfigurationState)
 	CHECK_TRUE(fsm_handle::is_in_state<ConfigurationState>());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL((int)RGBLedColor::BLUE, (int)status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckTransitionToOffState)
@@ -311,6 +334,8 @@ TEST(Sm, CheckTransitionToOffState)
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
 	CHECK_EQUAL(50, fake_status_led->m_period);
+	CHECK_TRUE(ext_status_led->is_flashing());
+	CHECK_TRUE(ext_status_led->get_state());
 
 	// Continue to hold for 5 more seconds
 	mock().enable();
@@ -318,6 +343,8 @@ TEST(Sm, CheckTransitionToOffState)
 	fake_timer->set_counter(16000);
 	system_scheduler->run();
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
 }
 
 TEST(Sm, CheckOffStateCanBeCancelled)
@@ -356,7 +383,7 @@ TEST(Sm, CheckTransitionToConfigurationStateAndVerifyOTAUpdateEvents)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(false);
+	mock_config_store->set_is_valid(false);
 	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
@@ -412,7 +439,6 @@ TEST(Sm, CheckSWSEventsDispatchedInOperationalState)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_valid").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 
@@ -423,16 +449,169 @@ TEST(Sm, CheckSWSEventsDispatchedInOperationalState)
 	CHECK_TRUE(status_led->is_flashing());
 
 	// After 5 seconds, transition to pre-operational with green LED flashing
-	mock().expectOneCall("start").onObject(location_scheduler).ignoreOtherParameters();
-	mock().expectOneCall("start").onObject(comms_scheduler);
 	fake_timer->set_counter(6000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
 	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());
+	CHECK_TRUE(location_scheduler->is_started());
+	CHECK_TRUE(comms_scheduler->is_started());
 
 	// Notify an SWS event and make sure it is dispatched into the schedulers
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(location_scheduler).withParameter("state", true);
-	mock().expectOneCall("notify_saltwater_switch_state").onObject(comms_scheduler).withParameter("state", true);
 	fake_saltwater_switch->set_state(true);
+	CHECK_TRUE(comms_scheduler->is_underwater_deferred());
+	CHECK_TRUE(location_scheduler->is_underwater_deferred());
 }
+
+
+TEST(Sm, CheckGNSSWithFixLedTransitions)
+{
+	mock().disable();
+	fsm_handle::start();
+
+	mock().enable();
+	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
+	mock().expectOneCall("kick_watchdog");
+
+	fake_timer->set_counter(1000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
+	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+
+	// After 5 seconds, transition to pre-operational with green LED flashing
+	fake_timer->set_counter(6000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+	CHECK_TRUE(location_scheduler->is_started());
+	CHECK_TRUE(comms_scheduler->is_started());
+
+	// Notify GNSS active
+	ServiceEvent e;
+	e.event_source = ServiceIdentifier::GNSS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_ACTIVE;
+	ServiceManager::inject_event(e);
+	CHECK_EQUAL((int)RGBLedColor::CYAN, (int)status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+	CHECK_TRUE(ext_status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
+
+	// Notify GNSS logged
+	GPSLogEntry log;
+	log.info.valid = 1;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	e.event_data = log;
+	ServiceManager::inject_event(e);
+	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
+
+	// Notify GNSS inactive
+	e.event_type = ServiceEventType::SERVICE_INACTIVE;
+	ServiceManager::inject_event(e);
+
+	// LED should now turn off
+	fake_timer->set_counter(9000);
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
+	CHECK_FALSE(ext_status_led->is_flashing());
+}
+
+TEST(Sm, CheckGNSSWithoutFixLedTransitions)
+{
+	mock().disable();
+	fsm_handle::start();
+
+	mock().enable();
+	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
+	mock().expectOneCall("kick_watchdog");
+
+	fake_timer->set_counter(1000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
+	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+
+	// After 5 seconds, transition to pre-operational with green LED flashing
+	fake_timer->set_counter(6000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+	CHECK_TRUE(location_scheduler->is_started());
+	CHECK_TRUE(comms_scheduler->is_started());
+
+	// Notify GNSS active
+	ServiceEvent e;
+	e.event_source = ServiceIdentifier::GNSS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_ACTIVE;
+	ServiceManager::inject_event(e);
+	CHECK_EQUAL((int)RGBLedColor::CYAN, (int)status_led->get_state());
+	CHECK_TRUE(ext_status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->is_flashing());
+
+	// Notify GNSS logged
+	GPSLogEntry log;
+	log.info.valid = 0;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	e.event_data = log;
+	ServiceManager::inject_event(e);
+	CHECK_EQUAL((int)RGBLedColor::RED, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+	CHECK_FALSE(ext_status_led->get_state());
+
+	// Notify GNSS inactive
+	e.event_type = ServiceEventType::SERVICE_INACTIVE;
+	ServiceManager::inject_event(e);
+
+	// LED should now turn off
+	fake_timer->set_counter(9000);
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+}
+
+
+TEST(Sm, CheckArgosTXLedTransitions)
+{
+	mock().disable();
+	fsm_handle::start();
+
+	mock().enable();
+	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
+	mock().expectOneCall("kick_watchdog");
+
+	fake_timer->set_counter(1000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
+	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+
+	// After 5 seconds, transition to pre-operational with green LED flashing
+	fake_timer->set_counter(6000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+	CHECK_TRUE(location_scheduler->is_started());
+	CHECK_TRUE(comms_scheduler->is_started());
+
+	// Notify Argos TX active
+	ServiceEvent e;
+	e.event_source = ServiceIdentifier::ARGOS_TX;
+	e.event_type = ServiceEventType::SERVICE_ACTIVE;
+	ServiceManager::inject_event(e);
+	CHECK_EQUAL((int)RGBLedColor::MAGENTA, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+
+	// Notify Argos TX inactive
+	e.event_type = ServiceEventType::SERVICE_INACTIVE;
+	ServiceManager::inject_event(e);
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+}
+

@@ -60,7 +60,7 @@ extern "C" {
 #define LED_3          LED2_B
 #define POWER_CONTROL  LED2_POWER_CONTROL
 
-#define LEDS_ACTIVE_STATE 1
+#define LEDS_ACTIVE_STATE 0
 
 #define LEDS_LIST { LED_1, LED_2, LED_3, POWER_CONTROL }
 
@@ -83,6 +83,8 @@ extern "C" {
 #define BUTTONS_LIST { BUTTON_1 }
 
 #define BSP_BUTTON_0   BUTTON_1
+
+#define HAS_WCHG_OTP
 
 //#define BSP_SELF_PINRESET_PIN NRF_GPIO_PIN_MAP(0,19)
 

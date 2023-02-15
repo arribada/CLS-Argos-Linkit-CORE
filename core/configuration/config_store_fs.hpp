@@ -6,6 +6,7 @@
 #include "debug.hpp"
 #include "battery.hpp"
 #include "dte_params.hpp"
+#include "calibration.hpp"
 
 
 extern BatteryMonitor *battery_monitor;
@@ -73,6 +74,12 @@ protected:
 				std::memcpy(entry_buffer, &s, sizeof(s));
 			};
 			void operator()(BaseArgosModulation &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(BaseUnderwaterDetectSource &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
+			void operator()(BaseDebugMode &s) {
 				std::memcpy(entry_buffer, &s, sizeof(s));
 			};
 			void operator()(BaseRawData &) {
@@ -158,6 +165,12 @@ protected:
 			m_params.at(index) = value;
 			break;
 		}
+		case BaseEncoding::UWDETECTSOURCE:
+		{
+			BaseUnderwaterDetectSource value = *(BaseUnderwaterDetectSource *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
 		case BaseEncoding::GNSSFIXMODE:
 		{
 			BaseGNSSFixMode value = *(BaseGNSSFixMode *)param_value;
@@ -185,6 +198,12 @@ protected:
 		case BaseEncoding::MODULATION:
 		{
 			BaseArgosModulation value = *(BaseArgosModulation *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::DEBUGMODE:
+		{
+			BaseDebugMode value = *(BaseDebugMode *)param_value;
 			m_params.at(index) = value;
 			break;
 		}
@@ -349,6 +368,10 @@ private:
 		DEBUG_TRACE("ConfigurationStoreLFS::serialize_protected_config: saved protected params to config.data");
 	}
 
+	void save_calibration_data() {
+		CalibratableManager::save_all(true);
+	}
+
 public:
 	LFSConfigurationStore(FileSystem &filesystem) : m_is_pass_predict_valid(false), m_is_config_valid(false), m_filesystem(filesystem) {}
 
@@ -392,6 +415,7 @@ public:
 		m_filesystem.format();
 		m_filesystem.mount();
 		serialize_protected_config(); // Recover "protected" parameters
+		save_calibration_data();
 		m_is_config_valid = false;
 		m_is_pass_predict_valid = false;
 	}
@@ -409,10 +433,9 @@ public:
 	}
 
 	bool is_battery_level_low() override {
-		auto lb_en = read_param<bool>(ParamID::LB_EN);
 		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();
-		return (lb_en && m_battery_level <= lb_threshold);
+		return (m_battery_level <= lb_threshold);
 	}
 
 };

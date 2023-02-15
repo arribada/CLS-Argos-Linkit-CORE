@@ -5,9 +5,9 @@
 #include "error.hpp"
 #include "ble_service.hpp"
 #include "reed.hpp"
+#include "service.hpp"
 
-struct ReedSwitchEvent              : tinyfsm::Event { ReedSwitchGesture state; };
-struct SaltwaterSwitchEvent         : tinyfsm::Event { bool state; };
+struct ReedSwitchEvent : tinyfsm::Event { ReedSwitchGesture state; };
 struct ErrorEvent : tinyfsm::Event { ErrorCode error_code; };
 
 
@@ -16,10 +16,10 @@ class GenTracker : public tinyfsm::Fsm<GenTracker>
 public:
 	void react(tinyfsm::Event const &);
 	void react(ReedSwitchEvent const &event);
-	virtual void react(SaltwaterSwitchEvent const &event);
 	void react(ErrorEvent const &event);
 	virtual void entry(void);
 	virtual void exit(void);
+	void set_ble_device_name();
 
 	static void kick_watchdog();
 	static void notify_bad_filesystem_error();
@@ -57,8 +57,10 @@ public:
 
 class OperationalState : public GenTracker
 {
+private:
+	void service_event_handler(ServiceEvent &e);
+
 public:
-	void react(SaltwaterSwitchEvent const &event) override;
 	void entry() override;
 	void exit() override;
 };
@@ -72,7 +74,6 @@ private:
 	void on_ble_inactivity_timeout();
 	void restart_inactivity_timeout();
 	void process_received_data();
-	void set_ble_device_name();
 
 public:
 	void entry() override;

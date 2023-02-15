@@ -13,10 +13,13 @@ private:
 	void update_state(bool state);
 
 public:
-	NrfSwitch(int pin, unsigned int hystersis_time_ms);
+	NrfSwitch(int pin, unsigned int hystersis_time_ms, bool active_status = true);
 	~NrfSwitch();
 	void start(std::function<void(bool)> func) override;
 	void stop() override;
+	bool get_state();
+	void pause() override;
+	void resume() override;
 
 	friend class NrfSwitchManager;
 };

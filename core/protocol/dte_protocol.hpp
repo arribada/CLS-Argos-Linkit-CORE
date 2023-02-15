@@ -241,7 +241,7 @@ public:
 	static void decode(
 			std::map<uint8_t, AopSatelliteEntry_t>& orbit_params,
 			std::map<uint8_t, AopSatelliteEntry_t>& constellation_status,
-			std::string& data,
+			std::string const& data,
 		BasePassPredict& pass_predict) {
 		unsigned int num_records = 0;
 		pass_predict.num_records = 0;
@@ -367,6 +367,9 @@ protected:
 	static inline void encode(std::string& output, const BaseZoneType& value) {
 		encode(output, (unsigned int&)value);
 	}
+	static inline void encode(std::string& output, const BaseDebugMode& value) {
+		encode(output, (unsigned int&)value);
+	}
 	static inline void encode(std::string& output, const std::time_t& value) {
 		char buff[256];
 		auto time = std::gmtime(&value);
@@ -438,6 +441,9 @@ protected:
 	static inline void encode_acquisition_period(std::string& output, unsigned int& value) {
 		unsigned int x;
 		switch (value) {
+		    case 0:
+		    	x = 0;
+		    	break;
 			case 10 * 60:
 				x = 1;
 				break;
@@ -479,6 +485,9 @@ protected:
 		encode(output, (unsigned int&)value);
 	}
 	static inline void encode(std::string& output, const BaseArgosModulation& value) {
+		encode(output, (unsigned int&)value);
+	}
+	static inline void encode(std::string& output, const BaseUnderwaterDetectSource& value) {
 		encode(output, (unsigned int&)value);
 	}
 	static void validate(const BaseMap &arg_map, const std::string& value) {
@@ -558,6 +567,8 @@ protected:
 	}
 	static void validate(const BaseMap &, const BaseArgosMode&) {
 	}
+	static void validate(const BaseMap &, const BaseUnderwaterDetectSource&) {
+	}
 	static void validate(const BaseMap &, const BaseArgosPower&) {
 	}
 	static void validate(const BaseMap &, const BaseLEDMode&) {
@@ -565,6 +576,8 @@ protected:
 	static void validate(const BaseMap &, const BaseZoneType&) {
 	}
 	static void validate(const BaseMap &, const BaseArgosModulation&) {
+	}
+	static void validate(const BaseMap &, const BaseDebugMode&) {
 	}
 public:
 	static std::string encode(DTECommand command, ...) {
@@ -617,6 +630,13 @@ public:
 						double arg = va_arg(args, double);
 						validate(command_args[arg_index], arg);
 						encode(payload, arg);
+						break;
+					}
+				case BaseEncoding::UINT:
+					{
+						unsigned int arg = va_arg(args, unsigned int);
+						validate(command_args[arg_index], arg);
+						encode(payload, arg, false);
 						break;
 					}
 				case BaseEncoding::HEXADECIMAL:
@@ -789,7 +809,7 @@ class DTEDecoder {
 private:
 	static const DTECommandMap* lookup_command(const std::string& command_str, bool is_req) {
 		unsigned int start = is_req ? 0 : (unsigned int)DTECommand::__NUM_REQ;
-		unsigned int end = is_req ? (unsigned int)DTECommand::__NUM_REQ : sizeof(command_map)/sizeof(DTECommandMap);
+		unsigned int end = is_req ? (unsigned int)DTECommand::__NUM_REQ : command_map_size;
 		for (unsigned int i = start; i < end; i++) {
 			if (command_map[i].name == command_str) {
 				//std::cout << "command: " << command_str << " match: " << command_map[i].name << "\n";
@@ -801,7 +821,7 @@ private:
 	}
 
 	static ParamID lookup_key(const std::string& key) {
-		auto end = sizeof(param_map) / sizeof(BaseMap);
+		auto end = param_map_size;
 		for (unsigned int i = 0; i < end; i++) {
 			if (param_map[i].key == key) {
 				return static_cast<ParamID>(i);
@@ -846,7 +866,9 @@ private:
 	}
 
 	static unsigned int decode_acquisition_period(const std::string& s) {
-		if (s == "1") {
+		if (s == "0") {
+			return 0;
+		} else if (s == "1") {
 			return 10 * 60;
 		} else if (s == "2") {
 			return 15 * 60;
@@ -910,6 +932,17 @@ private:
 			return BaseArgosModulation::A3;
 		} else if (s == "2") {
 			return BaseArgosModulation::A4;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
+	static BaseDebugMode decode_debug_mode(const std::string& s) {
+		if (s == "0") {
+			return BaseDebugMode::UART;
+		} else if (s == "1") {
+			return BaseDebugMode::BLE_NUS;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
@@ -981,6 +1014,17 @@ private:
 		}
 	}
 
+	static BaseUnderwaterDetectSource decode_underwater_detect_source(const std::string& s) {
+		if (s == "0") {
+			return BaseUnderwaterDetectSource::SWS;
+		} else if (s == "1") {
+			return BaseUnderwaterDetectSource::PRESSURE_SENSOR;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
 	static BaseArgosDepthPile decode_depth_pile(const std::string& s) {
 		if (s == "1") {
 			return BaseArgosDepthPile::DEPTH_PILE_1;
@@ -1014,8 +1058,8 @@ private:
 		int written;
 
 		snprintf(format, sizeof(format), "%%%zu", s.size());
-		strncat(format, fmt + 1, sizeof(format) - strlen(format));
-		strncat(format, "%n", sizeof(format) - strlen(format));
+		strncat(format, fmt + 1, sizeof(format) - strlen(format) - 1);
+		strncat(format, "%n", sizeof(format) - strlen(format) - 1);
 
 		int ret = sscanf(s.c_str(), format, &val, &written);
 		if (ret != 1)
@@ -1178,6 +1222,14 @@ private:
 							val.push_back(key_value);
 							break;
 						}
+						case BaseEncoding::UWDETECTSOURCE:
+						{
+							BaseUnderwaterDetectSource x = decode_underwater_detect_source(value);
+							DTEEncoder::validate(param_ref, x);
+							key_value.value = x;
+							val.push_back(key_value);
+							break;
+						}
 						case BaseEncoding::ARGOSFREQ:
 						{
 							double x = decode_frequency(value);
@@ -1245,6 +1297,13 @@ private:
 						case BaseEncoding::MODULATION:
 						{
 							BaseArgosModulation x = decode_argos_modulation(value);
+							key_value.value = x;
+							val.push_back(key_value);
+							break;
+						}
+						case BaseEncoding::DEBUGMODE:
+						{
+							BaseDebugMode x = decode_debug_mode(value);
 							key_value.value = x;
 							val.push_back(key_value);
 							break;
@@ -1466,11 +1525,13 @@ public:
 				case BaseEncoding::ARGOSPOWER:
 				case BaseEncoding::AQPERIOD:
 				case BaseEncoding::ARGOSFREQ:
+				case BaseEncoding::UWDETECTSOURCE:
 				case BaseEncoding::GNSSFIXMODE:
 				case BaseEncoding::GNSSDYNMODEL:
 				case BaseEncoding::LEDMODE:
 				case BaseEncoding::ZONETYPE:
 				case BaseEncoding::MODULATION:
+				case BaseEncoding::DEBUGMODE:
 				default:
 					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;

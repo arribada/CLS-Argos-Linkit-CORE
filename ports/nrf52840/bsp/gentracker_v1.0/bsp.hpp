@@ -19,10 +19,53 @@
 #define BATTERY_ADC	   BSP::ADC::ADC_CHANNEL_0
 #define UART_GPS	   BSP::UART::UART_0
 #define POWER_CONTROL_PIN  BSP::GPIO_POWER_CONTROL
+#define SWS_ENABLE_PIN BSP::GPIO::GPIO_SLOW_SWS_SEND
+#define SWS_SAMPLE_PIN BSP::GPIO::GPIO_SLOW_SWS_RX
+#define GPIO_AG_PWR_PIN BSP::GPIO::GPIO_AG_PWR
+#define REED_SWITCH_ACTIVE_STATE   true
+#define SAT_PWR_EN     BSP::GPIO::GPIO_SAT_EN
+#define SAT_RESET      BSP::GPIO::GPIO_SAT_RESET
+#define EXT_LED_PIN    BSP::GPIO::GPIO_EXT1_GPIO3
+#define EXT_I2C_BUS     BSP::I2C::I2C_0
+#define ONBOARD_I2C_BUS BSP::I2C::I2C_1
+#define BMX160_WAKEUP_PIN  BSP::GPIO::GPIO_INT1_AG
+#define WCHG_INTB_PIN	BSP::GPIO::GPIO_WCHG_INTB
+
+// I2C device mappings
+#define CDT_MS5803_DEVICE EXT_I2C_BUS
+#define CDT_AD5933_DEVICE EXT_I2C_BUS
+#define MCP4716_DEVICE    ONBOARD_I2C_BUS
+#define MS5803_VARIANT    "MS5803_14BA"
+#define MS5837_VARIANT    "MS5837_30BA"
+#define LIGHT_DEVICE   	  EXT_I2C_BUS
+#define OEM_PH_DEVICE  	  EXT_I2C_BUS
+#define OEM_RTD_DEVICE 	  EXT_I2C_BUS
+#define BMX160_DEVICE     ONBOARD_I2C_BUS
 
 // I2C bus addresses
-#define MCP4716_DEVICE      BSP::I2C::I2C_1
 #define MCP4716_I2C_ADDR    0x60
+#define MS5803_ADDRESS      0x77
+#define MS5837_ADDRESS	    0x76
+#define LIGHT_DEVICE_ADDR   0x29
+#define OEM_PH_DEVICE_ADDR  0x65
+#define OEM_RTD_DEVICE_ADDR 0x68
+#define AD5933_ADDRESS		0x0D
+#define BMX160_ADDRESS      0x69
+#define STWLC68_ADDRESS		0x61
+
+// Battery voltage ADC gain
+#define ADC_GAIN              (1.0f/3.0f)  // 1/3 gain
+#define RP506_ADC_GAIN        4.0f
+
+// Require reed switch engaged to boot up after power on reset
+#define POWER_ON_RESET_REQUIRES_REED_SWITCH
+#define PSEUDO_POWER_OFF
+
+// Other options
+#define HW_VERSION_DETECT 1
+#define NO_GPS_POWER_REG  0
+#define NO_ARGOS_PA_GAIN_CTRL 0
+#define ARGOS_EXT 0
 
 namespace BSP
 {
@@ -71,6 +114,7 @@ namespace BSP
 	extern const GPIO_InitTypeDefAndInst_t GPIO_Inits[GPIO_TOTAL_NUMBER];
 
 	// Interrupt priorities (0, 1, 4  are reserved for the softdevice)
+    static constexpr uint8_t INTERRUPT_PRIORITY_WDT       = 2;
     static constexpr uint8_t INTERRUPT_PRIORITY_RTC_1     = 2;
     static constexpr uint8_t INTERRUPT_PRIORITY_RTC_2     = 2;
     static constexpr uint8_t INTERRUPT_PRIORITY_UART_0    = 3;
