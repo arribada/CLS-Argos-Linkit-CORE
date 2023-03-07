@@ -83,11 +83,11 @@ void GPSService::service_initiate() {
 bool GPSService::service_cancel() {
 	// Cleanly terminate
 	DEBUG_TRACE("GPSService::service_cancel");
-	system_scheduler->cancel_task(m_task_update_rtc);
-	system_scheduler->cancel_task(m_task_process_gnss_data);
 
 	if (m_is_active) {
 		m_device.power_off();
+		system_scheduler->cancel_task(m_task_update_rtc);
+		system_scheduler->cancel_task(m_task_process_gnss_data);
 		GPSLogEntry log_entry = invalid_log_entry();
 		ServiceEventData event_data = log_entry;
 		service_complete(&event_data, &log_entry);

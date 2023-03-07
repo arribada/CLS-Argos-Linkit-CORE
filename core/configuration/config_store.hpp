@@ -88,7 +88,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x0F;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x10;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
@@ -135,9 +135,17 @@ protected:
 		/* GLONASS_CONST_SELECT */ 0U, // Not implemented
 		/* GNSS_HDOPFILT_EN */ (bool)true,
 		/* GNSS_HDOPFILT_THR */ 2U,
+#if MODEL_UW
+		/* GNSS_ACQ_TIMEOUT */ 240U,
+#else
 		/* GNSS_ACQ_TIMEOUT */ 120U,
+#endif
 		/* GNSS_NTRY */ 0U, // Not implemented
+#if MODEL_UW
+		/* UNDERWATER_EN */ (bool)true,
+#else
 		/* UNDERWATER_EN */ (bool)false,
+#endif
 		/* DRY_TIME_BEFORE_TX */ 1U,
 		/* SAMPLING_UNDER_FREQ */ 60U,
 		/* LB_EN */ (bool)false,
@@ -249,10 +257,22 @@ protected:
 		/* DEBUG_OUTPUT_MODE */ BaseDebugMode::UART,
 		/* GNSS_ASSISTNOW_OFFLINE_EN */ (bool)false,
 		/* WCHG_STATUS */ ""s,
+#if MODEL_UW
+		/* UW_MAX_SAMPLES */ 10U,
+#else
 		/* UW_MAX_SAMPLES */ 5U,
+#endif
+#if MODEL_UW
+		/* UW_MIN_DRY_SAMPLES */ 3U,
+#else
 		/* UW_MIN_DRY_SAMPLES */ 1U,
+#endif
 		/* UW_SAMPLE_GAP */ 1000U,
+#if MODEL_UW
+		/* UW_PIN_SAMPLE_DELAY */ 10U,
+#else
 		/* UW_PIN_SAMPLE_DELAY */ 1U,
+#endif
 		/* UW_DIVE_MODE_ENABLE */ (bool)true,
 		/* UW_DIVE_MODE_START_TIME */ 0U,
 	}};
