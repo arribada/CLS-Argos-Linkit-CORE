@@ -22,7 +22,7 @@ using namespace std::literals::string_literals;
 class PassPredictCodec {
 private:
 
-	static SatDownlinkStatus_t convert_dl_operating_status(uint8_t status, bool type_a) {
+	static SatDownlinkStatus_t convert_dl_operating_status(uint8_t status, bool type_a, enum SatUplinkStatus_t ul_status) {
 		if (type_a) {
 			switch (status) {
 			case 3:
@@ -33,7 +33,7 @@ private:
 		} else {
 			switch (status) {
 			case 1:
-				return SAT_DNLK_ON_WITH_A3;
+				return (ul_status == SAT_UPLK_ON_WITH_A3) ? SAT_DNLK_ON_WITH_A3 : SAT_DNLK_OFF;
 			default:
 				return SAT_DNLK_OFF;
 			}
@@ -41,6 +41,8 @@ private:
 	}
 
 	static SatUplinkStatus_t convert_ul_operating_status(uint8_t status, uint8_t hex_id) {
+		// For NK and NN satellites (Satellite identification 5 or 8), values ‘00’, ‘01’ and ‘10’
+		// means ARGOS-2 payload.  Refer to pg 56 of A4-SYS-IF-0086-CNES.
 		if (hex_id == 0x5 || hex_id == 0x8) {
 			switch (status) {
 			case 0:
@@ -89,9 +91,8 @@ private:
 						hex_id, dl_status, ul_status);
 			aop_entry.satHexId = hex_id;
 			aop_entry.satDcsId = a_dcs;
-			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status, type_a);
 			aop_entry.uplinkStatus = convert_ul_operating_status(ul_status, hex_id);
-
+			aop_entry.downlinkStatus = convert_dl_operating_status(dl_status, type_a, aop_entry.uplinkStatus);
 			uint8_t key = aop_entry.satHexId;
 			constellation_params[key] = aop_entry;
 		}

@@ -330,11 +330,10 @@ TEST(DTEHandler, PASPW_REQ_NewArgos4Satellites)
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
 	STRCMP_EQUAL("$O;PASPW#000;\r", resp.c_str());
 
-	printf("LAST_AOP=%u\n", configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE));
 	// Get last AOP date
 	req = "$PARMR#005;ART03\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
-	STRCMP_EQUAL("$O;PARMR#019;ART03=28/02/2023 23:22:51\r", resp.c_str());
+	STRCMP_EQUAL("$O;PARMR#019;ART03=07/03/2023 23:22:51\r", resp.c_str());
 }
 
 TEST(DTEHandler, DUMPD_REQ_SensorLog)

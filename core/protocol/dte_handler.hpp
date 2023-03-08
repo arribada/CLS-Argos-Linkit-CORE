@@ -292,7 +292,7 @@ public:
 			for (unsigned int i = 0; i < pass_predict.num_records; i++)
 			{
 				if (pass_predict.records[i].bulletin.year) {
-					std::time_t t = convert_epochtime(pass_predict.records[i].bulletin.year, pass_predict.records[i].bulletin.month, pass_predict.records[0].bulletin.day, pass_predict.records[i].bulletin.hour, pass_predict.records[i].bulletin.minute, pass_predict.records[i].bulletin.second);
+					std::time_t t = convert_epochtime(pass_predict.records[i].bulletin.year, pass_predict.records[i].bulletin.month, pass_predict.records[i].bulletin.day, pass_predict.records[i].bulletin.hour, pass_predict.records[i].bulletin.minute, pass_predict.records[i].bulletin.second);
 					if (t > argos_aop_date)
 						argos_aop_date = t;
 				}
@@ -308,6 +308,12 @@ public:
 
 				// Save configuration to commit AOPDATE
 				configuration_store->save_params();
+
+				// Log that the PASPW has been updated
+				auto time = std::gmtime(&argos_aop_date);
+				char buff[256];
+				std::strftime(buff, sizeof(buff), "%d/%m/%Y %H:%M:%S", time);
+				DEBUG_INFO("DTEHandler:PASPW_REQ: saving PASPW with #AOPs=%u ARGOS_AOP_DATE=%s", (unsigned int)pass_predict.num_records, buff);
 				break;
 			} else {
 				DEBUG_ERROR("DTEHandler::PASPW_REQ: no valid AOP records, so not updating the config store");
