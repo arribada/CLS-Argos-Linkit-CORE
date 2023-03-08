@@ -260,20 +260,22 @@ public:
 		// orbit_params
 		for ( const auto &it : constellation_status ) {
 			if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
-				//DEBUG_TRACE("PassPredictCodec::decode: STATUS entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
+				DEBUG_TRACE("PassPredictCodec::decode: STATUS entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
 
 				// Don't expect a AOP unless either downlink or uplink is operational
 				if (it.second.downlinkStatus || it.second.uplinkStatus) {
 					// AOP must be present for this record to be counted
 					if (orbit_params.count(it.first)) {
-						//DEBUG_TRACE("PassPredictCodec::decode: AOP exists: hex_id=%01x", orbit_params[it.first].satHexId);
+						DEBUG_TRACE("PassPredictCodec::decode: AOP exists: hex_id=%01x", orbit_params[it.first].satHexId);
 						pass_predict.records[num_records] = orbit_params[it.first];
 					}
 					else {
+						DEBUG_TRACE("PassPredictCodec::decode: AOP missing");
 						pass_predict.records[num_records].bulletin.year = 0;
 					}
 				} else {
 					// Ignore AOP params if out of service
+					DEBUG_TRACE("PassPredictCodec::decode: not operational");
 					pass_predict.records[num_records].bulletin.year = 0;
 				}
 				pass_predict.records[num_records].satHexId = it.second.satHexId;
@@ -309,17 +311,23 @@ public:
 		// orbit_params
 		for ( const auto &it : constellation_status ) {
 			if (num_records < MAX_AOP_SATELLITE_ENTRIES) {
-				//DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
+				DEBUG_TRACE("PassPredictCodec::decode: New paspw entry %u a_dcs = %01x hex_id=%01x", num_records, it.second.satDcsId, it.second.satHexId);
 
 				// Don't expect a AOP unless either downlink or uplink is operational
 				if (it.second.downlinkStatus || it.second.uplinkStatus) {
 					// AOP must be present for this record to be counted
-					if (orbit_params.count(it.first))
+					if (orbit_params.count(it.first)) {
+						DEBUG_TRACE("PassPredictCodec::decode: AOP exists: hex_id=%01x", orbit_params[it.first].satHexId);
 						pass_predict.records[num_records] = orbit_params[it.first];
-					else
+					}
+					else {
+						DEBUG_TRACE("PassPredictCodec::decode: AOP missing");
 						pass_predict.records[num_records].bulletin.year = 0;
-				} else
+					}
+				} else {
+					DEBUG_TRACE("PassPredictCodec::decode: not operational");
 					pass_predict.records[num_records].bulletin.year = 0;
+				}
 
 				pass_predict.records[num_records].satHexId = it.second.satHexId;
 				pass_predict.records[num_records].downlinkStatus = it.second.downlinkStatus;

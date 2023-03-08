@@ -314,6 +314,29 @@ TEST(DTEHandler, PASPW_REQ_DecodeDayOfYearWiderThan8Bits)
 	STRCMP_EQUAL("$O;PARMR#019;ART03=18/09/2021 23:09:10\r", resp.c_str());
 }
 
+TEST(DTEHandler, PASPW_REQ_NewArgos4Satellites)
+{
+	// Supplied by CLS
+	std::string allcast_ref = read_paspw_file("data/20230308105834.json");
+	std::string allcast_binary;
+
+	// Transcode to binary
+	allcast_binary = Binascii::unhexlify(allcast_ref);
+
+	BaseRawData paspw_raw = {0, 0, allcast_binary };
+
+	std::string resp;
+	std::string req = DTEEncoder::encode(DTECommand::PASPW_REQ, paspw_raw);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;PASPW#000;\r", resp.c_str());
+
+	printf("LAST_AOP=%u\n", configuration_store->read_param<std::time_t>(ParamID::ARGOS_AOP_DATE));
+	// Get last AOP date
+	req = "$PARMR#005;ART03\r";
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;PARMR#019;ART03=28/02/2023 23:22:51\r", resp.c_str());
+}
+
 TEST(DTEHandler, DUMPD_REQ_SensorLog)
 {
 	DTECommand command;

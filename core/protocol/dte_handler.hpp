@@ -286,16 +286,34 @@ public:
 				break;
 			}
 
-			// Update configuration store
-			configuration_store->write_pass_predict(pass_predict);
+			// Scan through all the records and find the entry whose bulletin date
+			// is the most recent, skipping any non-operational satellites
+			std::time_t argos_aop_date = 0;
+			for (unsigned int i = 0; i < pass_predict.num_records; i++)
+			{
+				if (pass_predict.records[i].bulletin.year) {
+					std::time_t t = convert_epochtime(pass_predict.records[i].bulletin.year, pass_predict.records[i].bulletin.month, pass_predict.records[0].bulletin.day, pass_predict.records[i].bulletin.hour, pass_predict.records[i].bulletin.minute, pass_predict.records[i].bulletin.second);
+					if (t > argos_aop_date)
+						argos_aop_date = t;
+				}
+			}
 
-			// Use the first AOP entry to set the AOP last updated date
-			std::time_t argos_aop_date = convert_epochtime(pass_predict.records[0].bulletin.year, pass_predict.records[0].bulletin.month, pass_predict.records[0].bulletin.day, pass_predict.records[0].bulletin.hour, pass_predict.records[0].bulletin.minute, pass_predict.records[0].bulletin.second);
-			configuration_store->write_param(ParamID::ARGOS_AOP_DATE, argos_aop_date);
+			if (argos_aop_date)
+			{
+				// Update configuration store
+				configuration_store->write_pass_predict(pass_predict);
 
-			// Save configuration to commit AOPDATE
-			configuration_store->save_params();
-			break;
+				// Set to most recent AOP bulletin record
+				configuration_store->write_param(ParamID::ARGOS_AOP_DATE, argos_aop_date);
+
+				// Save configuration to commit AOPDATE
+				configuration_store->save_params();
+				break;
+			} else {
+				DEBUG_ERROR("DTEHandler::PASPW_REQ: no valid AOP records, so not updating the config store");
+				error_code = (int)DTEError::INCORRECT_DATA;
+				break;
+			}
 		}
 
 		return DTEEncoder::encode(DTECommand::PASPW_RESP, error_code);
