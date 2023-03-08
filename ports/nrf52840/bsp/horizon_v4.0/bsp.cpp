@@ -272,7 +272,7 @@ namespace BSP
         {
             .twim = NRFX_TWIM_INSTANCE(0),
             {
-                .scl = NRF_GPIO_PIN_MAP(1, 15),
+                .scl = NRF_GPIO_PIN_MAP(0, 29),
                 .sda = NRF_GPIO_PIN_MAP(0, 30),
                 .frequency = NRF_TWIM_FREQ_400K,
                 .interrupt_priority = INTERRUPT_PRIORITY_I2C_0,

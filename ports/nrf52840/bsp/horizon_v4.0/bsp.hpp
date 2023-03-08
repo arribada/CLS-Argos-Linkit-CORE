@@ -63,6 +63,7 @@
 
 // If Artic board is detected then don't allow EXT I2C bus to be used
 #define ARTIC_I2C_BUS_CONFLICT EXT_I2C_BUS
+#define ARTIC_EXT_LED_CONFLICT EXT_LED_PIN
 
 namespace BSP
 {

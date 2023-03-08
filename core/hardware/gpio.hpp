@@ -10,6 +10,8 @@ public:
 	static void clear(uint32_t pin);
 	static void toggle(uint32_t pin);
 	static uint32_t value(uint32_t pin);
+	static void disable(uint32_t pin);
+	static void enable(uint32_t pin);
 };
 
 #endif // __GPIO_HPP_

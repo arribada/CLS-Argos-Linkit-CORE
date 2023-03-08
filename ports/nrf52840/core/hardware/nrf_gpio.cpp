@@ -32,3 +32,15 @@ uint32_t GPIOPins::value(uint32_t pin)
 {
 	return nrf_gpio_pin_read(BSP::GPIO_Inits[pin].pin_number);
 }
+
+void GPIOPins::enable(uint32_t pin)
+{
+	nrf_gpio_cfg(BSP::GPIO_Inits[pin].pin_number,
+				 BSP::GPIO_Inits[pin].dir, BSP::GPIO_Inits[pin].input, BSP::GPIO_Inits[pin].pull,
+			     BSP::GPIO_Inits[pin].drive, BSP::GPIO_Inits[pin].sense);
+}
+
+void GPIOPins::disable(uint32_t pin)
+{
+	nrf_gpio_cfg_default(BSP::GPIO_Inits[pin].pin_number);
+}

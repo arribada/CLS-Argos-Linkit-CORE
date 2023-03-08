@@ -492,6 +492,9 @@ int main()
 		// We need to mark the I2C bus as disabled since the pins now in use
 		NrfI2C::disable(ARTIC_I2C_BUS_CONFLICT);
 #endif
+#ifdef ARTIC_EXT_LED_CONFLICT
+		GPIOPins::disable(ARTIC_EXT_LED_CONFLICT);
+#endif
 	} catch (...) {
 		DEBUG_TRACE("Artic R2 not detected");
 	}

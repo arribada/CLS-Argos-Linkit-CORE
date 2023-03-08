@@ -22,3 +22,11 @@ uint32_t GPIOPins::value(uint32_t pin) {
 void GPIOPins::toggle(uint32_t pin) {
 	mock().actualCall("toggle").withParameter("pin", pin);
 }
+
+void GPIOPins::enable(uint32_t pin) {
+	mock().actualCall("enable").withParameter("pin", pin);
+}
+
+void GPIOPins::disable(uint32_t pin) {
+	mock().actualCall("disable").withParameter("pin", pin);
+}
