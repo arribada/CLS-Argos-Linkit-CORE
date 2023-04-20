@@ -174,7 +174,8 @@ enum class BaseEncoding {
 
 enum class BaseUnderwaterDetectSource {
 	SWS = 0,
-	PRESSURE_SENSOR
+	PRESSURE_SENSOR,
+	GNSS
 };
 
 enum class BaseLogDType {

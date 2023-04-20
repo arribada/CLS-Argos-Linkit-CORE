@@ -1,4 +1,5 @@
 #include "sws_service.hpp"
+#include "gnss_detector_service.hpp"
 #include "pressure_detector_service.hpp"
 #include "als_sensor_service.hpp"
 #include "ph_sensor_service.hpp"
@@ -33,7 +34,7 @@
 #include "is25_flash.hpp"
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
-#include "m8q.hpp"
+#include "m8qasync.hpp"
 #include "ltr_303.hpp"
 #include "oem_ph.hpp"
 #include "oem_rtd.hpp"
@@ -291,10 +292,6 @@ int main()
 				PMU::reset_cause() == "Pseudo Power On Reset"))) {
 
 		if (PMU::reset_cause() == "Power On Reset")  {
-			// Force GNSS off
-			M8QReceiver m;
-			m.power_off();
-
 			// Force Artic PA off
 			NrfI2C::init();
 			ArticSat::shutdown();
@@ -501,8 +498,9 @@ int main()
 
 	DEBUG_TRACE("GPS M8Q ...");
 	try {
-		static M8QReceiver m8q_gnss;
+		static M8QAsyncReceiver m8q_gnss;
 		static GPSService gps_service(m8q_gnss, &fs_sensor_log);
+		static GNSSDetectorService gps_detector(m8q_gnss);
 	} catch (...) {
 		DEBUG_TRACE("GPS M8Q not detected");
 	}

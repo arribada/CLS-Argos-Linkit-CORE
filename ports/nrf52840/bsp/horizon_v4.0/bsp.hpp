@@ -11,6 +11,7 @@
 #include "nrf_gpio.h"
 #include "nrfx_twim.h"
 #include "nrfx_wdt.h"
+#include "nrf_libuarte_async.h"
 
 // Logical device mappings to physical devices
 #define RTC_DATE_TIME  BSP::RTC::RTC_1
@@ -275,4 +276,14 @@ namespace BSP
     } WDT_InitTypeDefAndInst_t;
 
     extern const WDT_InitTypeDefAndInst_t WDT_Inits[WDT_TOTAL_NUMBER];
+
+    ///////////////////////////// ASYNC UART definitions //////////////////////////////
+
+     typedef struct
+     {
+         const nrf_libuarte_async_t *uart;
+         const nrf_libuarte_async_config_t config;
+     } UARTAsync_InitTypeDefAndInst_t;
+
+     extern const UARTAsync_InitTypeDefAndInst_t UARTAsync_Inits[1];
 }

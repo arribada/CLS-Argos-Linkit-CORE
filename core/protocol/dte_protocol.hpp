@@ -1028,6 +1028,8 @@ private:
 			return BaseUnderwaterDetectSource::SWS;
 		} else if (s == "1") {
 			return BaseUnderwaterDetectSource::PRESSURE_SENSOR;
+		} else if (s == "2") {
+			return BaseUnderwaterDetectSource::GNSS;
 		} else {
 			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;

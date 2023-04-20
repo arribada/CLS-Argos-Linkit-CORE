@@ -7,7 +7,7 @@ project(LinkIt
 
 set(VERSION_NUMBER 0)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SDK_ROOT      drivers/nRF5_SDK_17.0.2)
@@ -127,6 +127,8 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/libraries/experimental_section_vars
     ${SDK_ROOT}/components/libraries/crc32
     ${SDK_ROOT}/components/libraries/crc16
+	${SDK_ROOT}/components/libraries/queue
+    ${SDK_ROOT}/components/libraries/libuarte
     ${SDK_ROOT}/components/softdevice/common
     ${SDK_ROOT}/components/softdevice/s140/headers
     ${SDK_ROOT}/components/softdevice/s140/headers/nrf52
@@ -160,7 +162,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/filesystem
     ${PROJ_DIR}/core/scheduling
     ${PROJ_DIR}/core/hardware/artic_sat
-    ${PROJ_DIR}/core/hardware/m8q
+    ${PROJ_DIR}/core/hardware/m8qasync
     ${PROJ_DIR}/core/hardware/ms58xx
     ${PROJ_DIR}/core/hardware/ad5933
     ${PROJ_DIR}/core/hardware/ltr_303
@@ -210,6 +212,9 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/components/softdevice/common/nrf_sdh_soc.c
     ${SDK_ROOT}/components/libraries/crc32/crc32.c
     ${SDK_ROOT}/components/libraries/crc16/crc16.c
+	${SDK_ROOT}/components/libraries/queue/nrf_queue.c
+    ${SDK_ROOT}/components/libraries/libuarte/nrf_libuarte_async.c
+    ${SDK_ROOT}/components/libraries/libuarte/nrf_libuarte_drv.c
     ${SDK_ROOT}/modules/nrfx/mdk/system_nrf52840.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_qspi.c
@@ -217,6 +222,8 @@ target_sources(${TARGET_NAME} PRIVATE
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_twim.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_rtc.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_wdt.c
+	${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_ppi.c
+	${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_timer.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_gpiote.c
     ${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_saadc.c
     ${SDK_ROOT}/modules/nrfx/hal/nrf_nvmc.c
@@ -247,8 +254,8 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/oem_rtd/oem_rtd.cpp
     ${PROJ_DIR}/core/hardware/artic_sat/artic_sat.cpp
     ${PROJ_DIR}/core/hardware/artic_sat/pa_driver.cpp
-	${PROJ_DIR}/core/hardware/m8q/m8q.cpp
-    ${PROJ_DIR}/core/hardware/m8q/nrf_uart_m8.cpp
+	${PROJ_DIR}/core/hardware/m8qasync/m8qasync.cpp
+    ${PROJ_DIR}/core/hardware/m8qasync/ubx_comms.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp
     ${PROJ_DIR}/core/hardware/nrf_spim.cpp

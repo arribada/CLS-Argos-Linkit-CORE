@@ -8,6 +8,7 @@
 #include "timeutils.hpp"
 #include "scheduler.hpp"
 
+
 class GPSLogFormatter : public LogFormatter {
 public:
 	const std::string header() override {
@@ -16,15 +17,13 @@ public:
 	const std::string log_entry(const LogEntry& e) override {
 		char entry[512], d1[128], d2[128];
 		const GPSLogEntry *gps = (const GPSLogEntry *)&e;
-		std::time_t t;
-		std::tm *tm;
 
-		t = convert_epochtime(gps->header.year, gps->header.month, gps->header.day, gps->header.hours, gps->header.minutes, gps->header.seconds);
-		tm = std::gmtime(&t);
-		std::strftime(d1, sizeof(d1), "%d/%m/%Y %H:%M:%S", tm);
-		t = convert_epochtime(gps->info.year, gps->info.month, gps->info.day, gps->info.hour, gps->info.min, gps->info.sec);
-		tm = std::gmtime(&t);
-		std::strftime(d2, sizeof(d2), "%d/%m/%Y %H:%M:%S", tm);
+		snprintf(d1, sizeof(d1), "%02hhu/%02hhu/%04hu %02hhu:%02hhu:%02hhu",
+		        gps->header.day, gps->header.month, gps->header.year,
+		        gps->header.hours, gps->header.minutes, gps->header.seconds);
+        snprintf(d2, sizeof(d2), "%02hhu/%02hhu/%04hu %02hhu:%02hhu:%02hhu",
+                gps->info.day, gps->info.month, gps->info.year,
+                gps->info.hour, gps->info.min, gps->info.sec);
 
 		// Convert to CSV
 		snprintf(entry, sizeof(entry), "%s,%f,%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\r\n",
@@ -61,9 +60,11 @@ public:
 	}
 };
 
-class GPSService : public Service {
+class GPSService : public Service, public GPSEventListener  {
 public:
-	GPSService(GPSDevice& device, Logger *logger) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger), m_device(device) {}
+	GPSService(GPSDevice& device, Logger *logger) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger), m_device(device) {
+	    m_device.subscribe(*this);
+	}
 
 protected:
 
@@ -85,20 +86,20 @@ private:
 	bool       	 m_is_first_schedule;
 	bool         m_is_underwater;
 	uint64_t     m_wakeup_time;
-	unsigned int m_num_consecutive_fixes;
 	std::time_t  m_next_schedule;
 	struct {
 		GNSSData data;
-		std::atomic<bool> pending_rtc_set;
 		std::atomic<bool> pending_data_logging;
 	} m_gnss_data;
 	unsigned int m_num_gps_fixes;
-	Scheduler::TaskHandle m_task_update_rtc;
 	Scheduler::TaskHandle m_task_process_gnss_data;
 	bool m_is_active;
 
+    void react(const GPSEventPowerOff&) override;
+    void react(const GPSEventPVT&) override;
+    void react(const GPSEventError&) override;
+
 	// Private methods for GNSS
-	void task_update_rtc();
 	void task_process_gnss_data();
 	void populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time);
 	GPSLogEntry invalid_log_entry();

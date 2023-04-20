@@ -271,6 +271,7 @@ namespace BSP
     #if NRFX_TWIM0_ENABLED
         {
             .twim = NRFX_TWIM_INSTANCE(0),
+			.twim_config =
             {
                 .scl = NRF_GPIO_PIN_MAP(0, 29),
                 .sda = NRF_GPIO_PIN_MAP(0, 30),
@@ -283,6 +284,7 @@ namespace BSP
     #if NRFX_TWIM1_ENABLED
         {
             .twim = NRFX_TWIM_INSTANCE(1),
+			.twim_config =
             {
                 .scl = NRF_GPIO_PIN_MAP(0, 15),
                 .sda = NRF_GPIO_PIN_MAP(0, 27),
@@ -307,5 +309,30 @@ namespace BSP
 			}
     	}
 #endif
+    };
+
+    // Define UARTE async instance using library supplied macro
+    NRF_LIBUARTE_ASYNC_DEFINE(async_uarte_0, 0, 1,\
+            NRF_LIBUARTE_PERIPHERAL_NOT_USED, 2,\
+            255, 4);
+
+    const UARTAsync_InitTypeDefAndInst_t UARTAsync_Inits[1] =
+    {
+        {
+            .uart = &async_uarte_0,
+            .config = {
+                .rx_pin = NRF_GPIO_PIN_MAP(1, 8),
+                .tx_pin = NRF_GPIO_PIN_MAP(1, 9),
+                .cts_pin = NRF_UARTE_PSEL_DISCONNECTED,
+                .rts_pin = NRF_UARTE_PSEL_DISCONNECTED,
+                .timeout_us = 50,
+                .flush_on_timeout = true,
+                .hwfc = NRF_UARTE_HWFC_DISABLED,
+                .parity = NRF_UARTE_PARITY_EXCLUDED,
+                .baudrate = NRF_UARTE_BAUDRATE_460800,
+                .pullup_rx = false,
+                .int_prio = INTERRUPT_PRIORITY_UART_0,
+            }
+        }
     };
 }

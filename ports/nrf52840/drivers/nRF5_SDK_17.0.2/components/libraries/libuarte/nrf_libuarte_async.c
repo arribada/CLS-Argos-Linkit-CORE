@@ -55,6 +55,7 @@
 #define NRF_LOG_LEVEL       0
 #endif // NRF_LIBUARTE_CONFIG_LOG_ENABLED
 #include "nrf_log.h"
+
 NRF_LOG_MODULE_REGISTER();
 
 #if defined(NRFX_RTC_ENABLED) && NRFX_RTC_ENABLED
@@ -189,12 +190,37 @@ static bool rx_buffer_schedule(const nrf_libuarte_async_t * p_libuarte)
     return true;
 }
 
+static void rx_buffer_flush(const nrf_libuarte_async_t * p_libuarte)
+{
+    uint8_t * p_data;
+    while (nrf_queue_pop(p_libuarte->p_rx_queue, &p_data) == NRF_SUCCESS) {
+	    p_libuarte->p_ctrl_blk->alloc_cnt--;
+		nrf_balloc_free(p_libuarte->p_rx_pool, p_data);
+	}
+}
+
+static void rx_setup(const nrf_libuarte_async_t * p_libuarte)
+{
+    /* Initial memory block needed to start RX */
+    uint8_t * p_data;
+    p_data = nrf_balloc_alloc(p_libuarte->p_rx_pool);
+    if (p_data == NULL) {
+        APP_ERROR_CHECK_BOOL(false);
+    }
+    p_libuarte->p_ctrl_blk->alloc_cnt++;
+    p_libuarte->p_ctrl_blk->rx_enabled = true;
+    p_libuarte->p_ctrl_blk->p_curr_rx_buf = p_data;
+    p_libuarte->p_ctrl_blk->rx_count = 0;
+    ret_code_t ret =  nrf_libuarte_drv_rx_start(p_libuarte->p_libuarte, p_data, p_libuarte->rx_buf_size, false);
+    APP_ERROR_CHECK_BOOL(ret == NRF_SUCCESS);
+}
+
 static void uart_evt_handler(void * context, nrf_libuarte_drv_evt_t * p_evt)
 {
     ret_code_t ret;
     const nrf_libuarte_async_t * p_libuarte = (const nrf_libuarte_async_t *)context;
 
-    switch (p_evt->type)
+	switch (p_evt->type)
     {
     case NRF_LIBUARTE_DRV_EVT_TX_DONE:
     {
@@ -213,7 +239,12 @@ static void uart_evt_handler(void * context, nrf_libuarte_drv_evt_t * p_evt)
     }
     case NRF_LIBUARTE_DRV_EVT_RX_BUF_REQ:
     {
-        if (p_libuarte->p_ctrl_blk->rx_halted)
+    	if (!p_libuarte->p_ctrl_blk->rx_enabled) {
+    		//printf("Spurious NRF_LIBUARTE_DRV_EVT_RX_BUF_REQ\n");
+    		break;
+    	}
+
+    	if (p_libuarte->p_ctrl_blk->rx_halted)
         {
             break;
         }
@@ -227,15 +258,23 @@ static void uart_evt_handler(void * context, nrf_libuarte_drv_evt_t * p_evt)
             else
             {
                 NRF_LOG_ERROR("(evt) Failed to allocate buffer for RX.");
-                APP_ERROR_CHECK_BOOL(false);
+                //APP_ERROR_CHECK_BOOL(false);
+                nrf_libuarte_async_evt_t evt = {
+                    .type = NRF_LIBUARTE_ASYNC_EVT_ALLOC_ERROR,
+                };
+                p_libuarte->p_ctrl_blk->evt_handler(p_libuarte->p_ctrl_blk->context, &evt);
             }
         }
         break;
     }
-    case NRF_LIBUARTE_DRV_EVT_RX_DATA:
+    case NRF_LIBUARTE_DRV_EVT_RX_DATA:  // Only when DMA buffer is FULL
     {
+    	if (!p_libuarte->p_ctrl_blk->rx_enabled) {
+    		//printf("Spurious NRF_LIBUARTE_DRV_EVT_RX_DATA\n");
+    		break;
+    	}
 
-        uint32_t rx_amount = p_evt->data.rxtx.length - p_libuarte->p_ctrl_blk->sub_rx_count;
+    	uint32_t rx_amount = p_evt->data.rxtx.length - p_libuarte->p_ctrl_blk->sub_rx_count;
         if (rx_amount)
         {
             p_libuarte->p_ctrl_blk->rx_count += rx_amount;
@@ -258,6 +297,7 @@ static void uart_evt_handler(void * context, nrf_libuarte_drv_evt_t * p_evt)
             if(p_evt->data.rxtx.p_data != p_libuarte->p_ctrl_blk->p_curr_rx_buf)
             {
                 NRF_LOG_ERROR("(evt) RX buffer address mismatch");
+                NRF_LOG_ERROR("(evt) RX buffer address mismatch");
             }
 
             ret = nrf_queue_pop(p_libuarte->p_rx_queue, &p_libuarte->p_ctrl_blk->p_curr_rx_buf);
@@ -279,6 +319,10 @@ static void uart_evt_handler(void * context, nrf_libuarte_drv_evt_t * p_evt)
     }
     case NRF_LIBUARTE_DRV_EVT_ERROR:
     {
+        if (!p_libuarte->p_ctrl_blk->rx_enabled) {
+            //printf("Spurious NRF_LIBUARTE_DRV_EVT_OVERRUN_ERROR\n");
+            break;
+        }
         nrf_libuarte_async_evt_t evt = {
             .type = NRF_LIBUARTE_ASYNC_EVT_ERROR,
             .data = {
@@ -290,6 +334,10 @@ static void uart_evt_handler(void * context, nrf_libuarte_drv_evt_t * p_evt)
     }
     case NRF_LIBUARTE_DRV_EVT_OVERRUN_ERROR:
     {
+    	if (!p_libuarte->p_ctrl_blk->rx_enabled) {
+    		//printf("Spurious NRF_LIBUARTE_DRV_EVT_OVERRUN_ERROR\n");
+    		break;
+    	}
         NRF_LOG_WARNING("Overrun error - data loss due to UARTE interrupt not handled on time.");
         uint32_t rx_amount = p_evt->data.overrun_err.overrun_length - p_libuarte->p_ctrl_blk->sub_rx_count;
         p_libuarte->p_ctrl_blk->rx_count += rx_amount;
@@ -310,12 +358,25 @@ static void uart_evt_handler(void * context, nrf_libuarte_drv_evt_t * p_evt)
 
 void nrf_libuarte_async_timeout_handler(const nrf_libuarte_async_t * p_libuarte)
 {
-    NRFX_IRQ_DISABLE((IRQn_Type)NRFX_IRQ_NUMBER_GET(p_libuarte->p_libuarte->uarte));
+	if (!p_libuarte->p_ctrl_blk->rx_enabled) {
+		//printf("Spurious nrf_libuarte_async_timeout_handler\n");
+		return;
+	}
+
+	NRFX_IRQ_DISABLE((IRQn_Type)NRFX_IRQ_NUMBER_GET(p_libuarte->p_libuarte->uarte));
 
     uint32_t capt_rx_count = p_libuarte->p_libuarte->timer.p_reg->CC[3];
+	//printf("capt_rx_count=%u rx_count=%u sub_rx_count=%u\n", (unsigned int)capt_rx_count, (unsigned int)p_libuarte->p_ctrl_blk->rx_count,
+	//		(unsigned int)p_libuarte->p_ctrl_blk->sub_rx_count);
 
     if (capt_rx_count > p_libuarte->p_ctrl_blk->rx_count)
     {
+		// Stop RX if we are flushing on timeout
+		if (p_libuarte->p_ctrl_blk->flush_on_timeout) {
+			nrf_libuarte_drv_rx_stop(p_libuarte->p_libuarte);
+			rx_buffer_flush(p_libuarte);
+		}
+
         uint32_t rx_amount = capt_rx_count - p_libuarte->p_ctrl_blk->rx_count;
         nrf_libuarte_async_evt_t evt = {
             .type = NRF_LIBUARTE_ASYNC_EVT_RX_DATA,
@@ -331,9 +392,22 @@ void nrf_libuarte_async_timeout_handler(const nrf_libuarte_async_t * p_libuarte)
                       evt.data.rxtx.p_data,
                       p_libuarte->p_ctrl_blk->sub_rx_count);
 
-        p_libuarte->p_ctrl_blk->sub_rx_count += rx_amount;
-        p_libuarte->p_ctrl_blk->rx_count = capt_rx_count;
-        p_libuarte->p_ctrl_blk->evt_handler(p_libuarte->p_ctrl_blk->context, &evt);
+        // Restart RX if we are flushing on timeout
+        if (p_libuarte->p_ctrl_blk->flush_on_timeout) {
+
+            /* Initial memory block needed to start RX */
+        	rx_setup(p_libuarte);
+
+        	NRFX_IRQ_ENABLE((IRQn_Type)NRFX_IRQ_NUMBER_GET(p_libuarte->p_libuarte->uarte));
+
+        	// Note: user must call rx_free to free the current buffer
+			p_libuarte->p_ctrl_blk->evt_handler(p_libuarte->p_ctrl_blk->context, &evt);
+			return;
+        } else {
+            p_libuarte->p_ctrl_blk->sub_rx_count += rx_amount;
+            p_libuarte->p_ctrl_blk->rx_count = capt_rx_count;
+			p_libuarte->p_ctrl_blk->evt_handler(p_libuarte->p_ctrl_blk->context, &evt);
+        }
     }
 
     NRFX_IRQ_ENABLE((IRQn_Type)NRFX_IRQ_NUMBER_GET(p_libuarte->p_libuarte->uarte));
@@ -411,7 +485,9 @@ ret_code_t nrf_libuarte_async_init(const nrf_libuarte_async_t * const p_libuarte
     p_libuarte->p_ctrl_blk->alloc_cnt    = 0;
     p_libuarte->p_ctrl_blk->context = context;
     p_libuarte->p_ctrl_blk->timeout_us = p_config->timeout_us;
+    p_libuarte->p_ctrl_blk->flush_on_timeout = p_config->flush_on_timeout;
     p_libuarte->p_ctrl_blk->rx_halted = false;
+    p_libuarte->p_ctrl_blk->rx_enabled = false;
     p_libuarte->p_ctrl_blk->hwfc = (p_config->hwfc == NRF_UARTE_HWFC_ENABLED);
 
     uint32_t i;
@@ -533,13 +609,6 @@ ret_code_t nrf_libuarte_async_init(const nrf_libuarte_async_t * const p_libuarte
         return ret;
     }
 
-    ret = nrf_balloc_init(p_libuarte->p_rx_pool);
-    if (ret != NRF_SUCCESS)
-    {
-        return ret;
-    }
-
-    nrf_queue_reset(p_libuarte->p_rx_queue);
     p_libuarte->p_ctrl_blk->enabled = true;
 
     return ret;
@@ -554,15 +623,16 @@ void nrf_libuarte_async_uninit(const nrf_libuarte_async_t * const p_libuarte)
 
     p_libuarte->p_ctrl_blk->enabled = false;
 
-    /* if HW timeout was used */
+    nrf_libuarte_async_stop_rx(p_libuarte);
+    nrf_libuarte_drv_uninit(p_libuarte->p_libuarte);
+
+	/* if HW timeout was used */
     if (p_libuarte->p_app_timer == NULL || !NRF_LIBUARTE_ASYNC_WITH_APP_TIMER)
     {
         uint32_t i;
         ret_code_t ret;
         for (i = 0; i < NRF_LIBUARTE_ASYNC_PPI_CH_MAX; i++)
         {
-            ret = nrfx_ppi_channel_disable(p_libuarte->p_ctrl_blk->ppi_channels[i]);
-            ASSERT(ret == NRF_SUCCESS)
             ret = nrfx_ppi_channel_free(p_libuarte->p_ctrl_blk->ppi_channels[i]);
             ASSERT(ret == NRF_SUCCESS)
         }
@@ -570,31 +640,31 @@ void nrf_libuarte_async_uninit(const nrf_libuarte_async_t * const p_libuarte)
 
     if (p_libuarte->p_rtc && RTC_IN_USE)
     {
-        nrfx_rtc_disable(p_libuarte->p_rtc);
         nrfx_rtc_uninit(p_libuarte->p_rtc);
     }
     else if (p_libuarte->p_timer && TIMER_IN_USE)
     {
-        nrfx_timer_disable(p_libuarte->p_timer);
         nrfx_timer_uninit(p_libuarte->p_timer);
     }
     else if (p_libuarte->p_app_timer && NRF_LIBUARTE_ASYNC_WITH_APP_TIMER)
     {
         UNUSED_RETURN_VALUE(local_app_timer_stop(*p_libuarte->p_app_timer));
     }
-
-    nrf_libuarte_drv_uninit(p_libuarte->p_libuarte);
 }
 
-void nrf_libuarte_async_enable(const nrf_libuarte_async_t * const p_libuarte)
+void nrf_libuarte_async_start_rx(const nrf_libuarte_async_t * const p_libuarte)
 {
-    uint8_t * p_data;
-    p_data = nrf_balloc_alloc(p_libuarte->p_rx_pool);
-    p_libuarte->p_ctrl_blk->alloc_cnt++;
-    if (p_data == NULL)
-    {
-        APP_ERROR_CHECK_BOOL(false);
-    }
+	/* Reset RX state */
+    p_libuarte->p_ctrl_blk->p_curr_rx_buf = NULL;
+    p_libuarte->p_ctrl_blk->rx_free_cnt  = 0;
+    p_libuarte->p_ctrl_blk->sub_rx_count = 0;
+    p_libuarte->p_ctrl_blk->alloc_cnt    = 0;
+    p_libuarte->p_ctrl_blk->rx_halted = false;
+    nrf_queue_reset(p_libuarte->p_rx_queue);
+
+	/* Reset memory pool */
+    ret_code_t ret = nrf_balloc_init(p_libuarte->p_rx_pool);
+    APP_ERROR_CHECK_BOOL(ret == NRF_SUCCESS);
 
     if (p_libuarte->p_rtc && RTC_IN_USE)
     {
@@ -615,9 +685,8 @@ void nrf_libuarte_async_enable(const nrf_libuarte_async_t * const p_libuarte)
         APP_ERROR_CHECK_BOOL(err == NRFX_SUCCESS);
     }
 
-    p_libuarte->p_ctrl_blk->p_curr_rx_buf = p_data;
-    ret_code_t ret =  nrf_libuarte_drv_rx_start(p_libuarte->p_libuarte, p_data, p_libuarte->rx_buf_size, false);
-    APP_ERROR_CHECK_BOOL(ret == NRF_SUCCESS);
+	// Enable RX processing
+    rx_setup(p_libuarte);
 
     if (p_libuarte->p_app_timer && NRF_LIBUARTE_ASYNC_WITH_APP_TIMER)
     {
@@ -627,6 +696,46 @@ void nrf_libuarte_async_enable(const nrf_libuarte_async_t * const p_libuarte)
     }
 }
 
+void nrf_libuarte_async_stop_rx(const nrf_libuarte_async_t * const p_libuarte)
+{
+    /* Stop receiving */
+	nrf_libuarte_drv_rx_stop(p_libuarte->p_libuarte);
+
+	// Stop any RX processing
+    p_libuarte->p_ctrl_blk->rx_enabled = false;
+
+	/* if HW timeout was used */
+    if (p_libuarte->p_app_timer == NULL || !NRF_LIBUARTE_ASYNC_WITH_APP_TIMER)
+    {
+        uint32_t i;
+        ret_code_t ret;
+        for (i = 0; i < NRF_LIBUARTE_ASYNC_PPI_CH_MAX; i++)
+        {
+            ret = nrfx_ppi_channel_disable(p_libuarte->p_ctrl_blk->ppi_channels[i]);
+            ASSERT(ret == NRF_SUCCESS)
+        }
+    }
+
+    if (p_libuarte->p_rtc && RTC_IN_USE)
+    {
+        nrfx_rtc_disable(p_libuarte->p_rtc);
+    }
+    else if (p_libuarte->p_timer && TIMER_IN_USE)
+    {
+        nrfx_timer_disable(p_libuarte->p_timer);
+    }
+    else if (p_libuarte->p_app_timer && NRF_LIBUARTE_ASYNC_WITH_APP_TIMER)
+    {
+        UNUSED_RETURN_VALUE(local_app_timer_stop(*p_libuarte->p_app_timer));
+    }
+}
+
+void nrf_libuarte_async_set_timeout(const nrf_libuarte_async_t * const p_libuarte, unsigned int timeout_us)
+{
+	p_libuarte->p_ctrl_blk->timeout_us = timeout_us;
+    nrfx_timer_compare(p_libuarte->p_timer, NRF_TIMER_CC_CHANNEL0, timeout_us, true);
+}
+
 ret_code_t nrf_libuarte_async_tx(const nrf_libuarte_async_t * const p_libuarte, uint8_t * p_data, size_t length)
 {
     return nrf_libuarte_drv_tx(p_libuarte->p_libuarte, p_data, length);
@@ -634,7 +743,20 @@ ret_code_t nrf_libuarte_async_tx(const nrf_libuarte_async_t * const p_libuarte, 
 
 void nrf_libuarte_async_rx_free(const nrf_libuarte_async_t * const p_libuarte, uint8_t * p_data, size_t length)
 {
-    p_libuarte->p_ctrl_blk->rx_free_cnt += length;
+
+	// Force entire buffer to be freed if we flush on timeout
+	if (p_libuarte->p_ctrl_blk->flush_on_timeout) {
+        p_libuarte->p_ctrl_blk->rx_free_cnt = 0;
+        nrf_balloc_free(p_libuarte->p_rx_pool, p_data);
+        p_libuarte->p_ctrl_blk->alloc_cnt--;
+        if (p_libuarte->p_ctrl_blk->alloc_cnt<0) {
+            NRF_LOG_ERROR("Freeing more RX buffers than allocated.");
+            APP_ERROR_CHECK_BOOL(false);
+        }
+        return;
+	}
+
+	p_libuarte->p_ctrl_blk->rx_free_cnt += length;
     if (p_libuarte->p_ctrl_blk->rx_free_cnt == p_libuarte->rx_buf_size)
     {
         p_data -= (p_libuarte->p_ctrl_blk->rx_free_cnt - length);
@@ -665,7 +787,6 @@ void nrf_libuarte_async_rx_free(const nrf_libuarte_async_t * const p_libuarte, u
     {
         NRF_LOG_INFO("Freeing partial buffer: 0x%08X, length:%d", p_data, length);
     }
-
 }
 
 void nrf_libuarte_async_rts_clear(const nrf_libuarte_async_t * const p_libuarte)

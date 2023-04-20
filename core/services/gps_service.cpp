@@ -13,7 +13,6 @@ extern Scheduler *system_scheduler;
 void GPSService::service_init() {
 	m_is_active = false;
     m_gnss_data.pending_data_logging = false;
-    m_gnss_data.pending_rtc_set = false;
     m_is_first_fix_found = false;
     m_is_first_schedule = true;
     m_num_gps_fixes = 0;
@@ -57,21 +56,24 @@ void GPSService::service_initiate() {
 		gnss_config.fix_mode,
 		gnss_config.dyn_model,
 		gnss_config.assistnow_enable,
-		gnss_config.assistnow_offline_enable
+		gnss_config.assistnow_offline_enable,
+		gnss_config.hdop_filter_enable,
+		gnss_config.hdop_filter_threshold,
+		gnss_config.hacc_filter_enable,
+		gnss_config.hacc_filter_threshold,
 	};
+
+	nav_settings.num_consecutive_fixes = gnss_config.min_num_fixes;
+	nav_settings.sat_tracking = true;
+	nav_settings.acquisition_timeout = MS_PER_SEC * (m_is_first_fix_found ? gnss_config.acquisition_timeout : gnss_config.acquisition_timeout_cold_start);
 
 	m_next_schedule = service_current_time();
 	m_is_first_schedule = false;
 	m_wakeup_time = service_current_timer();
-	m_num_consecutive_fixes = gnss_config.min_num_fixes;
 
 	try {
 		m_is_active = true;
-		m_device.power_on(nav_settings,
-			[this](GNSSData data) {
-				gnss_data_callback(data);
-			}
-		);
+		m_device.power_on(nav_settings);
 	} catch (...) {
 		m_is_active = false;
 		GPSLogEntry log_entry = invalid_log_entry();
@@ -85,13 +87,12 @@ bool GPSService::service_cancel() {
 	DEBUG_TRACE("GPSService::service_cancel");
 
 	if (m_is_active) {
+		m_is_active = false;
 		m_device.power_off();
-		system_scheduler->cancel_task(m_task_update_rtc);
 		system_scheduler->cancel_task(m_task_process_gnss_data);
 		GPSLogEntry log_entry = invalid_log_entry();
 		ServiceEventData event_data = log_entry;
 		service_complete(&event_data, &log_entry);
-		m_is_active = false;
 		return true;
 	}
 
@@ -99,10 +100,8 @@ bool GPSService::service_cancel() {
 }
 
 unsigned int GPSService::service_next_timeout() {
-	GNSSConfig gnss_config;
-	configuration_store->get_gnss_configuration(gnss_config);
-	unsigned int timeout = m_is_first_fix_found ? gnss_config.acquisition_timeout : gnss_config.acquisition_timeout_cold_start;
-	return timeout * MS_PER_SEC;
+	// Timeout are handled in the GPSDevice
+	return 0;
 }
 
 bool GPSService::service_is_triggered_on_surfaced(bool& immediate) {
@@ -136,12 +135,6 @@ GPSLogEntry GPSService::invalid_log_entry()
     return gps_entry;
 }
 
-void GPSService::task_update_rtc()
-{
-    service_set_time(convert_epochtime(m_gnss_data.data.year, m_gnss_data.data.month, m_gnss_data.data.day, m_gnss_data.data.hour, m_gnss_data.data.min, m_gnss_data.data.sec));
-    DEBUG_TRACE("GPSService::task_update_rtc");
-    m_gnss_data.pending_rtc_set = false;
-}
 
 void GPSService::task_process_gnss_data()
 {
@@ -219,47 +212,38 @@ void GPSService::task_process_gnss_data()
     service_complete(&event_data, &gps_entry);
 }
 
+void GPSService::react(const GPSEventPowerOff& e) {
+	if (!m_is_active)
+		return;
+    DEBUG_TRACE("GPSService::react(GPSEventPowerOff)");
+    m_is_active = false;
+    m_device.power_off();
+    if (!e.fix_found) {
+		GPSLogEntry log_entry = invalid_log_entry();
+		ServiceEventData event_data = log_entry;
+		service_complete(&event_data, &log_entry);
+    }
+}
+
+void GPSService::react(const GPSEventError&) {
+}
+
+void GPSService::react(const GPSEventPVT& e) {
+	if (!m_is_active)
+		return;
+    gnss_data_callback(e.data);
+}
+
 void GPSService::gnss_data_callback(GNSSData data) {
     // If we haven't finished processing our last data then ignore this one
-    if (m_gnss_data.pending_data_logging || m_gnss_data.pending_rtc_set)
-        return;
-
-    GNSSConfig gnss_config;
-    configuration_store->get_gnss_configuration(gnss_config);
-
-    m_gnss_data.data = data;
-
-    // Update our time based off this data, schedule this as high priority
-    m_gnss_data.pending_rtc_set = true;
-    m_task_update_rtc = system_scheduler->post_task_prio([this]() {
-    	task_update_rtc();
-    }, "GPSSchedulerUpdateRTC", Scheduler::HIGHEST_PRIORITY);
-
-    // Only process this data if it satisfies an optional hdop threshold
-    if (gnss_config.hdop_filter_enable && (m_gnss_data.data.hDOP > gnss_config.hdop_filter_threshold)) {
-    	m_num_consecutive_fixes = gnss_config.min_num_fixes;
-    	DEBUG_TRACE("GPSService::gnss_data_callback: HDOP threshold %u not met with %f", gnss_config.hdop_filter_threshold, (double)m_gnss_data.data.hDOP);
+    if (m_gnss_data.pending_data_logging)
     	return;
-    }
-
-    // Only process this data if it satisfies an optional hacc threshold
-    if (gnss_config.hacc_filter_enable && (m_gnss_data.data.hAcc > 1000 * gnss_config.hacc_filter_threshold)) {
-    	m_num_consecutive_fixes = gnss_config.min_num_fixes;
-    	DEBUG_TRACE("GPSService::gnss_data_callback: HACC threshold %u not met with %f", 1000 * gnss_config.hacc_filter_threshold, (double)m_gnss_data.data.hAcc);
-    	return;
-    }
-
-    // Now check the requisite number of consecutive fixes have been made
-    if (--m_num_consecutive_fixes) {
-       	DEBUG_TRACE("GPSService::gnss_data_callback: criteria met with %u consecutive fixes remaining", m_num_consecutive_fixes);
-        return;
-    }
 
     // Mark first fix flag
+    m_gnss_data.data = data;
     m_is_first_fix_found = true;
     m_num_gps_fixes++;
 
-    // All filter criteria is met
     {
         // Defer processing this data till we are outside of this interrupt context
         m_gnss_data.pending_data_logging = true;

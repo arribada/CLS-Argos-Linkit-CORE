@@ -39,6 +39,11 @@
  */
 #ifndef UART_ASYNC_H
 #define UART_ASYNC_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include "sdk_errors.h"
 #include "nrf_balloc.h"
@@ -74,7 +79,8 @@ typedef enum
     NRF_LIBUARTE_ASYNC_EVT_RX_DATA,  ///< Requested TX transfer completed.
     NRF_LIBUARTE_ASYNC_EVT_TX_DONE,  ///< Requested RX transfer completed.
     NRF_LIBUARTE_ASYNC_EVT_ERROR,    ///< Error reported by UARTE peripheral.
-    NRF_LIBUARTE_ASYNC_EVT_OVERRUN_ERROR  ///< Error reported by the driver.
+    NRF_LIBUARTE_ASYNC_EVT_OVERRUN_ERROR,  ///< Error reported by the driver.
+    NRF_LIBUARTE_ASYNC_EVT_ALLOC_ERROR  ///< Error reported by the driver.
 } nrf_libuarte_async_evt_type_t;
 
 typedef enum
@@ -124,6 +130,7 @@ typedef struct
     uint32_t             cts_pin;    ///< CTS pin number.
     uint32_t             rts_pin;    ///< RTS pin number.
     uint32_t             timeout_us; ///< Receiver timeout in us unit.
+    bool                 flush_on_timeout;
     nrf_uarte_hwfc_t     hwfc;       ///< Flow control configuration.
     nrf_uarte_parity_t   parity;     ///< Parity configuration.
     nrf_uarte_baudrate_t baudrate;   ///< Baudrate.
@@ -138,16 +145,18 @@ typedef struct {
     nrf_libuarte_async_evt_handler_t evt_handler;
     void * context;
     nrf_ppi_channel_t ppi_channels[NRF_LIBUARTE_ASYNC_PPI_CH_MAX];
-    int32_t alloc_cnt;
-    uint32_t rx_count;
-    uint32_t sub_rx_count;
-    uint8_t * p_curr_rx_buf;
-    uint32_t rx_free_cnt;
-    uint32_t timeout_us;
-    bool app_timer_created;
-    bool hwfc;
-    bool rx_halted;
-    bool enabled;
+    int32_t alloc_cnt;        // Number of balloc buffers allocated
+    uint32_t rx_count;        // Cumulative bytes used in current balloc buffer
+    uint32_t sub_rx_count;    // Cumulative bytes used upon an inter-char timeout
+    uint8_t * p_curr_rx_buf;  // Pointer to current balloc buffer
+    uint32_t rx_free_cnt;     // Cumulative bytes freed from current buffer by user
+    uint32_t timeout_us;      // Nominal inter-character timeout in us
+    bool flush_on_timeout;    // Auto-flush buffers on inter-character timeout
+    bool app_timer_created;   // Set if using app_timer instance
+    bool hwfc;                // Set if HWFC is enabled
+    bool rx_halted;           // Set to indicate RX has been halted
+    bool enabled;             // Set if the driver has been initialized
+    bool rx_enabled;          // Set if RX has been enabled
 } nrf_libuarte_async_ctrl_blk_t;
 
 typedef struct {
@@ -286,12 +295,12 @@ void nrf_libuarte_async_timeout_handler(const nrf_libuarte_async_t * p_libuarte)
 	            ),\
               .p_libuarte = &CONCAT_2(_name, _libuarte),\
               .p_ctrl_blk = &CONCAT_2(_name, ctrl_blk),\
-              .rx_buf_size = _rx_buf_size,\
               _LIBUARTE_ASYNC_EVAL(\
                   NRFX_CONCAT_3(NRFX_RTC, _rtc1_idx, _ENABLED),\
                   (.rtc_handler =CONCAT_2(_name, _rtc_handler)),\
-                  ()\
-              )\
+                  (.rtc_handler = NULL)\
+              ),\
+              .rx_buf_size = _rx_buf_size,\
       };\
       /* RTC compare event is not periodic but need to be enabled again in the callback. */ \
       _LIBUARTE_ASYNC_EVAL(\
@@ -329,11 +338,26 @@ ret_code_t nrf_libuarte_async_init(const nrf_libuarte_async_t * const p_libuarte
 void nrf_libuarte_async_uninit(const nrf_libuarte_async_t * const p_libuarte);
 
 /**
- * @brief Function for enabling receiver.
+ * @brief Function for starting receiver.
  *
  * @param p_libuarte  Libuarte_async instance.
  */
-void nrf_libuarte_async_enable(const nrf_libuarte_async_t * const p_libuarte);
+void nrf_libuarte_async_start_rx(const nrf_libuarte_async_t * const p_libuarte);
+
+/**
+ * @brief Function for stopping receiver.
+ *
+ * @param p_libuarte  Libuarte_async instance.
+ */
+void nrf_libuarte_async_stop_rx(const nrf_libuarte_async_t * const p_libuarte);
+
+/**
+ * @brief Function for modifying the receive timeout.
+ *        This disables/enables the receiver temporarily.
+ *
+ * @param p_libuarte  Libuarte_async instance.
+ */
+void nrf_libuarte_async_set_timeout(const nrf_libuarte_async_t * const p_libuarte, unsigned int timeout_us);
 
 /**
  * @brief Function for deasserting RTS to pause the transmission.
@@ -381,5 +405,9 @@ void nrf_libuarte_async_rx_free(const nrf_libuarte_async_t * const p_libuarte,
                                 uint8_t * p_data, size_t length);
 
 /** @} */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //UART_ASYNC_H

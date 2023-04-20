@@ -398,6 +398,39 @@ complete_config:
     return ret;
 }
 
+static void pins_to_default(NRF_UARTE_Type * p_reg)
+{
+    /* Reset pins to default states */
+    uint32_t txd;
+    uint32_t rxd;
+    uint32_t rts;
+    uint32_t cts;
+
+    txd = nrf_uarte_tx_pin_get(p_reg);
+    rxd = nrf_uarte_rx_pin_get(p_reg);
+    rts = nrf_uarte_rts_pin_get(p_reg);
+    cts = nrf_uarte_cts_pin_get(p_reg);
+    nrf_uarte_txrx_pins_disconnect(p_reg);
+    nrf_uarte_hwfc_pins_disconnect(p_reg);
+
+    if (txd != NRF_UARTE_PSEL_DISCONNECTED)
+    {
+        nrf_gpio_cfg_default(txd);
+    }
+    if (rxd != NRF_UARTE_PSEL_DISCONNECTED)
+    {
+        nrf_gpio_cfg_default(rxd);
+    }
+    if (cts != NRF_UARTE_PSEL_DISCONNECTED)
+    {
+        nrf_gpio_cfg_default(cts);
+    }
+    if (rts != NRF_UARTE_PSEL_DISCONNECTED)
+    {
+        nrf_gpio_cfg_default(rts);
+    }
+}
+
 void tmr_evt_handler(nrf_timer_event_t event_type, void * p_context)
 {
     UNUSED_PARAMETER(event_type);
@@ -503,6 +536,7 @@ ret_code_t nrf_libuarte_drv_init(const nrf_libuarte_drv_t * const p_libuarte,
     }
 
     p_libuarte->ctrl_blk->enabled = true;
+
     return NRF_SUCCESS;
 }
 
@@ -559,6 +593,9 @@ void nrf_libuarte_drv_uninit(const nrf_libuarte_drv_t * const p_libuarte)
         nrfx_gpiote_out_uninit(p_libuarte->ctrl_blk->rts_pin);
     }
     ppi_free(p_libuarte);
+
+    pins_to_default(p_libuarte->uarte);
+
 }
 
 ret_code_t nrf_libuarte_drv_tx(const nrf_libuarte_drv_t * const p_libuarte,
@@ -644,6 +681,7 @@ ret_code_t nrf_libuarte_drv_rx_start(const nrf_libuarte_drv_t * const p_libuarte
          nrf_uarte_task_trigger(p_libuarte->uarte, NRF_UARTE_TASK_STARTRX);
     }
     NRF_LOG_DEBUG("Start continues RX. Provided buffer:0x%08X", p_data);
+
     return NRF_SUCCESS;
 }
 
@@ -685,6 +723,8 @@ void nrf_libuarte_drv_rx_stop(const nrf_libuarte_drv_t * const p_libuarte)
         *(uint32_t *)nrfx_gpiote_set_task_addr_get(p_libuarte->ctrl_blk->rts_pin) = 1;
     }
     p_libuarte->ctrl_blk->p_cur_rx = NULL;
+    p_libuarte->ctrl_blk->p_next_rx = NULL;
+    p_libuarte->ctrl_blk->p_next_next_rx = NULL;
     nrf_uarte_task_trigger(p_libuarte->uarte, NRF_UARTE_TASK_STOPRX);
 }
 
@@ -848,7 +888,6 @@ static void irq_handler(const nrf_libuarte_drv_t * const p_libuarte)
                                         p_libuarte->ctrl_blk->tx_chunk8);
             }
         }
-
     }
 }
 

@@ -1,13 +1,23 @@
 #pragma once
 
-#include <functional>
+#include <map>
+#include <cstdint>
 #include "base_types.hpp"
+#include "events.hpp"
 
 struct GPSNavSettings {
-	BaseGNSSFixMode  fix_mode;
+    BaseGNSSFixMode  fix_mode;
 	BaseGNSSDynModel dyn_model;
 	bool			 assistnow_autonomous_enable;
 	bool             assistnow_offline_enable;
+	bool             hdop_filter_en;
+	unsigned int     hdop_filter_threshold;
+	bool             hacc_filter_en;
+    unsigned int     hacc_filter_threshold;
+    bool             debug_enable = false;
+    bool             sat_tracking = false;
+    unsigned int     num_consecutive_fixes = 1;
+    unsigned int     acquisition_timeout = 0;
 };
 
 struct GNSSData {
@@ -46,13 +56,33 @@ struct GNSSData {
 	uint32_t   ttff;      // ms
 };
 
+struct GPSEventSignalAvailable {};
+struct GPSEventError {};
+struct GPSEventPowerOn {};
+struct GPSEventPowerOff {
+    bool fix_found;
+    bool signal_found;
+    GPSEventPowerOff(bool a, bool b) : fix_found(a), signal_found(b) {}
+};
+struct GPSEventPVT {
+    GNSSData& data;
+    GPSEventPVT(GNSSData& a) : data(a) {}
+};
 
-class GPSDevice {
+class GPSEventListener {
 public:
-	virtual ~GPSDevice() {}
-	// These methods are specific to the chipset and should be implemented by device-specific subclass
-	virtual void power_off() = 0;
-	virtual void power_on(const GPSNavSettings& nav_settings,
-			std::function<void(GNSSData data)> data_notification_callback = nullptr) = 0;
+    virtual ~GPSEventListener() {}
+    virtual void react(const GPSEventPowerOn&) {}
+    virtual void react(const GPSEventPowerOff&) {}
+    virtual void react(const GPSEventError&) {}
+    virtual void react(const GPSEventPVT&) {}
+    virtual void react(const GPSEventSignalAvailable&) {}
+};
 
+class GPSDevice : public EventEmitter<GPSEventListener> {
+public:
+    virtual ~GPSDevice() {}
+    // These methods are specific to the chipset and should be implemented by device-specific subclass
+    virtual void power_off() = 0;
+    virtual void power_on(const GPSNavSettings& nav_settings) = 0;
 };
