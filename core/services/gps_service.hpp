@@ -89,13 +89,11 @@ private:
 	std::time_t  m_next_schedule;
 	struct {
 		GNSSData data;
-		std::atomic<bool> pending_data_logging;
 	} m_gnss_data;
 	unsigned int m_num_gps_fixes;
-	Scheduler::TaskHandle m_task_process_gnss_data;
 	bool m_is_active;
 
-    void react(const GPSEventPowerOff&) override;
+    void react(const GPSEventMaxNavSamples&) override;
     void react(const GPSEventPVT&) override;
     void react(const GPSEventError&) override;
 

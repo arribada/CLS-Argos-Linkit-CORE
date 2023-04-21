@@ -16,9 +16,10 @@ public:
 private:
 	GPSDevice& m_device;
 	int m_current_state;
-	int m_pending_state;
 	unsigned int m_period_underwater_ms;
 	unsigned int m_period_surface_ms;
+	unsigned int m_min_num_dry_samples;
+	unsigned int m_num_dry_samples;
 
 	void notify_update(bool state) {
 		if (state != m_current_state) {
@@ -31,26 +32,38 @@ private:
 		}
 	}
 
-	void react(const GPSEventPowerOff& e) {
+    void react(const GPSEventError&) {
 		if (is_initiated()) {
-			DEBUG_TRACE("GNSSDetectorService: react: GPSEventPowerOff");
-			notify_update(m_pending_state && !e.fix_found);
+			DEBUG_TRACE("GNSSDetectorService: react: GPSEventError");
+			notify_update(m_current_state);
 			poweroff();
 		}
     }
 
-    void react(const GPSEventPowerOn&) {
-    }
-
-    void react(const GPSEventError&) {
-    }
-
-    void react(const GPSEventSignalAvailable&) {
+    void react(const GPSEventMaxSatSamples&) {
 		if (is_initiated()) {
-			DEBUG_TRACE("GNSSDetectorService: react: GPSEventSignalAvailable");
-			m_pending_state = false;
-			notify_update(m_pending_state);
+			DEBUG_TRACE("GNSSDetectorService: react: GPSEventMaxSatSamples");
+			notify_update(true); // Assume wet if we reached maximum samples
 			poweroff();
+		}
+    }
+
+    void react(const GPSEventSatReport& e) {
+		if (is_initiated()) {
+			DEBUG_TRACE("GNSSDetectorService: react: GPSEventSatReport: nSv=%u bestQual=%u dry=%u/%u",
+					e.numSvs,
+					e.bestSignalQuality,
+					m_num_dry_samples,
+					m_min_num_dry_samples);
+			// Use quality threshold of 3 as a dry sample
+			if (e.bestSignalQuality >= 3) {
+				m_num_dry_samples++;
+				if (m_num_dry_samples >= m_min_num_dry_samples) {
+					DEBUG_TRACE("GNSSDetectorService: react: GPSEventSatReport: dry threshold met");
+					notify_update(false);
+					poweroff();
+				}
+			}
 		}
     }
 
@@ -58,6 +71,7 @@ private:
 		m_current_state = -1;
 		m_period_underwater_ms = 1000 * service_read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ);
 		m_period_surface_ms = 1000 * service_read_param<unsigned int>(ParamID::SAMPLING_SURF_FREQ);
+		m_min_num_dry_samples = service_read_param<unsigned int>(ParamID::UW_MIN_DRY_SAMPLES);
 	}
 
 	void poweroff(void) {
@@ -65,10 +79,10 @@ private:
 	}
 
 	void service_term() {}
+
 	bool service_cancel() {
 		if (is_initiated()) {
 			DEBUG_TRACE("GNSSDetectorService: service_cancel");
-			notify_update(m_pending_state);
 			poweroff();
 			return true;
 		}
@@ -80,7 +94,7 @@ private:
 	}
 
 	unsigned int service_next_timeout() {
-		return 1000 * service_read_param<unsigned int>(ParamID::UW_MAX_SAMPLES);
+		return 0;
 	}
 
 	void service_initiate() {
@@ -100,7 +114,8 @@ private:
 		};
 		nav_settings.num_consecutive_fixes = gnss_config.min_num_fixes;
 		nav_settings.sat_tracking = true;
-		m_pending_state = true;
+		nav_settings.max_sat_samples = service_read_param<unsigned int>(ParamID::UW_MAX_SAMPLES);
+		m_num_dry_samples = 0;
 		m_device.power_on(nav_settings);
 	}
 

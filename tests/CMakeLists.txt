@@ -147,6 +147,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/timer_test.cpp"
     "src/filesystem_test.cpp"
     "src/gps_test.cpp"
+    "src/gnss_detector_test.cpp"
     "src/scheduler_test.cpp"
     "src/sm_test.cpp"
     "src/encoder_test.cpp"

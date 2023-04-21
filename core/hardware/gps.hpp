@@ -17,7 +17,8 @@ struct GPSNavSettings {
     bool             debug_enable = false;
     bool             sat_tracking = false;
     unsigned int     num_consecutive_fixes = 1;
-    unsigned int     acquisition_timeout = 0;
+    unsigned int     max_nav_samples = 0;
+    unsigned int     max_sat_samples = 0;
 };
 
 struct GNSSData {
@@ -56,13 +57,20 @@ struct GNSSData {
 	uint32_t   ttff;      // ms
 };
 
-struct GPSEventSignalAvailable {};
+struct GPSEventMaxNavSamples {};
+struct GPSEventMaxSatSamples {};
+
+struct GPSEventSatReport {
+	unsigned int numSvs;
+	unsigned int bestSignalQuality;
+	GPSEventSatReport(unsigned int a, unsigned int b) : numSvs(a), bestSignalQuality(b) {}
+};
+
 struct GPSEventError {};
 struct GPSEventPowerOn {};
 struct GPSEventPowerOff {
     bool fix_found;
-    bool signal_found;
-    GPSEventPowerOff(bool a, bool b) : fix_found(a), signal_found(b) {}
+    GPSEventPowerOff(bool a) : fix_found(a) {}
 };
 struct GPSEventPVT {
     GNSSData& data;
@@ -76,7 +84,9 @@ public:
     virtual void react(const GPSEventPowerOff&) {}
     virtual void react(const GPSEventError&) {}
     virtual void react(const GPSEventPVT&) {}
-    virtual void react(const GPSEventSignalAvailable&) {}
+    virtual void react(const GPSEventSatReport&) {}
+    virtual void react(const GPSEventMaxNavSamples&) {}
+    virtual void react(const GPSEventMaxSatSamples&) {}
 };
 
 class GPSDevice : public EventEmitter<GPSEventListener> {

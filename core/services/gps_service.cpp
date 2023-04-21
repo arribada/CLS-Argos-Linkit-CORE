@@ -12,7 +12,6 @@ extern Scheduler *system_scheduler;
 
 void GPSService::service_init() {
 	m_is_active = false;
-    m_gnss_data.pending_data_logging = false;
     m_is_first_fix_found = false;
     m_is_first_schedule = true;
     m_num_gps_fixes = 0;
@@ -65,21 +64,13 @@ void GPSService::service_initiate() {
 
 	nav_settings.num_consecutive_fixes = gnss_config.min_num_fixes;
 	nav_settings.sat_tracking = true;
-	nav_settings.acquisition_timeout = MS_PER_SEC * (m_is_first_fix_found ? gnss_config.acquisition_timeout : gnss_config.acquisition_timeout_cold_start);
+	nav_settings.max_nav_samples = (m_is_first_fix_found ? gnss_config.acquisition_timeout : gnss_config.acquisition_timeout_cold_start);
 
 	m_next_schedule = service_current_time();
 	m_is_first_schedule = false;
 	m_wakeup_time = service_current_timer();
-
-	try {
-		m_is_active = true;
-		m_device.power_on(nav_settings);
-	} catch (...) {
-		m_is_active = false;
-		GPSLogEntry log_entry = invalid_log_entry();
-		ServiceEventData event_data = log_entry;
-		service_complete(&event_data, &log_entry);
-	}
+	m_is_active = true;
+	m_device.power_on(nav_settings);
 }
 
 bool GPSService::service_cancel() {
@@ -89,7 +80,6 @@ bool GPSService::service_cancel() {
 	if (m_is_active) {
 		m_is_active = false;
 		m_device.power_off();
-		system_scheduler->cancel_task(m_task_process_gnss_data);
 		GPSLogEntry log_entry = invalid_log_entry();
 		ServiceEventData event_data = log_entry;
 		service_complete(&event_data, &log_entry);
@@ -201,10 +191,6 @@ void GPSService::task_process_gnss_data()
 			gps_entry.info.numSV,
 			(double)gps_entry.info.batt_voltage / 1000);
 
-    m_is_active = false;
-    m_device.power_off();
-    m_gnss_data.pending_data_logging = false;
-
     // Notify configuration store that we have a new valid GPS fix
     configuration_store->notify_gps_location(gps_entry);
 
@@ -212,46 +198,41 @@ void GPSService::task_process_gnss_data()
     service_complete(&event_data, &gps_entry);
 }
 
-void GPSService::react(const GPSEventPowerOff& e) {
+void GPSService::react(const GPSEventMaxNavSamples&) {
 	if (!m_is_active)
 		return;
-    DEBUG_TRACE("GPSService::react(GPSEventPowerOff)");
+    DEBUG_TRACE("GPSService::react(GPSEventMaxNavSamples)");
     m_is_active = false;
     m_device.power_off();
-    if (!e.fix_found) {
-		GPSLogEntry log_entry = invalid_log_entry();
-		ServiceEventData event_data = log_entry;
-		service_complete(&event_data, &log_entry);
-    }
+    GPSLogEntry log_entry = invalid_log_entry();
+    ServiceEventData event_data = log_entry;
+    service_complete(&event_data, &log_entry);
 }
 
 void GPSService::react(const GPSEventError&) {
+	if (!m_is_active)
+		return;
+    DEBUG_TRACE("GPSService::react(GPSEventError)");
+    m_device.power_off();
+    GPSLogEntry log_entry = invalid_log_entry();
+    ServiceEventData event_data = log_entry;
+    service_complete(&event_data, &log_entry);
 }
 
 void GPSService::react(const GPSEventPVT& e) {
 	if (!m_is_active)
 		return;
+	m_is_active = false;
+    m_device.power_off();
     gnss_data_callback(e.data);
 }
 
 void GPSService::gnss_data_callback(GNSSData data) {
-    // If we haven't finished processing our last data then ignore this one
-    if (m_gnss_data.pending_data_logging)
-    	return;
-
     // Mark first fix flag
     m_gnss_data.data = data;
     m_is_first_fix_found = true;
     m_num_gps_fixes++;
-
-    {
-        // Defer processing this data till we are outside of this interrupt context
-        m_gnss_data.pending_data_logging = true;
-        m_task_process_gnss_data = system_scheduler->post_task_prio(
-        		[this]() { task_process_gnss_data(); },
-        		"GPSProcessGNSSData",
-        		Scheduler::DEFAULT_PRIORITY);
-    }
+    task_process_gnss_data();
 }
 
 void GPSService::populate_gps_log_with_time(GPSLogEntry &entry, std::time_t time)

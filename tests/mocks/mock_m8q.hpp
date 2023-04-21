@@ -18,6 +18,22 @@ public:
     	notify(GPSEventPVT(gnss_data));
     }
 
+    void notify_max_nav_samples() {
+    	notify<GPSEventMaxNavSamples>({});
+    }
+
+    void notify_max_sat_samples() {
+    	notify<GPSEventMaxSatSamples>({});
+    }
+
+    void notify_sat_report(unsigned int qual=3, unsigned int nSv=1) {
+    	notify(GPSEventSatReport(nSv, qual));
+    }
+
+    void notify_error() {
+    	notify<GPSEventError>({});
+    }
+
     void notify_power_off(bool fix_found ) {
         notify(GPSEventPowerOff(fix_found));
     }
