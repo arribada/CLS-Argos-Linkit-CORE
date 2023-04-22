@@ -70,7 +70,7 @@ execute_process(
 add_executable(${TARGET_NAME})
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 
-target_include_directories(${TARGET_NAME} PRIVATE
+target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
     ${SDK_ROOT}/components/ble/ble_services/ble_ancs_c
     ${SDK_ROOT}/components/ble/ble_services/ble_ias_c
     ${SDK_ROOT}/components/ble/ble_services/ble_gls

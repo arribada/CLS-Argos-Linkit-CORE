@@ -86,7 +86,7 @@ static void rtc_time_keeping_event_handler(drv_rtc_t const * const  p_instance)
 
     if (drv_rtc_overflow_pending(p_instance))
     {
-        g_overflows_occured++;
+        g_overflows_occured = g_overflows_occured + 1;
     }
     else if (drv_rtc_compare_pending(p_instance, 0))
     {

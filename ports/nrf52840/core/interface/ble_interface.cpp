@@ -561,7 +561,7 @@ void BleInterface::nus_data_handler(ble_nus_evt_t * p_evt)
             else
             {
                 memcpy(&m_receive_buffer[m_receive_buffer_len], p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
-                m_receive_buffer_len += p_evt->params.rx_data.length;
+                m_receive_buffer_len = m_receive_buffer_len + p_evt->params.rx_data.length;
                 DEBUG_TRACE("BleInterface::nus_data_handler: received %u bytes cumulative %u (%03x).", p_evt->params.rx_data.length, m_receive_buffer_len, m_receive_buffer_len);
                 if (m_receive_buffer[m_receive_buffer_len - 1] == '\r')
                     m_carriage_return_received = true;
