@@ -20,6 +20,7 @@ private:
 	unsigned int m_period_surface_ms;
 	unsigned int m_min_num_dry_samples;
 	unsigned int m_num_dry_samples;
+	unsigned int m_dry_wet_threshold;
 
 	void notify_update(bool state) {
 		if (state != m_current_state) {
@@ -55,8 +56,8 @@ private:
 					e.bestSignalQuality,
 					m_num_dry_samples,
 					m_min_num_dry_samples);
-			// Use quality threshold of 3 as a dry sample
-			if (e.bestSignalQuality >= 3) {
+			// Use quality threshold to determine dry sample
+			if (e.bestSignalQuality >= m_dry_wet_threshold) {
 				m_num_dry_samples++;
 				if (m_num_dry_samples >= m_min_num_dry_samples) {
 					DEBUG_TRACE("GNSSDetectorService: react: GPSEventSatReport: dry threshold met");
@@ -72,6 +73,17 @@ private:
 		m_period_underwater_ms = 1000 * service_read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ);
 		m_period_surface_ms = 1000 * service_read_param<unsigned int>(ParamID::SAMPLING_SURF_FREQ);
 		m_min_num_dry_samples = service_read_param<unsigned int>(ParamID::UW_MIN_DRY_SAMPLES);
+		m_dry_wet_threshold = (unsigned int)service_read_param<double>(ParamID::UNDERWATER_DETECT_THRESH);
+		// Maximum quality allowed is 7
+		if (m_dry_wet_threshold > 7) {
+			DEBUG_TRACE("GNSSDetectorService: service_init: limiting quality to max 7");
+			m_dry_wet_threshold = 7;
+		}
+		// Minimum quality allowed is 0 since this means "no signal"
+		if (m_dry_wet_threshold == 0) {
+			DEBUG_TRACE("GNSSDetectorService: service_init: limiting quality to min 1");
+			m_dry_wet_threshold = 1;
+		}
 	}
 
 	void poweroff(void) {

@@ -88,7 +88,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x10;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x11;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
@@ -232,7 +232,7 @@ protected:
 		/* GNSS_TRIGGER_ON_SURFACED */ (bool)true,
 		/* GNSS_TRIGGER_ON_AXL_WAKEUP */ (bool)false,
 		/* UNDERWATER_DETECT_SOURCE */ BaseUnderwaterDetectSource::SWS,
-		/* UNDERWATER_DETECT_THRESH */ (double)1.1,
+		/* UNDERWATER_DETECT_THRESH */ (double)3.0,
 		/* PH_SENSOR_ENABLE */ (bool)false,
 		/* PH_SENSOR_PERIODIC */ 0U,
 		/* PH_SENSOR_VALUE */ (double)0.0,

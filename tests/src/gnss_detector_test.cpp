@@ -118,9 +118,11 @@ TEST(GNSSDetector, GNSSDetectorEnabledAndSurfacedThenSubmerged)
 	unsigned int min_dry_samples = 1;
 	unsigned int dry_schedule = 60;
 	unsigned int wet_schedule = 60;
+	double threshold = 3;
 
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, en);
 	fake_config_store->write_param(ParamID::UNDERWATER_DETECT_SOURCE, src);
+	fake_config_store->write_param(ParamID::UNDERWATER_DETECT_THRESH, threshold);
 	fake_config_store->write_param(ParamID::UW_MAX_SAMPLES, max_samples);
 	fake_config_store->write_param(ParamID::UW_MIN_DRY_SAMPLES, min_dry_samples);
 	fake_config_store->write_param(ParamID::SAMPLING_SURF_FREQ, dry_schedule);
@@ -137,7 +139,7 @@ TEST(GNSSDetector, GNSSDetectorEnabledAndSurfacedThenSubmerged)
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(1);
 	mock().expectOneCall("power_off").onObject(mock_m8q).ignoreOtherParameters();
-	mock_m8q->notify_sat_report();
+	mock_m8q->notify_sat_report(threshold);
 	CHECK_EQUAL(1, num_callbacks);
 	CHECK_FALSE(switch_state);
 
