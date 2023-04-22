@@ -30,6 +30,7 @@ private:
 	unsigned int m_num_sat_samples;
 	bool m_powering_off;
 	bool m_fix_was_found;
+	bool m_unrecoverable_error;
 	struct Timeout {
 		Scheduler::TaskHandle handle;
 		bool     running;

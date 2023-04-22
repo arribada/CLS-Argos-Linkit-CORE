@@ -32,7 +32,17 @@ static void convert_datetime_to_epoch(std::time_t time, uint16_t &year, uint8_t 
 {
 	std::tm *date_time = std::gmtime(&time);
 
-    day = date_time->tm_mday;
+	if (date_time == nullptr) {
+		day = 1;
+		month = 1;
+		year = 1970;
+		hour = 0;
+		min = 0;
+		sec = 0;
+		return;
+	}
+
+	day = date_time->tm_mday;
     month = date_time->tm_mon + 1;
     year = date_time->tm_year + 1900;
     hour = date_time->tm_hour;

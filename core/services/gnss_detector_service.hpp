@@ -36,16 +36,16 @@ private:
     void react(const GPSEventError&) {
 		if (is_initiated()) {
 			DEBUG_TRACE("GNSSDetectorService: react: GPSEventError");
-			notify_update(m_current_state);
 			poweroff();
+			notify_update(m_current_state);
 		}
     }
 
     void react(const GPSEventMaxSatSamples&) {
 		if (is_initiated()) {
 			DEBUG_TRACE("GNSSDetectorService: react: GPSEventMaxSatSamples");
-			notify_update(true); // Assume wet if we reached maximum samples
 			poweroff();
+			notify_update(true); // Assume wet if we reached maximum samples
 		}
     }
 
@@ -61,8 +61,8 @@ private:
 				m_num_dry_samples++;
 				if (m_num_dry_samples >= m_min_num_dry_samples) {
 					DEBUG_TRACE("GNSSDetectorService: react: GPSEventSatReport: dry threshold met");
-					notify_update(false);
 					poweroff();
+					notify_update(false);
 				}
 			}
 		}

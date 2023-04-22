@@ -77,12 +77,24 @@ void M8QAsyncReceiver::power_on(const GPSNavSettings& nav_settings) {
 }
 
 void M8QAsyncReceiver::check_for_power_off() {
+
+	// Don't power off unless there are clients or the system is already powering off
 	if (m_num_power_on || m_powering_off)
 		return;
+
 	// Try to cleanup in a way that will preserve navigation data
 	// before powering off
 	m_powering_off = true;
 
+	// Check for unrecoverable error as we won't be able to shutdown cleanly in this case
+	// because it is likely caused by comms failures to the GPS module
+	if (m_unrecoverable_error) {
+		// Do a forced shutdown
+		STATE_CHANGE(idle, poweroff);
+		return;
+	}
+
+	// Try to shutdown cleanly
 	if (STATE_EQUAL(idle)) {
 		return;
 	} else if (STATE_EQUAL(receive)) {
@@ -92,11 +104,13 @@ void M8QAsyncReceiver::check_for_power_off() {
 	} else if (STATE_EQUAL(configure)) {
 		STATE_CHANGE(configure, poweroff);
 	} else if (STATE_EQUAL(startreceive)) {
-		STATE_CHANGE(startreceive, stopreceive);
+		STATE_CHANGE(startreceive, poweroff);
 	} else if (STATE_EQUAL(senddatabase)) {
 		STATE_CHANGE(senddatabase, poweroff);
 	} else if (STATE_EQUAL(sendofflinedatabase)) {
 		STATE_CHANGE(sendofflinedatabase, poweroff);
+	} else {
+		STATE_CHANGE(idle, poweroff);
 	}
 }
 
@@ -383,8 +397,9 @@ void M8QAsyncReceiver::on_timeout() {
 		m_ubx_comms.cancel_expect();
 		state_machine();
 	} else if (STATE_EQUAL(receive)) {
-		// No fix within requested receive timeout
+		// No NAV/SAT information received within requested receive timeout
 		DEBUG_ERROR("M8QAsyncReceiver::on_timeout: no NAV/SAT info received");
+		m_unrecoverable_error = true;
 		notify<GPSEventError>({});
 	}
 }
@@ -399,6 +414,7 @@ void M8QAsyncReceiver::state_poweron_enter() {
 	m_op_state = OpState::IDLE;
 	m_uart_error_count = 0;
 	m_fix_was_found = false;
+	m_unrecoverable_error = false;
 	exit_shutdown();
     notify<GPSEventPowerOn>({});
 }
@@ -412,6 +428,7 @@ void M8QAsyncReceiver::state_poweron() {
 				break;
 			} else {
 				DEBUG_ERROR("M8QAsyncReceiver: failed to sync comms");
+				m_unrecoverable_error = true;
 				notify<GPSEventError>({});
 				break;
 			}
@@ -544,6 +561,7 @@ void M8QAsyncReceiver::state_configure() {
 		} else {
 			if (--m_retries == 0) {
 				DEBUG_ERROR("M8QAsyncReceiver::state_configure: failed");
+				m_unrecoverable_error = true;
 				notify<GPSEventError>({});
 				break;
 			}
@@ -590,6 +608,7 @@ void M8QAsyncReceiver::state_startreceive() {
 		} else {
 			if (--m_retries == 0) {
 				DEBUG_ERROR("M8QAsyncReceiver::state_start_receive: failed");
+				m_unrecoverable_error = true;
 				notify<GPSEventError>({});
 				break;
 			}
@@ -662,7 +681,8 @@ void M8QAsyncReceiver::state_stopreceive() {
 		} else {
 			if (--m_retries == 0) {
 				DEBUG_ERROR("M8QAsyncReceiver: stop receive failed");
-				STATE_CHANGE(stopreceive, poweroff);
+				m_unrecoverable_error = true;
+				notify<GPSEventError>({});
 				break;
 			}
 			m_op_state = OpState::IDLE;
@@ -791,7 +811,7 @@ void M8QAsyncReceiver::state_senddatabase() {
 		} else if (m_op_state == OpState::PENDING) {
 			break;
 		} else {
-			DEBUG_ERROR("M8QAsyncReceiver::state_send_database: failed");
+			DEBUG_WARN("M8QAsyncReceiver::state_send_database: failed");
 			STATE_CHANGE(senddatabase, startreceive);
 			break;
 		}
@@ -874,7 +894,7 @@ void M8QAsyncReceiver::state_sendofflinedatabase() {
 			STATE_CHANGE(sendofflinedatabase, startreceive);
 			break;
 		} else {
-			DEBUG_ERROR("M8QAsyncReceiver::state_sendofflinedatabase: failed");
+			DEBUG_WARN("M8QAsyncReceiver::state_sendofflinedatabase: failed");
 			STATE_CHANGE(sendofflinedatabase, startreceive);
 			break;
 		}
