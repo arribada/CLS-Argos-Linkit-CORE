@@ -132,6 +132,7 @@ public:
 	void start_dbd_filter();
 	void stop_dbd_filter();
 	bool is_expected_msg_count(uint8_t *buffer, unsigned int length, unsigned int expected,
+			unsigned int& actual_count,
 			UBX::MessageClass msg_cls, uint8_t msg_id);
 	void copy_mga_ano_to_buffer(File& file, uint8_t *dest_buffer, const unsigned int buffer_size, std::time_t now,
 			unsigned int& num_bytes_copied, unsigned int& num_msg_copied,

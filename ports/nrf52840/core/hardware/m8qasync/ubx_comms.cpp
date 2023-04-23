@@ -357,6 +357,7 @@ void UBXComms::run_dbd_filter(uint8_t *buffer, unsigned int length) {
 }
 
 bool UBXComms::is_expected_msg_count(uint8_t *buffer, unsigned int length, unsigned int expected,
+		unsigned int& actual_count,
 		MessageClass msg_cls, uint8_t msg_id) {
 
 	HeaderAndPayloadCRC *msg;
@@ -369,6 +370,8 @@ bool UBXComms::is_expected_msg_count(uint8_t *buffer, unsigned int length, unsig
 		if (msg->msgClass == msg_cls && msg->msgId == msg_id)
 			count++;
 	}
+
+	actual_count = count;
 
 	return (count == expected);
 }
