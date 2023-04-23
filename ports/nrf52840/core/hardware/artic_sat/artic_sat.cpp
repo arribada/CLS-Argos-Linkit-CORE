@@ -565,6 +565,7 @@ void ArticSat::state_machine(bool use_scheduler) {
 	if (use_scheduler && !ARTIC_STATE_EQUAL(stopped)) {
 		// Invoke ourselves again if we are not stopped
 		//DEBUG_TRACE("ArticSat::state_machine: reschedule in %u ms", m_next_delay);
+		system_scheduler->cancel_task(m_task);
 		m_task = system_scheduler->post_task_prio([this]() {
 			state_machine();
 		}, "ArgosTransceiverStateMachine", Scheduler::DEFAULT_PRIORITY, m_next_delay);
@@ -580,6 +581,7 @@ void ArticSat::state_starting_exit() {
 void ArticSat::state_starting() {
     m_is_first_tx = true;
 	m_nrf_spim = new NrfSPIM(SPI_SATELLITE);
+	m_state_counter = 3;  // Initally used for number of DSP reset attempts
 	ARTIC_STATE_CHANGE(starting, powering_on);
 }
 
@@ -637,38 +639,36 @@ void ArticSat::state_powering_on_exit() {
 }
 
 void ArticSat::state_powering_on() {
-    GPIOPins::set(SAT_PWR_EN);
     GPIOPins::set(SAT_RESET);
-    ARTIC_STATE_CHANGE(powering_on, reset_assert);
+    GPIOPins::set(SAT_PWR_EN);
+    ARTIC_STATE_CHANGE(powering_on, dsp_reset);
 }
 
 void ArticSat::state_reset_assert_enter() {
+	// State no longer used
 }
 
 void ArticSat::state_reset_assert_exit() {
-	m_next_delay = SAT_ARTIC_DELAY_RESET_MS;
+	// State no longer used
 }
 
 void ArticSat::state_reset_assert() {
-    GPIOPins::clear(SAT_RESET);
-    ARTIC_STATE_CHANGE(reset_assert, reset_deassert);
+	// State no longer used
 }
 
 void ArticSat::state_reset_deassert_enter() {
-	m_next_delay = SAT_ARTIC_DELAY_RESET_MS;
+	// State no longer used
 }
 
 void ArticSat::state_reset_deassert_exit() {
-	m_next_delay = SAT_ARTIC_DELAY_RESET_MS;
+	// State no longer used
 }
 
 void ArticSat::state_reset_deassert() {
-    GPIOPins::set(SAT_RESET);
     ARTIC_STATE_CHANGE(reset_deassert, dsp_reset);
 }
 
 void ArticSat::state_dsp_reset_enter() {
-	m_state_counter = 3;
 }
 
 void ArticSat::state_dsp_reset_exit() {
@@ -690,8 +690,12 @@ void ArticSat::state_dsp_reset() {
 			// Failed to reset DSP
 			DEBUG_ERROR("ArticSat::state_machine: DSP reset failed");
 			ARTIC_STATE_CHANGE(dsp_reset, error);
-		} else
-			m_next_delay = SAT_ARTIC_DELAY_RESET_MS;
+		} else {
+			DEBUG_WARN("ArticSat::state_machine: DSP reset failed: retries remaining %u", m_state_counter);
+			m_next_delay = 100; // Wait 100ms before trying to power on again
+		    GPIOPins::clear(SAT_PWR_EN);
+			ARTIC_STATE_CHANGE(dsp_reset, powering_on);
+		}
 	}
 }
 

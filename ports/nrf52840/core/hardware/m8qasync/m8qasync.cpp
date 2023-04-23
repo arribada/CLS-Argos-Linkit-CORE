@@ -737,12 +737,15 @@ void M8QAsyncReceiver::state_fetchdatabase() {
 						m_ana_database_len = 0;
 						STATE_CHANGE(fetchdatabase, poweroff);
 						break;
+					} else {
+						DEBUG_TRACE("M8QAsyncReceiver::state_fetchdatabase: validation failed: %u/%u msgs received: retry",
+								actual_count, m_expected_dbd_messages);
+						m_ana_database_len = 0;
+						m_expected_dbd_messages = 0;
+						m_op_state = OpState::IDLE;
+						m_step = 0;
+						continue;
 					}
-					DEBUG_TRACE("M8QAsyncReceiver::state_fetchdatabase: validation failed; retry");
-					m_ana_database_len = 0;
-					m_expected_dbd_messages = 0;
-					m_op_state = OpState::IDLE;
-					m_step = 0;
 				} else {
 					DEBUG_TRACE("M8QAsyncReceiver::state_fetchdatabase: success");
 					// Subtract the size of the MGA-ACK message from the database length
