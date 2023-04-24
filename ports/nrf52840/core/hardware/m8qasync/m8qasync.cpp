@@ -781,7 +781,7 @@ void M8QAsyncReceiver::state_senddatabase_enter() {
 	m_op_state = OpState::IDLE;
 	m_mga_ack_count = 0;
 	m_ubx_comms.start_dbd_filter();
-	m_retries = 10;
+	m_retries = 3;
 	DEBUG_TRACE("M8QAsyncReceiver::state_senddatabase: sending length %u bytes", m_ana_database_len);
 }
 
@@ -796,7 +796,7 @@ void M8QAsyncReceiver::state_senddatabase() {
 			m_op_state = OpState::PENDING;
 			if (m_step < m_ana_database_len) {
 				// Send buffer contents in chunks raw and notify when sent
-				unsigned int sz = std::min(64U, (m_ana_database_len - m_step));
+				unsigned int sz = std::min(256U, (m_ana_database_len - m_step));
 				m_ubx_comms.send(&m_navigation_database[m_step], sz, true, true);
 				m_step += sz;
 				break;
@@ -827,7 +827,7 @@ void M8QAsyncReceiver::state_senddatabase() {
 		} else if (m_op_state == OpState::SUCCESS) {
 			// Skip to next record
 			m_op_state = OpState::IDLE;
-			run_state_machine(1);  // Require 1 ms delay between transmitted data
+			run_state_machine(5);  // Wait 5 ms delay between transmitted data
 			break;
 		} else if (m_op_state == OpState::PENDING) {
 			break;
