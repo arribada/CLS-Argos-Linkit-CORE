@@ -143,6 +143,11 @@ enum class ParamID {
 	UW_PIN_SAMPLE_DELAY,
 	UW_DIVE_MODE_ENABLE,
 	UW_DIVE_MODE_START_TIME,
+	UW_GNSS_DRY_SAMPLING,
+	UW_GNSS_WET_SAMPLING,
+	UW_GNSS_MAX_SAMPLES,
+	UW_GNSS_MIN_DRY_SAMPLES,
+	UW_GNSS_DETECT_THRESH,
 	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
 };
@@ -175,7 +180,8 @@ enum class BaseEncoding {
 enum class BaseUnderwaterDetectSource {
 	SWS = 0,
 	PRESSURE_SENSOR,
-	GNSS
+	GNSS,
+	SWS_GNSS
 };
 
 enum class BaseLogDType {

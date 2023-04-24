@@ -41,7 +41,7 @@ void UWDetectorService::service_initiate() {
 			ServiceEventData event = m_pending_state;
 			service_complete(&event);
 		} else {
-			DEBUG_TRACE("UWDetectorService state unchanged");
+			DEBUG_TRACE("UWDetectorService: state unchanged");
 			service_complete();
 		}
 		m_pending_state = false;
@@ -57,17 +57,11 @@ void UWDetectorService::service_init() {
 	m_activation_threshold = service_read_param<double>(ParamID::UNDERWATER_DETECT_THRESH);
 	m_sample_gap = service_read_param<unsigned int>(ParamID::UW_SAMPLE_GAP);
 	m_enable_sample_delay = service_read_param<unsigned int>(ParamID::UW_PIN_SAMPLE_DELAY);
+	m_max_samples = service_read_param<unsigned int>(ParamID::UW_MAX_SAMPLES);
+	m_min_dry_samples = service_read_param<unsigned int>(ParamID::UW_MIN_DRY_SAMPLES);
 	m_sample_iteration = 0;
 	m_dry_count = 0;
 	m_pending_state = false;
-	BaseUnderwaterDetectSource src = service_read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE);
-	if (src == BaseUnderwaterDetectSource::SWS) {
-		m_max_samples = service_read_param<unsigned int>(ParamID::UW_MAX_SAMPLES);
-		m_min_dry_samples = service_read_param<unsigned int>(ParamID::UW_MIN_DRY_SAMPLES);
-	} else {
-		m_max_samples = 1;
-		m_min_dry_samples = 1;
-	}
 }
 
 void UWDetectorService::service_term() {

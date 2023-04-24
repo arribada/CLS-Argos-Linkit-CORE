@@ -163,6 +163,13 @@ const BaseMap param_map[] = {
 	// Dive mode
 	{ "UW_DIVE_MODE_ENABLE", "UNP12", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "UW_DIVE_MODE_START_TIME", "UNP13", BaseEncoding::UINT, 0U, 0xFFFFFFFFU, {}, true, true },
+
+	// GNSS UW parameters
+	{ "UW_GNSS_DRY_SAMPLING", "UNP14", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
+	{ "UW_GNSS_WET_SAMPLING", "UNP15", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
+	{ "UW_GNSS_MAX_SAMPLES", "UNP16", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
+	{ "UW_GNSS_MIN_DRY_SAMPLES", "UNP17", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
+	{ "UW_GNSS_DETECT_THRESH", "UNP18", BaseEncoding::UINT, 1U, 7U, {}, true, true },
 };
 
 const size_t param_map_size = sizeof(param_map) / sizeof(param_map[0]);

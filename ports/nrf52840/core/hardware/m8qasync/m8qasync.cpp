@@ -781,7 +781,6 @@ void M8QAsyncReceiver::state_senddatabase_enter() {
 	m_op_state = OpState::IDLE;
 	m_mga_ack_count = 0;
 	m_ubx_comms.start_dbd_filter();
-	m_retries = 3;
 	DEBUG_TRACE("M8QAsyncReceiver::state_senddatabase: sending length %u bytes", m_ana_database_len);
 }
 
@@ -796,7 +795,7 @@ void M8QAsyncReceiver::state_senddatabase() {
 			m_op_state = OpState::PENDING;
 			if (m_step < m_ana_database_len) {
 				// Send buffer contents in chunks raw and notify when sent
-				unsigned int sz = std::min(256U, (m_ana_database_len - m_step));
+				unsigned int sz = std::min(128U, (m_ana_database_len - m_step));
 				m_ubx_comms.send(&m_navigation_database[m_step], sz, true, true);
 				m_step += sz;
 				break;
@@ -805,23 +804,13 @@ void M8QAsyncReceiver::state_senddatabase() {
 				if (!m_ubx_comms.is_expected_msg_count(m_navigation_database, m_mga_ack_count,
 						m_expected_dbd_messages, actual_count, MessageClass::MSG_CLASS_MGA,
 						MGA::ID_ACK)) {
-					if (--m_retries == 0) {
-						DEBUG_WARN("M8QAsyncReceiver::state_senddatabase: missing MGA-ACK: %u/%u acks recieved",
-								actual_count, m_expected_dbd_messages);
-						STATE_CHANGE(senddatabase, startreceive);
-						break;
-					} else {
-						DEBUG_TRACE("M8QAsyncReceiver::state_senddatabase: MGA-ACK: %u/%u acks recieved",
-								actual_count, m_expected_dbd_messages);
-						m_op_state = OpState::IDLE;
-						run_state_machine(10); // Poll again in 10 ms
-						break;
-					}
+					DEBUG_TRACE("M8QAsyncReceiver::state_senddatabase: missing MGA-ACK: %u/%u acks recieved",
+							actual_count, m_expected_dbd_messages);
 				} else {
 					DEBUG_TRACE("M8QAsyncReceiver::state_senddatabase: success: %u/%u acks recieved",
 							actual_count, m_expected_dbd_messages);
-					STATE_CHANGE(senddatabase, startreceive);
 				}
+				STATE_CHANGE(senddatabase, startreceive);
 				break;
 			}
 		} else if (m_op_state == OpState::SUCCESS) {

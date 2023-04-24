@@ -91,6 +91,7 @@ TEST_GROUP(GPSService)
 		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED,
 		e.event_data = state,
 		e.event_source = ServiceIdentifier::UW_SENSOR;
+		e.event_originator_unique_id = 0x12345678;
 		ServiceManager::notify_peer_event(e);
 	}
 
@@ -679,6 +680,7 @@ TEST(GPSService, GNSSNoPeriodicTriggerOnAXLWakeupEvent)
 	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
 	e.event_data = true;
 	e.event_source = ServiceIdentifier::AXL_SENSOR;
+	e.event_originator_unique_id = 0x12345678;
 	s.notify_peer_event(e);
 	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
 	increment_time_s(1);

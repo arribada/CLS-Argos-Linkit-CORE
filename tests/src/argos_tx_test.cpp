@@ -84,6 +84,7 @@ TEST_GROUP(ArgosTxService)
 		e.event_source = ServiceIdentifier::GNSS_SENSOR;
 		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
 		e.event_data = log;
+		e.event_originator_unique_id = 0x12345678;
 		ServiceManager::notify_peer_event(e);
 		configuration_store->notify_gps_location(log);
 	}
@@ -93,6 +94,7 @@ TEST_GROUP(ArgosTxService)
 		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED,
 		e.event_data = state,
 		e.event_source = ServiceIdentifier::UW_SENSOR;
+		e.event_originator_unique_id = 0x12345678;
 		ServiceManager::notify_peer_event(e);
 	}
 };

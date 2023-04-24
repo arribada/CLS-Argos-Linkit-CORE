@@ -85,9 +85,10 @@ TEST_GROUP(GNSSDetector)
 
 	void notify_underwater_state(bool state) {
 		ServiceEvent e;
-		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED,
-		e.event_data = state,
+		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+		e.event_data = state;
 		e.event_source = ServiceIdentifier::UW_SENSOR;
+		e.event_originator_unique_id = 0x12345678;
 		ServiceManager::notify_peer_event(e);
 	}
 
@@ -118,15 +119,15 @@ TEST(GNSSDetector, GNSSDetectorEnabledAndSurfacedThenSubmerged)
 	unsigned int min_dry_samples = 1;
 	unsigned int dry_schedule = 60;
 	unsigned int wet_schedule = 60;
-	double threshold = 3;
+	unsigned int threshold = 3;
 
 	fake_config_store->write_param(ParamID::UNDERWATER_EN, en);
 	fake_config_store->write_param(ParamID::UNDERWATER_DETECT_SOURCE, src);
-	fake_config_store->write_param(ParamID::UNDERWATER_DETECT_THRESH, threshold);
-	fake_config_store->write_param(ParamID::UW_MAX_SAMPLES, max_samples);
-	fake_config_store->write_param(ParamID::UW_MIN_DRY_SAMPLES, min_dry_samples);
-	fake_config_store->write_param(ParamID::SAMPLING_SURF_FREQ, dry_schedule);
-	fake_config_store->write_param(ParamID::SAMPLING_UNDER_FREQ, wet_schedule);
+	fake_config_store->write_param(ParamID::UW_GNSS_DETECT_THRESH, threshold);
+	fake_config_store->write_param(ParamID::UW_GNSS_MAX_SAMPLES, max_samples);
+	fake_config_store->write_param(ParamID::UW_GNSS_MIN_DRY_SAMPLES, min_dry_samples);
+	fake_config_store->write_param(ParamID::UW_GNSS_DRY_SAMPLING, dry_schedule);
+	fake_config_store->write_param(ParamID::UW_GNSS_WET_SAMPLING, wet_schedule);
 
 	GNSSDetectorService s(*mock_m8q);
 	s.start([&switch_state, &num_callbacks](ServiceEvent &event) {
@@ -154,4 +155,67 @@ TEST(GNSSDetector, GNSSDetectorEnabledAndSurfacedThenSubmerged)
 	mock_m8q->notify_max_sat_samples();
 	CHECK_EQUAL(1, num_callbacks);
 	CHECK_TRUE(switch_state);
+}
+
+
+TEST(GNSSDetector, GNSSDetectorEnabledWithSWSDetectSurfacingOnly)
+{
+	unsigned int num_callbacks = 0;
+	bool switch_state = false;
+	bool en = true;
+	BaseUnderwaterDetectSource src = BaseUnderwaterDetectSource::SWS_GNSS;
+	unsigned int max_samples = 10;
+	unsigned int min_dry_samples = 1;
+	unsigned int dry_schedule = 60;
+	unsigned int wet_schedule = 60;
+	unsigned int threshold = 3;
+
+	fake_config_store->write_param(ParamID::UNDERWATER_EN, en);
+	fake_config_store->write_param(ParamID::UNDERWATER_DETECT_SOURCE, src);
+	fake_config_store->write_param(ParamID::UW_GNSS_DETECT_THRESH, threshold);
+	fake_config_store->write_param(ParamID::UW_GNSS_MAX_SAMPLES, max_samples);
+	fake_config_store->write_param(ParamID::UW_GNSS_MIN_DRY_SAMPLES, min_dry_samples);
+	fake_config_store->write_param(ParamID::UW_GNSS_DRY_SAMPLING, dry_schedule);
+	fake_config_store->write_param(ParamID::UW_GNSS_WET_SAMPLING, wet_schedule);
+
+	GNSSDetectorService s(*mock_m8q);
+	s.start([&switch_state, &num_callbacks](ServiceEvent &event) {
+		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+			switch_state = std::get<bool>(event.event_data);
+			num_callbacks++;
+		}
+	});
+
+	// Expect surfaced event when no existing state available
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(1);
+	mock().expectOneCall("power_off").onObject(mock_m8q).ignoreOtherParameters();
+	mock_m8q->notify_sat_report(threshold);
+	CHECK_EQUAL(1, num_callbacks);
+	CHECK_FALSE(switch_state);
+
+	// Do not expect submerge event from GNSS when SWS is also used
+	num_callbacks = 0;
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(dry_schedule);
+	for (unsigned int i = 0; i < max_samples; i++)
+		mock_m8q->notify_sat_report(0);
+	mock().expectOneCall("power_off").onObject(mock_m8q).ignoreOtherParameters();
+	mock_m8q->notify_max_sat_samples();
+
+	CHECK_EQUAL(0, num_callbacks);
+	CHECK_EQUAL(0, num_callbacks);
+	CHECK_FALSE(switch_state);
+
+	// Notify submerged state from another source
+	notify_underwater_state(true);
+
+	// Expect surface event from GNSS once more
+	num_callbacks = 0;
+	mock().expectOneCall("power_on").onObject(mock_m8q).ignoreOtherParameters();
+	increment_time_s(dry_schedule);
+	mock().expectOneCall("power_off").onObject(mock_m8q).ignoreOtherParameters();
+	mock_m8q->notify_sat_report(threshold);
+	CHECK_EQUAL(1, num_callbacks);
+	CHECK_FALSE(switch_state);
 }

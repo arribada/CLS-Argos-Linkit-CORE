@@ -492,6 +492,7 @@ TEST(Sm, CheckGNSSWithFixLedTransitions)
 	ServiceEvent e;
 	e.event_source = ServiceIdentifier::GNSS_SENSOR;
 	e.event_type = ServiceEventType::SERVICE_ACTIVE;
+	e.event_originator_unique_id = 0x12345678;
 	ServiceManager::inject_event(e);
 	CHECK_EQUAL((int)RGBLedColor::CYAN, (int)status_led->get_state());
 	CHECK_TRUE(status_led->is_flashing());
@@ -549,6 +550,7 @@ TEST(Sm, CheckGNSSWithoutFixLedTransitions)
 	ServiceEvent e;
 	e.event_source = ServiceIdentifier::GNSS_SENSOR;
 	e.event_type = ServiceEventType::SERVICE_ACTIVE;
+	e.event_originator_unique_id = 0x12345678;
 	ServiceManager::inject_event(e);
 	CHECK_EQUAL((int)RGBLedColor::CYAN, (int)status_led->get_state());
 	CHECK_TRUE(ext_status_led->get_state());
@@ -604,6 +606,7 @@ TEST(Sm, CheckArgosTXLedTransitions)
 	ServiceEvent e;
 	e.event_source = ServiceIdentifier::ARGOS_TX;
 	e.event_type = ServiceEventType::SERVICE_ACTIVE;
+	e.event_originator_unique_id = 0x12345678;
 	ServiceManager::inject_event(e);
 	CHECK_EQUAL((int)RGBLedColor::MAGENTA, (int)status_led->get_state());
 	CHECK_FALSE(status_led->is_flashing());

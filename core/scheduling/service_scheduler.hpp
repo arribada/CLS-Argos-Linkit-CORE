@@ -40,6 +40,7 @@ struct ServiceEvent {
 	ServiceEventType  event_type;
 	ServiceEventData  event_data;
 	ServiceIdentifier event_source;
+	unsigned int	  event_originator_unique_id;
 };
 
 // Legacy code for old interface

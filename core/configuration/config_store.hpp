@@ -232,7 +232,7 @@ protected:
 		/* GNSS_TRIGGER_ON_SURFACED */ (bool)true,
 		/* GNSS_TRIGGER_ON_AXL_WAKEUP */ (bool)false,
 		/* UNDERWATER_DETECT_SOURCE */ BaseUnderwaterDetectSource::SWS,
-		/* UNDERWATER_DETECT_THRESH */ (double)3.0,
+		/* UNDERWATER_DETECT_THRESH */ (double)1.1,
 		/* PH_SENSOR_ENABLE */ (bool)false,
 		/* PH_SENSOR_PERIODIC */ 0U,
 		/* PH_SENSOR_VALUE */ (double)0.0,
@@ -275,6 +275,11 @@ protected:
 #endif
 		/* UW_DIVE_MODE_ENABLE */ (bool)true,
 		/* UW_DIVE_MODE_START_TIME */ 0U,
+		/* UW_GNSS_DRY_SAMPLING */ 24U * 3600U,
+		/* UW_GNSS_WET_SAMPLING */ 24U * 3600U,
+		/* UW_GNSS_MAX_SAMPLES */ 45U,
+		/* UW_GNSS_MIN_DRY_SAMPLES */ 1U,
+		/* UW_GNSS_DETECT_THRESH */ 1U,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,

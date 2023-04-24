@@ -101,4 +101,5 @@ public:
 	static void notify_peer_event(ServiceEvent& event);
 	static void inject_event(ServiceEvent& event);
 	static Logger *get_logger(ServiceIdentifier service_id);
+	static unsigned int get_unique_id(const char *name);
 };

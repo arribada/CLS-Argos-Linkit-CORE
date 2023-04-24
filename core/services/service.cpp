@@ -38,9 +38,18 @@ void ServiceManager::stopall() {
 
 void ServiceManager::notify_peer_event(ServiceEvent& event) {
 	for (auto const& p : m_map) {
-		if (p.second.get_service_id() != event.event_source)
+		if (p.first != event.event_originator_unique_id)
 			p.second.notify_peer_event(event);
 	}
+}
+
+unsigned int ServiceManager::get_unique_id(const char *name) {
+	for (auto const& p : m_map) {
+		if (std::string(p.second.get_name()) == std::string(name))
+			return p.second.get_unique_id();
+	}
+
+	throw ErrorCode::RESOURCE_NOT_AVAILABLE;
 }
 
 Logger *ServiceManager::get_logger(ServiceIdentifier service_id) {
@@ -274,6 +283,7 @@ void Service::notify_log_updated(ServiceEventData& data) {
 		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
 		e.event_source = m_service_id;
 		e.event_data = data;
+		e.event_originator_unique_id = m_unique_id;
 		m_data_notification_callback(e);
 	}
 }
@@ -283,6 +293,7 @@ void Service::notify_service_active() {
 		ServiceEvent e;
 		e.event_type = ServiceEventType::SERVICE_ACTIVE;
 		e.event_source = m_service_id;
+		e.event_originator_unique_id = m_unique_id;
 		m_data_notification_callback(e);
 	}
 }
@@ -292,6 +303,7 @@ void Service::notify_service_inactive() {
 		ServiceEvent e;
 		e.event_type = ServiceEventType::SERVICE_INACTIVE;
 		e.event_source = m_service_id;
+		e.event_originator_unique_id = m_unique_id;
 		m_data_notification_callback(e);
 	}
 }

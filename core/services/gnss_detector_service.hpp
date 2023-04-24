@@ -21,14 +21,17 @@ private:
 	unsigned int m_min_num_dry_samples;
 	unsigned int m_num_dry_samples;
 	unsigned int m_dry_wet_threshold;
+	bool m_gnss_only_detect_surfacing;
 
 	void notify_update(bool state) {
-		if (state != m_current_state) {
+		if ((m_gnss_only_detect_surfacing && !state && (m_current_state == -1 || m_current_state == 1)) ||
+		    (!m_gnss_only_detect_surfacing && (state != m_current_state))) {
 			DEBUG_INFO("GNSSDetectorService: notify_update: new_state=%u", state);
 			m_current_state = state;
 			ServiceEventData event = state;
 			service_complete(&event);
 		} else {
+			DEBUG_TRACE("GNSSDetectorService: state unchanged");
 			service_complete(nullptr);
 		}
 	}
@@ -70,10 +73,11 @@ private:
 
 	void service_init() {
 		m_current_state = -1;
-		m_period_underwater_ms = 1000 * service_read_param<unsigned int>(ParamID::SAMPLING_UNDER_FREQ);
-		m_period_surface_ms = 1000 * service_read_param<unsigned int>(ParamID::SAMPLING_SURF_FREQ);
-		m_min_num_dry_samples = service_read_param<unsigned int>(ParamID::UW_MIN_DRY_SAMPLES);
-		m_dry_wet_threshold = (unsigned int)service_read_param<double>(ParamID::UNDERWATER_DETECT_THRESH);
+		m_period_underwater_ms = 1000 * service_read_param<unsigned int>(ParamID::UW_GNSS_WET_SAMPLING);
+		m_period_surface_ms = 1000 * service_read_param<unsigned int>(ParamID::UW_GNSS_DRY_SAMPLING);
+		m_min_num_dry_samples = service_read_param<unsigned int>(ParamID::UW_GNSS_MIN_DRY_SAMPLES);
+		m_dry_wet_threshold = service_read_param<unsigned int>(ParamID::UW_GNSS_DETECT_THRESH);
+		m_gnss_only_detect_surfacing = service_read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE) == BaseUnderwaterDetectSource::SWS_GNSS;
 		// Maximum quality allowed is 7
 		if (m_dry_wet_threshold > 7) {
 			DEBUG_TRACE("GNSSDetectorService: service_init: limiting quality to max 7");
@@ -109,6 +113,15 @@ private:
 		return 0;
 	}
 
+	void notify_peer_event(ServiceEvent& e) {
+		// GNSS must slave off other UW sensor events (e.g., SWS)
+		if (e.event_source == ServiceIdentifier::UW_SENSOR && e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+			DEBUG_TRACE("GNSSDetectorService: received updated system state=%u (current=%d)", std::get<bool>(e.event_data),
+					m_current_state);
+			m_current_state = std::get<bool>(e.event_data);
+		}
+	}
+
 	void service_initiate() {
 		// Do not initiate if GNSS is already active
 		DEBUG_TRACE("GNSSDetectorService: service_initiate: requesting GNSS power on");
@@ -135,6 +148,6 @@ private:
 	bool service_is_enabled() override {
 		bool enabled = service_read_param<bool>(ParamID::UNDERWATER_EN);
 		BaseUnderwaterDetectSource src = service_read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE);
-		return enabled && (src == BaseUnderwaterDetectSource::GNSS);
+		return enabled && (src == BaseUnderwaterDetectSource::GNSS || src == BaseUnderwaterDetectSource::SWS_GNSS);
 	}
 };

@@ -20,6 +20,6 @@ private:
 	bool service_is_enabled() override {
 		bool enabled = service_read_param<bool>(ParamID::UNDERWATER_EN);
 		BaseUnderwaterDetectSource src = service_read_param<BaseUnderwaterDetectSource>(ParamID::UNDERWATER_DETECT_SOURCE);
-		return enabled && (src == BaseUnderwaterDetectSource::SWS);
+		return enabled && (src == BaseUnderwaterDetectSource::SWS || src == BaseUnderwaterDetectSource::SWS_GNSS);
 	}
 };
