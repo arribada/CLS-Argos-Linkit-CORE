@@ -11,6 +11,17 @@ void GPIOPins::initialise()
 					 BSP::GPIO_Inits[i].dir, BSP::GPIO_Inits[i].input, BSP::GPIO_Inits[i].pull,
 				     BSP::GPIO_Inits[i].drive, BSP::GPIO_Inits[i].sense);
 	}
+
+	// Tri-state UART pins on GPS as these are controlled from driver level
+	nrf_gpio_cfg_default(BSP::UARTAsync_Inits[0].config.rx_pin);
+	nrf_gpio_cfg_default(BSP::UARTAsync_Inits[0].config.tx_pin);
+
+	// Ensure power off state for everything controlling power
+	clear(GPS_POWER);
+	clear(SAT_PWR_EN);
+	set(SAT_RESET);
+	clear(SWS_ENABLE_PIN);
+	clear(AG_ENABLE);
 }
 
 void GPIOPins::set(uint32_t pin)

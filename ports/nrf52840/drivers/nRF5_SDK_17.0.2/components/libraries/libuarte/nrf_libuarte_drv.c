@@ -716,6 +716,7 @@ void nrf_libuarte_drv_rx_buf_rsp(const nrf_libuarte_drv_t * const p_libuarte,
 void nrf_libuarte_drv_rx_stop(const nrf_libuarte_drv_t * const p_libuarte)
 {
     rx_ppi_disable(p_libuarte);
+    nrfx_timer_disable(&p_libuarte->timer);
 
     NRF_LOG_DEBUG("RX stopped.");
     if (LIBUARTE_DRV_WITH_HWFC && (p_libuarte->ctrl_blk->rts_pin != RTS_PIN_DISABLED))

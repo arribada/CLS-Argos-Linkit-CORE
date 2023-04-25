@@ -213,7 +213,7 @@ extern "C" int _write(int file, char *ptr, int len)
 {
 	if (g_debug_mode == BaseDebugMode::UART && m_is_debug_init)
 		nrfx_uarte_tx(&BSP::UART_Inits[BSP::UART_1].uarte, reinterpret_cast<const uint8_t *>(ptr), len);
-	else if (ble_service && !__get_IPSR()) {
+	else if (ble_service && !__get_IPSR() && g_debug_mode == BaseDebugMode::BLE_NUS) {
 		ble_service->write(std::string(ptr, len));
 	}
 	return len;
@@ -285,18 +285,12 @@ int main()
 
 	NrfI2C::init();
 	bool is_linkit_v3 = PMU::hardware_version() == "LinkIt V3";
+	ArticSat::shutdown();
 	NrfI2C::uninit();
 
 	if ((is_linkit_v3 && PMU::reset_cause() == "Pseudo Power On Reset") ||
 		(!is_linkit_v3 && (PMU::reset_cause() == "Power On Reset" ||
 				PMU::reset_cause() == "Pseudo Power On Reset"))) {
-
-		if (PMU::reset_cause() == "Power On Reset")  {
-			// Force Artic PA off
-			NrfI2C::init();
-			ArticSat::shutdown();
-			NrfI2C::uninit();
-		}
 
 		volatile bool power_on_ready = false;
 		system_timer->start();

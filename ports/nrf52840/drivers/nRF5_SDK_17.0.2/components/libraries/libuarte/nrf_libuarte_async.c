@@ -46,6 +46,7 @@
 #include "nrfx_ppi.h"
 #include "nrf_uart.h"
 #include "nrf_queue.h"
+#include "nrf_delay.h"
 #define NRF_LOG_MODULE_NAME libUARTE_async
 #if NRF_LIBUARTE_CONFIG_LOG_ENABLED
 #define NRF_LOG_LEVEL       NRF_LIBUARTE_CONFIG_LOG_LEVEL
@@ -624,6 +625,7 @@ void nrf_libuarte_async_uninit(const nrf_libuarte_async_t * const p_libuarte)
     p_libuarte->p_ctrl_blk->enabled = false;
 
     nrf_libuarte_async_stop_rx(p_libuarte);
+    nrf_delay_ms(5); // NOTE: idle power does not restore unless this delay is added
     nrf_libuarte_drv_uninit(p_libuarte->p_libuarte);
 
 	/* if HW timeout was used */
