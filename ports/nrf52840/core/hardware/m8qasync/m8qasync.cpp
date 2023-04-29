@@ -15,8 +15,11 @@ using namespace UBX;
 
 extern Scheduler  *system_scheduler;
 extern RTC        *rtc;
-extern Timer      *system_timer;
 extern FileSystem *main_filesystem;
+
+// Required baud rates
+#define DEFAULT_BAUDRATE    38400
+#define MAX_BAUDRATE        460800
 
 // State machine helper macros
 #define STATE_CHANGE(x, y)                       \
@@ -51,29 +54,31 @@ M8QAsyncReceiver::~M8QAsyncReceiver() {
 }
 
 void M8QAsyncReceiver::power_on(const GPSNavSettings& nav_settings) {
+	DEBUG_INFO("M8QAsyncReceiver::power_on");
+    // Track number of power on requests
+    m_num_power_on++;
 
-	// Track number of power on requests
-	m_num_power_on++;
+    // Cancel any ongoing poweroff request
+    m_powering_off = false;
 
-	// Cancel any ongoing poweroff request
-	m_powering_off = false;
+    // Reset observation counters of interest
+    if (nav_settings.max_nav_samples) {
+        m_num_nav_samples = 0;
+        m_nav_settings.max_nav_samples = nav_settings.max_nav_samples;
+        m_num_consecutive_fixes = m_nav_settings.num_consecutive_fixes;
+    }
 
-	// Reset observation counters of interest
-	if (nav_settings.max_nav_samples) {
-		m_num_nav_samples = 0;
-		m_nav_settings.max_nav_samples = nav_settings.max_nav_samples;
-	}
+    if (nav_settings.max_sat_samples) {
+        m_num_sat_samples = 0;
+        m_nav_settings.max_sat_samples = nav_settings.max_sat_samples;
+    }
 
-	if (nav_settings.max_sat_samples) {
-		m_num_sat_samples = 0;
-		m_nav_settings.max_sat_samples = nav_settings.max_sat_samples;
-	}
-
-	if (STATE_EQUAL(idle)) {
-		// Copy navigation settings to be used for this session
-		m_nav_settings = nav_settings;
-		STATE_CHANGE(idle, poweron);
-	}
+    if (STATE_EQUAL(idle)) {
+        // Copy navigation settings to be used for this session
+        m_nav_settings = nav_settings;
+        m_num_consecutive_fixes = m_nav_settings.num_consecutive_fixes;
+        STATE_CHANGE(idle, poweron);
+    }
 }
 
 void M8QAsyncReceiver::check_for_power_off() {
@@ -115,9 +120,11 @@ void M8QAsyncReceiver::check_for_power_off() {
 }
 
 void M8QAsyncReceiver::power_off() {
-	// Just decrement the number of users
-	if (m_num_power_on)
-		m_num_power_on--;
+	DEBUG_INFO("M8QAsyncReceiver::power_off");
+    // Just decrement the number of users
+    if (m_num_power_on)
+        m_num_power_on--;
+    check_for_power_off();
 }
 
 void M8QAsyncReceiver::enter_shutdown() {
@@ -127,7 +134,7 @@ void M8QAsyncReceiver::enter_shutdown() {
     // Disable the power supply for the GPS
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
 #else
-	// Use GPIO_GPS_EXT_INT as a shutdown
+    // Use GPIO_GPS_EXT_INT as a shutdown
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_EXT_INT);
 #endif
 }
@@ -143,7 +150,7 @@ void M8QAsyncReceiver::exit_shutdown() {
     GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);
     PMU::delay_ms(1000); // Necessary to allow the device to boot
 #else
-	// Use GPIO_GPS_EXT_INT as a wake-up
+    // Use GPIO_GPS_EXT_INT as a wake-up
     GPIOPins::set(BSP::GPIO::GPIO_GPS_EXT_INT);
 #endif
 }
@@ -181,9 +188,6 @@ void M8QAsyncReceiver::state_machine() {
 	case State::idle:
 		break;
 	}
-
-	// Check for power off criteria each time the state machine runs
-	check_for_power_off();
 }
 
 void M8QAsyncReceiver::run_state_machine(unsigned int time_ms) {
@@ -215,13 +219,13 @@ void M8QAsyncReceiver::react(const UBXCommsEventSatReport& s) {
     	static UBXCommsEventSatReport sat;
     	std::memcpy(&sat, &s, sizeof(sat));
         system_scheduler->post_task_prio([this]() {
-            //DEBUG_TRACE("UBXCommsEventSatReport: numSvs=%u", (unsigned int)sat.sat.numSvs);
+            DEBUG_TRACE("UBXCommsEventSatReport: numSvs=%u", (unsigned int)sat.sat.numSvs);
         	m_num_sat_samples++;
             GPSEventSatReport e(sat.sat.numSvs, 0);
             for (unsigned int i = 0; i < sat.sat.numSvs; i++) {
-                //DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].svId=%u", i, (unsigned int)sat.sat.svInfo[i].svId);
-                //DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].qualityInd=%u", i, (unsigned int)sat.sat.svInfo[i].qualityInd);
-                //DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].cno=%u", i, (unsigned int)sat.sat.svInfo[i].cno);
+                DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].svId=%u", i, (unsigned int)sat.sat.svInfo[i].svId);
+                DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].qualityInd=%u", i, (unsigned int)sat.sat.svInfo[i].qualityInd);
+                DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].cno=%u", i, (unsigned int)sat.sat.svInfo[i].cno);
 
                 if (sat.sat.svInfo[i].qualityInd > e.bestSignalQuality) {
                 	e.bestSignalQuality = sat.sat.svInfo[i].qualityInd;
@@ -234,106 +238,100 @@ void M8QAsyncReceiver::react(const UBXCommsEventSatReport& s) {
         		m_nav_settings.max_sat_samples = 0;
         		notify<GPSEventMaxSatSamples>({});
         	}
-
-        	run_state_machine();
-
         }, "SatReport");
     }
 }
 
 void M8QAsyncReceiver::react(const UBXCommsEventNavReport& n) {
-	static UBXCommsEventNavReport nav;
-	std::memcpy(&nav, &n, sizeof(nav));
+    static UBXCommsEventNavReport nav;
+    std::memcpy(&nav, &n, sizeof(nav));
     system_scheduler->post_task_prio([this]() {
-		while (STATE_EQUAL(receive)) {
+        while (STATE_EQUAL(receive)) {
 
-			// Increment number of nav samples received
-			m_num_nav_samples++;
+            // Increment number of nav samples received
+            m_num_nav_samples++;
 
-			// Restart timeout
-			initiate_timeout(5000);
+            // Restart timeout
+            initiate_timeout(5000);
 
-			if (nav.pvt.fixType != UBX::NAV::PVT::FIXTYPE_NO &&
-				nav.pvt.valid & UBX::NAV::PVT::VALID_VALID_DATE &&
-				nav.pvt.valid & UBX::NAV::PVT::VALID_VALID_TIME)
-			{
-				rtc->settime(convert_epochtime(nav.pvt.year, nav.pvt.month,
-														nav.pvt.day, nav.pvt.hour,
-														nav.pvt.min, nav.pvt.sec));
-			}
+            if (nav.pvt.fixType != UBX::NAV::PVT::FIXTYPE_NO &&
+                nav.pvt.valid & UBX::NAV::PVT::VALID_VALID_DATE &&
+                nav.pvt.valid & UBX::NAV::PVT::VALID_VALID_TIME)
+            {
+                rtc->settime(convert_epochtime(nav.pvt.year, nav.pvt.month,
+                                                        nav.pvt.day, nav.pvt.hour,
+                                                        nav.pvt.min, nav.pvt.sec));
+            }
 
-			if ((nav.pvt.fixType != UBX::NAV::PVT::FIXTYPE_2D &&
-				nav.pvt.fixType != UBX::NAV::PVT::FIXTYPE_3D)) {
-				break;
-			}
+            if ((nav.pvt.fixType != UBX::NAV::PVT::FIXTYPE_2D &&
+                nav.pvt.fixType != UBX::NAV::PVT::FIXTYPE_3D)) {
+                break;
+            }
 
-			if (m_nav_settings.hacc_filter_en &&
-				(m_nav_settings.hacc_filter_threshold * 1000) < nav.pvt.hAcc) {
-				m_num_consecutive_fixes = m_nav_settings.num_consecutive_fixes;
-				break;
-			}
+            if (m_nav_settings.hacc_filter_en &&
+                (m_nav_settings.hacc_filter_threshold * 1000) < nav.pvt.hAcc) {
+                m_num_consecutive_fixes = m_nav_settings.num_consecutive_fixes;
+                break;
+            }
 
-			if (m_nav_settings.hdop_filter_en &&
-				(100 * m_nav_settings.hdop_filter_threshold) < nav.dop.hDOP) {
-				m_num_consecutive_fixes = m_nav_settings.num_consecutive_fixes;
-				break;
-			}
+            if (m_nav_settings.hdop_filter_en &&
+                (100 * m_nav_settings.hdop_filter_threshold) < nav.dop.hDOP) {
+                m_num_consecutive_fixes = m_nav_settings.num_consecutive_fixes;
+                break;
+            }
 
-			if (m_num_consecutive_fixes) {
-				if (--m_num_consecutive_fixes) {
-					break;
-				}
-			}
+            if (m_num_consecutive_fixes) {
+                if (--m_num_consecutive_fixes) {
+                    break;
+                }
+            }
 
-			GNSSData gnss_data =
-			{
-				.iTOW      = nav.pvt.iTow,
-				.year      = nav.pvt.year,
-				.month     = nav.pvt.month,
-				.day       = nav.pvt.day,
-				.hour      = nav.pvt.hour,
-				.min       = nav.pvt.min,
-				.sec       = nav.pvt.sec,
-				.valid     = nav.pvt.valid,
-				.tAcc      = nav.pvt.tAcc,
-				.nano      = nav.pvt.nano,
-				.fixType   = nav.pvt.fixType,
-				.flags     = nav.pvt.flags,
-				.flags2    = nav.pvt.flags2,
-				.flags3    = nav.pvt.flags3,
-				.numSV     = nav.pvt.numSV,
-				.lon       = nav.pvt.lon / 10000000.0,
-				.lat       = nav.pvt.lat / 10000000.0,
-				.height    = nav.pvt.height,
-				.hMSL      = nav.pvt.hMSL,
-				.hAcc      = nav.pvt.hAcc,
-				.vAcc      = nav.pvt.vAcc,
-				.velN      = nav.pvt.velN,
-				.velE      = nav.pvt.velE,
-				.velD      = nav.pvt.velD,
-				.gSpeed    = nav.pvt.gSpeed,
-				.headMot   = nav.pvt.headMot / 100000.0f,
-				.sAcc      = nav.pvt.sAcc,
-				.headAcc   = nav.pvt.headAcc / 100000.0f,
-				.pDOP      = nav.dop.pDOP / 100.0f,
-				.vDOP      = nav.dop.vDOP / 100.0f,
-				.hDOP      = nav.dop.hDOP / 100.0f,
-				.headVeh   = nav.pvt.headVeh / 100000.0f,
-				.ttff      = nav.status.ttff
-			};
-			m_fix_was_found = true;
-			notify(GPSEventPVT(gnss_data));
-			return;
-		}
+            GNSSData gnss_data =
+            {
+                .iTOW      = nav.pvt.iTow,
+                .year      = nav.pvt.year,
+                .month     = nav.pvt.month,
+                .day       = nav.pvt.day,
+                .hour      = nav.pvt.hour,
+                .min       = nav.pvt.min,
+                .sec       = nav.pvt.sec,
+                .valid     = nav.pvt.valid,
+                .tAcc      = nav.pvt.tAcc,
+                .nano      = nav.pvt.nano,
+                .fixType   = nav.pvt.fixType,
+                .flags     = nav.pvt.flags,
+                .flags2    = nav.pvt.flags2,
+                .flags3    = nav.pvt.flags3,
+                .numSV     = nav.pvt.numSV,
+                .lon       = nav.pvt.lon / 10000000.0,
+                .lat       = nav.pvt.lat / 10000000.0,
+                .height    = nav.pvt.height,
+                .hMSL      = nav.pvt.hMSL,
+                .hAcc      = nav.pvt.hAcc,
+                .vAcc      = nav.pvt.vAcc,
+                .velN      = nav.pvt.velN,
+                .velE      = nav.pvt.velE,
+                .velD      = nav.pvt.velD,
+                .gSpeed    = nav.pvt.gSpeed,
+                .headMot   = nav.pvt.headMot / 100000.0f,
+                .sAcc      = nav.pvt.sAcc,
+                .headAcc   = nav.pvt.headAcc / 100000.0f,
+                .pDOP      = nav.dop.pDOP / 100.0f,
+                .vDOP      = nav.dop.vDOP / 100.0f,
+                .hDOP      = nav.dop.hDOP / 100.0f,
+                .headVeh   = nav.pvt.headVeh / 100000.0f,
+                .ttff      = nav.status.ttff
+            };
+            m_fix_was_found = true;
+            notify(GPSEventPVT(gnss_data));
+            return;
+        }
 
-		// Check if max number of samples has been reached
-		if (m_nav_settings.max_nav_samples && m_num_nav_samples >= m_nav_settings.max_nav_samples) {
-			m_nav_settings.max_nav_samples = 0;
-			notify<GPSEventMaxNavSamples>({});
-		}
-
-    	run_state_machine();
-
+        // Check if max number of samples has been reached
+        if (m_nav_settings.max_nav_samples && m_num_nav_samples >= m_nav_settings.max_nav_samples) {
+            m_nav_settings.max_nav_samples = 0;
+            notify<GPSEventMaxNavSamples>({});
+        }
     }, "NavReport");
 }
 
@@ -367,14 +365,18 @@ void M8QAsyncReceiver::react(const UBXCommsEventError& e) {
     system_scheduler->post_task_prio([this, e]() {
         DEBUG_TRACE("UBXCommsEventError: type=%02x count=%u", e.error_type, m_uart_error_count);
     }, "Debug");
-	if (STATE_EQUAL(poweron) || STATE_EQUAL(poweroff)) {
-		if (++m_uart_error_count >= 10) {
-			m_uart_error_count = 0;
-			cancel_timeout();
-			m_op_state = OpState::ERROR;
-			run_state_machine();
-		}
-	}
+    if (STATE_EQUAL(poweron)) {
+        if (++m_uart_error_count >= 10) {
+            m_uart_error_count = 0;
+            cancel_timeout();
+            m_op_state = OpState::ERROR;
+            run_state_machine();
+        }
+    } else {
+        cancel_timeout();
+        m_op_state = OpState::ERROR;
+        run_state_machine();
+    }
 }
 
 void M8QAsyncReceiver::initiate_timeout(unsigned int timeout_ms) {
@@ -382,13 +384,6 @@ void M8QAsyncReceiver::initiate_timeout(unsigned int timeout_ms) {
 	m_timeout.handle = system_scheduler->post_task_prio([this]() {
 		on_timeout();
 	}, "Timeout", Scheduler::DEFAULT_PRIORITY, timeout_ms);
-}
-
-void M8QAsyncReceiver::process_timeout() {
-	if (m_timeout.running && system_timer->get_counter() >= m_timeout.end) {
-		m_timeout.running = false;
-		on_timeout();
-	}
 }
 
 void M8QAsyncReceiver::on_timeout() {
@@ -494,7 +489,7 @@ void M8QAsyncReceiver::state_configure() {
 				run_state_machine(500); // Wait 500 ms for UART config to apply
 				break;
 			} else if (m_step == 1) {
-				sync_baud_rate(460800);
+				sync_baud_rate(MAX_BAUDRATE);
 				break;
 			} else if (m_step == 2) {
 				setup_gnss_channel_sharing();
@@ -564,7 +559,11 @@ void M8QAsyncReceiver::state_configure() {
 				m_unrecoverable_error = true;
 				notify<GPSEventError>({});
 				break;
-			}
+            } else if (m_op_state == OpState::ERROR) {
+                // Restart receiver on comms error
+                initiate_timeout();
+                m_ubx_comms.set_baudrate(MAX_BAUDRATE);
+            }
 			m_op_state = OpState::IDLE;
 		}
 	}
@@ -611,7 +610,11 @@ void M8QAsyncReceiver::state_startreceive() {
 				m_unrecoverable_error = true;
 				notify<GPSEventError>({});
 				break;
-			}
+            } else if (m_op_state == OpState::ERROR) {
+                // Restart receiver on comms error
+                initiate_timeout();
+                m_ubx_comms.set_baudrate(MAX_BAUDRATE);
+            }
 			m_op_state = OpState::IDLE;
 		}
 	}
@@ -621,11 +624,25 @@ void M8QAsyncReceiver::state_startreceive_exit() {
 }
 
 void M8QAsyncReceiver::state_receive_enter() {
-	// Allow maximum 5 seconds for receiver to start outputting navigation samples
-	initiate_timeout(5000);
+    // Allow maximum 5 seconds for receiver to start outputting navigation samples
+    initiate_timeout(5000);
+    m_op_state = OpState::IDLE;
+    m_retries = 3;
 }
 
 void M8QAsyncReceiver::state_receive() {
+    if (m_op_state == OpState::ERROR) {
+        if (--m_retries) {
+            // CommsError try to restart the receiver
+            m_ubx_comms.set_baudrate(MAX_BAUDRATE);
+            initiate_timeout(5000);
+            m_op_state = OpState::IDLE;
+        } else {
+            DEBUG_ERROR("M10Receiver: repeated comms errors");
+            m_unrecoverable_error = true;
+            notify<GPSEventError>({});
+        }
+    }
 }
 
 void M8QAsyncReceiver::state_receive_exit() {
@@ -681,10 +698,13 @@ void M8QAsyncReceiver::state_stopreceive() {
 		} else {
 			if (--m_retries == 0) {
 				DEBUG_ERROR("M8QAsyncReceiver: stop receive failed");
-				m_unrecoverable_error = true;
-				notify<GPSEventError>({});
+				STATE_CHANGE(stopreceive, poweroff);
 				break;
-			}
+            } else if (m_op_state == OpState::ERROR) {
+                // Restart receiver on comms error
+                initiate_timeout();
+                m_ubx_comms.set_baudrate(MAX_BAUDRATE);
+            }
 			m_op_state = OpState::IDLE;
 		}
 	}
@@ -822,6 +842,10 @@ void M8QAsyncReceiver::state_senddatabase() {
 			break;
 		} else {
 			DEBUG_WARN("M8QAsyncReceiver::state_send_database: failed");
+            if (m_op_state == OpState::ERROR) {
+                // Restart receiver on comms error
+                m_ubx_comms.set_baudrate(MAX_BAUDRATE);
+            }
 			STATE_CHANGE(senddatabase, startreceive);
 			break;
 		}
@@ -907,6 +931,10 @@ void M8QAsyncReceiver::state_sendofflinedatabase() {
 			break;
 		} else {
 			DEBUG_WARN("M8QAsyncReceiver::state_sendofflinedatabase: failed");
+            if (m_op_state == OpState::ERROR) {
+                // Restart receiver on comms error
+                m_ubx_comms.set_baudrate(MAX_BAUDRATE);
+            }
 			STATE_CHANGE(sendofflinedatabase, startreceive);
 			break;
 		}
@@ -988,7 +1016,7 @@ void M8QAsyncReceiver::setup_uart_port() {
         .reserved1 = 0,
         .txReady = 0,
         .mode = CFG::PRT::MODE_CHARLEN_8BIT | CFG::PRT::MODE_PARITY_NO | CFG::PRT::MODE_STOP_BITS_1,
-        .baudRate = 460800,
+        .baudRate = MAX_BAUDRATE,
         .inProtoMask = CFG::PRT::PROTOMASK_UBX,
         .outProtoMask = CFG::PRT::PROTOMASK_UBX,
         .flags = 0,
@@ -1017,7 +1045,7 @@ void M8QAsyncReceiver::setup_power_management() {
     };
 
 #if 1 == NO_GPS_POWER_REG
-	// Configure EXT_INT pin for power management
+    // Configure EXT_INT pin for power management
     cfg_msg_cfg_pm2.flags |= CFG::PM2::FLAGS_EXTINTWAKE | CFG::PM2::FLAGS_EXTINTBACKUP;
 #endif
 

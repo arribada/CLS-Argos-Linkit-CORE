@@ -98,7 +98,6 @@ private:
 	void run_state_machine(unsigned int time_ms = 0);
 
 	// Helpers
-	void process_timeout();
 	void cancel_timeout();
 	void initiate_timeout(unsigned int timeout_ms = 1000);
 	void on_timeout();

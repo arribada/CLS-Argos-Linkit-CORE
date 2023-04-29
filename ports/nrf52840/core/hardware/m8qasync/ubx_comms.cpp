@@ -49,6 +49,9 @@ void UBXComms::init() {
     m_expect.enable = false;
     m_is_init = true;
     m_debug_enable = false;
+    m_nav_report.pvt.iTow = -1;
+    m_nav_report.dop.iTow = -1;
+    m_nav_report.status.iTow = -1;
 }
 
 void UBXComms::deinit() {
