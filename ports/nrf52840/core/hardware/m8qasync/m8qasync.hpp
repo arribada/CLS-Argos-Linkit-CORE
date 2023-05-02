@@ -31,6 +31,7 @@ private:
 	bool m_powering_off;
 	bool m_fix_was_found;
 	bool m_unrecoverable_error;
+	bool m_database_overflow;
 	struct Timeout {
 		Scheduler::TaskHandle handle;
 		bool     running;

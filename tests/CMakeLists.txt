@@ -91,6 +91,9 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     # Increase the inplace_function max sizes for a 64 bit system
     -DINPLACE_FUNCTION_SIZE_SCHEDULER=1024
     -DINPLACE_FUNCTION_SIZE_TIMER=1536
+    
+    # For M8Q power management
+    -DNO_GPS_POWER_REG=0
 
     # Always output coloured text from GCC
     -fdiagnostics-color=always
@@ -114,7 +117,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ROOT_DIR}/core/protocol"
     "${ROOT_DIR}/core/util"
     "${NRF_DIR}/core/hardware"
-    "${NRF_DIR}/core/hardware/m8q"
+    "${NRF_DIR}/core/hardware/m8qasync"
     "${NRF_DIR}/core/memmang"
     "mocks"
     "fakes"
@@ -144,6 +147,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     "${LINUX_DIR}/interrupt_lock.cpp"
     "${NRF_DIR}/core/hardware/nrf_switch.cpp"
     "${NRF_DIR}/core/hardware/nrf_battery_mon.cpp"
+    "${NRF_DIR}/core/hardware/m8qasync/m8qasync.cpp"
+    "${NRF_DIR}/core/hardware/m8qasync/ubx_comms.cpp"
     "src/timer_test.cpp"
     "src/filesystem_test.cpp"
     "src/gps_test.cpp"
@@ -171,13 +176,15 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/axl_sensor_test.cpp"
     "src/pressure_sensor_test.cpp"
     "src/calibration_test.cpp"
-    "src/ubx_ano_test.cpp"
     "src/argos_rx_test.cpp"
     "src/argos_tx_test.cpp"
     "src/dive_mode_test.cpp"
+    "src/m8_test.cpp"
     "src/main.cpp"
     "fakes/memmang.cpp"
     "fakes/nrfx_rtc.c"
+    "fakes/nrf_libuarte_async.cpp"
+    "fakes/nrf_uarte.c"
     "mocks/mock_gpio.cpp"
     "mocks/mock_pmu.cpp"
     "mocks/mock_dfu.cpp"

@@ -342,17 +342,18 @@ void M8QAsyncReceiver::react(const UBXCommsEventMgaAck& ack) {
 }
 
 void M8QAsyncReceiver::react(const UBXCommsEventMgaDBD& dbd) {
-	if (STATE_EQUAL(fetchdatabase)) {
-		cancel_timeout();
-		if ((m_ana_database_len + dbd.length) < sizeof(m_navigation_database)) {
-			std::memcpy(&m_navigation_database[m_ana_database_len], dbd.database, dbd.length);
-			m_ana_database_len += dbd.length;
-		}
-		initiate_timeout();
-	} else if (STATE_EQUAL(senddatabase) || STATE_EQUAL(sendofflinedatabase)) {
-		std::memcpy(&m_navigation_database[m_mga_ack_count], dbd.database, dbd.length);
-		m_mga_ack_count += dbd.length;
-	}
+    if (STATE_EQUAL(fetchdatabase)) {
+        cancel_timeout();
+        if ((m_ana_database_len + dbd.length) < sizeof(m_navigation_database)) {
+            std::memcpy(&m_navigation_database[m_ana_database_len], dbd.database, dbd.length);
+            m_ana_database_len += dbd.length;
+        } else
+            m_database_overflow = true;
+        initiate_timeout();
+    } else if (STATE_EQUAL(senddatabase) || STATE_EQUAL(sendofflinedatabase)) {
+        std::memcpy(&m_navigation_database[m_mga_ack_count], dbd.database, dbd.length);
+        m_mga_ack_count += dbd.length;
+    }
 }
 
 void M8QAsyncReceiver::react(const UBXCommsEventDebug& e) {
@@ -678,8 +679,10 @@ void M8QAsyncReceiver::state_stopreceive() {
                 if (m_nav_settings.sat_tracking) {
                     disable_nav_sat_message();
                     break;
-                } else
+                } else {
+        			m_op_state = OpState::IDLE;
                     m_step++;
+                }
 			} else if (m_step == 4) {
 				m_step++;
 				m_op_state = OpState::IDLE;
@@ -719,6 +722,7 @@ void M8QAsyncReceiver::state_fetchdatabase_enter() {
 	m_op_state = OpState::IDLE;
 	m_ana_database_len = 0;
 	m_expected_dbd_messages = 0;
+    m_database_overflow = false;
 	m_ubx_comms.start_dbd_filter();
 }
 
@@ -758,13 +762,18 @@ void M8QAsyncReceiver::state_fetchdatabase() {
 						STATE_CHANGE(fetchdatabase, poweroff);
 						break;
 					} else {
-						DEBUG_TRACE("M8QAsyncReceiver::state_fetchdatabase: validation failed: %u/%u msgs received: retry",
-								actual_count, m_expected_dbd_messages);
-						m_ana_database_len = 0;
-						m_expected_dbd_messages = 0;
-						m_op_state = OpState::IDLE;
-						m_step = 0;
-						continue;
+                        if (!m_database_overflow) {
+                            DEBUG_TRACE("M10Receiver::state_fetchdatabase: validation failed: %u/%u msgs received: retry",
+                                    actual_count, m_expected_dbd_messages);
+                            m_ana_database_len = 0;
+                            m_expected_dbd_messages = 0;
+                            m_op_state = OpState::IDLE;
+                            m_step = 0;
+                            continue;
+                        } else {
+                            DEBUG_TRACE("M10Receiver::state_fetchdatabase: validation skipped: %u/%u msgs received: DBD buffer full",
+                                        actual_count, m_expected_dbd_messages);
+                        }
 					}
 				} else {
 					DEBUG_TRACE("M8QAsyncReceiver::state_fetchdatabase: success");

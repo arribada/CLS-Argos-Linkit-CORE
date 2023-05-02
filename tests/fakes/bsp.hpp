@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "nrfx_rtc.h"
 #include "nrfx_saadc.h"
+#include "nrf_libuarte_async.h"
 
 #define RTC_TIMER      BSP::RTC::RTC_1
 #define SWS_ENABLE_PIN BSP::GPIO::GPIO_SLOW_SWS_SEND
@@ -35,6 +36,7 @@ namespace BSP
 		GPIO_POWER_CONTROL,
 		GPIO_SLOW_SWS_SEND,
 		GPIO_SLOW_SWS_RX,
+        GPIO_GPS_PWR_EN,
 		GPIO_TOTAL_NUMBER
 	};
 
@@ -74,4 +76,12 @@ namespace BSP
     } WDT_InitTypeDefAndInst_t;
 
     extern const WDT_InitTypeDefAndInst_t WDT_Inits[WDT_TOTAL_NUMBER];
+
+    typedef struct
+    {
+        const nrf_libuarte_async_t *uart;
+        const nrf_libuarte_async_config_t config;
+    } UARTAsync_InitTypeDefAndInst_t;
+
+    extern const UARTAsync_InitTypeDefAndInst_t UARTAsync_Inits[1];
 }
