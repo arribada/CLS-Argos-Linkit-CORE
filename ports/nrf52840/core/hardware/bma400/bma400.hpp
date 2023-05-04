@@ -9,6 +9,9 @@ extern "C" {
 #include "BMA400-API/bma400_defs.h"
 }
 
+/*! Read write length varies based on user requirement */
+#define BMA400_READ_WRITE_LENGTH  UINT8_C(64)
+
 class BMA400LL
 {
 public:

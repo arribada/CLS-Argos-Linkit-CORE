@@ -5,21 +5,20 @@
 
 #include "debug.hpp"
 #include "nrf_delay.h"
+#include "nrf_i2c.hpp"
 #include "bsp.hpp"
-#include "nrfx_twim.h"
+#include "nrfx_twim.h" //I think this is unused
 #include "pmu.hpp"
 #include "error.hpp"
 #include "nrf_irq.hpp"
 
-//Todo: I cannot see the point of this unless there is more than 1 device connected to it. 
-// unless it is only so that i2c_read and i2c_write works publicly
 class BMA400LLManager {
 private:
-	static inline uint8_t m_unique_id = 0;  // default = 0
+	static inline uint8_t m_uniq_id = 0;  // default = 0
 	static inline std::map<uint8_t, BMA400LL&> m_map;
 
 public:
-	static uint8_t register_device(BMA400LL& dev);
+	static uint8_t register_device(BMA400LL& device);
 	static void unregister_device(uint8_t unique_id);
 	static BMA400LL& lookup_device(uint8_t unique_id);
 };
@@ -29,10 +28,13 @@ BMA400LL& BMA400LLManager::lookup_device(uint8_t unique_id)
 	return m_map.at(unique_id);
 }
 
+
 uint8_t BMA400LLManager::register_device(BMA400LL& device)
 {
-	m_map.insert({m_unique_id, device});
-	return m_unique_id++;
+    DEBUG_TRACE("BMA400LLManager::register_device -> m_unique_id=%d, &device=%p",m_uniq_id, &device);
+    m_map.insert({m_uniq_id, device});
+
+	return m_uniq_id++;
 }
 
 void BMA400LLManager::unregister_device(uint8_t unique_id)
@@ -62,43 +64,36 @@ void BMA400LL::init()
 
 	DEBUG_TRACE("BMA400LL::init");
     
-    // m_bma400_dev.id = m_unique_id; //?
-    m_bma400_dev.chip_id = m_unique_id;
-    m_bma400_dev.intf = BMA400_I2C_INTF;
+    m_bma400_dev.intf           = BMA400_I2C_INTF;
+    m_bma400_dev.intf_ptr       = &m_unique_id;
+    m_bma400_dev.read           = (bma400_read_fptr_t)i2c_read;
+    m_bma400_dev.write          = (bma400_write_fptr_t)i2c_write;
+    m_bma400_dev.delay_us       = (bma400_delay_us_fptr_t)delay_us;
+    m_bma400_dev.read_write_len = BMA400_READ_WRITE_LENGTH;
+    // m_bma400_dev.chip_id       read from bma in bma400_init()
+    // m_bma400_dev.dummy_byte    only used for SPI
+    // m_bma400_dev.resolution  = 12; // not used anywhere
 
-    m_bma400_dev.write = i2c_write;
-    m_bma400_dev.read = i2c_read;
-    m_bma400_dev.delay_us = delay_us;
+    DEBUG_TRACE("BMA400LL::init -> m_bma400_dev.intf_ptr=%p, m_bma400_dev.write=%p, m_bma400_dev.read=%p", m_bma400_dev.intf_ptr, m_bma400_dev.write, m_bma400_dev.read);
+    DEBUG_TRACE("BMA400LL::init -> *m_addr=%p, m_addr=%x", &m_addr, m_addr);
 
-    /*! Read write length varies based on user requirement */
-    #define READ_WRITE_LENGTH  UINT8_C(46) // todo: get the required read-write length
-    m_bma400_dev.read_write_len = READ_WRITE_LENGTH;
+    rslt = bma400_init(&m_bma400_dev);
+    bma400_check_rslt("bma400_init",rslt);
 
-    int8_t err_code;
+    rslt = bma400_soft_reset(&m_bma400_dev);
+    bma400_check_rslt("bma400_soft_reset", rslt);
 
-    err_code = bma400_init(&m_bma400_dev);
-
-    if (err_code != BMA400_OK)
-    {
-        DEBUG_ERROR("BMA400 initialization failure (%d)",err_code);
-        throw ErrorCode::I2C_COMMS_ERROR;
-    }
-    // rslt = bma400_soft_reset(&m_bma400_dev);
-    // bma400_check_rslt("bma400_soft_reset", rslt);
-
-    // rslt = bma400_init(&m_bma400_dev);
-    // bma400_check_rslt("bma400_init", rslt);
+    rslt = bma400_set_power_mode(BMA400_MODE_NORMAL, &m_bma400_dev); 
+    bma400_check_rslt("bma400_set_power_mode: normal", rslt);
 
     /* Get the accelerometer configurations which are set in the sensor */
     rslt = bma400_get_sensor_conf(&m_bma400_sensor_conf, 1, &m_bma400_dev);
     bma400_check_rslt("bma400_get_sensor_conf", rslt);
 
-    /* Select the type of configuration to be modified */
-    m_bma400_sensor_conf.type = BMA400_ACCEL;
-    /* Modify the desired configurations as per macros
-     * available in bma400_defs.h file */
-    m_bma400_sensor_conf.param.accel.odr = BMA400_ODR_100HZ;
-    m_bma400_sensor_conf.param.accel.range = BMA400_RANGE_16G;
+    // Modify the desired configurations as per macros - available in bma400_defs.h file
+    m_bma400_sensor_conf.type                 = BMA400_ACCEL;
+    m_bma400_sensor_conf.param.accel.odr      = BMA400_ODR_100HZ;
+    m_bma400_sensor_conf.param.accel.range    = BMA400_RANGE_16G;
     m_bma400_sensor_conf.param.accel.data_src = BMA400_DATA_SRC_ACCEL_FILT_2;
 
     /* Set the desired configurations to the sensor */
@@ -107,20 +102,21 @@ void BMA400LL::init()
 
     // note: Sleep mode: Registers readable and writable, no sensortime
     rslt = bma400_set_power_mode(BMA400_MODE_SLEEP, &m_bma400_dev); 
-    bma400_check_rslt("bma400_set_power_mode", rslt);
+    bma400_check_rslt("bma400_set_power_mode: sleep", rslt);
 
 
-    m_bma400_device_conf.type = BMA400_INT_PIN_CONF;
+    m_bma400_device_conf.type                    = BMA400_INT_PIN_CONF;
     m_bma400_device_conf.param.int_conf.int_chan = BMA400_INT_CHANNEL_1;
     m_bma400_device_conf.param.int_conf.pin_conf = BMA400_INT_PUSH_PULL_ACTIVE_0;
     rslt = bma400_set_device_conf(&m_bma400_device_conf, BMA400_INT_PIN_CONF, &m_bma400_dev);
     bma400_check_rslt("bma400_set_device_conf", rslt);
 }
-//                       
+
 int8_t BMA400LL::i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr)
 {
-    nrfx_err_t err_code;
-    BMA400LL& device = BMA400LLManager::lookup_device(0); //todo  Define intf_ptr to include chip_id
+    DEBUG_TRACE("BMA400LL::i2c_write -> intf_ptr=%p, *(uint8_t *)intf_ptr=%x", intf_ptr, *(uint8_t *)intf_ptr);
+
+    BMA400LL& device = BMA400LLManager::lookup_device(*(uint8_t *)intf_ptr);
 
     if (!length)
         return BMA400_OK;
@@ -131,42 +127,34 @@ int8_t BMA400LL::i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t l
     uint8_t buffer[BMA400_MAX_BUFFER_LEN];
     buffer[0] = reg_addr;
     memcpy(&buffer[1], reg_data, length);
-    
-    nrfx_twim_xfer_desc_t xfer = NRFX_TWIM_XFER_DESC_TX(device.m_addr, (uint8_t*)buffer, length + sizeof(reg_addr));
 
-    err_code = nrfx_twim_xfer(&BSP::I2C_Inits[device.m_bus].twim, &xfer, 0);
-    //todo: what does this need?
-//    err_code = nrfx_twim_tx(&BSP::I2C_Inits[device.m_bus].twim, device.m_addr, buffer, length + sizeof(reg_addr), false);
-    if (err_code != NRFX_SUCCESS)
-        return BMA400_E_COM_FAIL;
+    NrfI2C::write(device.m_bus, device.m_addr, (uint8_t*)buffer, length + sizeof(reg_addr), false);
+
+    DEBUG_TRACE("BMA400LL::i2c_write %x : %x",reg_addr, reg_data);
 
     return BMA400_OK;
 }
 
 int8_t BMA400LL::i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr)
 {
-    nrfx_err_t err_code;
-    BMA400LL& device = BMA400LLManager::lookup_device(0); //todo  Define intf_ptr to include chip_id
+    DEBUG_TRACE("BMA400LL::i2c_read -> intf_ptr=%p, *(uint8_t *)intf_ptr=%x", intf_ptr, *(uint8_t *)intf_ptr);
 
-    nrfx_twim_xfer_desc_t xfer = NRFX_TWIM_XFER_DESC_TXRX(device.m_addr, &reg_addr, sizeof(reg_addr), (uint8_t*)reg_data, length);
+    BMA400LL& device = BMA400LLManager::lookup_device(*(uint8_t *)intf_ptr);
 
-    err_code = nrfx_twim_xfer(&BSP::I2C_Inits[device.m_bus].twim, &xfer, 0);
+    DEBUG_TRACE("BMA400LL::i2c_read -> device.m_addr=%p, &reg_addr=%p", device.m_addr, &reg_addr);
 
-    // err_code = nrfx_twim_tx(&BSP::I2C_Inits[device.m_bus].twim, device.m_addr, &reg_addr, sizeof(reg_addr), true);
-    // if (err_code != NRFX_SUCCESS)
-    //     return BMA400_E_COM_FAIL;
-    
-    // err_code = nrfx_twim_rx(&BSP::I2C_Inits[device.m_bus].twim, device.m_addr, reg_data, length);
-    if (err_code != NRFX_SUCCESS)
-        return BMA400_E_COM_FAIL;
+    NrfI2C::write(device.m_bus, device.m_addr, &reg_addr, sizeof(reg_addr), true);
+    DEBUG_TRACE("BMA400LL::i2c_read -> (uint8_t*)reg_data=%p, reg_data=%p", (uint8_t*)reg_data, reg_data);
+
+	NrfI2C::read(device.m_bus, device.m_addr, (uint8_t*)reg_data, length);
+    DEBUG_TRACE("BMA400LL::i2c_read %x : %x",reg_addr, reg_data);
 
     return BMA400_OK;
 }
 
 void BMA400LL::delay_us(uint32_t period, void *intf_ptr)
 {
-    nrf_delay_us(period);
-    // intf_ptr(); // this is the callback function for every time the delay function is called. 
+    PMU::delay_us(period);
 }
 
 double BMA400LL::convert_g_force(unsigned int g_scale, int16_t axis_value)
@@ -180,6 +168,7 @@ void BMA400LL::bma400_check_rslt(const char api_name[], int8_t rslt)
     {
         case BMA400_OK:
             /* Do nothing */
+            DEBUG_TRACE("BMA400 [%s]",api_name);
             break;
         case BMA400_E_NULL_PTR:
             DEBUG_ERROR("BMA400 Error [%d] : Null pointer\r\n", rslt);
@@ -343,7 +332,6 @@ bool BMA400LL::check_and_clear_wakeup()
 	InterruptLock lock;
 	bool value = m_irq_pending;
 	m_irq_pending = false;
-	DEBUG_TRACE("BMA400LL::check_and_clear_wakeup: pending=%u", (unsigned int)value);
 	return value;
 }
 
