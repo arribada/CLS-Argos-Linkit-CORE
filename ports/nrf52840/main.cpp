@@ -38,7 +38,8 @@
 #include "oem_ph.hpp"
 #include "oem_rtd.hpp"
 #include "cdt.hpp"
-#include "bmx160.hpp"
+// #include "bmx160.hpp"
+#include "bma400.hpp"
 #include "ms58xx.hpp"
 #include "fs_log.hpp"
 #include "nrf_i2c.hpp"
@@ -231,6 +232,7 @@ int main()
 #ifdef GPIO_AG_PWR_PIN
 	// Current backfeeds from 3V3 -> i2c pullups -> BMX160 -> GPIO_AG_PWR
 	// Because of this we need to float our GPIO_AG_PWR pin to avoid sinking that current and thus increasing our sleep current
+	// Same thing for the bma400 ?
 	nrf_gpio_cfg_default(BSP::GPIO_Inits[GPIO_AG_PWR_PIN].pin_number);
 #endif
 
@@ -584,13 +586,21 @@ int main()
 	} catch (...) {
 		DEBUG_TRACE("OEM RTD: not detected");
 	}
+	// DEBUG_TRACE("BMX160...");
+	// try {
+	// 	static BMX160 bmx160;
+	// 	static AXLSensorService axl_sensor_service(bmx160, &axl_sensor_log);
+	// } catch (...) {
+	// 	DEBUG_TRACE("BMX160: not detected");
+	// }
 
-	DEBUG_TRACE("BMX160...");
+
+	DEBUG_TRACE("BMA400...");
 	try {
-		static BMX160 bmx160;
-		static AXLSensorService axl_sensor_service(bmx160, &axl_sensor_log);
+		static BMA400 bma400;
+		static AXLSensorService axl_sensor_service(bma400, &axl_sensor_log);
 	} catch (...) {
-		DEBUG_TRACE("BMX160: not detected");
+		DEBUG_TRACE("BMA400: not detected");
 	}
 
 	DEBUG_TRACE("Memory monitor...");

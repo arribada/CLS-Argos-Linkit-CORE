@@ -28,7 +28,8 @@
 #define EXT_LED_PIN    BSP::GPIO::GPIO_EXT1_GPIO3
 #define EXT_I2C_BUS     BSP::I2C::I2C_0
 #define ONBOARD_I2C_BUS BSP::I2C::I2C_1
-#define BMX160_WAKEUP_PIN  BSP::GPIO::GPIO_INT1_AG
+// #define BMX160_WAKEUP_PIN  BSP::GPIO::GPIO_INT1_AG
+#define BMA400_WAKEUP_PIN  BSP::GPIO::GPIO_INT1_AG
 #define WCHG_INTB_PIN	BSP::GPIO::GPIO_WCHG_INTB
 
 // I2C device mappings
@@ -40,7 +41,8 @@
 #define LIGHT_DEVICE   	  EXT_I2C_BUS
 #define OEM_PH_DEVICE  	  EXT_I2C_BUS
 #define OEM_RTD_DEVICE 	  EXT_I2C_BUS
-#define BMX160_DEVICE     ONBOARD_I2C_BUS
+// #define BMX160_DEVICE     ONBOARD_I2C_BUS
+#define BMA400_DEVICE     ONBOARD_I2C_BUS
 
 // I2C bus addresses
 #define MCP4716_I2C_ADDR    0x60
@@ -50,7 +52,8 @@
 #define OEM_PH_DEVICE_ADDR  0x65
 #define OEM_RTD_DEVICE_ADDR 0x68
 #define AD5933_ADDRESS		0x0D
-#define BMX160_ADDRESS      0x69
+// #define BMX160_ADDRESS      0x69
+#define BMA400_ADDRESS      0x15    //BMA400_I2C_ADDRESS_SDO_HIGH
 #define STWLC68_ADDRESS		0x61
 
 // Battery voltage ADC gain
@@ -79,7 +82,7 @@ namespace BSP
 	    GPIO_SLOW_SWS_RX,
 	    GPIO_SLOW_SWS_SEND,
 	    GPIO_WCHG_INTB,
-	    GPIO_AG_PWR,
+	    GPIO_AG_PWR,        //Accel Gyro Power
 	    GPIO_G8_33,
 	    GPIO_G16_33,
 	    GPIO_SAT_RESET,
@@ -95,7 +98,7 @@ namespace BSP
 	    GPIO_INT1_SAT,
 	    GPIO_INT2_SAT,
 	    GPIO_REED_SW,
-	    GPIO_INT1_AG,
+	    GPIO_INT1_AG,   // Accel Gyro INT1_IMU
 	    GPIO_INT2_AG,
 		GPIO_TOTAL_NUMBER
 	};

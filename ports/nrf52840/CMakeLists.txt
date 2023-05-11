@@ -167,7 +167,8 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/oem_ph
     ${PROJ_DIR}/core/hardware/oem_rtd
     ${PROJ_DIR}/core/hardware/cdt
-    ${PROJ_DIR}/core/hardware/bmx160
+    ${PROJ_DIR}/core/hardware/bma400
+    # ${PROJ_DIR}/core/hardware/bmx160
     ${PROJ_DIR}/core/hardware/stwlc68_otp
 )
 
@@ -239,8 +240,10 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
     ${PROJ_DIR}/core/hardware/ms58xx/ms58xx.cpp
     ${PROJ_DIR}/core/hardware/ad5933/ad5933.cpp
-    ${PROJ_DIR}/core/hardware/bmx160/bmx160.cpp
-    ${PROJ_DIR}/core/hardware/bmx160/bmx160.c
+    ${PROJ_DIR}/core/hardware/bma400/bma400.cpp
+    ${PROJ_DIR}/core/hardware/bma400/bma400.c
+    # ${PROJ_DIR}/core/hardware/bmx160/bmx160.cpp
+    # ${PROJ_DIR}/core/hardware/bmx160/bmx160.c
     ${PROJ_DIR}/core/hardware/cdt/cdt.cpp
     ${PROJ_DIR}/core/hardware/ltr_303/ltr_303.cpp
     ${PROJ_DIR}/core/hardware/oem_ph/oem_ph.cpp

@@ -84,6 +84,8 @@
                 "${workspaceRoot}/core/interface",
                 "${workspaceRoot}/core/filesystem",
                 "${workspaceRoot}/core/scheduling",
+                "${workspaceRoot}/ports/nrf52840/core/hardware",
+                "${workspaceRoot}/ports/nrf52840/core/hardware/bma400",
                 "${workspaceRoot}/ports/nrf52840/core/hardware/artic_r2",
                 "${workspaceRoot}/ports/nrf52840/core/hardware/m8q"
             ],
