@@ -1066,7 +1066,7 @@ private:
 		char format[32];
 		int written;
 
-		snprintf(format, sizeof(format), "%%%zu", s.size());
+		snprintf(format, sizeof(format), "%%%u", s.size());
 		strncat(format, fmt + 1, sizeof(format) - strlen(format) - 1);
 		strncat(format, "%n", sizeof(format) - strlen(format) - 1);
 
@@ -1388,7 +1388,7 @@ public:
 			return false;
 
 		size_t length;
-		sscanf(&str[str_pos], "%3zX", &length);
+		sscanf(&str[str_pos], "%3X", &length);
 		str_pos += size_of_length_field;
 
 		// Check the command deliminator //
