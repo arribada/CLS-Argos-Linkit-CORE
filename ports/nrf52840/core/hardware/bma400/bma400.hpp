@@ -6,7 +6,7 @@
 #include "nrf_irq.hpp"
 
 extern "C" {
-#include "BMA400-API/bma400_defs.h"
+#include "bma400_defs.h"
 }
 
 /*! Read write length varies based on user requirement */
