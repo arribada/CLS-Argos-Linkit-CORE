@@ -1272,3 +1272,21 @@ TEST(ArgosTxService, LastTxIsUpdated)
 	mock().expectOneCall("stop_send").onObject(mock_artic);
 	serv.stop();
 }
+
+TEST(ArgosTxService, DPHardFaultPartialDepthPile)
+{
+	ArgosDepthPile<GPSLogEntry> dp;
+	std::vector<GPSLogEntry*> v;
+	GPSLogEntry e;
+
+	// Load up full depth pile with burst count of 0
+	for (unsigned int i = 0; i < 6; i++) {
+		e.info.day = i;
+		dp.store(e, 99999999);
+	}
+
+	v = dp.retrieve((unsigned int)BaseArgosDepthPile::DEPTH_PILE_16);
+	CHECK_EQUAL(4, v.size());
+	v = dp.retrieve((unsigned int)BaseArgosDepthPile::DEPTH_PILE_16);
+	CHECK_EQUAL(2, v.size());
+}

@@ -97,11 +97,12 @@ public:
 		} else if (eligible > 1) {
 			for (unsigned int k = 0; k < span; k++) {
 				unsigned int idx = m_entry.size() - (span * (retrieve_index+1)) + k;
-				DEBUG_TRACE("ArgosDepthPile: retrieve: idx=%u burst_counter=%u", idx, m_entry[idx].burst_counter);
 				// We may have zero burst counter in some entries
-				if (m_entry[idx].burst_counter)
+				if (idx < m_entry.size() && m_entry[idx].burst_counter) {
+					DEBUG_TRACE("ArgosDepthPile: retrieve: idx=%u burst_counter=%u", idx, m_entry[idx].burst_counter);
 					m_entry[idx].burst_counter--;
-				v.push_back(&m_entry[idx].data);
+					v.push_back(&m_entry[idx].data);
+				}
 			}
 		} else {
 			DEBUG_TRACE("ArgosDepthPile: retrieve: no eligible entries found");

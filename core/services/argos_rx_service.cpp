@@ -94,8 +94,7 @@ void ArgosRxService::react(ArticEventRxPacket const& e) {
 	PassPredictCodec::decode(m_orbit_params_map, m_constellation_status_map, e.packet, pass_predict);
 
 	// Check to see if any new AOP records were found
-	if (pass_predict.num_records)
-		update_pass_predict(pass_predict);
+	update_pass_predict(pass_predict);
 }
 
 void ArgosRxService::react(ArticEventDeviceError const&) {

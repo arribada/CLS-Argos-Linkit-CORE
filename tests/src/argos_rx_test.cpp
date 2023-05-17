@@ -349,3 +349,68 @@ TEST(ArgosRxService, DeferredIfUnderwaterWhenScheduled)
 
 	//notify_underwater_state(false);
 }
+
+
+
+TEST(ArgosRxService, CheckArgosRxLogging)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	unsigned int rx_aop_update_period = 1U;
+
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_RX_AOP_UPDATE_PERIOD, rx_aop_update_period);
+
+	// Sample configuration provided with prepass library V3.4
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		1,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+		}
+	};
+
+	// Write ARGOS_AOP_DATE
+	std::time_t last_aop = 0;
+	fake_config_store->write_param(ParamID::ARGOS_AOP_DATE, last_aop);
+	fake_config_store->write_pass_predict(pass_predict);
+
+	ArgosRxService service(*mock_artic);
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	service.start(nullptr);
+
+	std::time_t t = 1632009600;
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+	inject_gps_location(11.8768, -33.8232);
+
+	t += service.get_last_schedule();
+	fake_rtc->settime(t);
+	fake_timer->set_counter(t*1000);
+
+	mock().expectOneCall("start_receive").onObject(mock_artic).withUnsignedIntParameter("mode", (unsigned int)ArticMode::A3);
+	while (!system_scheduler->run());
+
+	std::string x = "00000BE400C48C4D08C410A717C3F2DA5B707114521C45A5";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	x = "00000BE400B48C4D08C551A8BA1528C6C2FC2B0041D6F2F9";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	x = "00000BE400248C4D08964A41D778A48EF9B0830034C6909C";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	x = "00000D4400648C4D08D2424B01927D301DC3A5FA60B551B7";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+
+	x = "00000BE400548C4D08C94264BA0DD4BC02BC92143ED41F15";
+	mock_artic->inject_rx_packet(x, x.size() * 8);
+}
