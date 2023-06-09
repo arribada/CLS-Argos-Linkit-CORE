@@ -1038,7 +1038,7 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	store->write_param(ParamID::LB_TRESHOLD, lb_thresh);
 
 	// Notify battery level above threshold
-	fake_battery_monitor->m_level = 100;
+	fake_battery_monitor->set_values(100);
 
 	GNSSConfig gnss_config;
 	store->get_gnss_configuration(gnss_config);
@@ -1052,7 +1052,7 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(hacc_filter_threshold, gnss_config.hacc_filter_threshold);
 
 	// Notify battery level equal threshold
-	fake_battery_monitor->m_level = 10;
+	fake_battery_monitor->set_values(10, 4200, true, false);
 
 	store->get_gnss_configuration(gnss_config);
 
@@ -1065,20 +1065,7 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(lb_hacc_filter_threshold, gnss_config.hacc_filter_threshold);
 
 	// Notify battery level below threshold
-	fake_battery_monitor->m_level = 1;
-
-	store->get_gnss_configuration(gnss_config);
-
-	CHECK_EQUAL(lb_acquisition_timeout, gnss_config.acquisition_timeout);
-	CHECK_TRUE(lb_dloc_arg_nom == gnss_config.dloc_arg_nom);
-	CHECK_EQUAL(lb_gnss_en, gnss_config.enable);
-	CHECK_EQUAL(hdop_filter_enable, gnss_config.hdop_filter_enable);
-	CHECK_EQUAL(lb_hdop_filter_threshold, gnss_config.hdop_filter_threshold);
-	CHECK_EQUAL(hacc_filter_enable, gnss_config.hacc_filter_enable);
-	CHECK_EQUAL(lb_hacc_filter_threshold, gnss_config.hacc_filter_threshold);
-
-	// Notify battery level 1% above threshold whilst in LB mode
-	fake_battery_monitor->m_level = 11;
+	fake_battery_monitor->set_values(1, 4200, true, false);
 
 	store->get_gnss_configuration(gnss_config);
 
@@ -1091,7 +1078,7 @@ TEST(ConfigStore, RetrieveGPSConfigLBMode)
 	CHECK_EQUAL(lb_hacc_filter_threshold, gnss_config.hacc_filter_threshold);
 
 	// Notify battery level 5% above threshold whilst in LB mode
-	fake_battery_monitor->m_level = 15;
+	fake_battery_monitor->set_values(15, 4200, false, false);
 
 	store->get_gnss_configuration(gnss_config);
 
@@ -1201,7 +1188,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	store->write_param(ParamID::LB_TRESHOLD, lb_thresh);
 
 	// Notify battery level above threshold
-	fake_battery_monitor->m_level = 100;
+	fake_battery_monitor->set_values(100);
 
 	ArgosConfig argos_config;
 	store->get_argos_configuration(argos_config);
@@ -1217,7 +1204,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
 
 	// Notify battery level equal threshold
-	fake_battery_monitor->m_level = 10;
+	fake_battery_monitor->set_values(10, 4200, true, false);
 
 	store->get_argos_configuration(argos_config);
 
@@ -1232,22 +1219,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
 
 	// Notify battery level below threshold
-	fake_battery_monitor->m_level = 1;
-
-	store->get_argos_configuration(argos_config);
-
-	CHECK_EQUAL((unsigned int)lb_depth_pile, (unsigned int)argos_config.depth_pile);
-	CHECK_EQUAL(dry_time_before_tx, argos_config.dry_time_before_tx);
-	CHECK_EQUAL(lb_duty_cycle, argos_config.duty_cycle);
-	CHECK_EQUAL(frequency, argos_config.frequency);
-	CHECK_EQUAL((unsigned int)lb_mode, (unsigned int)argos_config.mode);
-	CHECK_EQUAL(lb_ntry_per_message, argos_config.ntry_per_message);
-	CHECK_EQUAL((unsigned int)lb_power, (unsigned int)argos_config.power);
-	CHECK_EQUAL(lb_tr_nom, argos_config.tr_nom);
-	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
-
-	// Notify battery level 1% above threshold
-	fake_battery_monitor->m_level = 11;
+	fake_battery_monitor->set_values(1, 4200, true, false);
 
 	store->get_argos_configuration(argos_config);
 
@@ -1262,7 +1234,7 @@ TEST(ConfigStore, RetrieveArgosConfigLBMode)
 	CHECK_EQUAL(tx_counter, argos_config.tx_counter);
 
 	// Notify battery level 5% above threshold
-	fake_battery_monitor->m_level = 15;
+	fake_battery_monitor->set_values(15, 4200, false, false);
 
 	store->get_argos_configuration(argos_config);
 

@@ -1,5 +1,4 @@
-#ifndef __NRF_BATTERY_MON_HPP_
-#define __NRF_BATTERY_MON_HPP_
+#pragma once
 
 #include "battery.hpp"
 
@@ -17,14 +16,13 @@ private:
 	bool m_is_init;
 
 	float sample_adc();
+	uint16_t convert_voltage(float);
+	uint8_t convert_level(uint16_t);
+	void internal_update() override;
 
 public:
-
-	NrfBatteryMonitor(uint8_t adc_channel, BatteryChemistry chem = BATT_CHEM_NCR18650_3100_3400);
-	void start() override {};
-	void stop() override {};
-	uint16_t get_voltage() override;
-	uint8_t get_level() override;
+	NrfBatteryMonitor(uint8_t adc_channel,
+			BatteryChemistry chem = BATT_CHEM_NCR18650_3100_3400,
+			uint16_t critical_voltage = 2800,
+			uint8_t low_level = 10);
 };
-
-#endif // __NRF_BATTERY_MON_HPP_

@@ -5,6 +5,7 @@
 #include "fake_rtc.hpp"
 #include "fake_config_store.hpp"
 #include "fake_timer.hpp"
+#include "fake_battery_mon.hpp"
 #include "dte_protocol.hpp"
 #include "binascii.hpp"
 #include "timeutils.hpp"
@@ -15,10 +16,12 @@ extern Timer *system_timer;
 extern ConfigurationStore *configuration_store;
 extern Scheduler *system_scheduler;
 extern RTC *rtc;
+extern BatteryMonitor *battery_monitor;
 
 
 TEST_GROUP(ArgosTxService)
 {
+	FakeBatteryMonitor *fake_battery_monitor;
 	FakeConfigurationStore *fake_config_store;
 	MockArticDevice *mock_artic;
 	FakeRTC *fake_rtc;
@@ -26,6 +29,8 @@ TEST_GROUP(ArgosTxService)
 	unsigned int txco_warmup = 5U;
 
 	void setup() {
+		fake_battery_monitor = new FakeBatteryMonitor;
+		battery_monitor = fake_battery_monitor;
 		mock_artic = new MockArticDevice;
 		fake_config_store = new FakeConfigurationStore;
 		configuration_store = fake_config_store;
@@ -48,6 +53,7 @@ TEST_GROUP(ArgosTxService)
 		delete fake_rtc;
 		delete fake_config_store;
 		delete mock_artic;
+		delete fake_battery_monitor;
 	}
 
 	GPSLogEntry make_gps_location(bool is_valid=true, double longitude=0, double latitude=0, std::time_t t=0, bool is_3d_fix = false, int32_t hMSL=0, int32_t gSpeed=0, uint16_t batt=4200) {
@@ -729,9 +735,10 @@ TEST(ArgosTxService, LegacyTxLowBattery)
 	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
 	serv.start();
 
-
 	// Force LB state
 	fake_config_store->set_battery_level(10U);
+	fake_config_store->set_is_battery_level_low(true);
+	fake_battery_monitor->set_values(10, 4200, true, false);
 
 	inject_gps_location(1, 11.8768, -33.8232, t);
 	inject_gps_location(1, 11.8768, -33.8232, t);

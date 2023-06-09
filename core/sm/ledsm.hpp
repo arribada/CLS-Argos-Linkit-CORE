@@ -22,6 +22,7 @@ struct SetLEDGNSSOffWithFix : tinyfsm::Event { };
 struct SetLEDGNSSOffWithoutFix : tinyfsm::Event { };
 struct SetLEDArgosTX : tinyfsm::Event { };
 struct SetLEDArgosTXComplete : tinyfsm::Event { };
+struct SetLEDBatteryCritical : tinyfsm::Event { };
 
 class LEDOff;
 class LEDBoot;
@@ -39,10 +40,12 @@ class LEDGNSSOffWithFix;
 class LEDGNSSOffWithoutFix;
 class LEDArgosTX;
 class LEDArgosTXComplete;
+class LEDBatteryCritical;
 
 
 class LEDState : public tinyfsm::Fsm<LEDState> {
 protected:
+	static inline bool m_is_battery_critical = false;
 	static inline bool m_is_gnss_on = false;
 	static inline bool m_is_magnet_engaged = false;
 public:
@@ -64,6 +67,7 @@ public:
 	void react(SetLEDGNSSOffWithoutFix const &) { transit<LEDGNSSOffWithoutFix>(); }
 	void react(SetLEDArgosTX const &) { transit<LEDArgosTX>(); }
 	void react(SetLEDArgosTXComplete const &) { transit<LEDArgosTXComplete>(); }
+	void react(SetLEDBatteryCritical const &) { transit<LEDBatteryCritical>(); }
 
 	virtual void entry(void) {}
 	virtual void exit(void) {}
@@ -177,6 +181,13 @@ public:
 };
 
 class LEDArgosTXComplete : public LEDState
+{
+public:
+	void entry() override;
+	void exit() override {};
+};
+
+class LEDBatteryCritical : public LEDState
 {
 public:
 	void entry() override;

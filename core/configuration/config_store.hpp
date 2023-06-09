@@ -16,8 +16,6 @@
 #include "wchg.hpp"
 
 #define MAX_CONFIG_ITEMS  (unsigned int)ParamID::__PARAM_SIZE
-#define LB_EXIT_DELTA          5
-#define LB_EXIT_THRESHOLD(x)   std::min((uint8_t)100, (uint8_t)(x + LB_EXIT_DELTA))
 
 using namespace std::string_literals;
 
@@ -280,6 +278,7 @@ protected:
 		/* UW_GNSS_MAX_SAMPLES */ 45U,
 		/* UW_GNSS_MIN_DRY_SAMPLES */ 1U,
 		/* UW_GNSS_DETECT_THRESH */ 1U,
+		/* LB_CRITICAL_THRESH */ 2.8,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,
@@ -299,6 +298,7 @@ protected:
 	std::array<BaseType, MAX_CONFIG_ITEMS> m_params;
 	uint8_t m_battery_level;
 	uint16_t m_battery_voltage;
+	bool     m_is_battery_level_low;
 	GPSLogEntry m_last_gps_log_entry;
 	ConfigMode  m_last_config_mode;
 	virtual void serialize_config() = 0;
@@ -336,8 +336,6 @@ private:
 
 public:
 	ConfigurationStore() {
-		m_battery_voltage = 0U;
-		m_battery_level = 255U;  // Set battery level to some value that won't trigger LB mode until we get notified of a real battery level
 		m_last_gps_log_entry.info.valid = 0; // Mark last GPS entry as invalid
 		m_last_config_mode = ConfigMode::NORMAL;
 	}
@@ -348,7 +346,6 @@ public:
 	virtual void factory_reset() = 0;
 	virtual BasePassPredict& read_pass_predict() = 0;
 	virtual void write_pass_predict(BasePassPredict& value) = 0;
-	virtual bool is_battery_level_low() = 0;
 
 	template <typename T>
 	T& read_param(ParamID param_id) {
@@ -515,15 +512,13 @@ public:
 	void get_gnss_configuration(GNSSConfig& gnss_config) {
 		auto cert_tx_enable = read_param<bool>(ParamID::CERT_TX_ENABLE);
 		auto lb_en = read_param<bool>(ParamID::LB_EN);
-		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();
 
 		gnss_config.battery_voltage = m_battery_voltage;
 		gnss_config.is_out_of_zone = is_zone_exclusion();
 		gnss_config.is_lb = false;
 
-		if (lb_en && (m_battery_level <= lb_threshold ||
-				(m_last_config_mode == ConfigMode::LOW_BATTERY && m_battery_level < LB_EXIT_THRESHOLD(lb_threshold)))) {
+		if (lb_en && m_is_battery_level_low) {
 			// Use LB mode which takes priority
 			gnss_config.is_lb = true;
 			gnss_config.enable = read_param<bool>(ParamID::LB_GNSS_EN);
@@ -605,14 +600,12 @@ public:
 
 	void get_argos_configuration(ArgosConfig& argos_config) {
 		auto lb_en = read_param<bool>(ParamID::LB_EN);
-		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
 		update_battery_level();
 
 		argos_config.is_out_of_zone = is_zone_exclusion();
 		argos_config.is_lb = false;
 
-		if (lb_en && (m_battery_level <= lb_threshold ||
-				(m_last_config_mode == ConfigMode::LOW_BATTERY && m_battery_level < LB_EXIT_THRESHOLD(lb_threshold)))) {
+		if (lb_en && m_is_battery_level_low) {
 			argos_config.is_lb = true;
 			argos_config.gnss_en = read_param<bool>(ParamID::GNSS_EN);
 			argos_config.last_aop_update = read_param<std::time_t>(ParamID::ARGOS_AOP_DATE);

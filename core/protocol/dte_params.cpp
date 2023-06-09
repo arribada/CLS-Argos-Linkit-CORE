@@ -170,6 +170,9 @@ const BaseMap param_map[] = {
 	{ "UW_GNSS_MAX_SAMPLES", "UNP16", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
 	{ "UW_GNSS_MIN_DRY_SAMPLES", "UNP17", BaseEncoding::UINT, 1U, 0xFFFFFFFFU, {}, true, true },
 	{ "UW_GNSS_DETECT_THRESH", "UNP18", BaseEncoding::UINT, 1U, 7U, {}, true, true },
+
+	// Critical battery threshold
+	{ "LB_CRITICAL_THRESH", "LBP12", BaseEncoding::FLOAT, 0.0, 12.0, {}, true, true },
 };
 
 const size_t param_map_size = sizeof(param_map) / sizeof(param_map[0]);

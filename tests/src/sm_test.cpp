@@ -18,7 +18,7 @@
 #include "mock_argos_tx.hpp"
 #include "mock_logger.hpp"
 #include "mock_timer.hpp"
-#include "mock_battery_mon.hpp"
+#include "fake_battery_mon.hpp"
 #include "mock_ota_file_updater.hpp"
 #include "scheduler.hpp"
 #include "dte_handler.hpp"
@@ -69,7 +69,7 @@ TEST_GROUP(Sm)
 	FakeRGBLed *fake_status_led;
 	FakeLed *fake_ext_status_led;
 	FakeTimer *fake_timer;
-	MockBatteryMonitor *mock_battery_monitor;
+	FakeBatteryMonitor *fake_battery_monitor;
 	MockOTAFileUpdater *mock_ota_file_updater;
 	MockBLEService * mock_ble_service;
 	MockLog *sensor_log;
@@ -94,8 +94,8 @@ TEST_GROUP(Sm)
 		system_scheduler = new Scheduler(system_timer);
 		mock_ble_service = new MockBLEService;
 		ble_service = mock_ble_service;
-		mock_battery_monitor = new MockBatteryMonitor;
-		battery_monitor = mock_battery_monitor;
+		fake_battery_monitor = new FakeBatteryMonitor;
+		battery_monitor = fake_battery_monitor;
 		fake_status_led = new FakeRGBLed("STATUS");
 		status_led = fake_status_led;
 		fake_ext_status_led = new FakeLed("EXT_STATUS");
@@ -114,7 +114,7 @@ TEST_GROUP(Sm)
 		delete mock_config_store;
 		delete mock_ble_service;
 		delete mock_ota_file_updater;
-		delete mock_battery_monitor;
+		delete fake_battery_monitor;
 		delete fake_status_led;
 		delete fake_reed_switch;
 		delete dummy_switch;
@@ -135,7 +135,6 @@ TEST(Sm, CheckBootFileSystemMountOk)
 	mock().expectOneCall("init").onObject(configuration_store);
 	mock().expectOneCall("is_mounted").onObject(main_filesystem).andReturnValue(false);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
-	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
 	CHECK_EQUAL((int)RGBLedColor::WHITE, (int)fake_status_led->get_state());
@@ -155,7 +154,6 @@ TEST(Sm, CheckBootFileSystemFirstMountFail)
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(-1);
 	mock().expectOneCall("format").onObject(main_filesystem).andReturnValue(0);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
-	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
 	CHECK_TRUE(fsm_handle::is_in_state<BootState>());
 }
@@ -192,9 +190,7 @@ TEST(Sm, CheckTransitionToPreOperationalState)
 	mock().expectOneCall("init").onObject(configuration_store);
 	mock().expectOneCall("is_mounted").onObject(main_filesystem).andReturnValue(false);
 	mock().expectOneCall("mount").onObject(main_filesystem).andReturnValue(0);
-	mock().expectOneCall("start").onObject(mock_battery_monitor);
 	fsm_handle::start();
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 	fake_timer->set_counter(1000);
 	system_scheduler->run();
@@ -210,7 +206,6 @@ TEST(Sm, CheckTransitionToOperationalConfigValid)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
@@ -238,9 +233,9 @@ TEST(Sm, CheckTransitionToOperationalConfigValidBatteryLow)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(true);
 	mock().expectOneCall("kick_watchdog");
 
+	fake_battery_monitor->set_values(10, 3300, true, false);
 	fake_timer->set_counter(1000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
@@ -286,7 +281,6 @@ TEST(Sm, CheckTransitionToErrorConfigInvalid)
 	CHECK_FALSE(ext_status_led->get_state());
 
 	// Red LED should go off after 5 seconds and then transition to off state with white LED flashing
-	mock().expectOneCall("stop").onObject(mock_battery_monitor).ignoreOtherParameters();
 	fake_timer->set_counter(11000);
 	system_scheduler->run();
 	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
@@ -439,7 +433,6 @@ TEST(Sm, CheckSWSEventsDispatchedInOperationalState)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
@@ -470,7 +463,6 @@ TEST(Sm, CheckGNSSWithFixLedTransitions)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
@@ -528,7 +520,6 @@ TEST(Sm, CheckGNSSWithoutFixLedTransitions)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
@@ -584,7 +575,6 @@ TEST(Sm, CheckArgosTXLedTransitions)
 	fsm_handle::start();
 
 	mock().enable();
-	mock().expectOneCall("is_battery_level_low").onObject(configuration_store).andReturnValue(false);
 	mock().expectOneCall("kick_watchdog");
 
 	fake_timer->set_counter(1000);
@@ -618,3 +608,56 @@ TEST(Sm, CheckArgosTXLedTransitions)
 	CHECK_FALSE(status_led->is_flashing());
 }
 
+TEST(Sm, TriggerBatteryCriticalStateInOperationalState)
+{
+	mock().disable();
+	fsm_handle::start();
+
+	mock().enable();
+	mock().expectOneCall("kick_watchdog");
+
+	fake_timer->set_counter(1000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<PreOperationalState>());
+	CHECK_EQUAL((int)RGBLedColor::GREEN, (int)status_led->get_state());
+	CHECK_TRUE(status_led->is_flashing());
+
+	// After 5 seconds, transition to pre-operational with green LED flashing
+	fake_timer->set_counter(6000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<OperationalState>());
+	CHECK_EQUAL((int)RGBLedColor::BLACK, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+	CHECK_TRUE(location_scheduler->is_started());
+	CHECK_TRUE(comms_scheduler->is_started());
+
+	// Set battery critical
+	fake_battery_monitor->set_values(5, 2000, true, true);
+	battery_monitor->update();
+	fake_timer->set_counter(7000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<BatteryCriticalState>());
+	CHECK_EQUAL((int)RGBLedColor::YELLOW, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+
+	// Wait 2 minutes for transition to off state
+	fake_timer->set_counter(7000 + 120000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<OffState>());
+}
+
+TEST(Sm, TriggerBatteryCriticalStateInPreOperationalState)
+{
+	mock().disable();
+	fsm_handle::start();
+
+	mock().enable();
+	mock().expectOneCall("kick_watchdog");
+
+	fake_battery_monitor->set_values(5, 2000, true, true);
+	fake_timer->set_counter(1000);
+	system_scheduler->run();
+	CHECK_TRUE(fsm_handle::is_in_state<BatteryCriticalState>());
+	CHECK_EQUAL((int)RGBLedColor::YELLOW, (int)status_led->get_state());
+	CHECK_FALSE(status_led->is_flashing());
+}

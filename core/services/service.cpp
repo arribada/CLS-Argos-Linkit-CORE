@@ -213,12 +213,16 @@ void Service::service_set_time(std::time_t t) {
 	rtc->settime(t);
 }
 
+void Service::service_update_battery() {
+	return battery_monitor->update();
+}
+
 uint16_t Service::service_get_voltage() {
 	return battery_monitor->get_voltage();
 }
 
 bool Service::service_is_battery_level_low() {
-	return configuration_store->is_battery_level_low();
+	return battery_monitor->is_battery_low();
 }
 
 void Service::reschedule(bool immediate) {

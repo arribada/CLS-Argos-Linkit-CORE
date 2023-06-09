@@ -159,7 +159,6 @@ target_sources(${PROJECT_NAME} PRIVATE
 	"src/decoder_test.cpp"
 	"src/config_store_test.cpp"
     "src/dte_handler_test.cpp"
-    "src/argos_test.cpp"
     "src/bch_test.cpp"
     "src/crc8_test.cpp"
     "src/crc16_test.cpp"

@@ -26,6 +26,8 @@ void LEDOff::entry() {
 	DEBUG_TRACE("LEDOff: entry");
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
+	else if (m_is_battery_critical)
+		transit<LEDBatteryCritical>();
 	else
 		status_led->off();
 	if (ext_status_led)
@@ -41,6 +43,7 @@ void LEDBoot::entry() {
 
 void LEDPowerDown::entry() {
 	DEBUG_TRACE("LEDPowerDown: entry");
+	m_is_battery_critical = false;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else
@@ -51,6 +54,7 @@ void LEDPowerDown::entry() {
 
 void LEDError::entry() {
 	DEBUG_TRACE("LEDError: entry");
+	m_is_battery_critical = false;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else
@@ -61,6 +65,7 @@ void LEDError::entry() {
 
 void LEDPreOperationalPending::entry() {
 	DEBUG_TRACE("LEDPreOperationalPending: entry");
+	m_is_battery_critical = false;
 	status_led->set(RGBLedColor::GREEN);
 	if (ext_status_led)
 		ext_status_led->off();
@@ -68,6 +73,7 @@ void LEDPreOperationalPending::entry() {
 
 void LEDPreOperationalError::entry() {
 	DEBUG_TRACE("LEDPreOperationalError: entry");
+	m_is_battery_critical = false;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else
@@ -78,6 +84,7 @@ void LEDPreOperationalError::entry() {
 
 void LEDPreOperationalBatteryNominal::entry() {
 	DEBUG_TRACE("LEDPreOperationalBatteryNominal: entry");
+	m_is_battery_critical = false;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else
@@ -88,6 +95,7 @@ void LEDPreOperationalBatteryNominal::entry() {
 
 void LEDPreOperationalBatteryLow::entry() {
 	DEBUG_TRACE("LEDPreOperationalBatteryLow: entry");
+	m_is_battery_critical = false;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else
@@ -98,6 +106,7 @@ void LEDPreOperationalBatteryLow::entry() {
 
 void LEDConfigPending::entry() {
 	DEBUG_TRACE("LEDConfigPending: entry");
+	m_is_battery_critical = false;
 	status_led->set(RGBLedColor::BLUE);
 	if (ext_status_led)
 		ext_status_led->off();
@@ -105,6 +114,7 @@ void LEDConfigPending::entry() {
 
 void LEDConfigNotConnected::entry() {
 	DEBUG_TRACE("LEDConfigNotConnected: entry");
+	m_is_battery_critical = false;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else
@@ -115,6 +125,7 @@ void LEDConfigNotConnected::entry() {
 
 void LEDConfigConnected::entry() {
 	DEBUG_TRACE("LEDConfigConnected: entry");
+	m_is_battery_critical = false;
 	if (m_is_magnet_engaged)
 		status_led->set(RGBLedColor::WHITE);
 	else
@@ -221,5 +232,15 @@ void LEDArgosTXComplete::entry() {
 					transit<LEDOff>();
 			}
 		}, system_timer->get_counter() + 50); // Add 50ms to avoid race condition on timer tick
+	}
+}
+
+void LEDBatteryCritical::entry() {
+	DEBUG_TRACE("LEDBatteryCritical: entry");
+	m_is_battery_critical = true;
+	if (m_is_magnet_engaged)
+		status_led->set(RGBLedColor::WHITE);
+	else {
+		status_led->set(RGBLedColor::YELLOW);
 	}
 }

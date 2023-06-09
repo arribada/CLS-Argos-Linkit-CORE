@@ -6,6 +6,16 @@
 #include "error.hpp"
 #include "debug.hpp"
 
+#ifndef CPPUTEST
+#include "crc16.h"
+#else
+#define crc16_compute(x, y, z)  0xFFFF
+#endif
+
+// Thresholds for low/critical battery filtering
+#define CRITICIAL_V_THRESHOLD_MV	250
+#define LOW_BATT_THRESHOLD			5
+
 // ADC constants
 #define ADC_MAX_VALUE (16384)      // 2^14
 #define ADC_REFERENCE (0.6f)       // 0.6v internal reference
@@ -26,7 +36,17 @@ static void nrfx_saadc_event_handler(nrfx_saadc_evt_t const *p_event)
 	(void)p_event;
 }
 
-NrfBatteryMonitor::NrfBatteryMonitor(uint8_t adc_channel, BatteryChemistry chem)
+// These filtered values should be retained in noinit RAM so they can survive a reset
+static __attribute__((section(".noinit"))) volatile uint16_t m_filtered_values[2];
+static __attribute__((section(".noinit"))) volatile uint16_t m_crc;
+
+
+NrfBatteryMonitor::NrfBatteryMonitor(uint8_t adc_channel,
+		BatteryChemistry chem,
+		uint16_t critical_voltage,
+		uint8_t low_level
+		) :
+		BatteryMonitor(low_level, critical_voltage)
 {
 	// One-time initialise the driver (assumes we are the only instance)
     nrfx_saadc_init(&BSP::ADC_Inits.config, nrfx_saadc_event_handler);
@@ -61,9 +81,50 @@ float NrfBatteryMonitor::sample_adc()
     return ((float) raw) / ((ADC_GAIN / ADC_REFERENCE) * ADC_MAX_VALUE) * 1000.0f;
 }
 
-uint8_t NrfBatteryMonitor::get_level()
+void NrfBatteryMonitor::internal_update() {
+	// Sample ADC and convert values
+	uint16_t mv = convert_voltage(sample_adc());
+	uint8_t  level = convert_level(mv);
+
+	// Check CRC of the previously stored filtered values
+	uint16_t crc = crc16_compute((const uint8_t *)m_filtered_values, sizeof(m_filtered_values), nullptr);
+	if (crc == m_crc) {
+		// Previously filtered values are valid -- make sure we don't
+		// allow filtered values to bounce around the threshold margin
+		// thus causing events to re-trigger unless a sufficient exit
+		// threshold is reached
+		if (m_filtered_values[0] < m_critical_voltage_mv) {
+			if (mv >= (m_critical_voltage_mv + CRITICIAL_V_THRESHOLD_MV))
+				m_filtered_values[0] = mv;
+		} else {
+			m_filtered_values[0] = mv;
+		}
+		if (m_filtered_values[1] < m_low_level) {
+			if (level >= (m_low_level + LOW_BATT_THRESHOLD))
+				m_filtered_values[1] = level;
+		} else {
+			m_filtered_values[1] = level;
+		}
+	} else {
+		// No previous values so set new values
+		m_filtered_values[0] = mv;
+		m_filtered_values[1] = level;
+	}
+
+	// Updated CRC in noinit RAM
+	m_crc = crc16_compute((const uint8_t *)m_filtered_values, sizeof(m_filtered_values), nullptr);
+
+	// Apply new values
+	m_last_voltage_mv = mv;
+	m_last_level = level;
+
+	// Set flags
+	m_is_critical_voltage = m_filtered_values[0] < m_critical_voltage_mv;
+	m_is_low_level = m_filtered_values[1] < m_low_level;
+}
+
+uint8_t NrfBatteryMonitor::convert_level(uint16_t mV)
 {
-	uint16_t mV = get_voltage();
 	// Convert to value between 0..100 based on LUT conversion
 	int lut_index = (BATT_LUT_ENTRIES - 1) - ((mV / 100) - (BATT_LUT_MIN_V / 100));
 	DEBUG_TRACE("NrfBatteryMonitor::get_level: mV = %u lut_index=%d", mV, lut_index);
@@ -84,12 +145,11 @@ uint8_t NrfBatteryMonitor::get_level()
 	}
 }
 
-uint16_t NrfBatteryMonitor::get_voltage()
+uint16_t NrfBatteryMonitor::convert_voltage(float adc)
 {
 #ifdef BATTERY_NOT_FITTED
 	return BATT_LUT_MAX_V;
 #else
-	float adc = sample_adc();
 	return (uint16_t)(adc * RP506_ADC_GAIN);
 #endif
 }

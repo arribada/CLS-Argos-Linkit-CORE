@@ -236,6 +236,7 @@ void ArgosTxService::process_gnss_burst() {
 void ArgosTxService::process_doppler_burst() {
 	DEBUG_TRACE("ArgosTxService::process_doppler_burst");
 	unsigned int size_bits;
+	service_update_battery();
 	ArticPacket packet = ArgosPacketBuilder::build_doppler_packet(service_get_voltage(), service_is_battery_level_low(), size_bits);
 	ArgosConfig argos_config;
 	configuration_store->get_argos_configuration(argos_config);

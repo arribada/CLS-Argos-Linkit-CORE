@@ -6,6 +6,7 @@
 #include "ble_service.hpp"
 #include "reed.hpp"
 #include "service.hpp"
+#include "battery.hpp"
 
 struct ReedSwitchEvent : tinyfsm::Event { ReedSwitchGesture state; };
 struct ErrorEvent : tinyfsm::Event { ErrorCode error_code; };
@@ -55,7 +56,7 @@ public:
 	void exit() override;
 };
 
-class OperationalState : public GenTracker
+class OperationalState : public GenTracker, public BatteryMonitorEventListener
 {
 private:
 	void service_event_handler(ServiceEvent &e);
@@ -63,6 +64,7 @@ private:
 public:
 	void entry() override;
 	void exit() override;
+	void react(BatteryMonitorEventVoltageCritical const &) override;
 };
 
 class ConfigurationState : public GenTracker
@@ -75,6 +77,16 @@ private:
 	void restart_inactivity_timeout();
 	void process_received_data();
 
+public:
+	void entry() override;
+	void exit() override;
+};
+
+class BatteryCriticalState : public GenTracker
+{
+private:
+	static inline const unsigned int BATTERY_CRITICAL_TIMEOUT_MS = 2 * 60 * 1000;
+	Scheduler::TaskHandle m_transit_task;
 public:
 	void entry() override;
 	void exit() override;

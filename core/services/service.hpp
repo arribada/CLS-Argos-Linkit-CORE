@@ -74,6 +74,7 @@ protected:
 	std::time_t service_current_time();
 	bool service_is_time_known();
 	void service_set_time(std::time_t);
+	void service_update_battery();
 	uint16_t service_get_voltage();
 	bool service_is_battery_level_low();
 	uint64_t service_current_timer();

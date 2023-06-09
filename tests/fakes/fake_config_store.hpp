@@ -8,7 +8,6 @@ protected:
 	void serialize_zone() {}
 	void update_battery_level() {}
 	unsigned int m_saved_count;
-	bool m_is_battery_level_low;
 
 public:
 	FakeConfigurationStore() { m_saved_count = 0; m_is_battery_level_low = false; }
@@ -19,7 +18,6 @@ public:
 	void factory_reset() {}
 	BasePassPredict& read_pass_predict() { return m_pass_predict; }
 	void write_pass_predict(BasePassPredict& value) { m_pass_predict = value; }
-	bool is_battery_level_low() { return m_is_battery_level_low; }
 	unsigned int get_saved_count() { return m_saved_count; }
 	void set_battery_level(unsigned int level) { m_battery_level = level; }
 	void set_is_battery_level_low(bool state) { m_is_battery_level_low = state; }

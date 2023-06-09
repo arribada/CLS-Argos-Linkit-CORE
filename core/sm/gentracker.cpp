@@ -37,6 +37,7 @@ FSM_INITIAL_STATE(LEDState, LEDOff);
 
 using led_handle = LEDState;
 
+
 void GenTracker::react(tinyfsm::Event const &) { }
 
 void GenTracker::react(ReedSwitchEvent const &event)
@@ -117,9 +118,6 @@ void BootState::entry() {
 	// Start reed switch monitoring and dispatch events to state machine
 	reed_switch->start([](ReedSwitchGesture s) { ReedSwitchEvent e; e.state = s; dispatch(e); });
 
-	// Start battery monitor
-	battery_monitor->start();
-
 	try {
 		// The underlying classes will create the files on the filesystem if they do not
 		// already yet exist
@@ -153,7 +151,6 @@ void BootState::exit() {
 
 void OffState::entry() {
 	DEBUG_INFO("entry: OffState");
-	battery_monitor->stop();
 	led_handle::dispatch<SetLEDPowerDown>({});
 	m_off_state_task = system_scheduler->post_task_prio([](){
 		led_handle::dispatch<SetLEDOff>({});
@@ -166,14 +163,20 @@ void OffState::entry() {
 void OffState::exit() {
 	DEBUG_INFO("exit: OffState");
 	system_scheduler->cancel_task(m_off_state_task);
-	battery_monitor->start();
 	led_handle::dispatch<SetLEDOff>({});
 }
 
 void PreOperationalState::entry() {
 	DEBUG_INFO("entry: PreOperationalState");
 	if (configuration_store->is_valid()) {
-		if (configuration_store->is_battery_level_low())
+		// Force battery monitor to update its levels
+		battery_monitor->update();
+		if (battery_monitor->is_battery_critical()) {
+			transit<BatteryCriticalState>();
+			return;
+		}
+
+		if (battery_monitor->is_battery_low())
 			led_handle::dispatch<SetLEDPreOperationalBatteryLow>({});
 		else
 			led_handle::dispatch<SetLEDPreOperationalBatteryNominal>({});
@@ -201,6 +204,8 @@ void PreOperationalState::exit() {
 
 void OperationalState::entry() {
 	DEBUG_INFO("entry: OperationalState");
+
+	battery_monitor->subscribe(*this);
 	led_handle::dispatch<SetLEDOff>({});
 
 	ServiceManager::startall([this](ServiceEvent& e) {
@@ -213,6 +218,13 @@ void OperationalState::entry() {
 		ble_service->start([](BLEServiceEvent&){ return 0; });
 		g_debug_mode = debug_mode;
 	}
+}
+
+void OperationalState::react(BatteryMonitorEventVoltageCritical const &) {
+	DEBUG_INFO("OperationalState::react: BatteryMonitorEventVoltageCritical");
+	system_scheduler->post_task_prio([this]() {
+		transit<BatteryCriticalState>();
+	}, "BatteryCriticalHandler", Scheduler::DEFAULT_PRIORITY, 1000);
 }
 
 void OperationalState::service_event_handler(ServiceEvent& e) {
@@ -253,6 +265,7 @@ void OperationalState::exit() {
 		DEBUG_TRACE("exit: OperationalState: BLE service stopped");
 		PMU::delay_ms(100);
 	}
+	battery_monitor->unsubscribe(*this);
 }
 
 void ConfigurationState::entry() {
@@ -418,6 +431,22 @@ void ConfigurationState::process_received_data() {
 
 		} while (action == DTEAction::AGAIN);
 	}
+}
+
+void BatteryCriticalState::entry() {
+	DEBUG_INFO("entry: BatteryCriticalState");
+	led_handle::dispatch<SetLEDBatteryCritical>({});
+	m_transit_task = system_scheduler->post_task_prio([this](){
+		transit<OffState>();
+	},
+	"GenTrackerBatteryCriticalTransitOffState",
+	Scheduler::DEFAULT_PRIORITY, BATTERY_CRITICAL_TIMEOUT_MS);
+}
+
+void BatteryCriticalState::exit() {
+	DEBUG_INFO("exit: BatteryCriticalState");
+	system_scheduler->cancel_task(m_transit_task);
+	led_handle::dispatch<SetLEDOff>({});
 }
 
 void ErrorState::entry() {

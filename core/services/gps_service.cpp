@@ -116,6 +116,7 @@ GPSLogEntry GPSService::invalid_log_entry()
 
     populate_gps_log_with_time(gps_entry, service_current_time());
 
+	service_update_battery();
     gps_entry.info.batt_voltage = service_get_voltage();
     gps_entry.info.event_type = GPSEventType::NO_FIX;
     gps_entry.info.valid = false;
@@ -124,7 +125,6 @@ GPSLogEntry GPSService::invalid_log_entry()
 
     return gps_entry;
 }
-
 
 void GPSService::task_process_gnss_data()
 {
@@ -137,6 +137,7 @@ void GPSService::task_process_gnss_data()
 
     populate_gps_log_with_time(gps_entry, service_current_time());
 
+	service_update_battery();
     gps_entry.info.batt_voltage = service_get_voltage();
 
     // Store GPS data

@@ -1,16 +1,15 @@
-#ifndef __FAKE_BATTERY_MON_HPP_
-#define __FAKE_BATTERY_MON_HPP_
+#pragma once
 
 #include "battery.hpp"
 
 class FakeBatteryMonitor : public BatteryMonitor {
 public:
-	uint16_t m_voltage;
-	uint8_t m_level;
-	void start() override {};
-	void stop() override {};
-	uint16_t get_voltage() override { return m_voltage; }
-	uint8_t get_level() override { return m_level; }
+	FakeBatteryMonitor() : BatteryMonitor(10, 2200) {}
+	void internal_update() {}
+	void set_values(uint8_t level = 100, uint16_t mv = 4200, bool is_low = false, bool is_critical = false) {
+		m_last_voltage_mv = mv;
+		m_last_level = level;
+		m_is_critical_voltage = is_critical;
+		m_is_low_level = is_low;
+	}
 };
-
-#endif // __FAKE_BATTERY_MON_HPP_

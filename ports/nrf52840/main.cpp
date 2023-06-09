@@ -383,11 +383,6 @@ int main()
 	Scheduler scheduler(system_timer);
 	system_scheduler = &scheduler;
 
-	DEBUG_TRACE("Battery monitor...");
-
-    NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC);
-    battery_monitor = &nrf_battery_monitor;
-
     // Initialise the I2C drivers
     NrfI2C::init();
 
@@ -411,6 +406,18 @@ int main()
 			PMU::powerdown();
 		}
 	}
+
+	DEBUG_TRACE("Configuration store...");
+	LFSConfigurationStore store(lfs_file_system);
+	configuration_store = &store;
+	configuration_store->init();
+
+	DEBUG_TRACE("Battery monitor...");
+	double critical_batt_voltage = configuration_store->read_param<double>(ParamID::LB_CRITICAL_THRESH);
+	unsigned int low_batt_level = configuration_store->read_param<unsigned int>(ParamID::LB_TRESHOLD);
+    NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC, BATT_CHEM_NCR18650_3100_3400,
+    		(uint16_t)(critical_batt_voltage*1000), low_batt_level);
+    battery_monitor = &nrf_battery_monitor;
 
 	DEBUG_TRACE("LFS System Log...");
 	SysLogFormatter sys_log_formatter;
@@ -452,10 +459,6 @@ int main()
 	AXLLogFormatter axl_sensor_log_formatter;
 	FsLog axl_sensor_log(&lfs_file_system, "AXL", 1024*1024);
 	axl_sensor_log.set_log_formatter(&axl_sensor_log_formatter);
-
-	DEBUG_TRACE("Configuration store...");
-	LFSConfigurationStore store(lfs_file_system);
-	configuration_store = &store;
 
 	DEBUG_TRACE("RAM access...");
 	NrfMemoryAccess nrf_memory_access;

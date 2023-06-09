@@ -333,8 +333,10 @@ protected:
 	}
 
 	void update_battery_level() override {
+		battery_monitor->update();
 		m_battery_level = battery_monitor->get_level();
 		m_battery_voltage = battery_monitor->get_voltage();
+		m_is_battery_level_low = battery_monitor->is_battery_low();
 	}
 
 private:
@@ -431,11 +433,4 @@ public:
 		m_pass_predict = value;
 		serialize_pass_predict();
 	}
-
-	bool is_battery_level_low() override {
-		auto lb_threshold = read_param<unsigned int>(ParamID::LB_TRESHOLD);
-		update_battery_level();
-		return (m_battery_level <= lb_threshold);
-	}
-
 };
