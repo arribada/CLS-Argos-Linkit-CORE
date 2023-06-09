@@ -224,7 +224,7 @@ TEST(M8, FailedToSyncCommsError)
     mock().expectOneCall("GPSEventPowerOn");
     m.power_on(settings);
     mock().expectOneCall("GPSEventError");
-    increment_time_ms(3000);
+    increment_time_ms(6000);
     m.power_off();
     mock().expectOneCall("GPSEventPowerOff");
     mock().expectOneCall("clear").withParameter("pin", BSP::GPIO::GPIO_GPS_PWR_EN);

@@ -422,6 +422,10 @@ void M8QAsyncReceiver::state_poweron() {
 			if (m_step == 0) {
 				sync_baud_rate(9600);
 				break;
+			}
+			else if (m_step == 1) {
+				sync_baud_rate(460800);
+				break;
 			} else {
 				DEBUG_ERROR("M8QAsyncReceiver: failed to sync comms");
 				m_unrecoverable_error = true;
