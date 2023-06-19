@@ -65,6 +65,7 @@ public:
 	GPSService(GPSDevice& device, Logger *logger) : Service(ServiceIdentifier::GNSS_SENSOR, "GNSS", logger), m_device(device) {
 	    m_device.subscribe(*this);
 	}
+	void notify_peer_event(ServiceEvent& e) override;
 
 protected:
 

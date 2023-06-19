@@ -279,6 +279,8 @@ protected:
 		/* UW_GNSS_MIN_DRY_SAMPLES */ 1U,
 		/* UW_GNSS_DETECT_THRESH */ 1U,
 		/* LB_CRITICAL_THRESH */ 2.8,
+		/* PRESSURE_SENSOR_LOGGING_MODE */ BasePressureSensorLoggingMode::ALWAYS,
+		/* GNSS_TRIGGER_COLD_START_ON_SURFACED */ (bool)false,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,

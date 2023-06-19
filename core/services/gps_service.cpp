@@ -252,3 +252,19 @@ bool GPSService::service_is_triggered_on_event(ServiceEvent& event, bool& immedi
 
 	return false;
 }
+
+void GPSService::notify_peer_event(ServiceEvent& e) {
+	//DEBUG_TRACE("GPSService::notify_peer_event: (%u,%u)", e.event_source, e.event_type);
+	if (e.event_source == ServiceIdentifier::UW_SENSOR && e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+		// Check for surfacing condition
+		if (std::get<bool>(e.event_data) == false) {
+			// Check if we need to trigger a cold start
+			if (service_read_param<bool>(ParamID::GNSS_TRIGGER_COLD_START_ON_SURFACED)) {
+				DEBUG_TRACE("GPSService: cold start required on surfaced");
+				m_is_first_fix_found = false;
+			}
+		}
+	}
+
+	Service::notify_peer_event(e);
+}

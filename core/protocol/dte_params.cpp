@@ -173,6 +173,12 @@ const BaseMap param_map[] = {
 
 	// Critical battery threshold
 	{ "LB_CRITICAL_THRESH", "LBP12", BaseEncoding::FLOAT, 0.0, 12.0, {}, true, true },
+
+	// Pressure sensor logging mode
+	{ "PRESSURE_SENSOR_LOGGING_MODE", "PRP03", BaseEncoding::PRESSURESENSORLOGGINGMODE, 0, 0, {}, true, true },
+
+	// GNSS trigger cold start on surfaced
+	{ "GNSS_TRIGGER_COLD_START_ON_SURFACED", "GNP28", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 };
 
 const size_t param_map_size = sizeof(param_map) / sizeof(param_map[0]);

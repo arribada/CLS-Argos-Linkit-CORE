@@ -149,6 +149,8 @@ enum class ParamID {
 	UW_GNSS_MIN_DRY_SAMPLES,
 	UW_GNSS_DETECT_THRESH,
 	LB_CRITICAL_THRESH,
+	PRESSURE_SENSOR_LOGGING_MODE,
+	GNSS_TRIGGER_COLD_START_ON_SURFACED,
 	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
 };
@@ -174,8 +176,14 @@ enum class BaseEncoding {
 	MODULATION,
 	UWDETECTSOURCE,
 	DEBUGMODE,
+	PRESSURESENSORLOGGINGMODE,
 	KEY_LIST,
 	KEY_VALUE_LIST
+};
+
+enum class BasePressureSensorLoggingMode {
+	ALWAYS = 0,
+	UW_THRESHOLD,
 };
 
 enum class BaseUnderwaterDetectSource {
@@ -444,7 +452,7 @@ using BaseName = std::string;
 using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
 
 // !!! Do not change the ordering of variants and also make sure std::string is the first entry !!!
-using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation, BaseUnderwaterDetectSource, BaseDebugMode>;
+using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation, BaseUnderwaterDetectSource, BaseDebugMode, BasePressureSensorLoggingMode>;
 
 struct BaseMap {
 	BaseName 	   name;

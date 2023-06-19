@@ -379,6 +379,9 @@ protected:
 	static inline void encode(std::string& output, const BaseDebugMode& value) {
 		encode(output, (unsigned int&)value);
 	}
+	static inline void encode(std::string& output, const BasePressureSensorLoggingMode& value) {
+		encode(output, (unsigned int&)value);
+	}
 	static inline void encode(std::string& output, const std::time_t& value) {
 		char buff[256];
 		auto time = std::gmtime(&value);
@@ -587,6 +590,8 @@ protected:
 	static void validate(const BaseMap &, const BaseArgosModulation&) {
 	}
 	static void validate(const BaseMap &, const BaseDebugMode&) {
+	}
+	static void validate(const BaseMap &, const BasePressureSensorLoggingMode&) {
 	}
 public:
 	static std::string encode(DTECommand command, ...) {
@@ -958,6 +963,17 @@ private:
 		}
 	}
 
+	static BasePressureSensorLoggingMode decode_pressure_sensor_logging_mode(const std::string& s) {
+		if (s == "0") {
+			return BasePressureSensorLoggingMode::ALWAYS;
+		} else if (s == "1") {
+			return BasePressureSensorLoggingMode::UW_THRESHOLD;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
 	static BaseGNSSDynModel decode_gnss_dyn_model(const std::string& s) {
 		if (s == "0") {
 			return BaseGNSSDynModel::PORTABLE;
@@ -1321,6 +1337,13 @@ private:
 							val.push_back(key_value);
 							break;
 						}
+						case BaseEncoding::PRESSURESENSORLOGGINGMODE:
+						{
+							BasePressureSensorLoggingMode x = decode_pressure_sensor_logging_mode(value);
+							key_value.value = x;
+							val.push_back(key_value);
+							break;
+						}
 						case BaseEncoding::KEY_LIST:
 						case BaseEncoding::KEY_VALUE_LIST:
 						default:
@@ -1545,6 +1568,7 @@ public:
 				case BaseEncoding::ZONETYPE:
 				case BaseEncoding::MODULATION:
 				case BaseEncoding::DEBUGMODE:
+				case BaseEncoding::PRESSURESENSORLOGGINGMODE:
 				default:
 					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;
