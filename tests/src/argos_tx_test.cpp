@@ -1297,3 +1297,72 @@ TEST(ArgosTxService, DPHardFaultPartialDepthPile)
 	v = dp.retrieve((unsigned int)BaseArgosDepthPile::DEPTH_PILE_16);
 	CHECK_EQUAL(2, v.size());
 }
+
+TEST(ArgosTxService, UnderwaterFor24HoursDryTimeZero)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::LEGACY;
+	BaseArgosPower power = BaseArgosPower::POWER_1000_MW;
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_1;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int lb_threshold = 0U;
+	bool lb_en = false;
+	unsigned int tr_nom = 10;
+	bool time_sync_en = false;
+	unsigned int dry_time_before_tx = 0;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::LB_EN, lb_en);
+	fake_config_store->write_param(ParamID::LB_TRESHOLD, lb_threshold);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, time_sync_en);
+	fake_config_store->write_param(ParamID::DRY_TIME_BEFORE_TX, dry_time_before_tx);
+
+	ArgosTxService serv(*mock_artic);
+
+	std::time_t t = 1652105502000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	serv.start();
+
+	inject_gps_location(1, 11.8768, -33.8232, t);
+
+	// Do initial transmit
+	mock().expectOneCall("set_tx_power").onObject(mock_artic).ignoreOtherParameters();
+	mock().expectOneCall("send").onObject(mock_artic).ignoreOtherParameters();
+	t += serv.get_last_schedule();
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+	system_scheduler->run();
+
+	mock_artic->notify(ArticEventTxComplete({}));
+
+	// Inject UW event
+	mock().expectOneCall("stop_send").onObject(mock_artic);
+	notify_underwater_state(true);
+
+	// Keep UW for 25 hours
+	t += 25 * 3600 * 1000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+	system_scheduler->run();
+
+	// Inject surfaced event
+	notify_underwater_state(false);
+
+	CHECK_EQUAL(0, serv.get_last_schedule());
+
+	mock().expectOneCall("set_tx_power").onObject(mock_artic).ignoreOtherParameters();
+	mock().expectOneCall("send").onObject(mock_artic).ignoreOtherParameters();
+	t += serv.get_last_schedule();
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+	system_scheduler->run();
+}

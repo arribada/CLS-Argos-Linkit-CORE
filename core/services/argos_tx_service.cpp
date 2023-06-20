@@ -616,7 +616,7 @@ void ArgosTxScheduler::schedule_periodic(unsigned int period_ms, bool jitter_en,
 		DEBUG_TRACE("ArgosScheduler::schedule_periodic: earliest TX is in %llu", m_earliest_schedule.value() - now_ms);
 
 		// If earliest TX is later than last known schedule
-		if (m_earliest_schedule.value() > now_ms) {
+		if (m_earliest_schedule.value() >= now_ms) {
 			// If we already had a schedule that is later then use that instead
 			start_time = m_earliest_schedule.value();
 			if (m_last_schedule_abs.has_value() &&
@@ -632,7 +632,8 @@ void ArgosTxScheduler::schedule_periodic(unsigned int period_ms, bool jitter_en,
 				break;
 			}
 		} else {
-			// Earliest TX has elapsed so reset it
+			// Earliest TX has elapsed so reset the last schedule to now and allow new schedule
+			// to be computed based on duty cycle
 			m_earliest_schedule.reset();
 		}
 		break;
@@ -652,6 +653,11 @@ void ArgosTxScheduler::schedule_periodic(unsigned int period_ms, bool jitter_en,
 		// It should be safe to allow a -ve jitter because TR_NOM is always larger
 		// than the jitter amount
 		start_time = m_last_schedule_abs.value() + period_ms + compute_random_jitter(jitter_en);
+
+		// Since we only project 24 hours forwards make sure that the start_time is within
+		// 24 hours of the current time
+		if ((start_time + (MSECS_PER_SECOND * SECONDS_PER_DAY)) < now_ms)
+			start_time = now_ms;
 	}
 
 	DEBUG_TRACE("ArgosTxScheduler::schedule_periodic: starting @ %llu", start_time);
