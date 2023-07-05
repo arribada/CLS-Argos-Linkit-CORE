@@ -77,7 +77,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -DMODEL_SB=0
     -DMODEL_UW=0
     -DMODEL_CORE=1
-    
+
     # For setting firmware app version
     -DFW_APP_VERSION_STR="V0.1"s
     -DFW_APP_VERSION_STR_C="V0.1"

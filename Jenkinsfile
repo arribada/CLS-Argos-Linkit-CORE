@@ -19,11 +19,14 @@ pipeline {
                     dir('ports/nrf52840/bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc') {
                         sh 'make mergehex'
                     }
+                    dir('ports/nrf52840/bootloader/gentracker_secure_bootloader/horizon_v4.0/armgcc') {
+                        sh 'make mergehex'
+                    }
                 }
             }
             post { 
                 success { 
-                archiveArtifacts 'ports/nrf52840/bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/*_merged.hex'
+                archiveArtifacts 'ports/nrf52840/bootloader/gentracker_secure_bootloader/**/armgcc/_build/*_merged.hex'
                 }
             }
         }
@@ -32,22 +35,26 @@ pipeline {
             steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     dir('ports/nrf52840/build/core') {
-                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Debug -DMODEL=CORE ../..'
+                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Release -DMODEL=CORE ../..'
                         sh 'ninja'
                     }
                     dir('ports/nrf52840/build/UW') {
-                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Debug -DMODEL=UW ../..'
+                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Release -DMODEL=UW ../..'
                         sh 'ninja'
                     }
                     dir('ports/nrf52840/build/SB') {
-                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Debug -DMODEL=SB ../..'
+                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Release -DMODEL=SB ../..'
+                        sh 'ninja'
+                    }
+                    dir('ports/nrf52840/build/HORIZON') {
+                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=HORIZON -DCMAKE_BUILD_TYPE=Release -DMODEL=CORE ../..'
                         sh 'ninja'
                     }
                 }
             }
             post { 
                 success { 
-                archiveArtifacts 'ports/nrf52840/build/**/*.hex,ports/nrf52840/build/**/*.img,ports/nrf52840/build/**/*.zip'
+                archiveArtifacts 'ports/nrf52840/build/**/*.hex,ports/nrf52840/build/**/*.img,ports/nrf52840/build/**/*.zip,ports/nrf52840/build/**/*.elf'
                 }
             }
         }

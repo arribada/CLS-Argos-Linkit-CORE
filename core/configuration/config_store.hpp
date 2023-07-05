@@ -86,7 +86,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x11;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x12;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
@@ -229,7 +229,11 @@ protected:
 		/* DEVICE_DECID */ 0U,
 		/* GNSS_TRIGGER_ON_SURFACED */ (bool)true,
 		/* GNSS_TRIGGER_ON_AXL_WAKEUP */ (bool)false,
+#if MODEL_UW
+		/* UNDERWATER_DETECT_SOURCE */ BaseUnderwaterDetectSource::SWS_GNSS,
+#else
 		/* UNDERWATER_DETECT_SOURCE */ BaseUnderwaterDetectSource::SWS,
+#endif
 		/* UNDERWATER_DETECT_THRESH */ (double)1.1,
 		/* PH_SENSOR_ENABLE */ (bool)false,
 		/* PH_SENSOR_PERIODIC */ 0U,
@@ -273,9 +277,9 @@ protected:
 #endif
 		/* UW_DIVE_MODE_ENABLE */ (bool)true,
 		/* UW_DIVE_MODE_START_TIME */ 0U,
-		/* UW_GNSS_DRY_SAMPLING */ 24U * 3600U,
-		/* UW_GNSS_WET_SAMPLING */ 24U * 3600U,
-		/* UW_GNSS_MAX_SAMPLES */ 45U,
+		/* UW_GNSS_DRY_SAMPLING */ 4U * 3600U,
+		/* UW_GNSS_WET_SAMPLING */ 4U * 3600U,
+		/* UW_GNSS_MAX_SAMPLES */ 10U,
 		/* UW_GNSS_MIN_DRY_SAMPLES */ 1U,
 		/* UW_GNSS_DETECT_THRESH */ 1U,
 		/* LB_CRITICAL_THRESH */ 2.8,
