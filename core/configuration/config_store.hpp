@@ -86,7 +86,7 @@ enum class ConfigMode {
 class ConfigurationStore {
 
 protected:
-	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x12;
+	static inline const unsigned int m_config_version_code = 0x1c07e800 | 0x13;
 	static inline const unsigned int m_config_version_code_aop = 0x1c07e800 | 0x03;
 	static inline const std::array<BaseType,MAX_CONFIG_ITEMS> default_params { {
 		/* ARGOS_DECID */ 0U,
@@ -128,7 +128,12 @@ protected:
 #else
 		/* DLOC_ARG_NOM */ 10*60U,
 #endif
+
+#if MODEL_UW
+		/* ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
+#else
 		/* ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_16,
+#endif
 		/* GPS_CONST_SELECT */ 0U, // Not implemented
 		/* GLONASS_CONST_SELECT */ 0U, // Not implemented
 		/* GNSS_HDOPFILT_EN */ (bool)true,
@@ -281,7 +286,11 @@ protected:
 		/* UW_GNSS_WET_SAMPLING */ 4U * 3600U,
 		/* UW_GNSS_MAX_SAMPLES */ 10U,
 		/* UW_GNSS_MIN_DRY_SAMPLES */ 1U,
+#if MODEL_UW
+		/* UW_GNSS_DETECT_THRESH */ 2U,
+#else
 		/* UW_GNSS_DETECT_THRESH */ 1U,
+#endif
 		/* LB_CRITICAL_THRESH */ 2.8,
 		/* PRESSURE_SENSOR_LOGGING_MODE */ BasePressureSensorLoggingMode::ALWAYS,
 		/* GNSS_TRIGGER_COLD_START_ON_SURFACED */ (bool)false,
