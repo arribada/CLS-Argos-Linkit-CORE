@@ -38,7 +38,7 @@ static unsigned int g_unique_id;
 // Return current 64 bit tick count
 static uint64_t current_ticks()
 {
-    uint64_t now = drv_rtc_counter_get(&BSP::RTC_Inits[RTC_TIMER].rtc) + (g_overflows_occured * TICKS_PER_OVERFLOW);
+    uint64_t now = drv_rtc_counter_get(&BSP::RTC_Inits[RTC_TIMER].rtc) + ((uint64_t)g_overflows_occured * (uint64_t)TICKS_PER_OVERFLOW);
 
     // It is possible that base was not updated and an overflow occured, in this case 'now' will be
     // 24bit value behind. An additional tick count updated on every 24 bit period is used to detect
@@ -62,7 +62,7 @@ static void setup_compare_interrupt()
     }
 
     // Check to see if the next scheduled task will occur before the RTC overflow
-    uint64_t next_counter_overflow_ticks = (g_overflows_occured + 1) * TICKS_PER_OVERFLOW;
+    uint64_t next_counter_overflow_ticks = ((uint64_t)g_overflows_occured + 1) * (uint64_t)TICKS_PER_OVERFLOW;
     uint64_t next_schedule_ticks = g_schedules.front().m_target_ticks;
 
     // Ensure that we only set an alarm that is at least 5 ticks away from now
