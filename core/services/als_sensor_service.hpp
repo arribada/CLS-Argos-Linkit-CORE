@@ -44,30 +44,34 @@ public:
 private:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
-	void read_and_populate_log_entry(LogEntry *e) override {
+	void sensor_populate_log_entry(LogEntry *e, ServiceSensorData& data) override {
 		ALSLogEntry *log = (ALSLogEntry *)e;
-		log->lumens = m_sensor.read();
+		log->lumens = data.port[0];
 		service_set_log_header_time(log->header, service_current_time());
 	}
 #pragma GCC diagnostic pop
 
-	void service_init() override {};
-	void service_term() override {};
-	bool service_is_enabled() override {
-		bool enable = service_read_param<bool>(ParamID::ALS_SENSOR_ENABLE);
-		return enable;
+	unsigned int sensor_max_samples() override {
+		return service_read_param<unsigned int>(ParamID::ALS_SENSOR_ENABLE_TX_MAX_SAMPLES);
 	}
-	unsigned int service_next_schedule_in_ms() override {
+
+	unsigned int sensor_num_channels() override { return 1U; }
+
+	bool sensor_is_enabled() override {
+		return service_read_param<bool>(ParamID::ALS_SENSOR_ENABLE);
+	}
+
+	unsigned int sensor_periodic() override {
 		unsigned int schedule =
 				1000 * service_read_param<unsigned int>(ParamID::ALS_SENSOR_PERIODIC);
 		return schedule == 0 ? Service::SCHEDULE_DISABLED : schedule;
 	}
-	void service_initiate() override {
-		ServiceEventData data;
-		LogEntry e;
-		read_and_populate_log_entry(&e);
-		service_complete(&data, &e);
+
+	unsigned int sensor_tx_periodic() override {
+		return service_read_param<unsigned int>(ParamID::ALS_SENSOR_ENABLE_TX_SAMPLE_PERIOD);
 	}
-	bool service_cancel() override { return false; }
-	bool service_is_usable_underwater() override { return true; }
+
+	BaseSensorEnableTxMode sensor_enable_tx_mode() override {
+		return service_read_param<BaseSensorEnableTxMode>(ParamID::ALS_SENSOR_ENABLE_TX_MODE);
+	}
 };

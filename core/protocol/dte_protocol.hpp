@@ -450,6 +450,9 @@ protected:
 			depth_pile = 12;
 		encode(output, depth_pile);
 	}
+	static inline void encode(std::string& output, const BaseSensorEnableTxMode& value) {
+		encode(output, (unsigned int)value);
+	}
 	static inline void encode_acquisition_period(std::string& output, unsigned int& value) {
 		unsigned int x;
 		switch (value) {
@@ -578,6 +581,8 @@ protected:
 	static void validate(const BaseMap &, const BaseArgosDepthPile&) {
 	}
 	static void validate(const BaseMap &, const BaseArgosMode&) {
+	}
+	static void validate(const BaseMap &, const BaseSensorEnableTxMode&) {
 	}
 	static void validate(const BaseMap &, const BaseUnderwaterDetectSource&) {
 	}
@@ -974,6 +979,21 @@ private:
 		}
 	}
 
+	static BaseSensorEnableTxMode decode_sensor_enable_tx_mode(const std::string& s) {
+		if (s == "0") {
+			return BaseSensorEnableTxMode::OFF;
+		} else if (s == "1") {
+			return BaseSensorEnableTxMode::ONESHOT;
+		} else if (s == "2") {
+			return BaseSensorEnableTxMode::MEAN;
+		} else if (s == "3") {
+			return BaseSensorEnableTxMode::MEDIAN;
+		} else {
+			DEBUG_ERROR("DTE_PROTOCOL_VALUE_OUT_OF_RANGE in %s(%s)", __FUNCTION__, s.c_str());
+			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
+		}
+	}
+
 	static BaseGNSSDynModel decode_gnss_dyn_model(const std::string& s) {
 		if (s == "0") {
 			return BaseGNSSDynModel::PORTABLE;
@@ -1344,6 +1364,13 @@ private:
 							val.push_back(key_value);
 							break;
 						}
+						case BaseEncoding::SENSORENABLETXMODE:
+						{
+							BaseSensorEnableTxMode x = decode_sensor_enable_tx_mode(value);
+							key_value.value = x;
+							val.push_back(key_value);
+							break;
+						}
 						case BaseEncoding::KEY_LIST:
 						case BaseEncoding::KEY_VALUE_LIST:
 						default:
@@ -1569,6 +1596,7 @@ public:
 				case BaseEncoding::MODULATION:
 				case BaseEncoding::DEBUGMODE:
 				case BaseEncoding::PRESSURESENSORLOGGINGMODE:
+				case BaseEncoding::SENSORENABLETXMODE:
 				default:
 					DEBUG_ERROR("BaseEncoding::Not supported");
 					break;

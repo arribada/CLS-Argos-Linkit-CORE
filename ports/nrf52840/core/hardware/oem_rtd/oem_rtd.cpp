@@ -56,25 +56,26 @@ double OEM_RTD_Sensor::read(unsigned int)
     while (!readReg<uint8_t>(RegAddr::NEW_READING_AVAILABLE))
     {}
 
-    uint32_t reading_u32 = readReg<uint32_t>(RegAddr::RTD_READING);
+    int32_t reading_u32 = readReg<int32_t>(RegAddr::RTD_READING);
 
-    // Convert reading to uint16_t and return it
     return (double)reading_u32 / 1000.0;
 }
 
 void OEM_RTD_Sensor::calibration_write(const double, const unsigned int calibration_offset)
 {
 	// We always calibrate to 0C based on ice melting in water temperature
-	writeReg<uint32_t>(RegAddr::CALIBRATION, 0U);
+	writeReg<uint32_t>(RegAddr::CALIBRATION, calibration_offset == 2 ? 100U : 0U);
 
 	// The calibration offset may be set to:
 	// 0=>Clear calibration
-	// 1=>Single point calibration
+	// 1=>Single point calibration at 0C
+	// 2=>Single point calibration at 100C
 	switch (calibration_offset) {
 	case 0:
 		writeReg<uint8_t>(RegAddr::CALIBRATION_REQUEST, 1U); // Clear calibration
 		break;
 	case 1:
+	case 2:
 		writeReg<uint8_t>(RegAddr::CALIBRATION_REQUEST, 2U); // Single point
 		break;
 	default:

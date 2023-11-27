@@ -168,6 +168,7 @@ target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
     ${PROJ_DIR}/core/hardware/ltr_303
     ${PROJ_DIR}/core/hardware/oem_ph
     ${PROJ_DIR}/core/hardware/oem_rtd
+    ${PROJ_DIR}/core/hardware/ezo_rtd
     ${PROJ_DIR}/core/hardware/cdt
     ${PROJ_DIR}/core/hardware/bmx160
     ${PROJ_DIR}/core/hardware/stwlc68_otp
@@ -252,6 +253,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/ltr_303/ltr_303.cpp
     ${PROJ_DIR}/core/hardware/oem_ph/oem_ph.cpp
     ${PROJ_DIR}/core/hardware/oem_rtd/oem_rtd.cpp
+    ${PROJ_DIR}/core/hardware/ezo_rtd/ezo_rtd.cpp
     ${PROJ_DIR}/core/hardware/artic_sat/artic_sat.cpp
     ${PROJ_DIR}/core/hardware/artic_sat/pa_driver.cpp
 	${PROJ_DIR}/core/hardware/m8qasync/m8qasync.cpp

@@ -68,6 +68,7 @@ protected:
 	// This can be called by underlying service
 	bool service_is_scheduled();
 	void service_reschedule(bool immediate = false);
+	void service_log(ServiceEventData *event_data = nullptr, void *entry = nullptr);
 	void service_complete(ServiceEventData *event_data = nullptr, void *entry = nullptr, bool reschedule = true);
 	void service_active();
 	void service_set_log_header_time(LogHeader& header, std::time_t time);

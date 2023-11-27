@@ -151,6 +151,18 @@ enum class ParamID {
 	LB_CRITICAL_THRESH,
 	PRESSURE_SENSOR_LOGGING_MODE,
 	GNSS_TRIGGER_COLD_START_ON_SURFACED,
+	SEA_TEMP_SENSOR_ENABLE_TX_MODE,
+	SEA_TEMP_SENSOR_ENABLE_TX_MAX_SAMPLES,
+	SEA_TEMP_SENSOR_ENABLE_TX_SAMPLE_PERIOD,
+	PH_SENSOR_ENABLE_TX_MODE,
+	PH_SENSOR_ENABLE_TX_MAX_SAMPLES,
+	PH_SENSOR_ENABLE_TX_SAMPLE_PERIOD,
+	ALS_SENSOR_ENABLE_TX_MODE,
+	ALS_SENSOR_ENABLE_TX_MAX_SAMPLES,
+	ALS_SENSOR_ENABLE_TX_SAMPLE_PERIOD,
+	PRESSURE_SENSOR_ENABLE_TX_MODE,
+	PRESSURE_SENSOR_ENABLE_TX_MAX_SAMPLES,
+	PRESSURE_SENSOR_ENABLE_TX_SAMPLE_PERIOD,
 	__PARAM_SIZE,
 	__NULL_PARAM = 0xFFFF
 };
@@ -177,6 +189,7 @@ enum class BaseEncoding {
 	UWDETECTSOURCE,
 	DEBUGMODE,
 	PRESSURESENSORLOGGINGMODE,
+	SENSORENABLETXMODE,
 	KEY_LIST,
 	KEY_VALUE_LIST
 };
@@ -378,6 +391,14 @@ enum class BaseDebugMode {
 	BLE_NUS
 };
 
+enum class BaseSensorEnableTxMode {
+	OFF,
+	ONESHOT,
+	MEAN,
+	MEDIAN,
+};
+
+
 enum class BaseArgosModulation {
 	A2,
 	A3,
@@ -452,7 +473,7 @@ using BaseName = std::string;
 using BaseConstraint = std::variant<unsigned int, int, double, std::string>;
 
 // !!! Do not change the ordering of variants and also make sure std::string is the first entry !!!
-using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation, BaseUnderwaterDetectSource, BaseDebugMode, BasePressureSensorLoggingMode>;
+using BaseType = std::variant<std::string, unsigned int, int, double, std::time_t, BaseRawData, BaseArgosMode, BaseArgosPower, BaseArgosDepthPile, bool, BaseGNSSFixMode, BaseGNSSDynModel, BaseLEDMode, BaseZoneType, BaseArgosModulation, BaseUnderwaterDetectSource, BaseDebugMode, BasePressureSensorLoggingMode, BaseSensorEnableTxMode>;
 
 struct BaseMap {
 	BaseName 	   name;

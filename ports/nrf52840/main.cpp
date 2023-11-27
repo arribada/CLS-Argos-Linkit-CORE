@@ -38,6 +38,7 @@
 #include "ltr_303.hpp"
 #include "oem_ph.hpp"
 #include "oem_rtd.hpp"
+#include "ezo_rtd.hpp"
 #include "cdt.hpp"
 #include "bmx160.hpp"
 #include "ms58xx.hpp"
@@ -572,12 +573,18 @@ int main()
 		DEBUG_TRACE("OEM PH: not detected");
 	}
 
-	DEBUG_TRACE("OEM RTD...");
+	DEBUG_TRACE("RTD...");
 	try {
 		static OEM_RTD_Sensor rtd;
 		static SeaTempSensorService rtd_sensor_service(rtd, &rtd_sensor_log);
 	} catch (...) {
 		DEBUG_TRACE("OEM RTD: not detected");
+		try {
+			static EZO_RTD_Sensor rtd;
+			static SeaTempSensorService rtd_sensor_service(rtd, &rtd_sensor_log);
+		} catch (...) {
+			DEBUG_TRACE("EZO RTD: not detected");
+		}
 	}
 
 	DEBUG_TRACE("BMX160...");

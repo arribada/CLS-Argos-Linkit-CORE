@@ -66,52 +66,40 @@ public:
 private:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
-	void read_and_populate_log_entry(LogEntry *e) override {
+	void sensor_populate_log_entry(LogEntry *e, ServiceSensorData& data) override {
 		AXLLogEntry *log = (AXLLogEntry *)e;
-		log->x = m_sensor.read(AXLSensorPort::X);
-		log->y = m_sensor.read(AXLSensorPort::Y);
-		log->z = m_sensor.read(AXLSensorPort::Z);
-		log->wakeup_triggered = m_sensor.read(AXLSensorPort::WAKEUP_TRIGGERED);
-		log->temperature = m_sensor.read((unsigned int)AXLSensorPort::TEMPERATURE);
+		log->x = data.port[(unsigned int)AXLSensorPort::X];
+		log->y = data.port[(unsigned int)AXLSensorPort::Y];
+		log->z = data.port[(unsigned int)AXLSensorPort::Z];
+		log->wakeup_triggered = data.port[(unsigned int)AXLSensorPort::WAKEUP_TRIGGERED];
+		log->temperature = data.port[(unsigned int)AXLSensorPort::TEMPERATURE];
 		service_set_log_header_time(log->header, service_current_time());
 	}
 #pragma GCC diagnostic pop
 
-	void service_init() override {
+	void sensor_init() override {
 		// Setup 0.1G threshold and 1 sample duration
 		double g_thresh = service_read_param<double>(ParamID::AXL_SENSOR_WAKEUP_THRESH);
 		unsigned int duration = service_read_param<unsigned int>(ParamID::AXL_SENSOR_WAKEUP_SAMPLES);
-		if (g_thresh && service_is_enabled()) {
+		if (g_thresh && sensor_is_enabled()) {
 			m_sensor.calibration_write(g_thresh, AXLCalibration::WAKEUP_THRESH);
 			m_sensor.calibration_write(duration, AXLCalibration::WAKEUP_DURATION);
 			m_sensor.install_event_handler(AXLEvent::WAKEUP, [this]() {
 				DEBUG_TRACE("AXLSensorService::event");
-				LogEntry e;
-				ServiceEventData data = true;
-				read_and_populate_log_entry(&e);
-				service_complete(&data, &e, false);
+				sensor_handler(false);
 			});
 		}
 	};
-	void service_term() override {
+	void sensor_term() override {
 		m_sensor.remove_event_handler(AXLEvent::WAKEUP);
 	};
-	bool service_is_enabled() override {
-		bool enable = service_read_param<bool>(ParamID::AXL_SENSOR_ENABLE);
-		return enable;
+	bool sensor_is_enabled() override {
+		return service_read_param<bool>(ParamID::AXL_SENSOR_ENABLE);
 	}
-	unsigned int service_next_schedule_in_ms() override {
+	unsigned int sensor_num_channels() override { return 5U; }
+	unsigned int sensor_periodic() override {
 		unsigned int schedule =
 				1000 * service_read_param<unsigned int>(ParamID::AXL_SENSOR_PERIODIC);
 		return schedule == 0 ? Service::SCHEDULE_DISABLED : schedule;
 	}
-	void service_initiate() override {
-		ServiceEventData data = false;
-		LogEntry e;
-		read_and_populate_log_entry(&e);
-		service_complete(&data, &e);
-	}
-	bool service_cancel() override { return false; }
-	unsigned int service_next_timeout() override { return 0; }
-	bool service_is_usable_underwater() override { return true; }
 };

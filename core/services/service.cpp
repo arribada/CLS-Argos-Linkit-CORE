@@ -162,18 +162,22 @@ bool Service::service_is_scheduled() {
 	return m_last_schedule != Service::SCHEDULE_DISABLED;
 }
 
-void Service::service_complete(ServiceEventData *event_data, void *entry, bool shall_reschedule) {
-	DEBUG_TRACE("Service::service_complete: service %s", m_name);
-	if (!m_is_initiated) {
-		DEBUG_WARN("Service::service_complete: service %s completed without being initiated", m_name);
-		return;
-	}
-	m_is_initiated = false;
-	notify_service_inactive();
+void Service::service_log(ServiceEventData *event_data, void *entry) {
 	if (m_logger && entry != nullptr)
 		m_logger->write(entry);
 	if (event_data)
 		notify_log_updated(*event_data);
+}
+
+void Service::service_complete(ServiceEventData *event_data, void *entry, bool shall_reschedule) {
+	DEBUG_TRACE("Service::service_complete: service %s", m_name);
+	if (!m_is_initiated) {
+		DEBUG_TRACE("Service::service_complete: service %s completed without being initiated", m_name);
+		return;
+	}
+	m_is_initiated = false;
+	notify_service_inactive();
+	service_log(event_data, entry);
 	if (shall_reschedule)
 		reschedule();
 }

@@ -16,7 +16,11 @@ enum class ServiceEventType {
 	SENSOR_LOG_UPDATED
 };
 
-using ServiceEventData = std::variant<bool,GPSLogEntry>;
+struct ServiceSensorData {
+	double port[5];
+};
+
+using ServiceEventData = std::variant<bool,GPSLogEntry,ServiceSensorData>;
 
 enum class ServiceIdentifier : unsigned int {
 	UNKNOWN,

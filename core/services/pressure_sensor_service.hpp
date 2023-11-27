@@ -56,10 +56,14 @@ private:
 #pragma GCC diagnostic ignored "-Warray-bounds"
 	double m_last_pressure;
 
-	void read_and_populate_log_entry(LogEntry *e) override {
+#pragma GCC diagnostic pop
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+	void sensor_populate_log_entry(LogEntry *e, ServiceSensorData& data) override {
 		PressureLogEntry *log = (PressureLogEntry *)e;
-		log->pressure = m_sensor.read((unsigned int)PressureSensorPort::PRESSURE);
-		log->temperature = m_sensor.read((unsigned int)PressureSensorPort::TEMPERATURE);
+		log->pressure = data.port[(unsigned int)PressureSensorPort::PRESSURE];
+		log->temperature = data.port[(unsigned int)PressureSensorPort::TEMPERATURE];
 
 		// Check pressure logging mode
 		BasePressureSensorLoggingMode mode = service_read_param<BasePressureSensorLoggingMode>(ParamID::PRESSURE_SENSOR_LOGGING_MODE);
@@ -84,27 +88,29 @@ private:
 	}
 #pragma GCC diagnostic pop
 
-	void service_init() override {};
-	void service_term() override {};
-	bool service_is_enabled() override {
-		bool enable = service_read_param<bool>(ParamID::PRESSURE_SENSOR_ENABLE);
-		return enable;
+	unsigned int sensor_max_samples() override {
+		return service_read_param<unsigned int>(ParamID::PRESSURE_SENSOR_ENABLE_TX_MAX_SAMPLES);
 	}
-	unsigned int service_next_schedule_in_ms() override {
+
+	unsigned int sensor_num_channels() override { return 2U; }
+
+	bool sensor_is_enabled() override {
+		return service_read_param<bool>(ParamID::PRESSURE_SENSOR_ENABLE);
+	}
+
+	unsigned int sensor_periodic() override {
 		unsigned int schedule =
 				1000 * service_read_param<unsigned int>(ParamID::PRESSURE_SENSOR_PERIODIC);
 		return schedule == 0 ? Service::SCHEDULE_DISABLED : schedule;
 	}
-	void service_initiate() override {
-		LogEntry e;
-		ServiceEventData data;
-		try {
-			read_and_populate_log_entry(&e);
-			service_complete(&data, &e);
-		} catch (ErrorCode&) {
-			// Don't log any data but complete the service is exception is caught
-			service_complete(nullptr, nullptr);
-		}
+
+	unsigned int sensor_tx_periodic() override {
+		return service_read_param<unsigned int>(ParamID::PRESSURE_SENSOR_ENABLE_TX_SAMPLE_PERIOD);
 	}
-	bool service_is_usable_underwater() override { return true; }
+
+	bool sensor_is_usable_underwater() override { return true; }
+
+	BaseSensorEnableTxMode sensor_enable_tx_mode() override {
+		return service_read_param<BaseSensorEnableTxMode>(ParamID::PRESSURE_SENSOR_ENABLE_TX_MODE);
+	}
 };

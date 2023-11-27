@@ -294,6 +294,19 @@ protected:
 		/* LB_CRITICAL_THRESH */ 2.8,
 		/* PRESSURE_SENSOR_LOGGING_MODE */ BasePressureSensorLoggingMode::ALWAYS,
 		/* GNSS_TRIGGER_COLD_START_ON_SURFACED */ (bool)false,
+
+		/* SEA_TEMP_SENSOR_ENABLE_TX_MODE */ BaseSensorEnableTxMode::OFF,
+		/* SEA_TEMP_SENSOR_ENABLE_TX_MAX_SAMPLES */ 1U,
+		/* SEA_TEMP_SENSOR_ENABLE_TX_SAMPLE_PERIOD */ 1000U,
+		/* PH_SENSOR_ENABLE_TX_MODE */ BaseSensorEnableTxMode::OFF,
+		/* PH_SENSOR_ENABLE_TX_MAX_SAMPLES */ 1U,
+		/* PH_SENSOR_SENSOR_ENABLE_TX_SAMPLE_PERIOD */ 1000U,
+		/* ALS_SENSOR_ENABLE_TX_MODE */ BaseSensorEnableTxMode::OFF,
+		/* ALS_SENSOR_ENABLE_TX_MAX_SAMPLES */ 1U,
+		/* ALS_SENSOR_ENABLE_TX_SAMPLE_PERIOD */ 1000U,
+		/* PRESSURE_SENSOR_ENABLE_TX_MODE */ BaseSensorEnableTxMode::OFF,
+		/* PRESSURE_SENSOR_ENABLE_TX_MAX_SAMPLES */ 1U,
+		/* PRESSURE_SENSOR_ENABLE_TX_SAMPLE_PERIOD */ 1000U,
 	}};
 	static inline const BasePassPredict default_prepass = {
 		/* version_code */ m_config_version_code_aop,

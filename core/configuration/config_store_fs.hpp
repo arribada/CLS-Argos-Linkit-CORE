@@ -85,6 +85,9 @@ protected:
 			void operator()(BasePressureSensorLoggingMode &s) {
 				std::memcpy(entry_buffer, &s, sizeof(s));
 			};
+			void operator()(BaseSensorEnableTxMode &s) {
+				std::memcpy(entry_buffer, &s, sizeof(s));
+			};
 			void operator()(BaseRawData &) {
 			};
 		} s;
@@ -213,6 +216,12 @@ protected:
 		case BaseEncoding::PRESSURESENSORLOGGINGMODE:
 		{
 			BasePressureSensorLoggingMode value = *(BasePressureSensorLoggingMode *)param_value;
+			m_params.at(index) = value;
+			break;
+		}
+		case BaseEncoding::SENSORENABLETXMODE:
+		{
+			BaseSensorEnableTxMode value = *(BaseSensorEnableTxMode *)param_value;
 			m_params.at(index) = value;
 			break;
 		}
