@@ -14,6 +14,7 @@
 #include "pmu.hpp"
 #include "sensor.hpp"
 #include "wchg.hpp"
+#include "service_scheduler.hpp"
 
 #define MAX_CONFIG_ITEMS  (unsigned int)ParamID::__PARAM_SIZE
 
@@ -74,6 +75,7 @@ struct ArgosConfig {
 	BaseArgosModulation cert_tx_modulation;
 	unsigned int cert_tx_repetition;
 	unsigned int argos_tcxo_warmup_time;
+	unsigned int sensor_tx_enable;
 };
 
 enum class ConfigMode {
@@ -740,6 +742,20 @@ public:
 		// Mark GNSS disabled if certification is set
 		if (argos_config.cert_tx_enable)
 			argos_config.gnss_en = false;
+
+		// Set sensor TX enable based on configuration
+		argos_config.sensor_tx_enable = 0;
+		if (argos_config.gnss_en) {
+			argos_config.sensor_tx_enable = 0;
+			argos_config.sensor_tx_enable |=
+				(int)(read_param<bool>(ParamID::ALS_SENSOR_ENABLE) && read_param<BaseSensorEnableTxMode>(ParamID::ALS_SENSOR_ENABLE_TX_MODE) != BaseSensorEnableTxMode::OFF) << (int)ServiceIdentifier::ALS_SENSOR;
+			argos_config.sensor_tx_enable |=
+				(int)(read_param<bool>(ParamID::PRESSURE_SENSOR_ENABLE) && read_param<BaseSensorEnableTxMode>(ParamID::ALS_SENSOR_ENABLE_TX_MODE) != BaseSensorEnableTxMode::OFF) << (int)ServiceIdentifier::PRESSURE_SENSOR;
+			argos_config.sensor_tx_enable |=
+				(int)(read_param<bool>(ParamID::SEA_TEMP_SENSOR_ENABLE) && read_param<BaseSensorEnableTxMode>(ParamID::ALS_SENSOR_ENABLE_TX_MODE) != BaseSensorEnableTxMode::OFF) << (int)ServiceIdentifier::SEA_TEMP_SENSOR;
+			argos_config.sensor_tx_enable |=
+				(int)(read_param<bool>(ParamID::PH_SENSOR_ENABLE) && read_param<BaseSensorEnableTxMode>(ParamID::ALS_SENSOR_ENABLE_TX_MODE) != BaseSensorEnableTxMode::OFF) << (int)ServiceIdentifier::PH_SENSOR;
+		}
 	}
 
 	void increment_tx_counter() {

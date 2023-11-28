@@ -12,6 +12,7 @@
 
 
 extern ConfigurationStore *configuration_store;
+extern Scheduler *system_scheduler;
 
 
 ArgosTxService::ArgosTxService(ArticDevice& device) : Service(ServiceIdentifier::ARGOS_TX, "ARGOSTX"),
@@ -27,7 +28,7 @@ void ArgosTxService::service_init() {
 	m_artic.set_device_identifier(argos_config.argos_id);
 	m_artic.subscribe(*this);
 	m_sched.reset(argos_config.argos_id);
-	m_gps_depth_pile.clear();
+	m_depth_pile_manager.clear();
 	m_is_first_tx = true;
 	m_is_tx_pending = false;
 
@@ -82,7 +83,7 @@ unsigned int ArgosTxService::service_next_schedule_in_ms() {
 				DEBUG_TRACE("ArgosTxService::service_next_schedule_in_ms: can't schedule as GNSS_EN and RTC not set");
 				return Service::SCHEDULE_DISABLED;
 			}
-			if (m_gps_depth_pile.eligible() == 0) {
+			if (m_depth_pile_manager.eligible() == 0) {
 				DEBUG_TRACE("ArgosTxService::service_next_schedule_in_ms: depth pile has no eligible entries");
 				return Service::SCHEDULE_DISABLED;
 			}
@@ -94,16 +95,28 @@ unsigned int ArgosTxService::service_next_schedule_in_ms() {
 			}
 			if (argos_config.mode == BaseArgosMode::DUTY_CYCLE) {
 				m_scheduled_mode = ArticMode::A2;
-				m_scheduled_task = [this]() { process_gnss_burst(); };
+				if (argos_config.sensor_tx_enable) {
+					m_scheduled_task = [this]() { process_sensor_burst(); };
+				} else {
+					m_scheduled_task = [this]() { process_gnss_burst(); };
+				}
 				return m_sched.schedule_duty_cycle(argos_config, now);
 			}
 			if (argos_config.mode == BaseArgosMode::LEGACY) {
 				m_scheduled_mode = ArticMode::A2;
-				m_scheduled_task = [this]() { process_gnss_burst(); };
+				if (argos_config.sensor_tx_enable) {
+					m_scheduled_task = [this]() { process_sensor_burst(); };
+				} else {
+					m_scheduled_task = [this]() { process_gnss_burst(); };
+				}
 				return m_sched.schedule_legacy(argos_config, now);
 			}
 			if (argos_config.mode == BaseArgosMode::PASS_PREDICTION) {
-				m_scheduled_task = [this]() { process_gnss_burst(); };
+				if (argos_config.sensor_tx_enable) {
+					m_scheduled_task = [this]() { process_sensor_burst(); };
+				} else {
+					m_scheduled_task = [this]() { process_gnss_burst(); };
+				}
 				BasePassPredict pass_predict = configuration_store->read_pass_predict();
 				return m_sched.schedule_prepass(argos_config, pass_predict, m_scheduled_mode, now);
 			}
@@ -140,18 +153,12 @@ bool ArgosTxService::service_is_triggered_on_surfaced(bool &immediate) {
 void ArgosTxService::notify_peer_event(ServiceEvent& e) {
 	//DEBUG_TRACE("ArgosTxService::notify_peer_event: (%u,%u)", e.event_source, e.event_type);
 
+	m_depth_pile_manager.notify_peer_event(e);
+
 	if (e.event_source == ServiceIdentifier::GNSS_SENSOR &&
 		e.event_type == ServiceEventType::SERVICE_LOG_UPDATED)
 	{
 		GPSLogEntry& entry = std::get<GPSLogEntry>(e.event_data);
-		ArgosConfig argos_config;
-		configuration_store->get_argos_configuration(argos_config);
-
-		// Store the entry into the depth pile
-		unsigned int burst_counter = (argos_config.ntry_per_message == 0 ||
-				argos_config.mode == BaseArgosMode::DUTY_CYCLE ||
-				argos_config.mode == BaseArgosMode::LEGACY) ? UINT_MAX : argos_config.ntry_per_message;
-		m_gps_depth_pile.store(entry, burst_counter);
 
 		// Update last known location
 		if (entry.info.valid) {
@@ -196,7 +203,7 @@ void ArgosTxService::process_time_sync_burst() {
 	ArgosConfig argos_config;
 	configuration_store->get_argos_configuration(argos_config);
 	unsigned int size_bits;
-	std::vector<GPSLogEntry*> v = m_gps_depth_pile.retrieve_latest();
+	std::vector<GPSLogEntry*> v = m_depth_pile_manager.retrieve_gps_latest();
 	if (v.size()) {
 		ArticPacket packet = ArgosPacketBuilder::build_gnss_packet(v, argos_config.is_out_of_zone, argos_config.is_lb,
 				argos_config.delta_time_loc,
@@ -212,12 +219,38 @@ void ArgosTxService::process_time_sync_burst() {
 	}
 }
 
+void ArgosTxService::process_sensor_burst() {
+	DEBUG_TRACE("ArgosTxService::process_sensor_burst");
+	ArgosConfig argos_config;
+	configuration_store->get_argos_configuration(argos_config);
+	unsigned int size_bits;
+	GPSLogEntry *gps = m_depth_pile_manager.retrieve_gps_single((unsigned int)argos_config.depth_pile);
+	if (gps != nullptr) {
+		ArticPacket packet = ArgosPacketBuilder::build_sensor_packet(gps,
+				m_depth_pile_manager.retrieve_sensor_single((unsigned int)argos_config.depth_pile, ServiceIdentifier::ALS_SENSOR),
+				m_depth_pile_manager.retrieve_sensor_single((unsigned int)argos_config.depth_pile, ServiceIdentifier::PH_SENSOR),
+				m_depth_pile_manager.retrieve_sensor_single((unsigned int)argos_config.depth_pile, ServiceIdentifier::PRESSURE_SENSOR),
+				m_depth_pile_manager.retrieve_sensor_single((unsigned int)argos_config.depth_pile, ServiceIdentifier::SEA_TEMP_SENSOR),
+				argos_config.is_lb,
+				argos_config.is_out_of_zone,
+				size_bits);
+		DEBUG_INFO("ArgosTxService::process_sensor_burst: mode=%s data=%s sz=%u power=%u mW", argos_modulation_to_string((BaseArgosModulation)m_scheduled_mode), Binascii::hexlify(packet).c_str(), size_bits,
+				argos_power_to_integer(argos_config.power));
+		m_artic.set_tx_power(argos_config.power);
+		m_artic.send(m_scheduled_mode, packet, size_bits);
+	} else {
+		// No eligible entries for transmission in the depth pile, so send a doppler burst instead
+		DEBUG_WARN("ArgosTxService::process_sensor_burst: no entries eligible in depth pile");
+		service_complete();
+	}
+}
+
 void ArgosTxService::process_gnss_burst() {
 	DEBUG_TRACE("ArgosTxService::process_gnss_burst");
 	ArgosConfig argos_config;
 	configuration_store->get_argos_configuration(argos_config);
 	unsigned int size_bits;
-	std::vector<GPSLogEntry*> v = m_gps_depth_pile.retrieve((unsigned int)argos_config.depth_pile);
+	std::vector<GPSLogEntry*> v = m_depth_pile_manager.retrieve_gps((unsigned int)argos_config.depth_pile);
 	if (v.size()) {
 		ArticPacket packet = ArgosPacketBuilder::build_gnss_packet(v, argos_config.is_out_of_zone, argos_config.is_lb,
 				argos_config.delta_time_loc,
@@ -564,6 +597,112 @@ ArticPacket ArgosPacketBuilder::build_doppler_packet(unsigned int batt_voltage, 
 	return packet;
 }
 
+ArticPacket ArgosPacketBuilder::build_sensor_packet(GPSLogEntry* gps_entry,
+		ServiceSensorData *als_sensor,
+		ServiceSensorData *ph_sensor,
+		ServiceSensorData *pressure_sensor,
+		ServiceSensorData *sea_temp_sensor,
+		bool is_out_of_zone, bool is_low_battery,
+		unsigned int& size_bits) {
+
+	DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet");
+	unsigned int base_pos = 0;
+	ArticPacket packet;
+
+	// Reserve required number of bytes
+	packet.assign(LONG_PACKET_BYTES, 0);
+
+	// Payload bytes
+	PACK_BITS(0, packet, base_pos, 8);  // Zero CRC field (computed later)
+
+	// Use scheduled GPS time as day/hour/min
+	uint16_t year;
+	uint8_t month, day, hour, min, sec;
+	convert_datetime_to_epoch(gps_entry->info.schedTime, year, month, day, hour, min, sec);
+	PACK_BITS(day, packet, base_pos, 5);
+
+	DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: day=%u", (unsigned int)day);
+	PACK_BITS(hour, packet, base_pos, 5);
+	DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: hour=%u", (unsigned int)hour);
+	PACK_BITS(min, packet, base_pos, 6);
+	DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: min=%u", (unsigned int)min);
+
+	if (gps_entry->info.valid) {
+		unsigned int lat = convert_latitude(gps_entry->info.lat);
+		PACK_BITS(lat, packet, base_pos, 21);
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: lat=%u (%lf)", lat, gps_entry->info.lat);
+		unsigned int lon = convert_longitude(gps_entry->info.lon);
+		PACK_BITS(lon, packet, base_pos, 22);
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: lon=%u (%lf)", lon, gps_entry->info.lon);
+		unsigned int gspeed = convert_speed((double)gps_entry->info.gSpeed);
+		PACK_BITS((unsigned int)gspeed, packet, base_pos, 7);
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: speed=%u (%lf)", (unsigned int)gspeed, (double)gps_entry->info.gSpeed);
+
+		// OUTOFZONE_FLAG
+		PACK_BITS(is_out_of_zone, packet, base_pos, 1);
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: is_out_of_zone=%u", is_out_of_zone);
+	} else {
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: lat/lon no fix");
+		PACK_BITS(0xFFFFFFFF, packet, base_pos, 21);
+		PACK_BITS(0xFFFFFFFF, packet, base_pos, 22);
+		PACK_BITS(0xFF, packet, base_pos, 7);
+		PACK_BITS(is_out_of_zone, packet, base_pos, 1);
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: is_out_of_zone=%u", (unsigned int)is_out_of_zone);
+	}
+
+	// VOLTAGE
+	unsigned int batt = convert_battery_voltage((unsigned int)gps_entry->info.batt_voltage);
+	PACK_BITS(batt, packet, base_pos, 7);
+	DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: voltage=%u (%u)", (unsigned int)batt, (unsigned int)gps_entry->info.batt_voltage);
+
+	// LOWBATERY_FLAG
+	PACK_BITS(is_low_battery, packet, base_pos, 1);
+	DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: is_lb=%u", is_low_battery);
+
+	// Add ALS sensor data
+	if (als_sensor != nullptr) {
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: als=%05X", (unsigned int)als_sensor->port[0]);
+		PACK_BITS((unsigned int)als_sensor->port[0], packet, base_pos, 17);
+	}
+	if (ph_sensor != nullptr) {
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: ph=%04X", (unsigned int)ph_sensor->port[0]);
+		PACK_BITS((unsigned int)ph_sensor->port[0], packet, base_pos, 14);
+	}
+	if (pressure_sensor != nullptr) {
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: pbar=%04X ptemp=%04X",
+				(unsigned int)pressure_sensor->port[0],
+				(unsigned int)pressure_sensor->port[1]);
+		PACK_BITS((unsigned int)pressure_sensor->port[0], packet, base_pos, 15);
+		PACK_BITS((unsigned int)pressure_sensor->port[1], packet, base_pos, 14);
+	}
+	if (sea_temp_sensor != nullptr) {
+		DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: sea_temp=%06X", (unsigned int)sea_temp_sensor->port[0]);
+		PACK_BITS((unsigned int)sea_temp_sensor->port[0], packet, base_pos, 21);
+	}
+
+	// Calculate CRC8
+	unsigned char crc8 = CRC8::checksum(packet.substr(1), base_pos - 8);
+	unsigned int crc_offset = 0;
+	PACK_BITS(crc8, packet, crc_offset, 8);
+	DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: crc8=%02x", crc8);
+
+	// BCH code B255_223_4
+	BCHCodeWord code_word = BCHEncoder::encode(
+			BCHEncoder::B255_223_4,
+			sizeof(BCHEncoder::B255_223_4),
+			packet, LONG_PACKET_PAYLOAD_BITS);
+	DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: bch=%08x", code_word);
+
+	// Append BCH code
+	PACK_BITS(code_word, packet, base_pos, BCHEncoder::B255_223_4_CODE_LEN);
+
+	size_bits = base_pos;
+
+	packet.resize((size_bits+7)/8);
+
+	return packet;
+}
+
 // ArgosTxScheduler
 
 ArgosTxScheduler::ArgosTxScheduler() :
@@ -822,4 +961,117 @@ void ArgosTxScheduler::schedule_at(std::time_t t) {
 
 void ArgosTxScheduler::notify_tx_complete() {
 	m_last_schedule_abs = m_curr_schedule_abs;
+}
+
+ArgosDepthPileManager::ArgosDepthPileManager() {
+	ArgosConfig argos_config;
+	configuration_store->get_argos_configuration(argos_config);
+	m_sensor_tx_enable = argos_config.sensor_tx_enable | (1 << (int)ServiceIdentifier::GNSS_SENSOR);
+	m_sensor_tx_current = 0;
+}
+
+void ArgosDepthPileManager::notify_peer_event(ServiceEvent& e) {
+
+	if (e.event_source == ServiceIdentifier::GNSS_SENSOR &&
+		e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+		DEBUG_TRACE("ArgosDepthPileManager::notify_peer_event: GNSS cache set");
+		GPSLogEntry& entry = std::get<GPSLogEntry>(e.event_data);
+		m_gps_cache = entry;
+		m_sensor_tx_current |= (1 << (int)ServiceIdentifier::GNSS_SENSOR);
+	} else if (e.event_source == ServiceIdentifier::ALS_SENSOR &&
+			e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+		DEBUG_TRACE("ArgosDepthPileManager::notify_peer_event: ALS cache set");
+		ServiceSensorData& entry = std::get<ServiceSensorData>(e.event_data);
+		m_als_cache.port[0] = entry.port[0];
+		m_sensor_tx_current |= (1 << (int)ServiceIdentifier::ALS_SENSOR);
+	} else if (e.event_source == ServiceIdentifier::PH_SENSOR &&
+			e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+		DEBUG_TRACE("ArgosDepthPileManager::notify_peer_event: PH cache set");
+		ServiceSensorData& entry = std::get<ServiceSensorData>(e.event_data);
+		m_ph_cache.port[0] = (unsigned int)(entry.port[0] * 1000U);
+		m_sensor_tx_current |= (1 << (int)ServiceIdentifier::PH_SENSOR);
+	} else if (e.event_source == ServiceIdentifier::PRESSURE_SENSOR &&
+			e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+		DEBUG_TRACE("ArgosDepthPileManager::notify_peer_event: PRESSURE cache set");
+		ServiceSensorData& entry = std::get<ServiceSensorData>(e.event_data);
+		m_pressure_cache.port[0] = (unsigned int)(entry.port[0] * 1000U);
+		m_pressure_cache.port[1] = (unsigned int)((entry.port[1] + 40.0) * 100U);
+		m_sensor_tx_current |= (1 << (int)ServiceIdentifier::PRESSURE_SENSOR);
+	} else if (e.event_source == ServiceIdentifier::SEA_TEMP_SENSOR &&
+			e.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+		DEBUG_TRACE("ArgosDepthPileManager::notify_peer_event: SEA_TEMP cache set");
+		ServiceSensorData& entry = std::get<ServiceSensorData>(e.event_data);
+		m_sea_temp_cache.port[0] = (unsigned int)((entry.port[0] + 126.0) * 1000U);
+		m_sensor_tx_current |= (1 << (int)ServiceIdentifier::SEA_TEMP_SENSOR);
+	} else if (e.event_source == ServiceIdentifier::GNSS_SENSOR &&
+			e.event_type == ServiceEventType::SERVICE_INACTIVE) {
+
+		// If we didn't yet gather all the expected inputs then we start
+		// a timeout to force dummy values into the depth pile
+		if (m_sensor_tx_current != m_sensor_tx_enable) {
+			m_timeout_task = system_scheduler->post_task_prio([this]() {
+				DEBUG_TRACE("ArgosDepthPileManager: sensor timeout: curr=%08x enable=%08x", m_sensor_tx_current, m_sensor_tx_enable);
+				if (((1 << (int)ServiceIdentifier::ALS_SENSOR) & m_sensor_tx_enable) &&
+					((1 << (int)ServiceIdentifier::ALS_SENSOR) & m_sensor_tx_current) == 0) {
+					m_als_cache.port[0] = 0xFFFFFFFF;
+					m_sensor_tx_current |= (1 << (int)ServiceIdentifier::ALS_SENSOR);
+				} else if (((1 << (int)ServiceIdentifier::PH_SENSOR) & m_sensor_tx_enable) &&
+						((1 << (int)ServiceIdentifier::PH_SENSOR) & m_sensor_tx_current) == 0) {
+					m_ph_cache.port[0] = 0xFFFFFFFF;
+					m_sensor_tx_current |= (1 << (int)ServiceIdentifier::PH_SENSOR);
+				} else if (((1 << (int)ServiceIdentifier::PRESSURE_SENSOR) & m_sensor_tx_enable) &&
+						((1 << (int)ServiceIdentifier::PRESSURE_SENSOR) & m_sensor_tx_current) == 0) {
+					m_pressure_cache.port[0] = 0xFFFFFFFF;
+					m_pressure_cache.port[1] = 0xFFFFFFFF;
+					m_sensor_tx_current |= (1 << (int)ServiceIdentifier::PRESSURE_SENSOR);
+				} else if (((1 << (int)ServiceIdentifier::SEA_TEMP_SENSOR) & m_sensor_tx_enable) &&
+						((1 << (int)ServiceIdentifier::SEA_TEMP_SENSOR) & m_sensor_tx_current) == 0) {
+					m_sea_temp_cache.port[0] = 0xFFFFFFFF;
+					m_sensor_tx_current |= (1 << (int)ServiceIdentifier::SEA_TEMP_SENSOR);
+				}
+				update_depth_pile();
+			}, "DepthPileTimeout", Scheduler::DEFAULT_PRIORITY, 2000U);
+		}
+	}
+
+	update_depth_pile();
+}
+
+void ArgosDepthPileManager::update_depth_pile() {
+
+	if (m_sensor_tx_current == m_sensor_tx_enable) {
+
+		// Cancel inactivity timeout
+		system_scheduler->cancel_task(m_timeout_task);
+
+		// Get the required burst counter
+		ArgosConfig argos_config;
+		configuration_store->get_argos_configuration(argos_config);
+		unsigned int burst_counter = (argos_config.ntry_per_message == 0 ||
+				argos_config.mode == BaseArgosMode::DUTY_CYCLE ||
+				argos_config.mode == BaseArgosMode::LEGACY) ? UINT_MAX : argos_config.ntry_per_message;
+
+		// Synchronously update the depth piles
+		if (m_sensor_tx_current & (1 << (int)ServiceIdentifier::GNSS_SENSOR)) {
+			// Store the entry into the depth pile
+			m_gps_depth_pile.store(m_gps_cache, burst_counter);
+		}
+		if (m_sensor_tx_current & (1 << (int)ServiceIdentifier::ALS_SENSOR)) {
+			// Store the entry into the depth pile
+			m_als_depth_pile.store(m_als_cache, burst_counter);
+		}
+		if (m_sensor_tx_current & (1 << (int)ServiceIdentifier::PH_SENSOR)) {
+			// Store the entry into the depth pile
+			m_ph_depth_pile.store(m_ph_cache, burst_counter);
+		}
+		if (m_sensor_tx_current & (1 << (int)ServiceIdentifier::PRESSURE_SENSOR)) {
+			// Store the entry into the depth pile
+			m_pressure_depth_pile.store(m_pressure_cache, burst_counter);
+		}
+		if (m_sensor_tx_current & (1 << (int)ServiceIdentifier::SEA_TEMP_SENSOR)) {
+			// Store the entry into the depth pile
+			m_sea_temp_depth_pile.store(m_sea_temp_cache, burst_counter);
+		}
+		m_sensor_tx_current = 0;
+	}
 }

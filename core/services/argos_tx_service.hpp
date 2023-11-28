@@ -8,6 +8,7 @@
 #include "artic_device.hpp"
 #include "service.hpp"
 #include "config_store.hpp"
+#include "service_scheduler.hpp"
 
 
 template<typename T> class ArgosDepthPile {
@@ -166,6 +167,14 @@ public:
 			unsigned int &size_bits);
 	static ArticPacket build_certification_packet(std::string cert_tx_payload, unsigned int &size_bits);
 	static ArticPacket build_doppler_packet(unsigned int battery, bool is_low_battery, unsigned int &size_bits);
+	static ArticPacket build_sensor_packet(GPSLogEntry* v,
+			ServiceSensorData *als_sensor,
+			ServiceSensorData *ph_sensor,
+			ServiceSensorData *pressure_sensor,
+			ServiceSensorData *sea_temp_sensor,
+			bool is_out_of_zone, bool is_low_battery,
+			unsigned int& size_bits
+			);
 };
 
 class ArgosTxScheduler {
@@ -213,6 +222,74 @@ public:
 };
 
 
+class ArgosDepthPileManager {
+public:
+	ArgosDepthPileManager();
+
+	void notify_peer_event(ServiceEvent& e);
+	void clear() {
+		m_gps_depth_pile.clear();
+		m_als_depth_pile.clear();
+		m_ph_depth_pile.clear();
+		m_pressure_depth_pile.clear();
+		m_sea_temp_depth_pile.clear();
+	}
+	bool eligible() {
+		return m_gps_depth_pile.eligible();
+	}
+
+	std::vector<GPSLogEntry*> retrieve_gps_latest() {
+		return m_gps_depth_pile.retrieve_latest();
+	}
+
+	std::vector<GPSLogEntry*> retrieve_gps(unsigned int depth_pile) {
+		return m_gps_depth_pile.retrieve(depth_pile);
+	}
+
+	GPSLogEntry* retrieve_gps_single(unsigned int depth_pile) {
+		try {
+			return m_gps_depth_pile.retrieve(depth_pile, 1).at(0);
+		} catch (const std::out_of_range& e) {
+			return nullptr;
+		}
+	}
+
+	ServiceSensorData* retrieve_sensor_single(unsigned int depth_pile, ServiceIdentifier service) {
+		try {
+			if (service == ServiceIdentifier::ALS_SENSOR) {
+				return m_als_depth_pile.retrieve(depth_pile, 1).at(0);
+			} else if (service == ServiceIdentifier::PH_SENSOR) {
+				return m_ph_depth_pile.retrieve(depth_pile, 1).at(0);
+			} else if (service == ServiceIdentifier::PRESSURE_SENSOR) {
+				return m_pressure_depth_pile.retrieve(depth_pile, 1).at(0);
+			} else if (service == ServiceIdentifier::SEA_TEMP_SENSOR) {
+				return m_sea_temp_depth_pile.retrieve(depth_pile, 1).at(0);
+			} else
+				throw ErrorCode::RESOURCE_NOT_AVAILABLE;
+		} catch (const std::out_of_range& e) {
+			return nullptr;
+		}
+	}
+
+private:
+	unsigned int m_sensor_tx_enable;
+	unsigned int m_sensor_tx_current;
+	Scheduler::TaskHandle m_timeout_task;
+	ArgosDepthPile<GPSLogEntry> m_gps_depth_pile;
+	GPSLogEntry m_gps_cache;
+	ArgosDepthPile<ServiceSensorData> m_als_depth_pile;
+	ServiceSensorData m_als_cache;
+	ArgosDepthPile<ServiceSensorData> m_pressure_depth_pile;
+	ServiceSensorData m_pressure_cache;
+	ArgosDepthPile<ServiceSensorData> m_ph_depth_pile;
+	ServiceSensorData m_ph_cache;
+	ArgosDepthPile<ServiceSensorData> m_sea_temp_depth_pile;
+	ServiceSensorData m_sea_temp_cache;
+
+	void update_depth_pile();
+};
+
+
 class ArgosTxService : public Service, ArticEventListener {
 public:
 	ArgosTxService(ArticDevice& device);
@@ -231,7 +308,7 @@ protected:
 
 private:
 	ArticDevice& m_artic;
-	ArgosDepthPile<GPSLogEntry> m_gps_depth_pile;
+	ArgosDepthPileManager m_depth_pile_manager;
 	ArgosTxScheduler m_sched;
 	bool m_is_first_tx;
 	bool m_is_tx_pending;
@@ -245,5 +322,6 @@ private:
 	void process_certification_burst();
 	void process_time_sync_burst();
 	void process_gnss_burst();
+	void process_sensor_burst();
 	void process_doppler_burst();
 };

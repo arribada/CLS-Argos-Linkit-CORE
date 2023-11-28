@@ -83,6 +83,31 @@ TEST_GROUP(ArgosTxService)
 		return log;
 	}
 
+	void inject_gps_active() {
+		ServiceEvent e;
+		e.event_type = ServiceEventType::SERVICE_ACTIVE;
+		e.event_source = ServiceIdentifier::GNSS_SENSOR;
+		e.event_originator_unique_id = 0x12345678;
+		ServiceManager::notify_peer_event(e);
+	}
+
+	void inject_gps_inactive() {
+		ServiceEvent e;
+		e.event_type = ServiceEventType::SERVICE_ACTIVE;
+		e.event_source = ServiceIdentifier::GNSS_SENSOR;
+		e.event_originator_unique_id = 0x12345678;
+		ServiceManager::notify_peer_event(e);
+	}
+
+	void inject_sensor_data(ServiceSensorData data, ServiceIdentifier service) {
+		ServiceEvent e;
+		e.event_source = service;
+		e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+		e.event_data = data;
+		e.event_originator_unique_id = 0x12345678;
+		ServiceManager::notify_peer_event(e);
+	}
+
 	void inject_gps_location(bool is_valid=true, double longitude=0, double latitude=0, std::time_t t=0, bool is_3d_fix = false, int32_t hMSL=0, int32_t gSpeed=0, uint16_t batt=4200) {
 		ServiceEvent e;
 		GPSLogEntry log = make_gps_location(is_valid, longitude, latitude, t, is_3d_fix, hMSL, gSpeed, batt);
@@ -1365,4 +1390,267 @@ TEST(ArgosTxService, UnderwaterFor24HoursDryTimeZero)
 	fake_rtc->settime(t/1000);
 	fake_timer->set_counter(t);
 	system_scheduler->run();
+}
+
+TEST(ArgosTxService, DepthPileManagerSensorTimeout)
+{
+	bool enable = true;
+	BaseSensorEnableTxMode mode = BaseSensorEnableTxMode::ONESHOT;
+	fake_config_store->write_param(ParamID::ALS_SENSOR_ENABLE, enable);
+	fake_config_store->write_param(ParamID::ALS_SENSOR_ENABLE_TX_MODE, mode);
+
+	std::time_t t = 1652105502000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+
+	ArgosDepthPileManager man;
+
+	ServiceEvent e;
+	GPSLogEntry log;
+	e.event_source = ServiceIdentifier::GNSS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_ACTIVE;
+	man.notify_peer_event(e);
+
+	e.event_data = log;
+	e.event_source = ServiceIdentifier::GNSS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	man.notify_peer_event(e);
+
+	e.event_type = ServiceEventType::SERVICE_INACTIVE;
+	man.notify_peer_event(e);
+
+	CHECK_FALSE(man.eligible());
+
+	// Sensor timeout
+	t += 2000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+	system_scheduler->run();
+
+	CHECK_TRUE(man.eligible());
+}
+
+TEST(ArgosTxService, DepthPileManagerSensorRx)
+{
+	bool enable = true;
+	BaseSensorEnableTxMode mode = BaseSensorEnableTxMode::ONESHOT;
+	fake_config_store->write_param(ParamID::ALS_SENSOR_ENABLE, enable);
+	fake_config_store->write_param(ParamID::ALS_SENSOR_ENABLE_TX_MODE, mode);
+
+	std::time_t t = 1652105502000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+
+	ArgosDepthPileManager man;
+
+	ServiceEvent e;
+	GPSLogEntry log;
+	ServiceSensorData sensor;
+	e.event_source = ServiceIdentifier::GNSS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_ACTIVE;
+	man.notify_peer_event(e);
+
+	e.event_data = log;
+	e.event_source = ServiceIdentifier::GNSS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	man.notify_peer_event(e);
+
+	e.event_data = sensor;
+	e.event_source = ServiceIdentifier::ALS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	man.notify_peer_event(e);
+
+	e.event_type = ServiceEventType::SERVICE_INACTIVE;
+	man.notify_peer_event(e);
+
+	CHECK_TRUE(man.eligible());
+}
+
+TEST(ArgosTxService, DepthPileManagerTestSensorValueConversion)
+{
+	bool enable = true;
+	BaseSensorEnableTxMode mode = BaseSensorEnableTxMode::ONESHOT;
+	fake_config_store->write_param(ParamID::ALS_SENSOR_ENABLE, enable);
+	fake_config_store->write_param(ParamID::ALS_SENSOR_ENABLE_TX_MODE, mode);
+	fake_config_store->write_param(ParamID::PH_SENSOR_ENABLE, enable);
+	fake_config_store->write_param(ParamID::PH_SENSOR_ENABLE_TX_MODE, mode);
+	fake_config_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE, enable);
+	fake_config_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_MODE, mode);
+	fake_config_store->write_param(ParamID::SEA_TEMP_SENSOR_ENABLE, enable);
+	fake_config_store->write_param(ParamID::SEA_TEMP_SENSOR_ENABLE_TX_MODE, mode);
+
+	ArgosDepthPileManager man;
+
+	ServiceEvent e;
+	GPSLogEntry log;
+	ServiceSensorData sensor;
+	e.event_source = ServiceIdentifier::GNSS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_ACTIVE;
+	man.notify_peer_event(e);
+
+	e.event_data = log;
+	e.event_source = ServiceIdentifier::GNSS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	man.notify_peer_event(e);
+
+	sensor.port[0] = 65535;
+	e.event_data = sensor;
+	e.event_source = ServiceIdentifier::ALS_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	man.notify_peer_event(e);
+
+	sensor.port[0] = 12.4;
+	sensor.port[1] = -38.0;
+	e.event_data = sensor;
+	e.event_source = ServiceIdentifier::PRESSURE_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	man.notify_peer_event(e);
+
+	sensor.port[0] = 12.343;
+	e.event_data = sensor;
+	e.event_source = ServiceIdentifier::PH_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	man.notify_peer_event(e);
+
+	sensor.port[0] = -12.343;
+	e.event_data = sensor;
+	e.event_source = ServiceIdentifier::SEA_TEMP_SENSOR;
+	e.event_type = ServiceEventType::SERVICE_LOG_UPDATED;
+	man.notify_peer_event(e);
+
+	e.event_type = ServiceEventType::SERVICE_INACTIVE;
+	man.notify_peer_event(e);
+
+	ServiceSensorData *converted;
+	converted = man.retrieve_sensor_single(1, ServiceIdentifier::ALS_SENSOR);
+	CHECK_FALSE(nullptr == converted);
+	CHECK_EQUAL(65535, (unsigned int)converted->port[0]);
+	converted = man.retrieve_sensor_single(1, ServiceIdentifier::PH_SENSOR);
+	CHECK_FALSE(nullptr == converted);
+	CHECK_EQUAL(12343, (unsigned int)converted->port[0]);
+	converted = man.retrieve_sensor_single(1, ServiceIdentifier::PRESSURE_SENSOR);
+	CHECK_FALSE(nullptr == converted);
+	CHECK_EQUAL(12400, (unsigned int)converted->port[0]);
+	CHECK_EQUAL(200, (unsigned int)converted->port[1]);
+	converted = man.retrieve_sensor_single(1, ServiceIdentifier::SEA_TEMP_SENSOR);
+	CHECK_FALSE(nullptr == converted);
+	CHECK_EQUAL(113657, (unsigned int)converted->port[0]);
+}
+
+TEST(ArgosTxService, BuildSensorPacket) {
+	unsigned int size_bits;
+	GPSLogEntry e = make_gps_location(1, 12.3, 44.4, 1652105502);
+	ServiceSensorData als, ph, pressure, sea_temp;
+	std::string x;
+
+	als.port[0] = 10000; // 10000 lux
+	ph.port[0] = 7000; // 7.0 ph
+	pressure.port[0] = 1000; // 1.0 bar
+	pressure.port[1] = 4000; // 0C
+	sea_temp.port[0] = 126000; // 0C
+
+	x = ArgosPacketBuilder::build_sensor_packet(&e, nullptr, nullptr, nullptr, nullptr, false, false, size_bits);
+	CHECK_EQUAL("CC4B8B3633003C0F0012C0526DE9C0"s, Binascii::hexlify(x));
+	CHECK_EQUAL(115, size_bits);
+	x = ArgosPacketBuilder::build_sensor_packet(&e, &als, &ph, &pressure, &sea_temp, false, false, size_bits);
+	CHECK_EQUAL("DB4B8B3633003C0F0012C27106D601F41F401EC30C55C3A320"s, Binascii::hexlify(x));
+	CHECK_EQUAL(196, size_bits);
+	x = ArgosPacketBuilder::build_sensor_packet(&e, nullptr, &ph, &pressure, &sea_temp, false, false, size_bits);
+	CHECK_EQUAL("9D4B8B3633003C0F0012CDAC03E83E803D860BE541EE20"s, Binascii::hexlify(x));
+	CHECK_EQUAL(196 - 17, size_bits);
+	x = ArgosPacketBuilder::build_sensor_packet(&e, &als, nullptr, &pressure, &sea_temp, false, false, size_bits);
+	CHECK_EQUAL("014B8B3633003C0F0012C271007D07D007B0C0E49F1BF4"s, Binascii::hexlify(x));
+	CHECK_EQUAL(196 - 14, size_bits);
+	x = ArgosPacketBuilder::build_sensor_packet(&e, &als, &ph, nullptr, &sea_temp, false, false, size_bits);
+	CHECK_EQUAL("9A4B8B3633003C0F0012C27106D603D861A1C3AD9C"s, Binascii::hexlify(x));
+	CHECK_EQUAL(196 - 29, size_bits);
+	x = ArgosPacketBuilder::build_sensor_packet(&e, &als, &ph, &pressure, nullptr, false, false, size_bits);
+	CHECK_EQUAL("554B8B3633003C0F0012C27106D601F41F40D43B78D6"s, Binascii::hexlify(x));
+	CHECK_EQUAL(196 - 21, size_bits);
+}
+
+
+TEST(ArgosTxService, PassPredictWithSensorDataPayload)
+{
+	double frequency = 900.22;
+	BaseArgosMode mode = BaseArgosMode::PASS_PREDICTION;
+	BaseArgosPower power = BaseArgosPower::POWER_1000_MW;
+	BaseArgosDepthPile depth_pile = BaseArgosDepthPile::DEPTH_PILE_4;
+	unsigned int argos_hexid = 0x01234567U;
+	unsigned int tr_nom = 10;
+	bool time_sync_en = false;
+	bool enable = true;
+	BaseSensorEnableTxMode sensor_mode = BaseSensorEnableTxMode::ONESHOT;
+
+	fake_config_store->write_param(ParamID::ARGOS_DEPTH_PILE, depth_pile);
+	fake_config_store->write_param(ParamID::ARGOS_FREQ, frequency);
+	fake_config_store->write_param(ParamID::ARGOS_MODE, mode);
+	fake_config_store->write_param(ParamID::ARGOS_HEXID, argos_hexid);
+	fake_config_store->write_param(ParamID::ARGOS_POWER, power);
+	fake_config_store->write_param(ParamID::TR_NOM, tr_nom);
+	fake_config_store->write_param(ParamID::ARGOS_TIME_SYNC_BURST_EN, time_sync_en);
+	fake_config_store->write_param(ParamID::ALS_SENSOR_ENABLE, enable);
+	fake_config_store->write_param(ParamID::ALS_SENSOR_ENABLE_TX_MODE, sensor_mode);
+
+	BasePassPredict pass_predict = {
+		/* version_code */ 0,
+		7,
+		{
+		    { 0xA, 5, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 59, 44 }, 7195.550f, 98.5444f, 327.835f, -25.341f, 101.3587f, 0.00f },
+			{ 0x9, 3, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 33, 39 }, 7195.632f, 98.7141f, 344.177f, -25.340f, 101.3600f, 0.00f },
+			{ 0xB, 7, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 23, 29, 29 }, 7194.917f, 98.7183f, 330.404f, -25.336f, 101.3449f, 0.00f },
+			{ 0x5, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 23, 50, 6 }, 7180.549f, 98.7298f, 289.399f, -25.260f, 101.0419f, -1.78f },
+			{ 0x8, 0, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A2, { 2020, 1, 26, 22, 12, 6 }, 7226.170f, 99.0661f, 343.180f, -25.499f, 102.0039f, -1.80f },
+			{ 0xC, 6, SAT_DNLK_OFF, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 52 }, 7226.509f, 99.1913f, 291.936f, -25.500f, 102.0108f, -1.98f },
+			{ 0xD, 4, SAT_DNLK_ON_WITH_A3, SAT_UPLK_ON_WITH_A3, { 2020, 1, 26, 22, 3, 53 }, 7160.246f, 98.5358f, 118.029f, -25.154f, 100.6148f, 0.00f }
+		}
+	};
+
+	fake_config_store->write_pass_predict(pass_predict);
+
+	ArgosTxService serv(*mock_artic);
+
+	std::time_t t = 1652105502000;
+	fake_rtc->settime(t/1000);
+	fake_timer->set_counter(t);
+
+	mock().expectOneCall("set_frequency").onObject(mock_artic).withDoubleParameter("freq", frequency);
+	mock().expectOneCall("set_tcxo_warmup_time").onObject(mock_artic).withUnsignedIntParameter("time", 5);
+	serv.start();
+
+	ServiceSensorData sensor_data;
+
+	inject_gps_active();
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	sensor_data.port[0] = 1234;
+	inject_sensor_data(sensor_data, ServiceIdentifier::ALS_SENSOR);
+	inject_gps_inactive();
+	inject_gps_active();
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	sensor_data.port[0] = 5678;
+	inject_sensor_data(sensor_data, ServiceIdentifier::ALS_SENSOR);
+	inject_gps_inactive();
+	inject_gps_active();
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	sensor_data.port[0] = 13594;
+	inject_sensor_data(sensor_data, ServiceIdentifier::ALS_SENSOR);
+	inject_gps_inactive();
+	inject_gps_active();
+	inject_gps_location(1, 11.8768, -33.8232, t);
+	sensor_data.port[0] = 22782;
+	inject_sensor_data(sensor_data, ServiceIdentifier::ALS_SENSOR);
+	inject_gps_inactive();
+
+	system_scheduler->run();
+
+	// Run for 10 transmissions
+	for (unsigned int i = 0; i < 10; i++) {
+		mock().expectOneCall("set_tx_power").onObject(mock_artic).ignoreOtherParameters();
+		mock().expectOneCall("send").onObject(mock_artic).ignoreOtherParameters();
+		t += serv.get_last_schedule();
+		fake_rtc->settime(t/1000);
+		fake_timer->set_counter(t);
+		system_scheduler->run();
+		mock_artic->notify(ArticEventTxComplete({}));
+	}
 }
