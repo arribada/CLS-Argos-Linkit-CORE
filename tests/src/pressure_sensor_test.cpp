@@ -306,6 +306,7 @@ TEST(PressureSensor, SchedulingTxEnableMean)
 
 	unsigned int tx_period = 1;
 	unsigned int period = 10;
+	unsigned int max_samples = 100;
 	bool sensor_en = true;
 	BaseSensorEnableTxMode mode = BaseSensorEnableTxMode::MEAN;
 	ServiceSensorData sensorData;
@@ -314,6 +315,7 @@ TEST(PressureSensor, SchedulingTxEnableMean)
 	configuration_store->write_param(ParamID::PRESSURE_SENSOR_PERIODIC, period);
 	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_MODE, mode);
 	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_SAMPLE_PERIOD, tx_period);
+	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_MAX_SAMPLES, max_samples);
 
 	s.start([&num_callbacks,&sensorData](ServiceEvent &event) {
 		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
@@ -326,7 +328,7 @@ TEST(PressureSensor, SchedulingTxEnableMean)
 	notify_gnss_active();
 
 	// Sampling should happen periodically in mean sampling mode
-	for (unsigned int i = 0; i < 100; i++) {
+	for (unsigned int i = 0; i < max_samples; i++) {
 		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
 		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 1).andReturnValue((double)i+1);
 		fake_timer->increment_counter(period);
@@ -357,6 +359,7 @@ TEST(PressureSensor, SchedulingTxEnableMedian)
 
 	unsigned int tx_period = 1;
 	unsigned int period = 10;
+	unsigned int max_samples = 100;
 	bool sensor_en = true;
 	BaseSensorEnableTxMode mode = BaseSensorEnableTxMode::MEDIAN;
 	ServiceSensorData sensorData;
@@ -365,6 +368,7 @@ TEST(PressureSensor, SchedulingTxEnableMedian)
 	configuration_store->write_param(ParamID::PRESSURE_SENSOR_PERIODIC, period);
 	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_MODE, mode);
 	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_SAMPLE_PERIOD, tx_period);
+	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_MAX_SAMPLES, max_samples);
 
 	s.start([&num_callbacks,&sensorData](ServiceEvent &event) {
 		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
@@ -377,9 +381,65 @@ TEST(PressureSensor, SchedulingTxEnableMedian)
 	notify_gnss_active();
 
 	// Sampling should happen periodically in mean sampling mode
-	for (unsigned int i = 0; i < 100; i++) {
+	for (unsigned int i = 0; i < max_samples; i++) {
 		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
 		mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 1).andReturnValue((double)i+1);
+		fake_timer->increment_counter(period);
+		system_scheduler->run();
+	}
+
+	notify_gnss_inactive();
+
+	CHECK_EQUAL(1, num_callbacks);
+	CHECK_EQUAL(1, logger->num_entries());
+	PressureLogEntry e;
+	logger->read(&e, 0);
+	CHECK_EQUAL((double)50, e.pressure);
+	CHECK_EQUAL((double)51, e.temperature);
+	CHECK_EQUAL((double)50, sensorData.port[0]);
+	CHECK_EQUAL((double)51, sensorData.port[1]);
+
+	s.stop();
+}
+
+
+TEST(PressureSensor, SchedulingTxEnableMaxSamplesTerminates)
+{
+	MockSensor drv;
+	PressureSensorService s(drv, logger);
+	unsigned int num_callbacks = 0;
+
+	system_timer->start();
+
+	unsigned int tx_period = 1;
+	unsigned int period = 10;
+	unsigned int max_samples = 100;
+	bool sensor_en = true;
+	BaseSensorEnableTxMode mode = BaseSensorEnableTxMode::MEDIAN;
+	ServiceSensorData sensorData;
+
+	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE, sensor_en);
+	configuration_store->write_param(ParamID::PRESSURE_SENSOR_PERIODIC, period);
+	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_MODE, mode);
+	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_SAMPLE_PERIOD, tx_period);
+	configuration_store->write_param(ParamID::PRESSURE_SENSOR_ENABLE_TX_MAX_SAMPLES, max_samples);
+
+	s.start([&num_callbacks,&sensorData](ServiceEvent &event) {
+		if (event.event_type == ServiceEventType::SERVICE_LOG_UPDATED) {
+			num_callbacks++;
+			sensorData = std::get<ServiceSensorData>(event.event_data);
+		}
+	});
+
+	// Sampling is triggered by GNSS
+	notify_gnss_active();
+
+	// Sampling should happen periodically in median sampling mode
+	for (unsigned int i = 0; i < 2 * max_samples; i++) {
+		if (i < max_samples) {
+			mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 0).andReturnValue((double)i);
+			mock().expectOneCall("read").onObject(&drv).withUnsignedIntParameter("port", 1).andReturnValue((double)i+1);
+		}
 		fake_timer->increment_counter(period);
 		system_scheduler->run();
 	}

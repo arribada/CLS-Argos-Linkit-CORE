@@ -16,37 +16,46 @@ protected:
 	Sensor &m_sensor;
 	void sensor_handler(bool reschedule = true, bool gnss_shutdown = false) {
 		try {
-			if (m_gnss_active) {
+			if (m_sensor_background_active) {
 				m_sample_number++;
 				for (unsigned int chan = 0; chan < sensor_num_channels(); chan++) {
 					m_samples[chan].push_back(m_sensor.read(chan));
 				}
-				service_complete(nullptr, nullptr, sensor_enable_tx_mode() != BaseSensorEnableTxMode::ONESHOT);
-			} else if (gnss_shutdown && m_sample_number > 0) {
-				ServiceSensorData sensor;
-				for (unsigned int chan = 0; chan < sensor_num_channels(); chan++) {
-					switch (sensor_enable_tx_mode()) {
-					case BaseSensorEnableTxMode::ONESHOT:
-						sensor.port[chan] = compute_oneshot_samples(m_samples[chan]);
-						//DEBUG_TRACE("[%s] oneshot[%u]=%f", get_name(), chan, sensor.port[chan]);
-						break;
-					case BaseSensorEnableTxMode::MEAN:
-						sensor.port[chan] = compute_mean_samples(m_samples[chan]);
-						//DEBUG_TRACE("[%s] mean[%u]=%f", get_name(), chan, sensor.port[chan]);
-						break;
-					case BaseSensorEnableTxMode::MEDIAN:
-						sensor.port[chan] = compute_median_samples(m_samples[chan]);
-						//DEBUG_TRACE("[%s] median[%u]=%f", get_name(), chan, sensor.port[chan]);
-						break;
-					default:
-					case BaseSensorEnableTxMode::OFF:
-						break;
-					}
+				if (service_is_scheduled()) {
+					service_complete(nullptr, nullptr,
+							!gnss_shutdown &&
+							(sensor_enable_tx_mode() != BaseSensorEnableTxMode::ONESHOT &&
+									m_sample_number < sensor_max_samples()));
 				}
-				LogEntry e;
-				ServiceEventData data = sensor;
-				sensor_populate_log_entry(&e, sensor);
-				service_log(&data, &e);
+
+				if (gnss_shutdown || m_sample_number >= sensor_max_samples()) {
+					DEBUG_TRACE("SensorService: %s: terminal state reached", get_name());
+					ServiceSensorData sensor;
+					for (unsigned int chan = 0; chan < sensor_num_channels(); chan++) {
+						switch (sensor_enable_tx_mode()) {
+						case BaseSensorEnableTxMode::ONESHOT:
+							sensor.port[chan] = compute_oneshot_samples(m_samples[chan]);
+							//DEBUG_TRACE("[%s] oneshot[%u]=%f", get_name(), chan, sensor.port[chan]);
+							break;
+						case BaseSensorEnableTxMode::MEAN:
+							sensor.port[chan] = compute_mean_samples(m_samples[chan]);
+							//DEBUG_TRACE("[%s] mean[%u]=%f", get_name(), chan, sensor.port[chan]);
+							break;
+						case BaseSensorEnableTxMode::MEDIAN:
+							sensor.port[chan] = compute_median_samples(m_samples[chan]);
+							//DEBUG_TRACE("[%s] median[%u]=%f", get_name(), chan, sensor.port[chan]);
+							break;
+						default:
+						case BaseSensorEnableTxMode::OFF:
+							break;
+						}
+					}
+					LogEntry e;
+					ServiceEventData data = sensor;
+					sensor_populate_log_entry(&e, sensor);
+					service_log(&data, &e);
+					m_sensor_background_active = false;
+				}
 			} else if (sensor_enable_tx_mode() == BaseSensorEnableTxMode::OFF) {
 				ServiceSensorData sensor;
 				for (unsigned int chan = 0; chan < sensor_num_channels(); chan++)
@@ -60,8 +69,8 @@ protected:
 				service_complete(nullptr, nullptr, reschedule);
 			}
 		} catch (ErrorCode e) {
-			DEBUG_ERROR("[%s] Failed to read sensor [%04X]", get_name(), (unsigned int)e);
-			if (!m_gnss_active)
+			DEBUG_ERROR("SensorService: %s: Failed to read sensor [%04X]", get_name(), (unsigned int)e);
+			if (!m_sensor_background_active)
 				service_complete(nullptr, nullptr, reschedule);
 		}
 	}
@@ -69,7 +78,7 @@ protected:
 private:
 	std::vector<double> m_samples[5];
 	unsigned int m_sample_number;
-	bool m_gnss_active;
+	bool m_sensor_background_active;
 
 	double compute_mean_samples(std::vector<double>& v) {
 		return std::reduce(v.begin(), v.end()) / v.size();
@@ -93,15 +102,17 @@ private:
 	void handle_peer_event(ServiceEvent& e) {
 		if (e.event_source == ServiceIdentifier::GNSS_SENSOR) {
 			if (e.event_type == ServiceEventType::SERVICE_ACTIVE) {
-				DEBUG_TRACE("%s: GNSS active - start sampling", get_name());
-				m_gnss_active = true;
+				DEBUG_TRACE("SensorService: %s: GNSS active - start sampling", get_name());
+				m_sensor_background_active = true;
 				m_sample_number = 0;
 				reset_samples();
 				service_reschedule(true);
-			} else if (e.event_type == ServiceEventType::SERVICE_INACTIVE) {
-				DEBUG_TRACE("%s: GNSS inactive - stop sampling", get_name());
-				m_gnss_active = false;
-				sensor_handler(false, true);
+			} else if (e.event_type == ServiceEventType::SERVICE_LOG_UPDATED ||
+					e.event_type == ServiceEventType::SERVICE_INACTIVE) {
+				if (m_sensor_background_active) {
+					DEBUG_TRACE("SensorService: %s: GNSS complete - force stop sampling", get_name());
+					sensor_handler(false, true);
+				}
 			}
 		}
 	}
@@ -111,7 +122,7 @@ private:
 	}
 
 	unsigned int service_next_schedule_in_ms() override {
-		if (m_gnss_active) {
+		if (m_sensor_background_active) {
 			if (m_sample_number == 0) return 0U;
 			return sensor_tx_periodic();
 		} else {
@@ -124,7 +135,7 @@ private:
 	}
 
 	void service_init() override {
-		m_gnss_active = false;
+		m_sensor_background_active = false;
 		m_sample_number = 0;
 		reset_samples();
 		sensor_init();

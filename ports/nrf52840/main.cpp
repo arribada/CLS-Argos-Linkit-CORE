@@ -573,18 +573,12 @@ int main()
 		DEBUG_TRACE("OEM PH: not detected");
 	}
 
-	DEBUG_TRACE("RTD...");
+	DEBUG_TRACE("EZO RTD...");
 	try {
-		static OEM_RTD_Sensor rtd;
+		static EZO_RTD_Sensor rtd;
 		static SeaTempSensorService rtd_sensor_service(rtd, &rtd_sensor_log);
-	} catch (...) {
-		DEBUG_TRACE("OEM RTD: not detected");
-		try {
-			static EZO_RTD_Sensor rtd;
-			static SeaTempSensorService rtd_sensor_service(rtd, &rtd_sensor_log);
-		} catch (...) {
-			DEBUG_TRACE("EZO RTD: not detected");
-		}
+	} catch (ErrorCode e) {
+		DEBUG_TRACE("EZO RTD: not detected [%04X]", e);
 	}
 
 	DEBUG_TRACE("BMX160...");

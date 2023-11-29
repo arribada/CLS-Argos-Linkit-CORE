@@ -43,7 +43,7 @@ BMX160LL::BMX160LL(unsigned int bus, unsigned char addr, int wakeup_pin) : m_bus
 		init();
 	} catch(...) {
 		BMX160LLManager::unregister_device(m_unique_id);
-		throw;
+		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
 	}
 }
 

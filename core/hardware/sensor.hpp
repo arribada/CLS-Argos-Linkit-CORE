@@ -5,6 +5,7 @@
 #include <string>
 
 #include "calibration.hpp"
+#include "error.hpp"
 
 class Sensor;
 
@@ -26,7 +27,7 @@ private:
 public:
 	static void add(Sensor& s, const char *name) {
 		if (m_map.count(std::string(name)))
-			throw; // Don't allow duplicate keys
+			throw ErrorCode::KEY_ALREADY_EXISTS; // Don't allow duplicate keys
 		m_map.insert({std::string(name), s});
 	}
 	static void remove(Sensor& s) {
@@ -36,7 +37,7 @@ public:
 				return;
 			}
 		}
-		throw; // Don't allow a remove that doesn't exist
+		throw ErrorCode::KEY_DOES_NOT_EXIST; // Don't allow a remove that doesn't exist
 	}
 	static Sensor &find_by_name(const char *name) {
 		return m_map.at(std::string(name));

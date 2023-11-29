@@ -1,12 +1,13 @@
 #include "calibration.hpp"
 #include "filesystem.hpp"
 #include "debug.hpp"
+#include "error.hpp"
 
 extern FileSystem *main_filesystem;
 
 void CalibratableManager::add(Calibratable& s, const char *name) {
 	if (m_map.count(std::string(name)))
-		throw; // Don't allow duplicate keys
+		throw ErrorCode::KEY_ALREADY_EXISTS; // Don't allow duplicate keys
 	m_map.insert({std::string(name), s});
 }
 
@@ -17,7 +18,7 @@ void CalibratableManager::remove(Calibratable& s) {
 			return;
 		}
 	}
-	throw; // Don't allow a remove that doesn't exist
+	throw ErrorCode::KEY_DOES_NOT_EXIST; // Don't allow a remove that doesn't exist
 }
 
 Calibratable &CalibratableManager::find_by_name(const char *name) {

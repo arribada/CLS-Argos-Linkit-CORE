@@ -97,7 +97,7 @@ EZO_RTD_Sensor::ResponseCode EZO_RTD_Sensor::read_response(std::string *response
 	else if (bytes[0] == 0xFF)
 		resp = ResponseCode::NODATA;
 	else
-		throw ErrorCode::I2C_COMMS_ERROR;
+		resp = ResponseCode::UNKNOWN;
 
 	if (resp == ResponseCode::SUCCESS && response != nullptr) {
 		for (unsigned int i = 1; i < sizeof(bytes); i++) {

@@ -1,6 +1,7 @@
 #include "nrf_i2c.hpp"
 #include "nrfx_twim.h"
 #include "error.hpp"
+#include "debug.hpp"
 
 void NrfI2C::init(void) {
 	for (unsigned int i = 0; i < BSP::I2C_TOTAL_NUMBER; i++)
@@ -30,15 +31,21 @@ void NrfI2C::disable(uint8_t bus) {
 void NrfI2C::read(uint8_t bus, uint8_t address, uint8_t *buffer, unsigned int length) {
 	if (!m_is_enabled[bus])
 		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
-    if (NRFX_SUCCESS != nrfx_twim_rx(&BSP::I2C_Inits[bus].twim, address, buffer, length))
+    nrfx_err_t error = nrfx_twim_rx(&BSP::I2C_Inits[bus].twim, address, buffer, length);
+    if (NRFX_SUCCESS != error) {
+    	DEBUG_ERROR("NrfI2C::read(%u,%02x,%u)=%08x", (unsigned int)bus, (unsigned int)address, (unsigned int)length, (unsigned int)error);
         throw ErrorCode::I2C_COMMS_ERROR;
+    }
 }
 
 void NrfI2C::write(uint8_t bus, uint8_t address, const uint8_t *buffer, unsigned int length, bool no_stop) {
 	if (!m_is_enabled[bus])
 		throw ErrorCode::RESOURCE_NOT_AVAILABLE;
-    if (NRFX_SUCCESS != nrfx_twim_tx(&BSP::I2C_Inits[bus].twim, address, buffer, length, no_stop))
+	nrfx_err_t error = nrfx_twim_tx(&BSP::I2C_Inits[bus].twim, address, buffer, length, no_stop);
+    if (NRFX_SUCCESS != error) {
+    	DEBUG_ERROR("NrfI2C::write(%u,%02x,%u)=%08x", (unsigned int)bus, (unsigned int)address, (unsigned int)length, (unsigned int)error);
         throw ErrorCode::I2C_COMMS_ERROR;
+    }
 }
 
 uint8_t NrfI2C::num_buses(void) {

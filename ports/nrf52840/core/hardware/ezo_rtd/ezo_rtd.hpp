@@ -10,7 +10,8 @@ public:
 		SUCCESS,
 		ERROR,
 		BUSY,
-		NODATA
+		NODATA,
+		UNKNOWN
 	};
 	EZO_RTD_Sensor();
 	double read(unsigned int) override;

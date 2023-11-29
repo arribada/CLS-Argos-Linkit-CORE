@@ -539,7 +539,7 @@ POWER_ON_FAILURE:
     else if (ret == SendReturnCode::RESPONSE_TIMEOUT)
         throw ErrorCode::GPS_BOOT_TIMEOUT;
     else
-        throw;
+        throw ErrorCode::GPS_UNKNOWN_ERROR;
 }
 
 void M8QReceiver::reception_callback(uint8_t *data, size_t len)

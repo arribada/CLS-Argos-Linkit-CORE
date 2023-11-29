@@ -817,7 +817,7 @@ void ArgosTxScheduler::schedule_periodic(unsigned int period_ms, bool jitter_en,
 
 	DEBUG_ERROR("ArgosTxScheduler::schedule_periodic: no schedule found!");
 	m_curr_schedule_abs.reset();
-	throw;
+	throw ErrorCode::RESOURCE_NOT_AVAILABLE;
 }
 
 unsigned int ArgosTxScheduler::schedule_prepass(ArgosConfig& config, BasePassPredict& pass_predict, ArticMode& scheduled_mode, std::time_t now) {
@@ -1008,7 +1008,7 @@ void ArgosDepthPileManager::notify_peer_event(ServiceEvent& e) {
 
 		// If we didn't yet gather all the expected inputs then we start
 		// a timeout to force dummy values into the depth pile
-		if (m_sensor_tx_current != m_sensor_tx_enable) {
+		if ((m_sensor_tx_current & m_sensor_tx_enable) != m_sensor_tx_enable) {
 			m_timeout_task = system_scheduler->post_task_prio([this]() {
 				DEBUG_TRACE("ArgosDepthPileManager: sensor timeout: curr=%08x enable=%08x", m_sensor_tx_current, m_sensor_tx_enable);
 				if (((1 << (int)ServiceIdentifier::ALS_SENSOR) & m_sensor_tx_enable) &&
@@ -1039,7 +1039,7 @@ void ArgosDepthPileManager::notify_peer_event(ServiceEvent& e) {
 
 void ArgosDepthPileManager::update_depth_pile() {
 
-	if (m_sensor_tx_current == m_sensor_tx_enable) {
+	if ((m_sensor_tx_current & m_sensor_tx_enable) == m_sensor_tx_enable) {
 
 		// Cancel inactivity timeout
 		system_scheduler->cancel_task(m_timeout_task);
