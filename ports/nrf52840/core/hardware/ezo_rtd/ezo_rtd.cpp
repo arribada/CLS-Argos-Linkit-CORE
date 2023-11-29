@@ -10,11 +10,10 @@
 #include "ezo_rtd.hpp"
 #include "pmu.hpp"
 
-EZO_RTD_Sensor::EZO_RTD_Sensor() : Sensor("RTD") {
+EZO_RTD_Sensor::EZO_RTD_Sensor() : Sensor("RTD"), m_is_calibrating(false) {
 	// Wakeup the device from sleep mode
-	read_response();
-	read_response();
-	write_command("Sleep");
+	wakeup();
+	sleep();
 
 #ifdef EZO_RTD_LED_OFF
 	// Turn off LED
@@ -30,13 +29,21 @@ EZO_RTD_Sensor::EZO_RTD_Sensor() : Sensor("RTD") {
 #endif
 }
 
+void EZO_RTD_Sensor::sleep() {
+	write_command("Sleep");
+}
+
+void EZO_RTD_Sensor::wakeup() {
+	read_response();
+	read_response();
+}
+
 double EZO_RTD_Sensor::read(unsigned int)
 {
 	std::string response;
 
 	// Wakeup the device from sleep mode
-	read_response();
-	read_response();
+	wakeup();
 
 	// Issue read command
 	write_command("R");
@@ -51,7 +58,8 @@ double EZO_RTD_Sensor::read(unsigned int)
 	if (retries == 10)
 		throw ErrorCode::I2C_COMMS_ERROR;
 
-	write_command("Sleep");
+	if (!m_is_calibrating)
+		sleep();
 
 	// Response is a string containing floating point temperature
     const char *s = response.c_str();
@@ -66,6 +74,11 @@ double EZO_RTD_Sensor::read(unsigned int)
 
 void EZO_RTD_Sensor::calibration_write(const double, const unsigned int calibration_offset)
 {
+	// Wakeup the device in case it is in sleep mode
+	wakeup();
+
+	m_is_calibrating = true;
+
 	if (calibration_offset == 0) {
 		write_command("Cal,clear");
 		PMU::delay_ms(300);
@@ -75,6 +88,10 @@ void EZO_RTD_Sensor::calibration_write(const double, const unsigned int calibrat
 	} else if (calibration_offset == 2) {
 		write_command("Cal,100");
 		PMU::delay_ms(600);
+	} else if (calibration_offset == 3) {
+		sleep();
+		m_is_calibrating = false;
+		return;
 	} else {
 		return;
 	}

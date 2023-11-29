@@ -18,6 +18,9 @@ public:
 	void calibration_write(const double calibration_data, const unsigned int calibration_offset) override;
 
 private:
+	bool m_is_calibrating;
+	void wakeup();
+	void sleep();
 	void write_command(const std::string command);
 	ResponseCode read_response(std::string *response = nullptr);
 };
