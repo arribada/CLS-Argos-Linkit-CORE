@@ -11,7 +11,10 @@
 #include "pmu.hpp"
 
 EZO_RTD_Sensor::EZO_RTD_Sensor() : Sensor("RTD") {
-	read_response(); // Should get a NODATA response code
+	// Wakeup the device from sleep mode
+	read_response();
+	read_response();
+	write_command("Sleep");
 
 #ifdef EZO_RTD_LED_OFF
 	// Turn off LED
@@ -31,6 +34,11 @@ double EZO_RTD_Sensor::read(unsigned int)
 {
 	std::string response;
 
+	// Wakeup the device from sleep mode
+	read_response();
+	read_response();
+
+	// Issue read command
 	write_command("R");
 	PMU::delay_ms(600);
 
@@ -42,6 +50,8 @@ double EZO_RTD_Sensor::read(unsigned int)
 
 	if (retries == 10)
 		throw ErrorCode::I2C_COMMS_ERROR;
+
+	write_command("Sleep");
 
 	// Response is a string containing floating point temperature
     const char *s = response.c_str();
