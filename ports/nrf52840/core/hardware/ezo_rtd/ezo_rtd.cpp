@@ -11,22 +11,11 @@
 #include "pmu.hpp"
 
 EZO_RTD_Sensor::EZO_RTD_Sensor() : Sensor("RTD"), m_is_calibrating(false) {
-	// Wakeup the device from sleep mode
+	// Wakeup the device from sleep mode to confirm it is present
 	wakeup();
-	sleep();
 
-#ifdef EZO_RTD_LED_OFF
-	// Turn off LED
-	write_command("L,0"); // Turn LED off
-	PMU::delay_ms(300);
-	int retries;
-	for (retries = 0; retries < 10; retries++) {
-		if (read_response() == ResponseCode::SUCCESS)
-			break;
-	}
-	if (retries == 10)
-		throw ErrorCode::I2C_COMMS_ERROR;
-#endif
+	// Sleep the device once more
+	sleep();
 }
 
 void EZO_RTD_Sensor::sleep() {
@@ -40,7 +29,7 @@ void EZO_RTD_Sensor::wakeup() {
 
 double EZO_RTD_Sensor::read(unsigned int)
 {
-	std::string response;
+	char response[20];
 
 	// Wakeup the device from sleep mode
 	wakeup();
@@ -48,31 +37,24 @@ double EZO_RTD_Sensor::read(unsigned int)
 	// Issue read command
 	write_command("R");
 	PMU::delay_ms(600);
-
-	int retries;
-	for (retries = 0; retries < 10; retries++) {
-		if (read_response(&response) == ResponseCode::SUCCESS)
-			break;
-	}
-
-	if (retries == 10)
-		throw ErrorCode::I2C_COMMS_ERROR;
+	wait_response(response);
 
 	if (!m_is_calibrating)
 		sleep();
 
 	// Response is a string containing floating point temperature
-    const char *s = response.c_str();
     char *e;
     errno = 0;
-    double value = strtod(s, &e);
-    if (errno == 0 && s != e && value >= -126 && value <= 1254) {
+    double value = strtod(response, &e);
+
+    // Check reading is within the valid range of the device i.e., -126C to 1254C
+    if (errno == 0 && response != e && value >= -126 && value <= 1254) {
     	return value;
     }
   	throw ErrorCode::I2C_COMMS_ERROR;
 }
 
-void EZO_RTD_Sensor::calibration_write(const double, const unsigned int calibration_offset)
+void EZO_RTD_Sensor::calibration_write(const double temperature, const unsigned int calibration_offset)
 {
 	// Wakeup the device in case it is in sleep mode
 	wakeup();
@@ -89,28 +71,53 @@ void EZO_RTD_Sensor::calibration_write(const double, const unsigned int calibrat
 		write_command("Cal,100");
 		PMU::delay_ms(600);
 	} else if (calibration_offset == 3) {
+		if (temperature >= -126 && temperature <= 1254) {
+			char command[255];
+			sprintf(command, "Cal,%f", temperature);
+			write_command(command);
+			PMU::delay_ms(600);
+		} else
+			throw ErrorCode::RESOURCE_NOT_AVAILABLE;
+	} else if (calibration_offset == 4) {
+		write_command("Find");
+		PMU::delay_ms(300);
+	} else if (calibration_offset == 5) {
+		write_command("Factory");
+		m_is_calibrating = false;
+		return;
+	} else if (calibration_offset >= 6) {
 		sleep();
 		m_is_calibrating = false;
 		return;
-	} else {
-		return;
 	}
 
-	int retries;
-	for (retries = 0; retries < 10; retries++) {
-		if (read_response() == ResponseCode::SUCCESS)
-			break;
+	wait_response();
+}
+
+void EZO_RTD_Sensor::write_command(const char *command) {
+	char data[255];
+	strcpy(data, command); // I2C driver requires data to be in RAM region!
+	DEBUG_TRACE("EZO_RTD_Sensor::write_command(%s)", command);
+	NrfI2C::write(EZO_RTD_DEVICE, EZO_RTD_DEVICE_ADDR, (const uint8_t *)data, strlen(command), false);
+}
+
+const char *EZO_RTD_Sensor::response_code_to_str(ResponseCode resp) {
+	switch (resp) {
+	case ResponseCode::SUCCESS:
+		return "SUCCESS";
+	case ResponseCode::ERROR:
+		return "ERROR";
+	case ResponseCode::BUSY:
+		return "BUSY";
+	case ResponseCode::NODATA:
+		return "NODATA";
+	case ResponseCode::UNKNOWN:
+	default:
+		return "UNKNOWN";
 	}
-
-	if (retries == 10)
-		throw ErrorCode::I2C_COMMS_ERROR;
 }
 
-void EZO_RTD_Sensor::write_command(const std::string command) {
-	NrfI2C::write(EZO_RTD_DEVICE, EZO_RTD_DEVICE_ADDR, (const uint8_t *)command.c_str(), command.length(), false);
-}
-
-EZO_RTD_Sensor::ResponseCode EZO_RTD_Sensor::read_response(std::string *response) {
+EZO_RTD_Sensor::ResponseCode EZO_RTD_Sensor::read_response(char *response) {
 	ResponseCode resp;
 	uint8_t bytes[20] = {0};
 
@@ -127,15 +134,26 @@ EZO_RTD_Sensor::ResponseCode EZO_RTD_Sensor::read_response(std::string *response
 		resp = ResponseCode::UNKNOWN;
 
 	if (resp == ResponseCode::SUCCESS && response != nullptr) {
-		for (unsigned int i = 1; i < sizeof(bytes); i++) {
-			if (bytes[i] == 0)
-				break;
-			response->push_back((char)bytes[i]);
-		}
+		unsigned int i;
+		for (i = 1; i < sizeof(bytes) && bytes[i]; i++)
+			response[i-1] = (char)bytes[i];
+		response[i-1] = 0; // Force null termination
+		DEBUG_TRACE("EZO_RTD_Sensor::read_response: resp=%s data=%s", response_code_to_str(resp), response);
+	} else {
+		DEBUG_TRACE("EZO_RTD_Sensor::read_response: resp=%s", response_code_to_str(resp));
 	}
 
-	DEBUG_TRACE("EZO_RTD_Sensor::read_response: resp=%u data=%s", (unsigned int)resp,
-			response == nullptr ? "null" : response->c_str());
-
 	return resp;
+}
+
+void EZO_RTD_Sensor::wait_response(char *response) {
+	int retries;
+	for (retries = 0; retries < 100; retries++) {
+		if (read_response(response) == ResponseCode::SUCCESS)
+			break;
+		PMU::delay_ms(1);
+	}
+
+	if (retries == 100)
+		throw ErrorCode::I2C_COMMS_ERROR;
 }

@@ -288,7 +288,9 @@ int main()
 	bool is_linkit_v3 = PMU::hardware_version() == "LinkIt V3";
 	ArticSat::shutdown();
 	{
-		EZO_RTD_Sensor rtd; // Puts the device into standby mode
+		try {
+			EZO_RTD_Sensor rtd; // Puts the device into standby mode
+		} catch (...) {}
 	}
 	NrfI2C::uninit();
 
