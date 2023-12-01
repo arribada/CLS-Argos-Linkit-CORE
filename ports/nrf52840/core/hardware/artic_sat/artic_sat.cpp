@@ -641,30 +641,30 @@ void ArticSat::state_powering_on_exit() {
 void ArticSat::state_powering_on() {
     GPIOPins::set(SAT_RESET);
     GPIOPins::set(SAT_PWR_EN);
-    ARTIC_STATE_CHANGE(powering_on, dsp_reset);
+    ARTIC_STATE_CHANGE(powering_on, reset_assert);
 }
 
 void ArticSat::state_reset_assert_enter() {
-	// State no longer used
 }
 
 void ArticSat::state_reset_assert_exit() {
-	// State no longer used
+	m_next_delay = SAT_ARTIC_DELAY_RESET_MS;
 }
 
 void ArticSat::state_reset_assert() {
-	// State no longer used
+    GPIOPins::clear(SAT_RESET);
+    ARTIC_STATE_CHANGE(reset_assert, reset_deassert);
 }
 
 void ArticSat::state_reset_deassert_enter() {
-	// State no longer used
 }
 
 void ArticSat::state_reset_deassert_exit() {
-	// State no longer used
+	m_next_delay = SAT_ARTIC_DELAY_RESET_MS;
 }
 
 void ArticSat::state_reset_deassert() {
+    GPIOPins::set(SAT_RESET);
     ARTIC_STATE_CHANGE(reset_deassert, dsp_reset);
 }
 
