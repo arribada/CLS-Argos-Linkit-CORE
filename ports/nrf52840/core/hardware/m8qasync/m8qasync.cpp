@@ -219,13 +219,17 @@ void M8QAsyncReceiver::react(const UBXCommsEventSatReport& s) {
     	static UBXCommsEventSatReport sat;
     	std::memcpy(&sat, &s, sizeof(sat));
         system_scheduler->post_task_prio([this]() {
-            DEBUG_TRACE("UBXCommsEventSatReport: numSvs=%u", (unsigned int)sat.sat.numSvs);
+        	if (m_nav_settings.debug_enable) {
+        		DEBUG_TRACE("UBXCommsEventSatReport: numSvs=%u", (unsigned int)sat.sat.numSvs);
+        	}
         	m_num_sat_samples++;
             GPSEventSatReport e(sat.sat.numSvs, 0);
             for (unsigned int i = 0; i < sat.sat.numSvs; i++) {
-                DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].svId=%u", i, (unsigned int)sat.sat.svInfo[i].svId);
-                DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].qualityInd=%u", i, (unsigned int)sat.sat.svInfo[i].qualityInd);
-                DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].cno=%u", i, (unsigned int)sat.sat.svInfo[i].cno);
+            	if (m_nav_settings.debug_enable) {
+					DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].svId=%u", i, (unsigned int)sat.sat.svInfo[i].svId);
+					DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].qualityInd=%u", i, (unsigned int)sat.sat.svInfo[i].qualityInd);
+					DEBUG_TRACE("UBXCommsEventSatReport: svInfo[%u].cno=%u", i, (unsigned int)sat.sat.svInfo[i].cno);
+            	}
 
                 if (sat.sat.svInfo[i].qualityInd > e.bestSignalQuality) {
                 	e.bestSignalQuality = sat.sat.svInfo[i].qualityInd;
