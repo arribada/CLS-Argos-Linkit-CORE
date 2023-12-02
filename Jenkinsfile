@@ -34,21 +34,61 @@ pipeline {
         stage ('Compile Firmware') {
             steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    dir('ports/nrf52840/build/core') {
-                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Release -DMODEL=CORE ../..'
-                        sh 'ninja'
+                    dir('ports/nrf52840/build/CORE') {
+                        sh 'git show-ref --tags -d | grep ^`git rev-parse HEAD` | sed -e "s,.* refs/tags/,," -e "s/\\^{}//" > TAG_NAME'
+                        sh 'cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Release -DMODEL=CORE ../..'
+                        sh 'make -j 4'
+                        sh 'nrfutil settings generate --family NRF52840 --application LinkIt_CORE_board.hex --application-version 0 --bootloader-version 1 --bl-settings-version 2 --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ../../drivers/nRF5_SDK_17.0.2/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ../../nrfutil_pkg_key.pem settings.hex'
+                        sh 'mergehex -m ../../bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/cls_bootloader_v1_linkit_merged.hex LinkIt_CORE_board.hex -o m1.hex'
+                        sh 'mergehex -m m1.hex settings.hex -o LinkIt_CORE_board_merged.hex'
+                        sh 'rm -f m1.hex settings.hex'
+				        sh "mv LinkIt_CORE_board_dfu.zip LinkIt_CORE_board_dfu-`cat TAG_NAME`.zip"
+						sh "mv LinkIt_CORE_board.elf LinkIt_CORE_board-`cat TAG_NAME`.elf"
+						sh "mv LinkIt_CORE_board.hex LinkIt_CORE_board-`cat TAG_NAME`.hex"
+						sh "mv LinkIt_CORE_board.img LinkIt_CORE_board-`cat TAG_NAME`.img"
+						sh "mv LinkIt_CORE_board_merged.hex LinkIt_CORE_board_merged-`cat TAG_NAME`.hex"
                     }
                     dir('ports/nrf52840/build/UW') {
-                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Release -DMODEL=UW ../..'
-                        sh 'ninja'
+                        sh 'git show-ref --tags -d | grep ^`git rev-parse HEAD` | sed -e "s,.* refs/tags/,," -e "s/\\^{}//" > TAG_NAME'
+                        sh 'cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Release -DMODEL=UW ../..'
+                        sh 'make -j 4'
+                        sh 'nrfutil settings generate --family NRF52840 --application LinkIt_UW_board.hex --application-version 0 --bootloader-version 1 --bl-settings-version 2 --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ../../drivers/nRF5_SDK_17.0.2/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ../../nrfutil_pkg_key.pem settings.hex'
+                        sh 'mergehex -m ../../bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/cls_bootloader_v1_linkit_merged.hex LinkIt_UW_board.hex -o m1.hex'
+                        sh 'mergehex -m m1.hex settings.hex -o LinkIt_UW_board_merged.hex'
+                        sh 'rm -f m1.hex settings.hex'
+						sh "mv LinkIt_UW_board_dfu.zip LinkIt_UW_board_dfu-`cat TAG_NAME`.zip"
+						sh "mv LinkIt_UW_board.elf LinkIt_UW_board-`cat TAG_NAME`.elf"
+						sh "mv LinkIt_UW_board.hex LinkIt_UW_board-`cat TAG_NAME`.hex"
+						sh "mv LinkIt_UW_board.img LinkIt_UW_board-`cat TAG_NAME`.img"
+						sh "mv LinkIt_UW_board_merged.hex LinkIt_UW_board_merged-`cat TAG_NAME`.hex"
                     }
                     dir('ports/nrf52840/build/SB') {
-                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Release -DMODEL=SB ../..'
-                        sh 'ninja'
+                        sh 'git show-ref --tags -d | grep ^`git rev-parse HEAD` | sed -e "s,.* refs/tags/,," -e "s/\\^{}//" > TAG_NAME'
+                        sh 'cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=LINKIT -DCMAKE_BUILD_TYPE=Release -DMODEL=SB ../..'
+                        sh 'make -j 4'
+                        sh 'nrfutil settings generate --family NRF52840 --application LinkIt_SB_board.hex --application-version 0 --bootloader-version 1 --bl-settings-version 2 --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ../../drivers/nRF5_SDK_17.0.2/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ../../nrfutil_pkg_key.pem settings.hex'
+                        sh 'mergehex -m ../../bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/cls_bootloader_v1_linkit_merged.hex LinkIt_SB_board.hex -o m1.hex'
+                        sh 'mergehex -m m1.hex settings.hex -o LinkIt_SB_board_merged.hex'
+                        sh 'rm -f m1.hex settings.hex'
+						sh "mv LinkIt_SB_board_dfu.zip LinkIt_SB_board_dfu-`cat TAG_NAME`.zip"
+						sh "mv LinkIt_SB_board.elf LinkIt_SB_board-`cat TAG_NAME`.elf"
+						sh "mv LinkIt_SB_board.hex LinkIt_SB_board-`cat TAG_NAME`.hex"
+						sh "mv LinkIt_SB_board.img LinkIt_SB_board-`cat TAG_NAME`.img"
+						sh "mv LinkIt_SB_board_merged.hex LinkIt_SB_board_merged-`cat TAG_NAME`.hex"
                     }
                     dir('ports/nrf52840/build/HORIZON') {
-                        sh 'cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=HORIZON -DCMAKE_BUILD_TYPE=Release -DMODEL=CORE ../..'
-                        sh 'ninja'
+                        sh 'git show-ref --tags -d | grep ^`git rev-parse HEAD` | sed -e "s,.* refs/tags/,," -e "s/\\^{}//" > TAG_NAME'
+                        sh 'cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=HORIZON -DCMAKE_BUILD_TYPE=Release -DMODEL=CORE ../..'
+                        sh 'make -j 4'
+                        sh 'nrfutil settings generate --family NRF52840 --application LinkIt_horizon_board.hex --application-version 0 --bootloader-version 1 --bl-settings-version 2 --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ../../drivers/nRF5_SDK_17.0.2/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ../../nrfutil_pkg_key.pem settings.hex'
+                        sh 'mergehex -m ../../bootloader/gentracker_secure_bootloader/horizon_v4.0/armgcc/_build/horizon_bootloader_v4_linkit_merged.hex LinkIt_horizon_board.hex -o m1.hex'
+                        sh 'mergehex -m m1.hex settings.hex -o LinkIt_horizon_board_merged.hex'
+                        sh 'rm -f m1.hex settings.hex'
+						sh "mv LinkIt_horizon_board_dfu.zip LinkIt_HORIZON_board_dfu-`cat TAG_NAME`.zip"
+						sh "mv LinkIt_horizon_board.elf LinkIt_HORIZON_board-`cat TAG_NAME`.elf"
+						sh "mv LinkIt_horizon_board.hex LinkIt_HORIZON_board-`cat TAG_NAME`.hex"
+						sh "mv LinkIt_horizon_board.img LinkIt_HORIZON_board-`cat TAG_NAME`.img"
+						sh "mv LinkIt_horizon_board_merged.hex LinkIt_HORIZON_board_merged-`cat TAG_NAME`.hex"
                     }
                 }
             }
