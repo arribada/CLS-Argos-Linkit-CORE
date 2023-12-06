@@ -690,7 +690,7 @@ ArticPacket ArgosPacketBuilder::build_sensor_packet(GPSLogEntry* gps_entry,
 	BCHCodeWord code_word = BCHEncoder::encode(
 			BCHEncoder::B255_223_4,
 			sizeof(BCHEncoder::B255_223_4),
-			packet, LONG_PACKET_PAYLOAD_BITS);
+			packet, base_pos);
 	DEBUG_TRACE("ArgosPacketBuilder::build_sensor_packet: bch=%08x", code_word);
 
 	// Append BCH code

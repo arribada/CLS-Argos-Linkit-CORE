@@ -1537,7 +1537,7 @@ TEST(ArgosTxService, DepthPileManagerTestSensorValueConversion)
 	CHECK_EQUAL(113657, (unsigned int)converted->port[0]);
 }
 
-TEST(ArgosTxService, BuildSensorPacket) {
+TEST(ArgosTxService, BuildSensorPacketAll) {
 	unsigned int size_bits;
 	GPSLogEntry e = make_gps_location(1, 12.3, 44.4, 1652105502);
 	ServiceSensorData als, ph, pressure, sea_temp;
@@ -1550,23 +1550,36 @@ TEST(ArgosTxService, BuildSensorPacket) {
 	sea_temp.port[0] = 126000; // 0C
 
 	x = ArgosPacketBuilder::build_sensor_packet(&e, nullptr, nullptr, nullptr, nullptr, false, false, size_bits);
-	CHECK_EQUAL("CC4B8B3633003C0F0012C0526DE9C0"s, Binascii::hexlify(x));
+	CHECK_EQUAL("CC4B8B3633003C0F0012DB3750A6C0"s, Binascii::hexlify(x));
 	CHECK_EQUAL(115, size_bits);
 	x = ArgosPacketBuilder::build_sensor_packet(&e, &als, &ph, &pressure, &sea_temp, false, false, size_bits);
-	CHECK_EQUAL("DB4B8B3633003C0F0012C27106D601F41F401EC30C55C3A320"s, Binascii::hexlify(x));
+	CHECK_EQUAL("DB4B8B3633003C0F0012C27106D601F41F401EC30D29A43B60"s, Binascii::hexlify(x));
 	CHECK_EQUAL(196, size_bits);
 	x = ArgosPacketBuilder::build_sensor_packet(&e, nullptr, &ph, &pressure, &sea_temp, false, false, size_bits);
-	CHECK_EQUAL("9D4B8B3633003C0F0012CDAC03E83E803D860BE541EE20"s, Binascii::hexlify(x));
+	CHECK_EQUAL("9D4B8B3633003C0F0012CDAC03E83E803D86016C0F00A0"s, Binascii::hexlify(x));
 	CHECK_EQUAL(196 - 17, size_bits);
 	x = ArgosPacketBuilder::build_sensor_packet(&e, &als, nullptr, &pressure, &sea_temp, false, false, size_bits);
-	CHECK_EQUAL("014B8B3633003C0F0012C271007D07D007B0C0E49F1BF4"s, Binascii::hexlify(x));
+	CHECK_EQUAL("014B8B3633003C0F0012C271007D07D007B0C35F8554C8"s, Binascii::hexlify(x));
 	CHECK_EQUAL(196 - 14, size_bits);
 	x = ArgosPacketBuilder::build_sensor_packet(&e, &als, &ph, nullptr, &sea_temp, false, false, size_bits);
-	CHECK_EQUAL("9A4B8B3633003C0F0012C27106D603D861A1C3AD9C"s, Binascii::hexlify(x));
+	CHECK_EQUAL("9A4B8B3633003C0F0012C27106D603D860B455F0FE"s, Binascii::hexlify(x));
 	CHECK_EQUAL(196 - 29, size_bits);
 	x = ArgosPacketBuilder::build_sensor_packet(&e, &als, &ph, &pressure, nullptr, false, false, size_bits);
-	CHECK_EQUAL("554B8B3633003C0F0012C27106D601F41F40D43B78D6"s, Binascii::hexlify(x));
+	CHECK_EQUAL("554B8B3633003C0F0012C27106D601F41F41C886E7C4"s, Binascii::hexlify(x));
 	CHECK_EQUAL(196 - 21, size_bits);
+}
+
+TEST(ArgosTxService, BuildSensorPacketSeaTemp) {
+	unsigned int size_bits;
+	GPSLogEntry e = make_gps_location(1, 12.3, 44.4, 1652105502);
+	ServiceSensorData sea_temp;
+	std::string x;
+
+	sea_temp.port[0] = 147100; // 21.1C
+
+	x = ArgosPacketBuilder::build_sensor_packet(&e, nullptr, nullptr, nullptr, &sea_temp, false, false, size_bits);
+	CHECK_EQUAL("0A4B8B3633003C0F0012C23E9CBCE00BD1"s, Binascii::hexlify(x));
+	CHECK_EQUAL(136, size_bits);
 }
 
 
