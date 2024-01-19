@@ -162,8 +162,8 @@ static const UART_InitTypeDefAndInst UART_Inits[] =
 	{
 		.uarte = NRFX_UARTE_INSTANCE(1),
 		.config = {
-			.pseltxd = NRF_GPIO_PIN_MAP(0, 11),
-			.pselrxd = NRF_GPIO_PIN_MAP(0, 14),
+			.pseltxd = NRF_GPIO_PIN_MAP(0, 24),
+			.pselrxd = NRF_GPIO_PIN_MAP(0, 25),
 			.pselcts = NRF_UARTE_PSEL_DISCONNECTED,
 			.pselrts = NRF_UARTE_PSEL_DISCONNECTED,
 			.p_context = NULL, // Context passed to interrupt handler
