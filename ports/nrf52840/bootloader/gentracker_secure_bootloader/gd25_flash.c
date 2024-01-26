@@ -36,7 +36,7 @@ int gd25_flash_init(void)
                 .dpmconfig = false, // Deep power-down mode enable
             },
             {
-                .sck_delay = 0, // SCK delay in units of 62.5 ns  <0-255>
+                .sck_delay = 1, // SCK delay in units of 62.5 ns  <0-255>
                 .dpmen = false, // Deep power-down mode enable
                 .spi_mode = NRF_QSPI_MODE_0,
                 .sck_freq = NRF_QSPI_FREQ_32MDIV1, // See table above
@@ -47,7 +47,7 @@ int gd25_flash_init(void)
 	nrf_qspi_cinstr_conf_t config;
 	uint8_t status;
 	uint8_t rx_buffer[3];
-	//uint8_t tx_buffer[1];
+	uint8_t tx_buffer[2];
 	nrfx_err_t ret;
 
 	ret = nrfx_qspi_init(&qspi_config, NULL, NULL);
@@ -63,7 +63,7 @@ int gd25_flash_init(void)
     config.wipwait   = false;
 
 	// Issue a wake up command in case the device is in a deep sleep
-	config.opcode = POWER_UP;
+	config.opcode = RDPD;
 	config.length = NRF_QSPI_CINSTR_LEN_1B;
 	config.wren = false;
 
@@ -82,21 +82,23 @@ int gd25_flash_init(void)
         rx_buffer[1] != MEMORY_TYPE_ID ||
         rx_buffer[2] != CAPACITY_ID)
     {
-		//DEBUG_ERROR("GD25Q16C not correctly identified");
+		NRF_LOG_ERROR("GD25Q16C not correctly identified");
         return -1;
     }
 
-	// Switch to QSPI mode
-	// No QSPI mode to enabled, only use QSPI read and program commands.
-	// config.opcode = WRSR;
-    // tx_buffer[0] = STATUS_QE;
-	// config.length = NRF_QSPI_CINSTR_LEN_2B;
-	// config.wren = true;
-	// nrfx_qspi_cinstr_xfer(&config, tx_buffer, NULL);
+	// Switch to QSPI mode²
+	config.opcode = WRSR;
+	uint16_t tx_temp = STATUS_QE;
+    tx_buffer[0] = (uint8_t) tx_temp;
+    tx_buffer[1] = (uint8_t) (tx_temp >> 8);
+	config.length = NRF_QSPI_CINSTR_LEN_3B;
+	config.wren = true;
+	nrfx_qspi_cinstr_xfer(&config, tx_buffer, NULL);
+	NRF_LOG_INFO("GD25Q16C set Qenabled and fast mode (%x , %x)", tx_buffer[0], tx_buffer[1]);
 
 	// Wait for QSPI to be programmed
 	config.opcode = RDSRL;
-	config.length = NRF_QSPI_CINSTR_LEN_1B;
+	config.length = NRF_QSPI_CINSTR_LEN_2B;
 	config.wren = false;
     do
     {
@@ -105,6 +107,18 @@ int gd25_flash_init(void)
     }
 	while (status & (uint8_t)STATUS_WIP);
 
+	// Wait for QSPI to be programmed
+	config.opcode = RDSRU;
+	config.length = NRF_QSPI_CINSTR_LEN_2B;
+	config.wren = false;
+    // do
+    // {
+		nrfx_qspi_cinstr_xfer(&config, NULL, rx_buffer);
+		status = rx_buffer[0];
+    // }
+	// while (status & (uint8_t) (tx_temp >>8));
+
+	NRF_LOG_INFO("GD25Q16C Flash used and QUAD SPI configured (%x)", rx_buffer[0]);
     return 0;
 }
 

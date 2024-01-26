@@ -7,7 +7,7 @@ namespace BSP
 	{
 		// pin number, direction, input, pull, drive sense
 		/* GPIO_POWER_CONTROL   */ {NRF_GPIO_PIN_MAP(0,  14), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_D0S1, NRF_GPIO_PIN_NOSENSE, {}},
-		/* GPIO_DEBUG           */ {NRF_GPIO_PIN_MAP(0, 32), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_DEBUG           */ {NRF_GPIO_PIN_MAP(1, 0), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
 		/* GPIO_GPS_EXT_INT     */ {NRF_GPIO_PIN_MAP(0, 27), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
 		/* GPIO_LED_GREEN       */ {NRF_GPIO_PIN_MAP(1, 10), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}}, /* Rewrite Artic_R2 pin*/
 		/* GPIO_LED_RED         */ {NRF_GPIO_PIN_MAP(1,  15), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
@@ -18,6 +18,8 @@ namespace BSP
 		/* GPIO_REED_SW         */ {NRF_GPIO_PIN_MAP(0,  5), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIO_PIN_NOPULL, false, true, false}},
         /* GPIO_INT1_AG         */ {NRF_GPIO_PIN_MAP(0,  7), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {NRF_GPIOTE_POLARITY_LOTOHI, NRF_GPIO_PIN_NOPULL, false, true, false}},
 		/* GPIO_INT2_AG         */ {NRF_GPIO_PIN_MAP(1, 8), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_SWS         */ {NRF_GPIO_PIN_MAP(0,  15), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIO_PIN_NOPULL, false, true, false}},
+		/* GPIO_SWS_EN      */ {NRF_GPIO_PIN_MAP(0, 13), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
 		/* GPIO_SOLAR_BAT       */ {NRF_GPIO_PIN_MAP(0, 30), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
 		/* GPIO_SOLAR_CHRG      */ {NRF_GPIO_PIN_MAP(0, 3), NRF_GPIO_PIN_DIR_INPUT,  NRF_GPIO_PIN_INPUT_CONNECT,    NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}}
     };
@@ -57,7 +59,7 @@ namespace BSP
                 .p_context = NULL, // Context passed to interrupt handler
                 .hwfc = NRF_UARTE_HWFC_DISABLED,
                 .parity = NRF_UARTE_PARITY_EXCLUDED,
-                .baudrate = NRF_UARTE_BAUDRATE_9600, // See table above
+                .baudrate = NRF_UARTE_BAUDRATE_460800 // See table above
                 .interrupt_priority = INTERRUPT_PRIORITY_UART_0,
             }
         },
@@ -73,7 +75,7 @@ namespace BSP
                 .p_context = NULL, // Context passed to interrupt handler
                 .hwfc = NRF_UARTE_HWFC_DISABLED,
                 .parity = NRF_UARTE_PARITY_EXCLUDED,
-                .baudrate = NRF_UARTE_BAUDRATE_9600, // See table above
+                .baudrate = NRF_UARTE_BAUDRATE_460800, // See table above
                 .interrupt_priority = INTERRUPT_PRIORITY_UART_1,
             }
         }
@@ -125,7 +127,7 @@ namespace BSP
                     .sck_delay = 1, // SCK delay in units of 62.5 ns  <0-255>
                     .dpmen = false, // Deep power-down mode enable
                     .spi_mode = NRF_QSPI_MODE_0,
-                    .sck_freq = NRF_QSPI_FREQ_32MDIV2, // See table above
+                    .sck_freq = NRF_QSPI_FREQ_32MDIV4, // See table above
                 },
                 .irq_priority = INTERRUPT_PRIORITY_QSPI_0
             }
@@ -275,14 +277,14 @@ namespace BSP
             .twim = NRFX_TWIM_INSTANCE(1),
 			.twim_config =
             {
-                .scl = NRF_GPIO_PIN_MAP(0, 15),
-                .sda = NRF_GPIO_PIN_MAP(0, 27),
+                .scl = NRF_GPIO_PIN_MAP(0, 30),
+                .sda = NRF_GPIO_PIN_MAP(0, 3),
                 .frequency = NRF_TWIM_FREQ_400K,
                 .interrupt_priority = INTERRUPT_PRIORITY_I2C_1,
                 .hold_bus_uninit = 0, // Hold pull up state on gpio pins after uninit <0 = Disabled, 1 = Enabled>
             }
         }
-    #endif
+    #endif 
     };
 
     ///////////////////////////////// WDT definitions /////////////////////////////////

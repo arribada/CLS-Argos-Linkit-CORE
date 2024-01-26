@@ -2,7 +2,7 @@
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
-#ifdef GD25Q16C
+#if FLASH_GD25 == 1
 	#include "gd25_flash.h"
 	#include "GD25Q16C.h"
 #else
@@ -26,7 +26,7 @@ struct __attribute__((packed)) image_header {
 
 #define MAX_IMAGE_SIZE  (FIRMWARE_UPDATE_REGION_SIZE - sizeof(struct image_header))
 
-#ifdef GD25Q16C
+#if FLASH_GD25 == 1
 static const unsigned int FIRMWARE_UPDATE_BLOCK_OFFSET = GD25_BLOCK_COUNT - (FIRMWARE_UPDATE_REGION_SIZE / GD25_BLOCK_SIZE);
 #else
 static const unsigned int FIRMWARE_UPDATE_BLOCK_OFFSET = IS25_BLOCK_COUNT - (FIRMWARE_UPDATE_REGION_SIZE / IS25_BLOCK_SIZE);
@@ -44,7 +44,7 @@ static uint32_t compute_crc_in_flash(uint32_t base_addr, uint32_t size)
 		uint32_t length = MIN(PAGE_SIZE, size);
 
 
-#ifdef GD25Q16C
+#if FLASH_GD25 == 1
 		gd25_flash_read(base_addr + offset, data, length);
 #else
 		is25_flash_read(base_addr + offset, data, length);
@@ -76,7 +76,7 @@ static uint32_t ext_image_copy(uint32_t dst_addr,
 
         // Read ex flash page
 
-#ifdef GD25Q16C
+#if FLASH_GD25 == 1
     	gd25_flash_read(src_addr, (uint8_t *)src_page, bytes);
 #else
     	is25_flash_read(src_addr, (uint8_t *)src_page, bytes);
@@ -147,14 +147,14 @@ void ext_flash_update(void)
 	// Initialise flash memory
 	
 
-#ifdef GD25Q16C
+#if FLASH_GD25 == 1
 	if (gd25_flash_init())
 		return;
 
 	// Read header providing us with size and crc32
 	gd25_flash_read(FIRMWARE_UPDATE_BLOCK_OFFSET * GD25_BLOCK_SIZE, (uint8_t *)&header, sizeof(header));
 
-	if (header.image_size <= MAX_IMAGE_SIZE)
+	if ((header.image_size <= MAX_IMAGE_SIZE) && (header.image_size > 0))
 	{
 		NRF_LOG_INFO("ext_flash_update: new firmware image detected size=%u crc32=%08x",
 				     header.image_size, header.crc32);
@@ -175,13 +175,14 @@ void ext_flash_update(void)
 		NRF_LOG_INFO("ext_flash_update: applying firmware update...");
 		apply_update((FIRMWARE_UPDATE_BLOCK_OFFSET * GD25_BLOCK_SIZE) + sizeof(header), header.image_size);
 #else
+
 	if (is25_flash_init())
 		return;
 
 	// Read header providing us with size and crc32
 	is25_flash_read(FIRMWARE_UPDATE_BLOCK_OFFSET * IS25_BLOCK_SIZE, (uint8_t *)&header, sizeof(header));
 
-	if (header.image_size <= MAX_IMAGE_SIZE)
+	if ((header.image_size <= MAX_IMAGE_SIZE) && (header.image_size > 0))
 	{
 		NRF_LOG_INFO("ext_flash_update: new firmware image detected size=%u crc32=%08x",
 				     header.image_size, header.crc32);
@@ -216,7 +217,7 @@ void ext_flash_update(void)
 	    NRF_LOG_FLUSH();
 
 
-#ifdef GD25Q16C
+#if FLASH_GD25 == 1
 		gd25_flash_erase(FIRMWARE_UPDATE_BLOCK_OFFSET);
 #else
 		is25_flash_erase(FIRMWARE_UPDATE_BLOCK_OFFSET);
@@ -236,7 +237,7 @@ void ext_flash_update(void)
 	}
 
 
-#ifdef GD25Q16C
+#if FLASH_GD25 == 1
 	gd25_flash_deinit();
 #else
 	is25_flash_deinit();

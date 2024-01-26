@@ -17,10 +17,17 @@ set(LIB_DIR       ../../libraries)
 
 option(BOARD "Board to compile for" NONE)
 
-if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE)
+if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE OR ${MODEL} MATCHES FEATHER)
+    set (ARGOS_STM 0)
+    set (ARGOS_ARTIC_SAT 0)
+    set (ARGOS_ARTIC_R2 1)
+    set (FLASH_IS25 1)
+    set (FLASH_GD25 0)
+    set (SENSOR_BMX160 1)
     set(MODEL_SB 0)
     set(MODEL_UW 0)
     set(MODEL_CORE 0)
+    set(MODEL_FEATHER 0)
     set(DEVICE_MODEL "Linkit ${MODEL}")
     set(HAS_WCHG 0)
     if(${MODEL} MATCHES SB)
@@ -31,9 +38,17 @@ if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE)
     elseif(${MODEL} MATCHES CORE)
         set(MODEL_CORE 1)
 	    set(HAS_WCHG 1)
+    elseif(${MODEL} MATCHES FEATHER)
+        set(MODEL_FEATHER 1)
+        set (SENSOR_BMX160 0)
+	    set(HAS_WCHG 0)
+        set (ARGOS_ARTIC_R2 0)
+        set(ARGOS_STM 1)
+        set (FLASH_IS25 0)
+        set (FLASH_GD25 1)
     endif()
 else()
-    message(FATAL_ERROR "MODEL must be one of {SB, CORE, UW}")
+    message(FATAL_ERROR "MODEL must be one of {SB, CORE, UW, FEATHER}")
 endif()
 
 # Append board model to the target name
@@ -41,40 +56,19 @@ if(${BOARD} MATCHES HORIZON)
     set(TARGET_NAME ${PROJECT_NAME}_horizon_board)
     set(BOARD_DIR     "${PROJ_DIR}/bsp/horizon_v4.0")
     set(DEVICE_MODEL "Horizon CORE")
-    set(MODEL_SB 0)
-    set(MODEL_UW 0)
-    set(MODEL_CORE 1)
     set(HAS_WCHG 0)
     set(BOOTLOADER "bootloader/gentracker_secure_bootloader/horizon_v4.0/armgcc/_build/horizon_bootloader_v4_linkit_merged.hex")
 elseif(${BOARD} MATCHES LINKIT)
     set(TARGET_NAME ${PROJECT_NAME}_${MODEL}_board)
     set(BOARD_DIR     "${PROJ_DIR}/bsp/gentracker_v1.0")
     set(BOOTLOADER "bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/cls_bootloader_v1_linkit_merged.hex")
-elseif(${BOARD} MATCHES RSPB_ADAFRUIT)
-    set(TARGET_NAME ${PROJECT_NAME}_${MODEL}_board)
+elseif(${BOARD} MATCHES RSPB)
+    set(TARGET_NAME ${PROJECT_NAME}_rspb_board)
     set(BOARD_DIR     "${PROJ_DIR}/bsp/rspb_adafruit_feather")
+    set(DEVICE_MODEL "RSPB ${MODEL}")
     set(BOOTLOADER "bootloader/gentracker_secure_bootloader/rspb_adafruit_feather/armgcc/_build/rspb_bootloader_v1_linkit_merged.hex")
 else()
-    message(FATAL_ERROR "Board must be HORIZON or LINKIT")
-endif()
-
-# Append board model to the target name
-if(${BOARD} MATCHES RSPB_ADAFRUIT)
-    set(TARGET_NAME ${PROJECT_NAME}_rspb_adafruit_board)
-    set(BOARD_DIR     "${PROJ_DIR}/bsp/rspb_adafruit_feather")
-    set(DEVICE_MODEL "RSPB CORE")
-    set(MODEL_SB 0)
-    set(MODEL_UW 0)
-    set(MODEL_CORE 0)
-    set(MODEL_ADAFRUIT_FEATHER_EXPRESS 1)
-    set(HAS_WCHG 0)
-    set(BOOTLOADER "bootloader/gentracker_secure_bootloader/rspb_adafruit_feather/armgcc/_build/rspb_bootloader_v1_linkit_merged.hex")
-elseif(${BOARD} MATCHES LINKIT)
-    set(TARGET_NAME ${PROJECT_NAME}_${MODEL}_board)
-    set(BOARD_DIR     "${PROJ_DIR}/bsp/gentracker_v1.0")
-    set(BOOTLOADER "bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/cls_bootloader_v1_linkit_merged.hex")
-else()
-    message(FATAL_ERROR "Board must be HORIZON or LINKIT")
+    message(FATAL_ERROR "Board must be HORIZON or LINKIT or RSPB")
 endif()
 
 if (DEBUG_LEVEL)
@@ -182,9 +176,7 @@ target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
     ${PROJ_DIR}/core/hardware
     ${PROJ_DIR}/core/interface
     ${PROJ_DIR}/core/memmang
-    ${PROJ_DIR}/core/filesystem
     ${PROJ_DIR}/core/scheduling
-    ${PROJ_DIR}/core/hardware/artic_sat
     ${PROJ_DIR}/core/hardware/m8qasync
     ${PROJ_DIR}/core/hardware/ms58xx
     ${PROJ_DIR}/core/hardware/ad5933
@@ -193,8 +185,6 @@ target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
     ${PROJ_DIR}/core/hardware/oem_rtd
     ${PROJ_DIR}/core/hardware/ezo_rtd
     ${PROJ_DIR}/core/hardware/cdt
-    ${PROJ_DIR}/core/hardware/bmx160
-    ${PROJ_DIR}/core/hardware/stwlc68_otp
 )
 
 target_sources(${TARGET_NAME} PRIVATE
@@ -267,18 +257,13 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/protocol/dte_params.cpp
     ${CORE_DIR}/configuration/calibration.cpp
     ${BOARD_DIR}/bsp.cpp
-    ${PROJ_DIR}/core/filesystem/is25_flash.cpp
     ${PROJ_DIR}/core/hardware/ms58xx/ms58xx.cpp
     ${PROJ_DIR}/core/hardware/ad5933/ad5933.cpp
-    ${PROJ_DIR}/core/hardware/bmx160/bmx160.cpp
-    ${PROJ_DIR}/core/hardware/bmx160/bmx160.c
     ${PROJ_DIR}/core/hardware/cdt/cdt.cpp
     ${PROJ_DIR}/core/hardware/ltr_303/ltr_303.cpp
     ${PROJ_DIR}/core/hardware/oem_ph/oem_ph.cpp
     ${PROJ_DIR}/core/hardware/oem_rtd/oem_rtd.cpp
     ${PROJ_DIR}/core/hardware/ezo_rtd/ezo_rtd.cpp
-    ${PROJ_DIR}/core/hardware/artic_sat/artic_sat.cpp
-    ${PROJ_DIR}/core/hardware/artic_sat/pa_driver.cpp
 	${PROJ_DIR}/core/hardware/m8qasync/m8qasync.cpp
     ${PROJ_DIR}/core/hardware/m8qasync/ubx_comms.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
@@ -309,7 +294,64 @@ if (HAS_WCHG)
 		    ${PROJ_DIR}/core/hardware/stwlc68_otp/otp_chip_info.c
 		    ${PROJ_DIR}/core/hardware/stwlc68_otp/stwlc68.cpp
         )
+
+        target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
+            ${PROJ_DIR}/core/hardware/stwlc68_otp
+        )
 endif()
+
+if (SENSOR_BMX160)
+        target_sources(${TARGET_NAME} PRIVATE
+            ${PROJ_DIR}/core/hardware/bmx160/bmx160.cpp
+            ${PROJ_DIR}/core/hardware/bmx160/bmx160.c
+        )
+
+        target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
+            ${PROJ_DIR}/core/hardware/bmx160
+        )
+endif()
+
+if (ARGOS_ARTIC_SAT)
+        target_sources(${TARGET_NAME} PRIVATE
+            ${PROJ_DIR}/core/hardware/artic_sat/artic_sat.cpp
+            ${PROJ_DIR}/core/hardware/artic_sat/pa_driver.cpp
+        )
+
+        target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
+            ${PROJ_DIR}/core/hardware/artic_sat
+        )
+endif()
+if (ARGOS_ARTIC_R2)
+        target_sources(${TARGET_NAME} PRIVATE
+            ${PROJ_DIR}/core/hardware/artic_r2/artic.cpp
+            ${PROJ_DIR}/core/hardware/artic_r2/pa_driver.cpp
+        )
+
+        target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
+            ${PROJ_DIR}/core/hardware/artic_r2
+        )
+endif()
+
+if (FLASH_IS25)
+        target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
+            ${PROJ_DIR}/core/filesystem/flash_is25
+        )
+        
+        target_sources(${TARGET_NAME} PRIVATE
+            ${PROJ_DIR}/core/filesystem/flash_is25/is25_flash.cpp
+        )
+endif()
+
+if (FLASH_GD25)
+        target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
+            ${PROJ_DIR}/core/filesystem/flash_gd25
+        )
+        
+        target_sources(${TARGET_NAME} PRIVATE
+            ${PROJ_DIR}/core/filesystem/flash_gd25/gd25_flash.cpp
+        )
+endif()
+
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
     Release=0
@@ -318,6 +360,13 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     MODEL_SB=${MODEL_SB}
     MODEL_UW=${MODEL_UW}
     MODEL_CORE=${MODEL_CORE}
+    MODEL_FEATHER=${MODEL_ADAFDRUIT}
+    ARGOS_ARTIC_SAT=${ARGOS_ARTIC_SAT}
+    ARGOS_ARTIC_R2=${ARGOS_ARTIC_R2}
+    ARGOS_STM=${ARGOS_STM}
+    FLASH_IS25=${FLASH_IS25}
+    FLASH_GD25=${FLASH_GD25}
+    SENSOR_BMX160=${SENSOR_BMX160}
     BUILD_TYPE=${CMAKE_BUILD_TYPE}
     #SCHEDULER_DEBUG
     DEBUG_ENABLE=1
@@ -479,5 +528,6 @@ add_custom_target(merged_hex
 )
 
 add_dependencies(flash ${TARGET_NAME})
+add_dependencies(merged_hex ${TARGET_NAME})
 add_dependencies(flash_softdev ${TARGET_NAME})
 add_dependencies(dfu_app ${TARGET_NAME})

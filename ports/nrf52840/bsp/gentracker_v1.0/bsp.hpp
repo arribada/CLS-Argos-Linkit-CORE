@@ -13,6 +13,7 @@
 #include "nrfx_wdt.h"
 #include "nrf_libuarte_async.h"
 
+#define ARGOS_ARTIC_SAT
 // Logical device mappings to physical devices
 #define RTC_DATE_TIME  BSP::RTC::RTC_1
 #define RTC_TIMER      BSP::RTC::RTC_2
