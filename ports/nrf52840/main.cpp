@@ -30,8 +30,15 @@
 #include "reed.hpp"
 #include "nrf_rtc.hpp"
 #include "gpio.hpp"
+#if defined(ARGOS_ARTIC_SAT) && (ARGOS_ARTIC_SAT == 1)
 #include "artic_sat.hpp"
+#endif
+#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
+#include "gd25_flash.hpp"
+#endif
+#if defined(FLASH_IS25) && (FLASH_IS25 == 1)
 #include "is25_flash.hpp"
+#endif
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
 #include "m8qasync.hpp"
@@ -40,13 +47,17 @@
 #include "oem_rtd.hpp"
 #include "ezo_rtd.hpp"
 #include "cdt.hpp"
+#if SENSOR_BMX160 == 1
 #include "bmx160.hpp"
+#endif
 #include "ms58xx.hpp"
 #include "fs_log.hpp"
 #include "nrf_i2c.hpp"
 #include "gpio_led.hpp"
 #include "heap.h"
+#if defined(HAS_WCHG) && (HAS_WCHG == 1)
 #include "stwlc68.hpp"
+#endif
 #include "etl/error_handler.h"
 #include "memory_monitor_service.hpp"
 #include "dive_mode_service.hpp"
@@ -74,8 +85,12 @@ static bool m_is_debug_init = false;
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
 
+#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
+#define OTA_UPDATE_RESERVED_BLOCKS ((1024 * 1024) / GD25_BLOCK_SIZE)
+#else
 // Reserve the last 1MB of IS25 flash memory for firmware updates
 #define OTA_UPDATE_RESERVED_BLOCKS ((1024 * 1024) / IS25_BLOCK_SIZE)
+#endif
 
 // Reed switch debouncing time (ms)
 #define REED_SWITCH_DEBOUNCE_TIME_MS    25
@@ -94,11 +109,15 @@ extern "C" void HardFault_Handler() {
 #endif
 		GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+#ifdef GPIO_LED_BLUE
 		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 		nrf_delay_ms(50);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+#ifdef GPIO_LED_BLUE
 		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 		nrf_delay_ms(50);
 		PMU::kick_watchdog();
 #endif
@@ -119,11 +138,15 @@ extern "C" void MemoryManagement_Handler(void)
 #endif
 		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
+#ifdef GPIO_LED_BLUE
 		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 		nrf_delay_ms(50);
 		GPIOPins::clear(BSP::GPIO::GPIO_LED_GREEN);
 		GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
+#ifdef GPIO_LED_BLUE
 		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 		nrf_delay_ms(50);
 		PMU::kick_watchdog();
 #endif
@@ -145,11 +168,15 @@ extern "C" {
 #endif
 			GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
 			GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+#ifdef GPIO_LED_BLUE
 			GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 			nrf_delay_ms(50);
 			GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
 			GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+#ifdef GPIO_LED_BLUE
 			GPIOPins::clear(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 			nrf_delay_ms(50);
 			PMU::kick_watchdog();
 		}
@@ -170,11 +197,15 @@ extern "C" void vApplicationMallocFailedHook() {
 #endif
 		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
 		GPIOPins::clear(BSP::GPIO::GPIO_LED_GREEN);
+#ifdef GPIO_LED_BLUE
 		GPIOPins::clear(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 		nrf_delay_ms(50);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+#ifdef GPIO_LED_BLUE
 		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 		nrf_delay_ms(50);
 		PMU::kick_watchdog();
 #endif
@@ -197,11 +228,15 @@ void etl_error_handler(const etl::exception& e)
 #endif
 		GPIOPins::clear(BSP::GPIO::GPIO_LED_RED);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+#ifdef GPIO_LED_BLUE
 		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 		nrf_delay_ms(200);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_RED);
 		GPIOPins::set(BSP::GPIO::GPIO_LED_GREEN);
+#ifdef GPIO_LED_BLUE
 		GPIOPins::set(BSP::GPIO::GPIO_LED_BLUE);
+#endif
 		nrf_delay_ms(200);
 		PMU::kick_watchdog();
 #endif
@@ -253,7 +288,13 @@ int main()
 	NrfTimer::get_instance().init();
 
 	DEBUG_TRACE("RGB LED...");
+	//TODO implement NeoPixel management here.
+#ifdef NEOPIXEL_PIN
+	DEBUG_TRACE("Implement NeoPixel usage");
+	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_NEOPIXEL, RGBLedColor::WHITE);
+#else
 	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
+#endif
 	status_led = &nrf_status_led;
 
 #ifdef EXT_LED_PIN
@@ -274,9 +315,15 @@ int main()
 	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
 
+	#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
+	DEBUG_TRACE("GD25 flash...");
+	Gd25Flash gd25_flash;
+	gd25_flash.init();
+	#else
 	DEBUG_TRACE("IS25 flash...");
 	Is25Flash is25_flash;
 	is25_flash.init();
+	#endif
 
 	// Check the reed switch is engaged for 3 seconds if this is a power on event
     DEBUG_TRACE("PMU Reset Cause = %s", PMU::reset_cause().c_str());
@@ -286,12 +333,15 @@ int main()
 
 	NrfI2C::init();
 	bool is_linkit_v3 = PMU::hardware_version() == "LinkIt V3";
+
+#if ((defined(ARGOS_ARTIC_SAT) && (ARGOS_ARTIC_SAT == 1)) || (defined_ARTIC_R2) && (ARGOS_ARTIC_R2 ==1))
 	ArticSat::shutdown();
 	{
 		try {
 			EZO_RTD_Sensor rtd; // Puts the device into standby mode
 		} catch (...) {}
 	}
+#endif
 	NrfI2C::uninit();
 
 	if ((is_linkit_v3 && PMU::reset_cause() == "Pseudo Power On Reset") ||
@@ -397,8 +447,15 @@ int main()
 	reed_switch = &reed_gesture_switch;
 
 	DEBUG_TRACE("LFS filesystem...");
+
+	#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
+	LFSFileSystem lfs_file_system(&gd25_flash, GD25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);
+	main_filesystem = &lfs_file_system;
+	#else
 	LFSFileSystem lfs_file_system(&is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);
 	main_filesystem = &lfs_file_system;
+	DEBUG_TRACE("STWLC68 not included");
+	#endif
 
 	// If we can't mount the filesystem then try to format it first and retry
 	DEBUG_TRACE("Mount LFS filesystem...");
@@ -476,12 +533,18 @@ int main()
 
 	DEBUG_TRACE("OTA updater...");
 	ble_service = &BleInterface::get_instance();
+
+	#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
+	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &gd25_flash, GD25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS, OTA_UPDATE_RESERVED_BLOCKS);
+	#else
 	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS, OTA_UPDATE_RESERVED_BLOCKS);
+	#endif
 	ota_updater = &ota_flash_file_updater;
 
 	DEBUG_TRACE("SWS...");
 	SWSService sws;
 
+	#if ((defined(ARGOS_ARTIC_SAT) && (ARGOS_ARTIC_SAT == 1)) || (defined_ARTIC_R2) && (ARGOS_ARTIC_R2 ==1))
 	DEBUG_TRACE("Artic R2...");
 	try {
 		static ArticSat artic;
@@ -498,6 +561,9 @@ int main()
 	} catch (...) {
 		DEBUG_TRACE("Artic R2 not detected");
 	}
+	#else
+	DEBUG_TRACE("ARGOS ARTIC not configured...");
+	#endif
 
 	DEBUG_TRACE("GPS M8Q ...");
 	try {
@@ -591,12 +657,16 @@ int main()
 	}
 
 	DEBUG_TRACE("BMX160...");
+	#if SENSOR_BMX160 == 1
 	try {
 		static BMX160 bmx160;
 		static AXLSensorService axl_sensor_service(bmx160, &axl_sensor_log);
 	} catch (...) {
 		DEBUG_TRACE("BMX160: not detected");
 	}
+	#else
+		DEBUG_TRACE("BMX160: not configured");
+	#endif
 
 	DEBUG_TRACE("Memory monitor...");
 	MemoryMonitorService memory_monitor_service;

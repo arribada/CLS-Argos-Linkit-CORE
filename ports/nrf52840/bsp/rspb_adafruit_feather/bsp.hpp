@@ -14,7 +14,6 @@
 #include "nrf_libuarte_async.h"
 
 
-#define GD25Q16C
 // Logical device mappings to physical devices
 #define RTC_DATE_TIME  BSP::RTC::RTC_1
 #define RTC_TIMER      BSP::RTC::RTC_2
@@ -30,7 +29,10 @@
 #define GPS_POWER_PIN	BSP::GPIO::GPIO_GPS_PWR_EN
 #define GPS_RST_PIN		BSP::GPIO::GPIO_GPS_RST
 #define GPS_PULSE_PIN   BSP::GPIO::GPIO_GPS_PULSE
+#define GPS_POWER       BSP::GPIO::GPIO_GPS_EXT_INT
 
+#define SWS_ENABLE_PIN BSP::GPIO::GPIO_SWS_EN
+#define SWS_SAMPLE_PIN BSP::GPIO::GPIO_SWS
 // I2C device mappings
 #define CDT_MS5803_DEVICE EXT_I2C_BUS
 #define CDT_AD5933_DEVICE EXT_I2C_BUS
@@ -52,8 +54,7 @@
 #define EZO_RTD_DEVICE_ADDR 0x66
 #define OEM_RTD_DEVICE_ADDR 0x68
 #define AD5933_ADDRESS		0x0D
-#define BMX160_ADDRESS      0x69
-#define STWLC68_ADDRESS		0x61
+//#define STWLC68_ADDRESS		0x61
 #define BMA400_ADDRESS      0x15 /*Secondary address used, primary is 0x14*/ 
 
 // Battery voltage ADC gain
@@ -61,7 +62,7 @@
 #define RP506_ADC_GAIN        4.0f
 
 // Require reed switch engaged to boot up after power on reset
-#define POWER_ON_RESET_REQUIRES_REED_SWITCH
+//#define POWER_ON_RESET_REQUIRES_REED_SWITCH
 #define PSEUDO_POWER_OFF
 
 // Other options
@@ -82,11 +83,15 @@ namespace BSP
 	    GPIO_LED_RED,
         GPIO_LED_NEOPIXEL,
 	    GPIO_GPS_PWR_EN,
+	    GPIO_GPS_RST,
+	    GPIO_GPS_PULSE,
 	    GPIO_REED_SW,
 	    GPIO_INT1_AG,
 	    GPIO_INT2_AG,
+        GPIO_SWS,
+        GPIO_SWS_EN,
         GPIO_SOLAR_BAT,
-        GPIO_SOLAR_CHRG
+        GPIO_SOLAR_CHRG,
 		GPIO_TOTAL_NUMBER
 	};
 

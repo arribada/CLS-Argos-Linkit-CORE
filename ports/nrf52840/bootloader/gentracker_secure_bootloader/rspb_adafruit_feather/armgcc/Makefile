@@ -1,5 +1,5 @@
-PROJECT_NAME     := secure_bootloader_usb_mbr_rspb_adafruit
-TARGETS          := rspb_adafruit_bootloader_v1_linkit
+PROJECT_NAME     := secure_bootloader_usb_mbr_rspb
+TARGETS          := rspb_bootloader_v1_linkit
 OUTPUT_DIRECTORY := _build
 
 PROJ_DIR := ../..
@@ -172,8 +172,8 @@ OPT = -Os -g3
 
 # C flags common to all targets
 CFLAGS += $(OPT)
-CFLAGS += -DBOARD_RSPB_ADAFRUIT
-CFLAGS += -DGD25Q16C
+CFLAGS += -DBOARD_RSPB
+CFLAGS += -DFLASH_GD25=1
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
 CFLAGS += -DMBR_PRESENT
@@ -195,8 +195,8 @@ ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-ASMFLAGS += -DBOARD_RSPB_ADAFRUIT
-ASMFLAGS += -DGD25Q16C
+ASMFLAGS += -DBOARD_RSPB
+ASMFLAGS += -DFLASH_GD25=1
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DFLOAT_ABI_HARD
 ASMFLAGS += -DMBR_PRESENT

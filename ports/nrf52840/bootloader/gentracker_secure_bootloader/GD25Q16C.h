@@ -32,8 +32,8 @@ static const uint8_t WRSR          = 0x01;
 //static const uint8_t SERPNV        = 0x85; // Set Extended Read Parameters (Non-Volatile)
 //static const uint8_t SERPV         = 0x83; // Set Extended Read Parameters (Volatile)
 static const uint8_t BER64K        = 0xD8; // Block erase 64Kbyte
-static const uint8_t POWER_DOWN    = 0xB9; // Power down the device
-static const uint8_t POWER_UP      = 0xAB; // Wake the device from a powered down state
+static const uint8_t DP    = 0xB9; // Power down the device
+static const uint8_t RDPD      = 0xAB; // Wake the device from a powered down state
 
 /* SPI flash status bits */
 static const uint16_t STATUS_WIP   = 1 << 0; // Write in progress

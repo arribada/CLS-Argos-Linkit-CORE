@@ -18,10 +18,18 @@ void GPIOPins::initialise()
 
 	// Ensure power off state for everything controlling power
 	clear(GPS_POWER);
+	#ifdef SAT_PWR_EN
 	clear(SAT_PWR_EN);
+	#endif
+	#ifdef SAT_PWR_EN
 	set(SAT_RESET);
+	#endif
+	#ifdef SAT_PWR_EN
 	clear(SWS_ENABLE_PIN);
+	#endif
+	#ifdef SAT_PWR_EN
 	clear(AG_ENABLE);
+	#endif
 }
 
 void GPIOPins::set(uint32_t pin)
