@@ -18,7 +18,7 @@ extern RTC        *rtc;
 extern FileSystem *main_filesystem;
 
 // Required baud rates
-#define DEFAULT_BAUDRATE    38400
+#define DEFAULT_BAUDRATE    9600
 #define MAX_BAUDRATE        460800
 
 // State machine helper macros

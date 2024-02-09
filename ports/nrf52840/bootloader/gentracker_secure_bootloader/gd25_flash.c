@@ -39,7 +39,7 @@ int gd25_flash_init(void)
                 .sck_delay = 1, // SCK delay in units of 62.5 ns  <0-255>
                 .dpmen = false, // Deep power-down mode enable
                 .spi_mode = NRF_QSPI_MODE_0,
-                .sck_freq = NRF_QSPI_FREQ_32MDIV1, // See table above
+                .sck_freq = NRF_QSPI_FREQ_32MDIV4, // See table above
             },
             .irq_priority = NRFX_QSPI_CONFIG_IRQ_PRIORITY
         };

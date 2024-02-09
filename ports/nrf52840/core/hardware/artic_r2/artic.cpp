@@ -1068,7 +1068,7 @@ bool ArticTransceiver::is_firmware_ready() {
 bool ArticTransceiver::is_tx_finished() {
 	uint32_t status = 0, required = (1<<TX_FINISHED);
     get_status_register(&status);
-    //print_status(status);
+    print_status(status);
     return ((status & required) == required);
 }
 

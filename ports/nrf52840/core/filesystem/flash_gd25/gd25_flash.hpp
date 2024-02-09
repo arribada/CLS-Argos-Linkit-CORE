@@ -2,7 +2,7 @@
 
 #include "filesystem.hpp"
 
-#define GD25_BLOCK_COUNT   (4096)
+#define GD25_BLOCK_COUNT   (512)
 #define GD25_BLOCK_SIZE    (4*1024)
 #define GD25_PAGE_SIZE     (256)
 

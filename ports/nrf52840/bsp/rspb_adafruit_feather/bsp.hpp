@@ -62,7 +62,7 @@
 #define RP506_ADC_GAIN        4.0f
 
 // Require reed switch engaged to boot up after power on reset
-//#define POWER_ON_RESET_REQUIRES_REED_SWITCH
+#define POWER_ON_RESET_REQUIRES_REED_SWITCH
 #define PSEUDO_POWER_OFF
 
 // Other options

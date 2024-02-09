@@ -6,7 +6,7 @@ namespace BSP
 	const GPIO_InitTypeDefAndInst_t GPIO_Inits[GPIO_TOTAL_NUMBER] =
 	{
 		// pin number, direction, input, pull, drive sense
-		/* GPIO_POWER_CONTROL   */ {NRF_GPIO_PIN_MAP(0,  14), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_D0S1, NRF_GPIO_PIN_NOSENSE, {}},
+		/* GPIO_POWER_CONTROL   */ {NRF_GPIO_PIN_MAP(0,  4), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_D0S1, NRF_GPIO_PIN_NOSENSE, {}},
 		/* GPIO_DEBUG           */ {NRF_GPIO_PIN_MAP(1, 0), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
 		/* GPIO_GPS_EXT_INT     */ {NRF_GPIO_PIN_MAP(0, 27), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}},
 		/* GPIO_LED_GREEN       */ {NRF_GPIO_PIN_MAP(1, 10), NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE, {}}, /* Rewrite Artic_R2 pin*/
@@ -59,7 +59,7 @@ namespace BSP
                 .p_context = NULL, // Context passed to interrupt handler
                 .hwfc = NRF_UARTE_HWFC_DISABLED,
                 .parity = NRF_UARTE_PARITY_EXCLUDED,
-                .baudrate = NRF_UARTE_BAUDRATE_460800 // See table above
+                .baudrate = NRF_UARTE_BAUDRATE_9600 // See table above
                 .interrupt_priority = INTERRUPT_PRIORITY_UART_0,
             }
         },
@@ -127,7 +127,7 @@ namespace BSP
                     .sck_delay = 1, // SCK delay in units of 62.5 ns  <0-255>
                     .dpmen = false, // Deep power-down mode enable
                     .spi_mode = NRF_QSPI_MODE_0,
-                    .sck_freq = NRF_QSPI_FREQ_32MDIV4, // See table above
+                    .sck_freq = NRF_QSPI_FREQ_32MDIV8, // See table above
                 },
                 .irq_priority = INTERRUPT_PRIORITY_QSPI_0
             }
@@ -312,15 +312,15 @@ namespace BSP
         {
             .uart = &async_uarte_0,
             .config = {
-                .rx_pin = NRF_GPIO_PIN_MAP(1, 8),
-                .tx_pin = NRF_GPIO_PIN_MAP(1, 9),
+                .rx_pin = NRF_GPIO_PIN_MAP(0, 8),
+                .tx_pin = NRF_GPIO_PIN_MAP(0, 9),
                 .cts_pin = NRF_UARTE_PSEL_DISCONNECTED,
                 .rts_pin = NRF_UARTE_PSEL_DISCONNECTED,
                 .timeout_us = 50,
                 .flush_on_timeout = true,
                 .hwfc = NRF_UARTE_HWFC_DISABLED,
                 .parity = NRF_UARTE_PARITY_EXCLUDED,
-                .baudrate = NRF_UARTE_BAUDRATE_460800,
+                .baudrate = NRF_UARTE_BAUDRATE_9600,
                 .pullup_rx = false,
                 .int_prio = INTERRUPT_PRIORITY_UART_0,
             }

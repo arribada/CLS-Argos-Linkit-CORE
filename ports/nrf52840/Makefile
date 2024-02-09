@@ -117,17 +117,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named LinkIt_rspb_board
+# Target rules for targets named LinkIt_CORE_board
 
 # Build rule for target.
-LinkIt_rspb_board: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LinkIt_rspb_board
-.PHONY : LinkIt_rspb_board
+LinkIt_CORE_board: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LinkIt_CORE_board
+.PHONY : LinkIt_CORE_board
 
 # fast build rule for target.
-LinkIt_rspb_board/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/build
-.PHONY : LinkIt_rspb_board/fast
+LinkIt_CORE_board/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/build
+.PHONY : LinkIt_CORE_board/fast
 
 #=============================================================================
 # Target rules for targets named flash_softdev
@@ -181,60 +181,60 @@ merged_hex/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/merged_hex.dir/build.make CMakeFiles/merged_hex.dir/build
 .PHONY : merged_hex/fast
 
-bsp/rspb_adafruit_feather/bsp.obj: bsp/rspb_adafruit_feather/bsp.cpp.obj
-.PHONY : bsp/rspb_adafruit_feather/bsp.obj
+bsp/gentracker_v1.0/bsp.obj: bsp/gentracker_v1.0/bsp.cpp.obj
+.PHONY : bsp/gentracker_v1.0/bsp.obj
 
 # target to build an object file
-bsp/rspb_adafruit_feather/bsp.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/bsp/rspb_adafruit_feather/bsp.cpp.obj
-.PHONY : bsp/rspb_adafruit_feather/bsp.cpp.obj
+bsp/gentracker_v1.0/bsp.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/bsp/gentracker_v1.0/bsp.cpp.obj
+.PHONY : bsp/gentracker_v1.0/bsp.cpp.obj
 
-bsp/rspb_adafruit_feather/bsp.i: bsp/rspb_adafruit_feather/bsp.cpp.i
-.PHONY : bsp/rspb_adafruit_feather/bsp.i
+bsp/gentracker_v1.0/bsp.i: bsp/gentracker_v1.0/bsp.cpp.i
+.PHONY : bsp/gentracker_v1.0/bsp.i
 
 # target to preprocess a source file
-bsp/rspb_adafruit_feather/bsp.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/bsp/rspb_adafruit_feather/bsp.cpp.i
-.PHONY : bsp/rspb_adafruit_feather/bsp.cpp.i
+bsp/gentracker_v1.0/bsp.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/bsp/gentracker_v1.0/bsp.cpp.i
+.PHONY : bsp/gentracker_v1.0/bsp.cpp.i
 
-bsp/rspb_adafruit_feather/bsp.s: bsp/rspb_adafruit_feather/bsp.cpp.s
-.PHONY : bsp/rspb_adafruit_feather/bsp.s
+bsp/gentracker_v1.0/bsp.s: bsp/gentracker_v1.0/bsp.cpp.s
+.PHONY : bsp/gentracker_v1.0/bsp.s
 
 # target to generate assembly for a file
-bsp/rspb_adafruit_feather/bsp.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/bsp/rspb_adafruit_feather/bsp.cpp.s
-.PHONY : bsp/rspb_adafruit_feather/bsp.cpp.s
+bsp/gentracker_v1.0/bsp.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/bsp/gentracker_v1.0/bsp.cpp.s
+.PHONY : bsp/gentracker_v1.0/bsp.cpp.s
 
-core/filesystem/flash_gd25/gd25_flash.obj: core/filesystem/flash_gd25/gd25_flash.cpp.obj
-.PHONY : core/filesystem/flash_gd25/gd25_flash.obj
+core/filesystem/flash_is25/is25_flash.obj: core/filesystem/flash_is25/is25_flash.cpp.obj
+.PHONY : core/filesystem/flash_is25/is25_flash.obj
 
 # target to build an object file
-core/filesystem/flash_gd25/gd25_flash.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_gd25/gd25_flash.cpp.obj
-.PHONY : core/filesystem/flash_gd25/gd25_flash.cpp.obj
+core/filesystem/flash_is25/is25_flash.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj
+.PHONY : core/filesystem/flash_is25/is25_flash.cpp.obj
 
-core/filesystem/flash_gd25/gd25_flash.i: core/filesystem/flash_gd25/gd25_flash.cpp.i
-.PHONY : core/filesystem/flash_gd25/gd25_flash.i
+core/filesystem/flash_is25/is25_flash.i: core/filesystem/flash_is25/is25_flash.cpp.i
+.PHONY : core/filesystem/flash_is25/is25_flash.i
 
 # target to preprocess a source file
-core/filesystem/flash_gd25/gd25_flash.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_gd25/gd25_flash.cpp.i
-.PHONY : core/filesystem/flash_gd25/gd25_flash.cpp.i
+core/filesystem/flash_is25/is25_flash.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/filesystem/flash_is25/is25_flash.cpp.i
+.PHONY : core/filesystem/flash_is25/is25_flash.cpp.i
 
-core/filesystem/flash_gd25/gd25_flash.s: core/filesystem/flash_gd25/gd25_flash.cpp.s
-.PHONY : core/filesystem/flash_gd25/gd25_flash.s
+core/filesystem/flash_is25/is25_flash.s: core/filesystem/flash_is25/is25_flash.cpp.s
+.PHONY : core/filesystem/flash_is25/is25_flash.s
 
 # target to generate assembly for a file
-core/filesystem/flash_gd25/gd25_flash.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_gd25/gd25_flash.cpp.s
-.PHONY : core/filesystem/flash_gd25/gd25_flash.cpp.s
+core/filesystem/flash_is25/is25_flash.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/filesystem/flash_is25/is25_flash.cpp.s
+.PHONY : core/filesystem/flash_is25/is25_flash.cpp.s
 
 core/hardware/ad5933/ad5933.obj: core/hardware/ad5933/ad5933.cpp.obj
 .PHONY : core/hardware/ad5933/ad5933.obj
 
 # target to build an object file
 core/hardware/ad5933/ad5933.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ad5933/ad5933.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ad5933/ad5933.cpp.obj
 .PHONY : core/hardware/ad5933/ad5933.cpp.obj
 
 core/hardware/ad5933/ad5933.i: core/hardware/ad5933/ad5933.cpp.i
@@ -242,7 +242,7 @@ core/hardware/ad5933/ad5933.i: core/hardware/ad5933/ad5933.cpp.i
 
 # target to preprocess a source file
 core/hardware/ad5933/ad5933.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ad5933/ad5933.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ad5933/ad5933.cpp.i
 .PHONY : core/hardware/ad5933/ad5933.cpp.i
 
 core/hardware/ad5933/ad5933.s: core/hardware/ad5933/ad5933.cpp.s
@@ -250,15 +250,111 @@ core/hardware/ad5933/ad5933.s: core/hardware/ad5933/ad5933.cpp.s
 
 # target to generate assembly for a file
 core/hardware/ad5933/ad5933.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ad5933/ad5933.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ad5933/ad5933.cpp.s
 .PHONY : core/hardware/ad5933/ad5933.cpp.s
+
+core/hardware/artic_r2/artic.obj: core/hardware/artic_r2/artic.cpp.obj
+.PHONY : core/hardware/artic_r2/artic.obj
+
+# target to build an object file
+core/hardware/artic_r2/artic.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/artic_r2/artic.cpp.obj
+.PHONY : core/hardware/artic_r2/artic.cpp.obj
+
+core/hardware/artic_r2/artic.i: core/hardware/artic_r2/artic.cpp.i
+.PHONY : core/hardware/artic_r2/artic.i
+
+# target to preprocess a source file
+core/hardware/artic_r2/artic.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/artic_r2/artic.cpp.i
+.PHONY : core/hardware/artic_r2/artic.cpp.i
+
+core/hardware/artic_r2/artic.s: core/hardware/artic_r2/artic.cpp.s
+.PHONY : core/hardware/artic_r2/artic.s
+
+# target to generate assembly for a file
+core/hardware/artic_r2/artic.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/artic_r2/artic.cpp.s
+.PHONY : core/hardware/artic_r2/artic.cpp.s
+
+core/hardware/artic_r2/pa_driver.obj: core/hardware/artic_r2/pa_driver.cpp.obj
+.PHONY : core/hardware/artic_r2/pa_driver.obj
+
+# target to build an object file
+core/hardware/artic_r2/pa_driver.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/artic_r2/pa_driver.cpp.obj
+.PHONY : core/hardware/artic_r2/pa_driver.cpp.obj
+
+core/hardware/artic_r2/pa_driver.i: core/hardware/artic_r2/pa_driver.cpp.i
+.PHONY : core/hardware/artic_r2/pa_driver.i
+
+# target to preprocess a source file
+core/hardware/artic_r2/pa_driver.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/artic_r2/pa_driver.cpp.i
+.PHONY : core/hardware/artic_r2/pa_driver.cpp.i
+
+core/hardware/artic_r2/pa_driver.s: core/hardware/artic_r2/pa_driver.cpp.s
+.PHONY : core/hardware/artic_r2/pa_driver.s
+
+# target to generate assembly for a file
+core/hardware/artic_r2/pa_driver.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/artic_r2/pa_driver.cpp.s
+.PHONY : core/hardware/artic_r2/pa_driver.cpp.s
+
+core/hardware/bmx160/bmx160.obj: core/hardware/bmx160/bmx160.c.obj
+.PHONY : core/hardware/bmx160/bmx160.obj
+
+# target to build an object file
+core/hardware/bmx160/bmx160.c.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/bmx160/bmx160.c.obj
+.PHONY : core/hardware/bmx160/bmx160.c.obj
+
+core/hardware/bmx160/bmx160.i: core/hardware/bmx160/bmx160.c.i
+.PHONY : core/hardware/bmx160/bmx160.i
+
+# target to preprocess a source file
+core/hardware/bmx160/bmx160.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/bmx160/bmx160.c.i
+.PHONY : core/hardware/bmx160/bmx160.c.i
+
+core/hardware/bmx160/bmx160.s: core/hardware/bmx160/bmx160.c.s
+.PHONY : core/hardware/bmx160/bmx160.s
+
+# target to generate assembly for a file
+core/hardware/bmx160/bmx160.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/bmx160/bmx160.c.s
+.PHONY : core/hardware/bmx160/bmx160.c.s
+
+core/hardware/bmx160/bmx160.obj: core/hardware/bmx160/bmx160.cpp.obj
+.PHONY : core/hardware/bmx160/bmx160.obj
+
+# target to build an object file
+core/hardware/bmx160/bmx160.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/bmx160/bmx160.cpp.obj
+.PHONY : core/hardware/bmx160/bmx160.cpp.obj
+
+core/hardware/bmx160/bmx160.i: core/hardware/bmx160/bmx160.cpp.i
+.PHONY : core/hardware/bmx160/bmx160.i
+
+# target to preprocess a source file
+core/hardware/bmx160/bmx160.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/bmx160/bmx160.cpp.i
+.PHONY : core/hardware/bmx160/bmx160.cpp.i
+
+core/hardware/bmx160/bmx160.s: core/hardware/bmx160/bmx160.cpp.s
+.PHONY : core/hardware/bmx160/bmx160.s
+
+# target to generate assembly for a file
+core/hardware/bmx160/bmx160.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/bmx160/bmx160.cpp.s
+.PHONY : core/hardware/bmx160/bmx160.cpp.s
 
 core/hardware/cdt/cdt.obj: core/hardware/cdt/cdt.cpp.obj
 .PHONY : core/hardware/cdt/cdt.obj
 
 # target to build an object file
 core/hardware/cdt/cdt.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/cdt/cdt.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/cdt/cdt.cpp.obj
 .PHONY : core/hardware/cdt/cdt.cpp.obj
 
 core/hardware/cdt/cdt.i: core/hardware/cdt/cdt.cpp.i
@@ -266,7 +362,7 @@ core/hardware/cdt/cdt.i: core/hardware/cdt/cdt.cpp.i
 
 # target to preprocess a source file
 core/hardware/cdt/cdt.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/cdt/cdt.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/cdt/cdt.cpp.i
 .PHONY : core/hardware/cdt/cdt.cpp.i
 
 core/hardware/cdt/cdt.s: core/hardware/cdt/cdt.cpp.s
@@ -274,7 +370,7 @@ core/hardware/cdt/cdt.s: core/hardware/cdt/cdt.cpp.s
 
 # target to generate assembly for a file
 core/hardware/cdt/cdt.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/cdt/cdt.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/cdt/cdt.cpp.s
 .PHONY : core/hardware/cdt/cdt.cpp.s
 
 core/hardware/ezo_rtd/ezo_rtd.obj: core/hardware/ezo_rtd/ezo_rtd.cpp.obj
@@ -282,7 +378,7 @@ core/hardware/ezo_rtd/ezo_rtd.obj: core/hardware/ezo_rtd/ezo_rtd.cpp.obj
 
 # target to build an object file
 core/hardware/ezo_rtd/ezo_rtd.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ezo_rtd/ezo_rtd.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ezo_rtd/ezo_rtd.cpp.obj
 .PHONY : core/hardware/ezo_rtd/ezo_rtd.cpp.obj
 
 core/hardware/ezo_rtd/ezo_rtd.i: core/hardware/ezo_rtd/ezo_rtd.cpp.i
@@ -290,7 +386,7 @@ core/hardware/ezo_rtd/ezo_rtd.i: core/hardware/ezo_rtd/ezo_rtd.cpp.i
 
 # target to preprocess a source file
 core/hardware/ezo_rtd/ezo_rtd.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ezo_rtd/ezo_rtd.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ezo_rtd/ezo_rtd.cpp.i
 .PHONY : core/hardware/ezo_rtd/ezo_rtd.cpp.i
 
 core/hardware/ezo_rtd/ezo_rtd.s: core/hardware/ezo_rtd/ezo_rtd.cpp.s
@@ -298,7 +394,7 @@ core/hardware/ezo_rtd/ezo_rtd.s: core/hardware/ezo_rtd/ezo_rtd.cpp.s
 
 # target to generate assembly for a file
 core/hardware/ezo_rtd/ezo_rtd.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ezo_rtd/ezo_rtd.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ezo_rtd/ezo_rtd.cpp.s
 .PHONY : core/hardware/ezo_rtd/ezo_rtd.cpp.s
 
 core/hardware/ltr_303/ltr_303.obj: core/hardware/ltr_303/ltr_303.cpp.obj
@@ -306,7 +402,7 @@ core/hardware/ltr_303/ltr_303.obj: core/hardware/ltr_303/ltr_303.cpp.obj
 
 # target to build an object file
 core/hardware/ltr_303/ltr_303.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ltr_303/ltr_303.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ltr_303/ltr_303.cpp.obj
 .PHONY : core/hardware/ltr_303/ltr_303.cpp.obj
 
 core/hardware/ltr_303/ltr_303.i: core/hardware/ltr_303/ltr_303.cpp.i
@@ -314,7 +410,7 @@ core/hardware/ltr_303/ltr_303.i: core/hardware/ltr_303/ltr_303.cpp.i
 
 # target to preprocess a source file
 core/hardware/ltr_303/ltr_303.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ltr_303/ltr_303.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ltr_303/ltr_303.cpp.i
 .PHONY : core/hardware/ltr_303/ltr_303.cpp.i
 
 core/hardware/ltr_303/ltr_303.s: core/hardware/ltr_303/ltr_303.cpp.s
@@ -322,7 +418,7 @@ core/hardware/ltr_303/ltr_303.s: core/hardware/ltr_303/ltr_303.cpp.s
 
 # target to generate assembly for a file
 core/hardware/ltr_303/ltr_303.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ltr_303/ltr_303.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ltr_303/ltr_303.cpp.s
 .PHONY : core/hardware/ltr_303/ltr_303.cpp.s
 
 core/hardware/m8qasync/m8qasync.obj: core/hardware/m8qasync/m8qasync.cpp.obj
@@ -330,7 +426,7 @@ core/hardware/m8qasync/m8qasync.obj: core/hardware/m8qasync/m8qasync.cpp.obj
 
 # target to build an object file
 core/hardware/m8qasync/m8qasync.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m8qasync/m8qasync.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/m8qasync/m8qasync.cpp.obj
 .PHONY : core/hardware/m8qasync/m8qasync.cpp.obj
 
 core/hardware/m8qasync/m8qasync.i: core/hardware/m8qasync/m8qasync.cpp.i
@@ -338,7 +434,7 @@ core/hardware/m8qasync/m8qasync.i: core/hardware/m8qasync/m8qasync.cpp.i
 
 # target to preprocess a source file
 core/hardware/m8qasync/m8qasync.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m8qasync/m8qasync.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/m8qasync/m8qasync.cpp.i
 .PHONY : core/hardware/m8qasync/m8qasync.cpp.i
 
 core/hardware/m8qasync/m8qasync.s: core/hardware/m8qasync/m8qasync.cpp.s
@@ -346,7 +442,7 @@ core/hardware/m8qasync/m8qasync.s: core/hardware/m8qasync/m8qasync.cpp.s
 
 # target to generate assembly for a file
 core/hardware/m8qasync/m8qasync.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m8qasync/m8qasync.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/m8qasync/m8qasync.cpp.s
 .PHONY : core/hardware/m8qasync/m8qasync.cpp.s
 
 core/hardware/m8qasync/ubx_comms.obj: core/hardware/m8qasync/ubx_comms.cpp.obj
@@ -354,7 +450,7 @@ core/hardware/m8qasync/ubx_comms.obj: core/hardware/m8qasync/ubx_comms.cpp.obj
 
 # target to build an object file
 core/hardware/m8qasync/ubx_comms.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m8qasync/ubx_comms.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/m8qasync/ubx_comms.cpp.obj
 .PHONY : core/hardware/m8qasync/ubx_comms.cpp.obj
 
 core/hardware/m8qasync/ubx_comms.i: core/hardware/m8qasync/ubx_comms.cpp.i
@@ -362,7 +458,7 @@ core/hardware/m8qasync/ubx_comms.i: core/hardware/m8qasync/ubx_comms.cpp.i
 
 # target to preprocess a source file
 core/hardware/m8qasync/ubx_comms.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m8qasync/ubx_comms.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/m8qasync/ubx_comms.cpp.i
 .PHONY : core/hardware/m8qasync/ubx_comms.cpp.i
 
 core/hardware/m8qasync/ubx_comms.s: core/hardware/m8qasync/ubx_comms.cpp.s
@@ -370,7 +466,7 @@ core/hardware/m8qasync/ubx_comms.s: core/hardware/m8qasync/ubx_comms.cpp.s
 
 # target to generate assembly for a file
 core/hardware/m8qasync/ubx_comms.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m8qasync/ubx_comms.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/m8qasync/ubx_comms.cpp.s
 .PHONY : core/hardware/m8qasync/ubx_comms.cpp.s
 
 core/hardware/ms58xx/ms58xx.obj: core/hardware/ms58xx/ms58xx.cpp.obj
@@ -378,7 +474,7 @@ core/hardware/ms58xx/ms58xx.obj: core/hardware/ms58xx/ms58xx.cpp.obj
 
 # target to build an object file
 core/hardware/ms58xx/ms58xx.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ms58xx/ms58xx.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ms58xx/ms58xx.cpp.obj
 .PHONY : core/hardware/ms58xx/ms58xx.cpp.obj
 
 core/hardware/ms58xx/ms58xx.i: core/hardware/ms58xx/ms58xx.cpp.i
@@ -386,7 +482,7 @@ core/hardware/ms58xx/ms58xx.i: core/hardware/ms58xx/ms58xx.cpp.i
 
 # target to preprocess a source file
 core/hardware/ms58xx/ms58xx.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ms58xx/ms58xx.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ms58xx/ms58xx.cpp.i
 .PHONY : core/hardware/ms58xx/ms58xx.cpp.i
 
 core/hardware/ms58xx/ms58xx.s: core/hardware/ms58xx/ms58xx.cpp.s
@@ -394,7 +490,7 @@ core/hardware/ms58xx/ms58xx.s: core/hardware/ms58xx/ms58xx.cpp.s
 
 # target to generate assembly for a file
 core/hardware/ms58xx/ms58xx.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/ms58xx/ms58xx.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/ms58xx/ms58xx.cpp.s
 .PHONY : core/hardware/ms58xx/ms58xx.cpp.s
 
 core/hardware/nrf_battery_mon.obj: core/hardware/nrf_battery_mon.cpp.obj
@@ -402,7 +498,7 @@ core/hardware/nrf_battery_mon.obj: core/hardware/nrf_battery_mon.cpp.obj
 
 # target to build an object file
 core/hardware/nrf_battery_mon.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_battery_mon.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_battery_mon.cpp.obj
 .PHONY : core/hardware/nrf_battery_mon.cpp.obj
 
 core/hardware/nrf_battery_mon.i: core/hardware/nrf_battery_mon.cpp.i
@@ -410,7 +506,7 @@ core/hardware/nrf_battery_mon.i: core/hardware/nrf_battery_mon.cpp.i
 
 # target to preprocess a source file
 core/hardware/nrf_battery_mon.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_battery_mon.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_battery_mon.cpp.i
 .PHONY : core/hardware/nrf_battery_mon.cpp.i
 
 core/hardware/nrf_battery_mon.s: core/hardware/nrf_battery_mon.cpp.s
@@ -418,7 +514,7 @@ core/hardware/nrf_battery_mon.s: core/hardware/nrf_battery_mon.cpp.s
 
 # target to generate assembly for a file
 core/hardware/nrf_battery_mon.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_battery_mon.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_battery_mon.cpp.s
 .PHONY : core/hardware/nrf_battery_mon.cpp.s
 
 core/hardware/nrf_gpio.obj: core/hardware/nrf_gpio.cpp.obj
@@ -426,7 +522,7 @@ core/hardware/nrf_gpio.obj: core/hardware/nrf_gpio.cpp.obj
 
 # target to build an object file
 core/hardware/nrf_gpio.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_gpio.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_gpio.cpp.obj
 .PHONY : core/hardware/nrf_gpio.cpp.obj
 
 core/hardware/nrf_gpio.i: core/hardware/nrf_gpio.cpp.i
@@ -434,7 +530,7 @@ core/hardware/nrf_gpio.i: core/hardware/nrf_gpio.cpp.i
 
 # target to preprocess a source file
 core/hardware/nrf_gpio.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_gpio.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_gpio.cpp.i
 .PHONY : core/hardware/nrf_gpio.cpp.i
 
 core/hardware/nrf_gpio.s: core/hardware/nrf_gpio.cpp.s
@@ -442,7 +538,7 @@ core/hardware/nrf_gpio.s: core/hardware/nrf_gpio.cpp.s
 
 # target to generate assembly for a file
 core/hardware/nrf_gpio.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_gpio.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_gpio.cpp.s
 .PHONY : core/hardware/nrf_gpio.cpp.s
 
 core/hardware/nrf_i2c.obj: core/hardware/nrf_i2c.cpp.obj
@@ -450,7 +546,7 @@ core/hardware/nrf_i2c.obj: core/hardware/nrf_i2c.cpp.obj
 
 # target to build an object file
 core/hardware/nrf_i2c.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_i2c.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_i2c.cpp.obj
 .PHONY : core/hardware/nrf_i2c.cpp.obj
 
 core/hardware/nrf_i2c.i: core/hardware/nrf_i2c.cpp.i
@@ -458,7 +554,7 @@ core/hardware/nrf_i2c.i: core/hardware/nrf_i2c.cpp.i
 
 # target to preprocess a source file
 core/hardware/nrf_i2c.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_i2c.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_i2c.cpp.i
 .PHONY : core/hardware/nrf_i2c.cpp.i
 
 core/hardware/nrf_i2c.s: core/hardware/nrf_i2c.cpp.s
@@ -466,7 +562,7 @@ core/hardware/nrf_i2c.s: core/hardware/nrf_i2c.cpp.s
 
 # target to generate assembly for a file
 core/hardware/nrf_i2c.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_i2c.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_i2c.cpp.s
 .PHONY : core/hardware/nrf_i2c.cpp.s
 
 core/hardware/nrf_irq.obj: core/hardware/nrf_irq.cpp.obj
@@ -474,7 +570,7 @@ core/hardware/nrf_irq.obj: core/hardware/nrf_irq.cpp.obj
 
 # target to build an object file
 core/hardware/nrf_irq.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_irq.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_irq.cpp.obj
 .PHONY : core/hardware/nrf_irq.cpp.obj
 
 core/hardware/nrf_irq.i: core/hardware/nrf_irq.cpp.i
@@ -482,7 +578,7 @@ core/hardware/nrf_irq.i: core/hardware/nrf_irq.cpp.i
 
 # target to preprocess a source file
 core/hardware/nrf_irq.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_irq.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_irq.cpp.i
 .PHONY : core/hardware/nrf_irq.cpp.i
 
 core/hardware/nrf_irq.s: core/hardware/nrf_irq.cpp.s
@@ -490,7 +586,7 @@ core/hardware/nrf_irq.s: core/hardware/nrf_irq.cpp.s
 
 # target to generate assembly for a file
 core/hardware/nrf_irq.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_irq.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_irq.cpp.s
 .PHONY : core/hardware/nrf_irq.cpp.s
 
 core/hardware/nrf_pmu.obj: core/hardware/nrf_pmu.cpp.obj
@@ -498,7 +594,7 @@ core/hardware/nrf_pmu.obj: core/hardware/nrf_pmu.cpp.obj
 
 # target to build an object file
 core/hardware/nrf_pmu.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_pmu.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_pmu.cpp.obj
 .PHONY : core/hardware/nrf_pmu.cpp.obj
 
 core/hardware/nrf_pmu.i: core/hardware/nrf_pmu.cpp.i
@@ -506,7 +602,7 @@ core/hardware/nrf_pmu.i: core/hardware/nrf_pmu.cpp.i
 
 # target to preprocess a source file
 core/hardware/nrf_pmu.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_pmu.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_pmu.cpp.i
 .PHONY : core/hardware/nrf_pmu.cpp.i
 
 core/hardware/nrf_pmu.s: core/hardware/nrf_pmu.cpp.s
@@ -514,7 +610,7 @@ core/hardware/nrf_pmu.s: core/hardware/nrf_pmu.cpp.s
 
 # target to generate assembly for a file
 core/hardware/nrf_pmu.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_pmu.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_pmu.cpp.s
 .PHONY : core/hardware/nrf_pmu.cpp.s
 
 core/hardware/nrf_rtc.obj: core/hardware/nrf_rtc.cpp.obj
@@ -522,7 +618,7 @@ core/hardware/nrf_rtc.obj: core/hardware/nrf_rtc.cpp.obj
 
 # target to build an object file
 core/hardware/nrf_rtc.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_rtc.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_rtc.cpp.obj
 .PHONY : core/hardware/nrf_rtc.cpp.obj
 
 core/hardware/nrf_rtc.i: core/hardware/nrf_rtc.cpp.i
@@ -530,7 +626,7 @@ core/hardware/nrf_rtc.i: core/hardware/nrf_rtc.cpp.i
 
 # target to preprocess a source file
 core/hardware/nrf_rtc.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_rtc.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_rtc.cpp.i
 .PHONY : core/hardware/nrf_rtc.cpp.i
 
 core/hardware/nrf_rtc.s: core/hardware/nrf_rtc.cpp.s
@@ -538,7 +634,7 @@ core/hardware/nrf_rtc.s: core/hardware/nrf_rtc.cpp.s
 
 # target to generate assembly for a file
 core/hardware/nrf_rtc.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_rtc.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_rtc.cpp.s
 .PHONY : core/hardware/nrf_rtc.cpp.s
 
 core/hardware/nrf_spim.obj: core/hardware/nrf_spim.cpp.obj
@@ -546,7 +642,7 @@ core/hardware/nrf_spim.obj: core/hardware/nrf_spim.cpp.obj
 
 # target to build an object file
 core/hardware/nrf_spim.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_spim.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_spim.cpp.obj
 .PHONY : core/hardware/nrf_spim.cpp.obj
 
 core/hardware/nrf_spim.i: core/hardware/nrf_spim.cpp.i
@@ -554,7 +650,7 @@ core/hardware/nrf_spim.i: core/hardware/nrf_spim.cpp.i
 
 # target to preprocess a source file
 core/hardware/nrf_spim.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_spim.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_spim.cpp.i
 .PHONY : core/hardware/nrf_spim.cpp.i
 
 core/hardware/nrf_spim.s: core/hardware/nrf_spim.cpp.s
@@ -562,7 +658,7 @@ core/hardware/nrf_spim.s: core/hardware/nrf_spim.cpp.s
 
 # target to generate assembly for a file
 core/hardware/nrf_spim.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_spim.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_spim.cpp.s
 .PHONY : core/hardware/nrf_spim.cpp.s
 
 core/hardware/nrf_switch.obj: core/hardware/nrf_switch.cpp.obj
@@ -570,7 +666,7 @@ core/hardware/nrf_switch.obj: core/hardware/nrf_switch.cpp.obj
 
 # target to build an object file
 core/hardware/nrf_switch.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_switch.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_switch.cpp.obj
 .PHONY : core/hardware/nrf_switch.cpp.obj
 
 core/hardware/nrf_switch.i: core/hardware/nrf_switch.cpp.i
@@ -578,7 +674,7 @@ core/hardware/nrf_switch.i: core/hardware/nrf_switch.cpp.i
 
 # target to preprocess a source file
 core/hardware/nrf_switch.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_switch.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_switch.cpp.i
 .PHONY : core/hardware/nrf_switch.cpp.i
 
 core/hardware/nrf_switch.s: core/hardware/nrf_switch.cpp.s
@@ -586,7 +682,7 @@ core/hardware/nrf_switch.s: core/hardware/nrf_switch.cpp.s
 
 # target to generate assembly for a file
 core/hardware/nrf_switch.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_switch.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_switch.cpp.s
 .PHONY : core/hardware/nrf_switch.cpp.s
 
 core/hardware/nrf_timer.obj: core/hardware/nrf_timer.cpp.obj
@@ -594,7 +690,7 @@ core/hardware/nrf_timer.obj: core/hardware/nrf_timer.cpp.obj
 
 # target to build an object file
 core/hardware/nrf_timer.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_timer.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_timer.cpp.obj
 .PHONY : core/hardware/nrf_timer.cpp.obj
 
 core/hardware/nrf_timer.i: core/hardware/nrf_timer.cpp.i
@@ -602,7 +698,7 @@ core/hardware/nrf_timer.i: core/hardware/nrf_timer.cpp.i
 
 # target to preprocess a source file
 core/hardware/nrf_timer.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_timer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_timer.cpp.i
 .PHONY : core/hardware/nrf_timer.cpp.i
 
 core/hardware/nrf_timer.s: core/hardware/nrf_timer.cpp.s
@@ -610,7 +706,7 @@ core/hardware/nrf_timer.s: core/hardware/nrf_timer.cpp.s
 
 # target to generate assembly for a file
 core/hardware/nrf_timer.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_timer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/nrf_timer.cpp.s
 .PHONY : core/hardware/nrf_timer.cpp.s
 
 core/hardware/oem_ph/oem_ph.obj: core/hardware/oem_ph/oem_ph.cpp.obj
@@ -618,7 +714,7 @@ core/hardware/oem_ph/oem_ph.obj: core/hardware/oem_ph/oem_ph.cpp.obj
 
 # target to build an object file
 core/hardware/oem_ph/oem_ph.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/oem_ph/oem_ph.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/oem_ph/oem_ph.cpp.obj
 .PHONY : core/hardware/oem_ph/oem_ph.cpp.obj
 
 core/hardware/oem_ph/oem_ph.i: core/hardware/oem_ph/oem_ph.cpp.i
@@ -626,7 +722,7 @@ core/hardware/oem_ph/oem_ph.i: core/hardware/oem_ph/oem_ph.cpp.i
 
 # target to preprocess a source file
 core/hardware/oem_ph/oem_ph.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/oem_ph/oem_ph.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/oem_ph/oem_ph.cpp.i
 .PHONY : core/hardware/oem_ph/oem_ph.cpp.i
 
 core/hardware/oem_ph/oem_ph.s: core/hardware/oem_ph/oem_ph.cpp.s
@@ -634,7 +730,7 @@ core/hardware/oem_ph/oem_ph.s: core/hardware/oem_ph/oem_ph.cpp.s
 
 # target to generate assembly for a file
 core/hardware/oem_ph/oem_ph.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/oem_ph/oem_ph.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/oem_ph/oem_ph.cpp.s
 .PHONY : core/hardware/oem_ph/oem_ph.cpp.s
 
 core/hardware/oem_rtd/oem_rtd.obj: core/hardware/oem_rtd/oem_rtd.cpp.obj
@@ -642,7 +738,7 @@ core/hardware/oem_rtd/oem_rtd.obj: core/hardware/oem_rtd/oem_rtd.cpp.obj
 
 # target to build an object file
 core/hardware/oem_rtd/oem_rtd.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/oem_rtd/oem_rtd.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/oem_rtd/oem_rtd.cpp.obj
 .PHONY : core/hardware/oem_rtd/oem_rtd.cpp.obj
 
 core/hardware/oem_rtd/oem_rtd.i: core/hardware/oem_rtd/oem_rtd.cpp.i
@@ -650,7 +746,7 @@ core/hardware/oem_rtd/oem_rtd.i: core/hardware/oem_rtd/oem_rtd.cpp.i
 
 # target to preprocess a source file
 core/hardware/oem_rtd/oem_rtd.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/oem_rtd/oem_rtd.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/oem_rtd/oem_rtd.cpp.i
 .PHONY : core/hardware/oem_rtd/oem_rtd.cpp.i
 
 core/hardware/oem_rtd/oem_rtd.s: core/hardware/oem_rtd/oem_rtd.cpp.s
@@ -658,15 +754,87 @@ core/hardware/oem_rtd/oem_rtd.s: core/hardware/oem_rtd/oem_rtd.cpp.s
 
 # target to generate assembly for a file
 core/hardware/oem_rtd/oem_rtd.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/hardware/oem_rtd/oem_rtd.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/oem_rtd/oem_rtd.cpp.s
 .PHONY : core/hardware/oem_rtd/oem_rtd.cpp.s
+
+core/hardware/stwlc68_otp/otp_chip_info.obj: core/hardware/stwlc68_otp/otp_chip_info.c.obj
+.PHONY : core/hardware/stwlc68_otp/otp_chip_info.obj
+
+# target to build an object file
+core/hardware/stwlc68_otp/otp_chip_info.c.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/stwlc68_otp/otp_chip_info.c.obj
+.PHONY : core/hardware/stwlc68_otp/otp_chip_info.c.obj
+
+core/hardware/stwlc68_otp/otp_chip_info.i: core/hardware/stwlc68_otp/otp_chip_info.c.i
+.PHONY : core/hardware/stwlc68_otp/otp_chip_info.i
+
+# target to preprocess a source file
+core/hardware/stwlc68_otp/otp_chip_info.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/stwlc68_otp/otp_chip_info.c.i
+.PHONY : core/hardware/stwlc68_otp/otp_chip_info.c.i
+
+core/hardware/stwlc68_otp/otp_chip_info.s: core/hardware/stwlc68_otp/otp_chip_info.c.s
+.PHONY : core/hardware/stwlc68_otp/otp_chip_info.s
+
+# target to generate assembly for a file
+core/hardware/stwlc68_otp/otp_chip_info.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/stwlc68_otp/otp_chip_info.c.s
+.PHONY : core/hardware/stwlc68_otp/otp_chip_info.c.s
+
+core/hardware/stwlc68_otp/otphal.obj: core/hardware/stwlc68_otp/otphal.c.obj
+.PHONY : core/hardware/stwlc68_otp/otphal.obj
+
+# target to build an object file
+core/hardware/stwlc68_otp/otphal.c.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/stwlc68_otp/otphal.c.obj
+.PHONY : core/hardware/stwlc68_otp/otphal.c.obj
+
+core/hardware/stwlc68_otp/otphal.i: core/hardware/stwlc68_otp/otphal.c.i
+.PHONY : core/hardware/stwlc68_otp/otphal.i
+
+# target to preprocess a source file
+core/hardware/stwlc68_otp/otphal.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/stwlc68_otp/otphal.c.i
+.PHONY : core/hardware/stwlc68_otp/otphal.c.i
+
+core/hardware/stwlc68_otp/otphal.s: core/hardware/stwlc68_otp/otphal.c.s
+.PHONY : core/hardware/stwlc68_otp/otphal.s
+
+# target to generate assembly for a file
+core/hardware/stwlc68_otp/otphal.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/stwlc68_otp/otphal.c.s
+.PHONY : core/hardware/stwlc68_otp/otphal.c.s
+
+core/hardware/stwlc68_otp/stwlc68.obj: core/hardware/stwlc68_otp/stwlc68.cpp.obj
+.PHONY : core/hardware/stwlc68_otp/stwlc68.obj
+
+# target to build an object file
+core/hardware/stwlc68_otp/stwlc68.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/stwlc68_otp/stwlc68.cpp.obj
+.PHONY : core/hardware/stwlc68_otp/stwlc68.cpp.obj
+
+core/hardware/stwlc68_otp/stwlc68.i: core/hardware/stwlc68_otp/stwlc68.cpp.i
+.PHONY : core/hardware/stwlc68_otp/stwlc68.i
+
+# target to preprocess a source file
+core/hardware/stwlc68_otp/stwlc68.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/stwlc68_otp/stwlc68.cpp.i
+.PHONY : core/hardware/stwlc68_otp/stwlc68.cpp.i
+
+core/hardware/stwlc68_otp/stwlc68.s: core/hardware/stwlc68_otp/stwlc68.cpp.s
+.PHONY : core/hardware/stwlc68_otp/stwlc68.s
+
+# target to generate assembly for a file
+core/hardware/stwlc68_otp/stwlc68.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/hardware/stwlc68_otp/stwlc68.cpp.s
+.PHONY : core/hardware/stwlc68_otp/stwlc68.cpp.s
 
 core/interface/ble_interface.obj: core/interface/ble_interface.cpp.obj
 .PHONY : core/interface/ble_interface.obj
 
 # target to build an object file
 core/interface/ble_interface.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/interface/ble_interface.cpp.obj
 .PHONY : core/interface/ble_interface.cpp.obj
 
 core/interface/ble_interface.i: core/interface/ble_interface.cpp.i
@@ -674,7 +842,7 @@ core/interface/ble_interface.i: core/interface/ble_interface.cpp.i
 
 # target to preprocess a source file
 core/interface/ble_interface.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/interface/ble_interface.cpp.i
 .PHONY : core/interface/ble_interface.cpp.i
 
 core/interface/ble_interface.s: core/interface/ble_interface.cpp.s
@@ -682,7 +850,7 @@ core/interface/ble_interface.s: core/interface/ble_interface.cpp.s
 
 # target to generate assembly for a file
 core/interface/ble_interface.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/interface/ble_interface.cpp.s
 .PHONY : core/interface/ble_interface.cpp.s
 
 core/interface/ble_stm_ota.obj: core/interface/ble_stm_ota.c.obj
@@ -690,7 +858,7 @@ core/interface/ble_stm_ota.obj: core/interface/ble_stm_ota.c.obj
 
 # target to build an object file
 core/interface/ble_stm_ota.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/interface/ble_stm_ota.c.obj
 .PHONY : core/interface/ble_stm_ota.c.obj
 
 core/interface/ble_stm_ota.i: core/interface/ble_stm_ota.c.i
@@ -698,7 +866,7 @@ core/interface/ble_stm_ota.i: core/interface/ble_stm_ota.c.i
 
 # target to preprocess a source file
 core/interface/ble_stm_ota.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/interface/ble_stm_ota.c.i
 .PHONY : core/interface/ble_stm_ota.c.i
 
 core/interface/ble_stm_ota.s: core/interface/ble_stm_ota.c.s
@@ -706,7 +874,7 @@ core/interface/ble_stm_ota.s: core/interface/ble_stm_ota.c.s
 
 # target to generate assembly for a file
 core/interface/ble_stm_ota.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/interface/ble_stm_ota.c.s
 .PHONY : core/interface/ble_stm_ota.c.s
 
 core/memmang/bindings.obj: core/memmang/bindings.c.obj
@@ -714,7 +882,7 @@ core/memmang/bindings.obj: core/memmang/bindings.c.obj
 
 # target to build an object file
 core/memmang/bindings.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/bindings.c.obj
 .PHONY : core/memmang/bindings.c.obj
 
 core/memmang/bindings.i: core/memmang/bindings.c.i
@@ -722,7 +890,7 @@ core/memmang/bindings.i: core/memmang/bindings.c.i
 
 # target to preprocess a source file
 core/memmang/bindings.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/bindings.c.i
 .PHONY : core/memmang/bindings.c.i
 
 core/memmang/bindings.s: core/memmang/bindings.c.s
@@ -730,7 +898,7 @@ core/memmang/bindings.s: core/memmang/bindings.c.s
 
 # target to generate assembly for a file
 core/memmang/bindings.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/bindings.c.s
 .PHONY : core/memmang/bindings.c.s
 
 core/memmang/bindings.obj: core/memmang/bindings.cpp.obj
@@ -738,7 +906,7 @@ core/memmang/bindings.obj: core/memmang/bindings.cpp.obj
 
 # target to build an object file
 core/memmang/bindings.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/bindings.cpp.obj
 .PHONY : core/memmang/bindings.cpp.obj
 
 core/memmang/bindings.i: core/memmang/bindings.cpp.i
@@ -746,7 +914,7 @@ core/memmang/bindings.i: core/memmang/bindings.cpp.i
 
 # target to preprocess a source file
 core/memmang/bindings.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/bindings.cpp.i
 .PHONY : core/memmang/bindings.cpp.i
 
 core/memmang/bindings.s: core/memmang/bindings.cpp.s
@@ -754,7 +922,7 @@ core/memmang/bindings.s: core/memmang/bindings.cpp.s
 
 # target to generate assembly for a file
 core/memmang/bindings.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/bindings.cpp.s
 .PHONY : core/memmang/bindings.cpp.s
 
 core/memmang/heap_4.obj: core/memmang/heap_4.c.obj
@@ -762,7 +930,7 @@ core/memmang/heap_4.obj: core/memmang/heap_4.c.obj
 
 # target to build an object file
 core/memmang/heap_4.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/heap_4.c.obj
 .PHONY : core/memmang/heap_4.c.obj
 
 core/memmang/heap_4.i: core/memmang/heap_4.c.i
@@ -770,7 +938,7 @@ core/memmang/heap_4.i: core/memmang/heap_4.c.i
 
 # target to preprocess a source file
 core/memmang/heap_4.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/heap_4.c.i
 .PHONY : core/memmang/heap_4.c.i
 
 core/memmang/heap_4.s: core/memmang/heap_4.c.s
@@ -778,7 +946,7 @@ core/memmang/heap_4.s: core/memmang/heap_4.c.s
 
 # target to generate assembly for a file
 core/memmang/heap_4.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/heap_4.c.s
 .PHONY : core/memmang/heap_4.c.s
 
 core/memmang/heap_mem.obj: core/memmang/heap_mem.c.obj
@@ -786,7 +954,7 @@ core/memmang/heap_mem.obj: core/memmang/heap_mem.c.obj
 
 # target to build an object file
 core/memmang/heap_mem.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/heap_mem.c.obj
 .PHONY : core/memmang/heap_mem.c.obj
 
 core/memmang/heap_mem.i: core/memmang/heap_mem.c.i
@@ -794,7 +962,7 @@ core/memmang/heap_mem.i: core/memmang/heap_mem.c.i
 
 # target to preprocess a source file
 core/memmang/heap_mem.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/heap_mem.c.i
 .PHONY : core/memmang/heap_mem.c.i
 
 core/memmang/heap_mem.s: core/memmang/heap_mem.c.s
@@ -802,7 +970,7 @@ core/memmang/heap_mem.s: core/memmang/heap_mem.c.s
 
 # target to generate assembly for a file
 core/memmang/heap_mem.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/heap_mem.c.s
 .PHONY : core/memmang/heap_mem.c.s
 
 core/memmang/memmang.obj: core/memmang/memmang.cpp.obj
@@ -810,7 +978,7 @@ core/memmang/memmang.obj: core/memmang/memmang.cpp.obj
 
 # target to build an object file
 core/memmang/memmang.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/memmang.cpp.obj
 .PHONY : core/memmang/memmang.cpp.obj
 
 core/memmang/memmang.i: core/memmang/memmang.cpp.i
@@ -818,7 +986,7 @@ core/memmang/memmang.i: core/memmang/memmang.cpp.i
 
 # target to preprocess a source file
 core/memmang/memmang.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/memmang.cpp.i
 .PHONY : core/memmang/memmang.cpp.i
 
 core/memmang/memmang.s: core/memmang/memmang.cpp.s
@@ -826,7 +994,7 @@ core/memmang/memmang.s: core/memmang/memmang.cpp.s
 
 # target to generate assembly for a file
 core/memmang/memmang.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/memmang/memmang.cpp.s
 .PHONY : core/memmang/memmang.cpp.s
 
 core/scheduling/interrupt_lock.obj: core/scheduling/interrupt_lock.cpp.obj
@@ -834,7 +1002,7 @@ core/scheduling/interrupt_lock.obj: core/scheduling/interrupt_lock.cpp.obj
 
 # target to build an object file
 core/scheduling/interrupt_lock.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/scheduling/interrupt_lock.cpp.obj
 .PHONY : core/scheduling/interrupt_lock.cpp.obj
 
 core/scheduling/interrupt_lock.i: core/scheduling/interrupt_lock.cpp.i
@@ -842,7 +1010,7 @@ core/scheduling/interrupt_lock.i: core/scheduling/interrupt_lock.cpp.i
 
 # target to preprocess a source file
 core/scheduling/interrupt_lock.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/scheduling/interrupt_lock.cpp.i
 .PHONY : core/scheduling/interrupt_lock.cpp.i
 
 core/scheduling/interrupt_lock.s: core/scheduling/interrupt_lock.cpp.s
@@ -850,7 +1018,7 @@ core/scheduling/interrupt_lock.s: core/scheduling/interrupt_lock.cpp.s
 
 # target to generate assembly for a file
 core/scheduling/interrupt_lock.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/core/scheduling/interrupt_lock.cpp.s
 .PHONY : core/scheduling/interrupt_lock.cpp.s
 
 drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.obj: drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.obj
@@ -858,7 +1026,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.obj: driv
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.i: drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.i
@@ -866,7 +1034,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.i: driver
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.i
 
 drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.s: drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.s
@@ -874,7 +1042,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.s: driver
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/ble_advertising/ble_advertising.c.s
 
 drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.obj: drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.obj
@@ -882,7 +1050,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.i: drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.i
@@ -890,7 +1058,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.i
 
 drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.s: drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.s
@@ -898,7 +1066,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c.s
 
 drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.obj: drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.obj
@@ -906,7 +1074,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.obj: drivers
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.i: drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.i
@@ -914,7 +1082,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.i: drivers/n
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.i
 
 drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.s: drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.s
@@ -922,7 +1090,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.s: drivers/n
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/ble_services/ble_nus/ble_nus.c.s
 
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.obj: drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.obj
@@ -930,7 +1098,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.obj: drivers/nRF5_SDK_
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.i: drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.i
@@ -938,7 +1106,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.i: drivers/nRF5_SDK_17
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.i
 
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.s: drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.s
@@ -946,7 +1114,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.s: drivers/nRF5_SDK_17
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/common/ble_advdata.c.s
 
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.obj: drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.obj
@@ -954,7 +1122,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.obj: drivers/nRF5_S
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.i: drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.i
@@ -962,7 +1130,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.i: drivers/nRF5_SDK
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.i
 
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.s: drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.s
@@ -970,7 +1138,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.s: drivers/nRF5_SDK
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/common/ble_conn_state.c.s
 
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.obj: drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.obj
@@ -978,7 +1146,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.obj: drivers/nRF5_S
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.i: drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.i
@@ -986,7 +1154,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.i: drivers/nRF5_SDK
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.i
 
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.s: drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.s
@@ -994,7 +1162,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.s: drivers/nRF5_SDK
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/common/ble_srv_common.c.s
 
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.obj: drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.obj
@@ -1002,7 +1170,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.obj: drivers/nR
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.i: drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.i
@@ -1010,7 +1178,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.i: drivers/nRF5
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.i
 
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.s: drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.s
@@ -1018,7 +1186,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.s: drivers/nRF5
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_gatt/nrf_ble_gatt.c.s
 
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.obj: drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.obj
@@ -1026,7 +1194,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.obj: drivers/nRF5
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.i: drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.i
@@ -1034,7 +1202,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.i: drivers/nRF5_S
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.i
 
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.s: drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.s
@@ -1042,7 +1210,7 @@ drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.s: drivers/nRF5_S
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/ble/nrf_ble_qwr/nrf_ble_qwr.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.obj: drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.obj
@@ -1050,7 +1218,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.obj: drivers/nRF5
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.i: drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.i
@@ -1058,7 +1226,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.i: drivers/nRF5_S
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.s: drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.s
@@ -1066,7 +1234,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.s: drivers/nRF5_S
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/atomic/nrf_atomic.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.obj: drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.obj
@@ -1074,7 +1242,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.obj: drivers
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.i: drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.i
@@ -1082,7 +1250,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.i: drivers/n
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.s: drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.s
@@ -1090,7 +1258,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.s: drivers/n
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/atomic_fifo/nrf_atfifo.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.obj: drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.obj
@@ -1098,7 +1266,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.obj: drive
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.i: drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.i
@@ -1106,7 +1274,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.i: drivers
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.s: drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.s
@@ -1114,7 +1282,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.s: drivers
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/atomic_flags/nrf_atflags.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.obj: drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.obj
@@ -1122,7 +1290,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.obj: drivers/nRF5
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.i: drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.i
@@ -1130,7 +1298,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.i: drivers/nRF5_S
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.s: drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.s
@@ -1138,7 +1306,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.s: drivers/nRF5_S
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/balloc/nrf_balloc.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.obj: drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.obj
@@ -1146,7 +1314,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.obj: drivers/nRF5_SDK_1
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.i: drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.i
@@ -1154,7 +1322,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.i: drivers/nRF5_SDK_17.
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.s: drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.s
@@ -1162,7 +1330,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.s: drivers/nRF5_SDK_17.
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/crc16/crc16.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.obj: drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.obj
@@ -1170,7 +1338,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.obj: drivers/nRF5_SDK_1
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.i: drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.i
@@ -1178,7 +1346,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.i: drivers/nRF5_SDK_17.
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.s: drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.s
@@ -1186,7 +1354,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.s: drivers/nRF5_SDK_17.
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/crc32/crc32.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.obj: drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.obj
@@ -1194,7 +1362,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_secti
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.i: drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.i
@@ -1202,7 +1370,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_secti
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.s: drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.s
@@ -1210,7 +1378,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_secti
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/experimental_section_vars/nrf_section_iter.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.obj: drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.obj
@@ -1218,7 +1386,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.obj: dr
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.i: drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.i
@@ -1226,7 +1394,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.i: driv
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.s: drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.s
@@ -1234,7 +1402,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.s: driv
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_async.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.obj: drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.obj
@@ -1242,7 +1410,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.obj: driv
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.i: drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.i
@@ -1250,7 +1418,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.i: driver
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.s: drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.s
@@ -1258,7 +1426,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.s: driver
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/libuarte/nrf_libuarte_drv.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.obj: drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.obj
@@ -1266,7 +1434,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.obj:
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.i: drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.i
@@ -1274,7 +1442,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.i: d
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.s: drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.s
@@ -1282,7 +1450,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.s: d
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_backend_serial.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.obj: drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.obj
@@ -1290,7 +1458,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.obj: drive
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.i: drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.i
@@ -1298,7 +1466,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.i: drivers
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.s: drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.s
@@ -1306,7 +1474,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.s: drivers
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_frontend.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.obj: drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.obj
@@ -1314,7 +1482,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.obj: 
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.i: drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.i
@@ -1322,7 +1490,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.i: dr
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.s: drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.s
@@ -1330,7 +1498,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.s: dr
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/log/src/nrf_log_str_formatter.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.obj: drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.obj
@@ -1338,7 +1506,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.obj: drivers/nRF5
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.i: drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.i
@@ -1346,7 +1514,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.i: drivers/nRF5_S
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.s: drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.s
@@ -1354,7 +1522,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.s: drivers/nRF5_S
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/memobj/nrf_memobj.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.obj: drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.obj
@@ -1362,7 +1530,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.obj: drivers/
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.i: drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.i
@@ -1370,7 +1538,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.i: drivers/nR
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.s: drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.s
@@ -1378,7 +1546,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.s: drivers/nR
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.obj: drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.obj
@@ -1386,7 +1554,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.obj: drivers/nRF5_S
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.i: drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.i
@@ -1394,7 +1562,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.i: drivers/nRF5_SDK
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.s: drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.s
@@ -1402,7 +1570,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.s: drivers/nRF5_SDK
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/queue/nrf_queue.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.obj: drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.obj
@@ -1410,7 +1578,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.obj: drivers/nR
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.i: drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.i
@@ -1418,7 +1586,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.i: drivers/nRF5
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.s: drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.s
@@ -1426,7 +1594,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.s: drivers/nRF5
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/ringbuf/nrf_ringbuf.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.obj: drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.obj
@@ -1434,7 +1602,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.obj: drivers/
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.i: drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.i
@@ -1442,7 +1610,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.i: drivers/nR
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.s: drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.s
@@ -1450,7 +1618,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.s: drivers/nR
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/sortlist/nrf_sortlist.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.obj: drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.obj
@@ -1458,7 +1626,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.obj: drivers/
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.i: drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.i
@@ -1466,7 +1634,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.i: drivers/nR
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.s: drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.s
@@ -1474,7 +1642,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.s: drivers/nR
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/strerror/nrf_strerror.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.obj: drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.obj
@@ -1482,7 +1650,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.obj: drivers/nRF5_SDK
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.i: drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.i
@@ -1490,7 +1658,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.i: drivers/nRF5_SDK_1
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.s: drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.s
@@ -1498,7 +1666,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.s: drivers/nRF5_SDK_1
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/timer/drv_rtc.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.obj: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.obj
@@ -1506,7 +1674,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.obj: drivers/nRF5_SD
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.i: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.i
@@ -1514,7 +1682,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.i: drivers/nRF5_SDK_
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.s: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.s
@@ -1522,7 +1690,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.s: drivers/nRF5_SDK_
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.obj: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.obj
@@ -1530,7 +1698,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.obj: dri
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.i: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.i
@@ -1538,7 +1706,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.i: drive
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.s: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.s
@@ -1546,7 +1714,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.s: drive
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_handler_gcc.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.obj: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.obj
@@ -1554,7 +1722,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.obj: drivers/nR
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.i: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.i
@@ -1562,7 +1730,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.i: drivers/nRF5
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.s: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.s
@@ -1570,7 +1738,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.s: drivers/nRF5
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_error_weak.c.s
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.obj: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.obj
@@ -1578,7 +1746,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.obj: drivers
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.i: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.i
@@ -1586,7 +1754,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.i: drivers/n
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.i
 
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.s: drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.s
@@ -1594,7 +1762,7 @@ drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.s: drivers/n
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/libraries/util/app_util_platform.c.s
 
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.obj: drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.obj
@@ -1602,7 +1770,7 @@ drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.obj: drivers/nRF5_S
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.i: drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.i
@@ -1610,7 +1778,7 @@ drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.i: drivers/nRF5_SDK
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.i
 
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.s: drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.s
@@ -1618,7 +1786,7 @@ drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.s: drivers/nRF5_SDK
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh.c.s
 
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.obj: drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.obj
@@ -1626,7 +1794,7 @@ drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.obj: drivers/nR
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.i: drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.i
@@ -1634,7 +1802,7 @@ drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.i: drivers/nRF5
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.i
 
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.s: drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.s
@@ -1642,7 +1810,7 @@ drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.s: drivers/nRF5
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_ble.c.s
 
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.obj: drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.obj
@@ -1650,7 +1818,7 @@ drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.obj: drivers/nR
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.obj
 
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.i: drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.i
@@ -1658,7 +1826,7 @@ drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.i: drivers/nRF5
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.i
 
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.s: drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.s
@@ -1666,7 +1834,7 @@ drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.s: drivers/nRF5
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/components/softdevice/common/nrf_sdh_soc.c.s
 
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.obj: drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.obj
@@ -1674,7 +1842,7 @@ drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.obj: drivers/nRF5_SDK_17.0.
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.obj
 
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.i: drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.i
@@ -1682,7 +1850,7 @@ drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.i: drivers/nRF5_SDK_17.0.2/
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.i
 
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.s: drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.s
@@ -1690,7 +1858,7 @@ drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.s: drivers/nRF5_SDK_17.0.2/
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf.c.s
 
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.obj: drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.obj
@@ -1698,7 +1866,7 @@ drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.obj: drivers/nRF5_SD
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.obj
 
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.i: drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.i
@@ -1706,7 +1874,7 @@ drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.i: drivers/nRF5_SDK_
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.i
 
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.s: drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.s
@@ -1714,7 +1882,7 @@ drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.s: drivers/nRF5_SDK_
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/external/fprintf/nrf_fprintf_format.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.obj
@@ -1722,7 +1890,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.obj: drivers/nRF5_S
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.i
@@ -1730,7 +1898,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.i: drivers/nRF5_SDK
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.s
@@ -1738,7 +1906,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.s: drivers/nRF5_SDK
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_gpiote.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.obj
@@ -1746,7 +1914,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.obj: drivers/nRF5_SDK_
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.i
@@ -1754,7 +1922,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.i: drivers/nRF5_SDK_17
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.s
@@ -1762,7 +1930,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.s: drivers/nRF5_SDK_17
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_ppi.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.obj
@@ -1770,7 +1938,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.obj: drivers/nRF5_SDK
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.i
@@ -1778,7 +1946,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.i: drivers/nRF5_SDK_1
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.s
@@ -1786,7 +1954,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.s: drivers/nRF5_SDK_1
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_qspi.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.obj
@@ -1794,7 +1962,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.obj: drivers/nRF5_SDK_
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.i
@@ -1802,7 +1970,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.i: drivers/nRF5_SDK_17
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.s
@@ -1810,7 +1978,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.s: drivers/nRF5_SDK_17
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_rtc.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.obj
@@ -1818,7 +1986,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.obj: drivers/nRF5_SD
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.i
@@ -1826,7 +1994,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.i: drivers/nRF5_SDK_
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.s
@@ -1834,7 +2002,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.s: drivers/nRF5_SDK_
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_saadc.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.obj
@@ -1842,7 +2010,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.obj: drivers/nRF5_SDK
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.i
@@ -1850,7 +2018,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.i: drivers/nRF5_SDK_1
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.s
@@ -1858,7 +2026,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.s: drivers/nRF5_SDK_1
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_spim.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.obj
@@ -1866,7 +2034,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.obj: drivers/nRF5_SD
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.i
@@ -1874,7 +2042,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.i: drivers/nRF5_SDK_
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.s
@@ -1882,7 +2050,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.s: drivers/nRF5_SDK_
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_timer.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.obj
@@ -1890,7 +2058,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.obj: drivers/nRF5_SDK
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.i
@@ -1898,7 +2066,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.i: drivers/nRF5_SDK_1
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.s
@@ -1906,7 +2074,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.s: drivers/nRF5_SDK_1
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_twim.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.obj
@@ -1914,7 +2082,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.obj: drivers/nRF5_SD
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.i
@@ -1922,7 +2090,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.i: drivers/nRF5_SDK_
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.s
@@ -1930,7 +2098,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.s: drivers/nRF5_SDK_
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_uarte.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.obj
@@ -1938,7 +2106,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.obj: drivers/nRF5_SDK_
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.i
@@ -1946,7 +2114,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.i: drivers/nRF5_SDK_17
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.s
@@ -1954,7 +2122,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.s: drivers/nRF5_SDK_17
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/drivers/src/nrfx_wdt.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.obj
@@ -1962,7 +2130,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.obj: drivers/nRF5_SDK_17.0.2/m
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.i
@@ -1970,7 +2138,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.i: drivers/nRF5_SDK_17.0.2/mod
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.s
@@ -1978,7 +2146,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.s: drivers/nRF5_SDK_17.0.2/mod
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/hal/nrf_nvmc.c.s
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.obj: drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.obj
@@ -1986,7 +2154,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.obj: drivers/nRF5_SDK_1
 
 # target to build an object file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.obj
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.obj
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.i: drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.i
@@ -1994,7 +2162,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.i: drivers/nRF5_SDK_17.
 
 # target to preprocess a source file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.i
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.i
 
 drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.s: drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.s
@@ -2002,7 +2170,7 @@ drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.s: drivers/nRF5_SDK_17.
 
 # target to generate assembly for a file
 drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.s
 .PHONY : drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.s
 
 drivers/nrf_log_redirect/nrf_log_redirect.obj: drivers/nrf_log_redirect/nrf_log_redirect.c.obj
@@ -2010,7 +2178,7 @@ drivers/nrf_log_redirect/nrf_log_redirect.obj: drivers/nrf_log_redirect/nrf_log_
 
 # target to build an object file
 drivers/nrf_log_redirect/nrf_log_redirect.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj
 .PHONY : drivers/nrf_log_redirect/nrf_log_redirect.c.obj
 
 drivers/nrf_log_redirect/nrf_log_redirect.i: drivers/nrf_log_redirect/nrf_log_redirect.c.i
@@ -2018,7 +2186,7 @@ drivers/nrf_log_redirect/nrf_log_redirect.i: drivers/nrf_log_redirect/nrf_log_re
 
 # target to preprocess a source file
 drivers/nrf_log_redirect/nrf_log_redirect.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.i
 .PHONY : drivers/nrf_log_redirect/nrf_log_redirect.c.i
 
 drivers/nrf_log_redirect/nrf_log_redirect.s: drivers/nrf_log_redirect/nrf_log_redirect.c.s
@@ -2026,7 +2194,7 @@ drivers/nrf_log_redirect/nrf_log_redirect.s: drivers/nrf_log_redirect/nrf_log_re
 
 # target to generate assembly for a file
 drivers/nrf_log_redirect/nrf_log_redirect.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.s
 .PHONY : drivers/nrf_log_redirect/nrf_log_redirect.c.s
 
 gcc_startup_nrf52840.obj: gcc_startup_nrf52840.S.obj
@@ -2034,7 +2202,7 @@ gcc_startup_nrf52840.obj: gcc_startup_nrf52840.S.obj
 
 # target to build an object file
 gcc_startup_nrf52840.S.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/gcc_startup_nrf52840.S.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/gcc_startup_nrf52840.S.obj
 .PHONY : gcc_startup_nrf52840.S.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.obj
@@ -2042,7 +2210,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.obj: hom
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.i
@@ -2050,7 +2218,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.i: home/
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.s
@@ -2058,7 +2226,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.s: home/
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/configuration/calibration.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.obj
@@ -2066,7 +2234,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.i
@@ -2074,7 +2242,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.s
@@ -2082,7 +2250,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/filesystem/ota_flash_file_updater.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.obj
@@ -2090,7 +2258,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.obj: home/schade/Lin
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.i
@@ -2098,7 +2266,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.i: home/schade/Linki
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.s
@@ -2106,7 +2274,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.s: home/schade/Linki
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/reed.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.obj
@@ -2114,7 +2282,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.obj: home/schade/L
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.i
@@ -2122,7 +2290,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.i: home/schade/Lin
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.s
@@ -2130,7 +2298,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.s: home/schade/Lin
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/hardware/sensor.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.obj
@@ -2138,7 +2306,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.obj: home/schade/Li
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.i
@@ -2146,7 +2314,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.i: home/schade/Link
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.s
@@ -2154,7 +2322,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.s: home/schade/Link
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/logging/logger.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.obj
@@ -2162,7 +2330,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.obj: home/sc
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.i
@@ -2170,7 +2338,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.i: home/scha
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.s
@@ -2178,7 +2346,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.s: home/scha
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_commands.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.obj
@@ -2186,7 +2354,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.obj: home/scha
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.i
@@ -2194,7 +2362,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.i: home/schade
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.s
@@ -2202,7 +2370,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.s: home/schade
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/protocol/dte_params.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.obj
@@ -2210,7 +2378,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.obj: hom
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.i
@@ -2218,7 +2386,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.i: home/
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.s
@@ -2226,7 +2394,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.s: home/
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_rx_service.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.obj
@@ -2234,7 +2402,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.obj: hom
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.i
@@ -2242,7 +2410,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.i: home/
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.s
@@ -2250,7 +2418,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.s: home/
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/argos_tx_service.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.obj
@@ -2258,7 +2426,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.obj: home/sch
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.i
@@ -2266,7 +2434,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.i: home/schad
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.s
@@ -2274,7 +2442,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.s: home/schad
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/gps_service.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.obj
@@ -2282,7 +2450,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.obj: home/schade/
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.i
@@ -2290,7 +2458,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.i: home/schade/Li
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.s
@@ -2298,7 +2466,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.s: home/schade/Li
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/service.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.obj
@@ -2306,7 +2474,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.obj: h
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.i
@@ -2314,7 +2482,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.i: hom
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.s
@@ -2322,7 +2490,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.s: hom
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/services/uwdetector_service.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.obj
@@ -2330,7 +2498,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.obj: home/schade/Lin
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.i
@@ -2338,7 +2506,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.i: home/schade/Linki
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.s
@@ -2346,7 +2514,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.s: home/schade/Linki
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/gentracker.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.obj
@@ -2354,7 +2522,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.obj: home/schade/Linkit/C
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.i
@@ -2362,7 +2530,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.i: home/schade/Linkit/CLS
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.s
@@ -2370,7 +2538,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.s: home/schade/Linkit/CLS
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/sm/ledsm.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.obj
@@ -2378,7 +2546,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.obj: home/schade/Li
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.i
@@ -2386,7 +2554,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.i: home/schade/Link
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.s
@@ -2394,7 +2562,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.s: home/schade/Link
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/core/util/haversine.cpp.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.obj
@@ -2402,7 +2570,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_b
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.i
@@ -2410,7 +2578,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_b
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.s
@@ -2418,7 +2586,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_b
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/CmBacktrace/cm_backtrace/cm_backtrace.c.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.obj
@@ -2426,7 +2594,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.obj: home/schade
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.i
@@ -2434,7 +2602,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.i: home/schade/L
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.s
@@ -2442,7 +2610,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.s: home/schade/L
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs.c.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.obj
@@ -2450,7 +2618,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.obj: home/s
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.i
@@ -2458,7 +2626,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.i: home/sch
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.s
@@ -2466,7 +2634,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.s: home/sch
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/littlefs/lfs_util.c.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.obj
@@ -2474,7 +2642,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.i
@@ -2482,7 +2650,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.s
@@ -2490,7 +2658,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass.c.s
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.obj: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.obj
@@ -2498,7 +2666,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-
 
 # target to build an object file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.obj
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.obj
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.i: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.i
@@ -2506,7 +2674,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-
 
 # target to preprocess a source file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.i
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.i
 
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.s: home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.s
@@ -2514,7 +2682,7 @@ home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-
 
 # target to generate assembly for a file
 home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.s
 .PHONY : home/schade/Linkit/CLS-Argos-Linkit-CORE/libraries/prepass/prepass_package_code-PREPAS_V3.4/previpass_util.c.s
 
 main.obj: main.cpp.obj
@@ -2522,7 +2690,7 @@ main.obj: main.cpp.obj
 
 # target to build an object file
 main.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/main.cpp.obj
 .PHONY : main.cpp.obj
 
 main.i: main.cpp.i
@@ -2530,7 +2698,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -2538,7 +2706,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_rspb_board.dir/build.make CMakeFiles/LinkIt_rspb_board.dir/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LinkIt_CORE_board.dir/build.make CMakeFiles/LinkIt_CORE_board.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 # Help Target
@@ -2553,16 +2721,28 @@ help:
 	@echo "... flash"
 	@echo "... flash_softdev"
 	@echo "... merged_hex"
-	@echo "... LinkIt_rspb_board"
-	@echo "... bsp/rspb_adafruit_feather/bsp.obj"
-	@echo "... bsp/rspb_adafruit_feather/bsp.i"
-	@echo "... bsp/rspb_adafruit_feather/bsp.s"
-	@echo "... core/filesystem/flash_gd25/gd25_flash.obj"
-	@echo "... core/filesystem/flash_gd25/gd25_flash.i"
-	@echo "... core/filesystem/flash_gd25/gd25_flash.s"
+	@echo "... LinkIt_CORE_board"
+	@echo "... bsp/gentracker_v1.0/bsp.obj"
+	@echo "... bsp/gentracker_v1.0/bsp.i"
+	@echo "... bsp/gentracker_v1.0/bsp.s"
+	@echo "... core/filesystem/flash_is25/is25_flash.obj"
+	@echo "... core/filesystem/flash_is25/is25_flash.i"
+	@echo "... core/filesystem/flash_is25/is25_flash.s"
 	@echo "... core/hardware/ad5933/ad5933.obj"
 	@echo "... core/hardware/ad5933/ad5933.i"
 	@echo "... core/hardware/ad5933/ad5933.s"
+	@echo "... core/hardware/artic_r2/artic.obj"
+	@echo "... core/hardware/artic_r2/artic.i"
+	@echo "... core/hardware/artic_r2/artic.s"
+	@echo "... core/hardware/artic_r2/pa_driver.obj"
+	@echo "... core/hardware/artic_r2/pa_driver.i"
+	@echo "... core/hardware/artic_r2/pa_driver.s"
+	@echo "... core/hardware/bmx160/bmx160.obj"
+	@echo "... core/hardware/bmx160/bmx160.i"
+	@echo "... core/hardware/bmx160/bmx160.s"
+	@echo "... core/hardware/bmx160/bmx160.obj"
+	@echo "... core/hardware/bmx160/bmx160.i"
+	@echo "... core/hardware/bmx160/bmx160.s"
 	@echo "... core/hardware/cdt/cdt.obj"
 	@echo "... core/hardware/cdt/cdt.i"
 	@echo "... core/hardware/cdt/cdt.s"
@@ -2614,6 +2794,15 @@ help:
 	@echo "... core/hardware/oem_rtd/oem_rtd.obj"
 	@echo "... core/hardware/oem_rtd/oem_rtd.i"
 	@echo "... core/hardware/oem_rtd/oem_rtd.s"
+	@echo "... core/hardware/stwlc68_otp/otp_chip_info.obj"
+	@echo "... core/hardware/stwlc68_otp/otp_chip_info.i"
+	@echo "... core/hardware/stwlc68_otp/otp_chip_info.s"
+	@echo "... core/hardware/stwlc68_otp/otphal.obj"
+	@echo "... core/hardware/stwlc68_otp/otphal.i"
+	@echo "... core/hardware/stwlc68_otp/otphal.s"
+	@echo "... core/hardware/stwlc68_otp/stwlc68.obj"
+	@echo "... core/hardware/stwlc68_otp/stwlc68.i"
+	@echo "... core/hardware/stwlc68_otp/stwlc68.s"
 	@echo "... core/interface/ble_interface.obj"
 	@echo "... core/interface/ble_interface.i"
 	@echo "... core/interface/ble_interface.s"
