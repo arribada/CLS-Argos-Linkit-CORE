@@ -13,6 +13,8 @@ Linkit represents the evolution and consolidation of the Horizon board and the s
 
 For detailed instructions and documentation, please refer to the [wiki](https://github.com/arribada/CLS-Argos-Linkit-CORE/wiki).
 
+Feel free to ask questions on the [Linkit Forum.](https://forum.arribada.org/c/linkit-core/8)
+
 # Hardware compatibility
 
 * Horizon Board
