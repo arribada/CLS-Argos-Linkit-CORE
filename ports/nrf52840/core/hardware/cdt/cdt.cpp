@@ -1,7 +1,7 @@
 #include "cdt.hpp"
 #include "debug.hpp"
 
-CDT::CDT(MS58xxLL& ms58xx, AD5933LL& ad5933) : Sensor("CDT"), m_cal(Calibration("CDT")), m_ms58xx(ms58xx), m_ad5933(ad5933) {
+CDT::CDT(MS58xxHardware& ms58xx, AD5933& ad5933) : Sensor("CDT"), m_cal(Calibration("CDT")), m_ms58xx(ms58xx), m_ad5933(ad5933) {
 }
 
 double CDT::read(unsigned int offset) {
@@ -25,24 +25,56 @@ void CDT::calibration_write(const double value, const unsigned int offset) {
 	if (0 == offset) {
 		DEBUG_TRACE("CDT::calibrate: reset calibration");
 		m_cal.reset();
-	} else if (1 == offset) {
-		double magnitude = m_ad5933.get_iq_magnitude_single_point(90000);
-		double impedance_ref = value;
-		double gain_factor = (1 / impedance_ref) / magnitude;
-		DEBUG_TRACE("CDT::calibrate: measured gain_factor = %f", gain_factor);
-		m_cal.write((unsigned int)CalibrationPoint::GAIN_FACTOR, gain_factor);
 	} else if (2 == offset) {
-		DEBUG_TRACE("CDT::calibrate: CA = %f", value);
+		DEBUG_TRACE("CDT::calibrate: CA = %lf", value);
 		m_cal.write((unsigned int)CalibrationPoint::CA, value);
 	} else if (3 == offset) {
-		DEBUG_TRACE("CDT::calibrate: CB = %f", value);
+		DEBUG_TRACE("CDT::calibrate: CB = %lf", value);
 		m_cal.write((unsigned int)CalibrationPoint::CB, value);
 	} else if (4 == offset) {
-		DEBUG_TRACE("CDT::calibrate: CC = %f", value);
+		DEBUG_TRACE("CDT::calibrate: CC = %lf", value);
 		m_cal.write((unsigned int)CalibrationPoint::CC, value);
 	} else if (5 == offset) {
 		DEBUG_TRACE("CDT::calibrate: saving calibration");
 		m_cal.save();
+	} else if (6 == offset) {
+		DEBUG_TRACE("CDT::calibrate: gain_factor = %lf", value);
+		m_cal.write((unsigned int)CalibrationPoint::GAIN_FACTOR, value);
+	} else if (7 == offset) {
+		DEBUG_TRACE("CDT::calibrate: power on AD5933 using f=%u", (unsigned int)value);
+		m_ad5933.start((unsigned int)value, VRange::V1_GAIN1X);
+	} else if (8 == offset) {
+		DEBUG_TRACE("CDT::calibrate: power off AD5933");
+		m_ad5933.stop();
+	}
+}
+
+void CDT::calibration_read(double& value, const unsigned int offset) {
+	if (0 == offset) {
+		DEBUG_TRACE("CDT::calibrate: read CA");
+		value = m_cal.read((unsigned int)CalibrationPoint::CA);
+	} else if (1 == offset) {
+		DEBUG_TRACE("CDT::calibrate: read CB");
+		value = m_cal.read((unsigned int)CalibrationPoint::CB);
+	} else if (2 == offset) {
+		DEBUG_TRACE("CDT::calibrate: read CC");
+		value = m_cal.read((unsigned int)CalibrationPoint::CC);
+	} else if (3 == offset) {
+		DEBUG_TRACE("CDT::calibrate: read gain_factor");
+		value = m_cal.read((unsigned int)CalibrationPoint::GAIN_FACTOR);
+	} else if (4 == offset) {
+		int16_t real, imag;
+		// This will fetch I and Q samples so must be called first
+		m_ad5933.get_real_imaginary(real, imag);
+		DEBUG_TRACE("CDT::calibrate: read real value: %d,%d", (int)real, (int)imag);
+		value = (double)real;
+		m_last_imaginary = imag;
+	} else if (5 == offset) {
+		DEBUG_TRACE("CDT::calibrate: read imaginary value");
+		value = (double)m_last_imaginary;
+	} else if (6 == offset) {
+		DEBUG_TRACE("CDT::calibrate: read impedence using calibrated gain");
+		value = m_ad5933.get_impedence(1, m_cal.read((unsigned int)CalibrationPoint::GAIN_FACTOR));
 	}
 }
 
@@ -70,11 +102,14 @@ double CDT::read_calibrated_conductivity() {
 		CC = 0.4696;
 	}
 
-	double impedance = (1 / (gain_factor * m_ad5933.get_iq_magnitude_single_point(90000, 2)));
-	double conduino_value = impedance * 1000;
+	m_ad5933.start(90000, VRange::V1_GAIN1X);
+	double impedance = m_ad5933.get_impedence(2, gain_factor);
+	m_ad5933.stop();
+
+	double conduino_value = (1 / impedance) * 1000;
 	double conductivity = 1000 * (CA * conduino_value * conduino_value + CB * conduino_value + CC);
 
-	DEBUG_TRACE("CDT::read_calibrated_conductivity: conductivity = %f", conductivity);
+	DEBUG_TRACE("CDT::read_calibrated_conductivity: conductivity = %lf", conductivity);
 
 	return conductivity;
 }

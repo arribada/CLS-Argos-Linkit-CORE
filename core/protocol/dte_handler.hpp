@@ -63,7 +63,7 @@ private:
 		{8, "AXL"},
 		{9, "PRESSURE"},
 	};
-	static inline std::map<unsigned int, std::string> m_scalw = {
+	static inline std::map<unsigned int, std::string> m_scalx = {
 		{0, "AXL"},
 		{1, "PRS"},
 		{2, "ALS"},
@@ -452,7 +452,7 @@ public:
 		unsigned int value = std::get<double>(arg_list[2]);
 
 		try {
-			const char *name = m_scalw.at(device_id).c_str();
+			const char *name = m_scalx.at(device_id).c_str();
 			DEBUG_TRACE("Calibrating device %s...", name);
 			Calibratable& s = CalibratableManager::find_by_name(name);
 			s.calibration_write(value, offset);
@@ -462,6 +462,36 @@ public:
 		}
 
 		return DTEEncoder::encode(DTECommand::SCALW_RESP, error_code);
+	}
+
+	static std::string SCALR_REQ(int error_code, std::vector<BaseType>& arg_list) {
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::SCALR_RESP, error_code);
+		}
+
+		// Extract the device_id parameter from arg_list to determine which device to calibrate
+		unsigned int device_id = std::get<unsigned int>(arg_list[0]);
+
+		// Extract the calibration offset parameter from arg_list to determine which sensor offset to calibrate
+		unsigned int offset = std::get<unsigned int>(arg_list[1]);
+
+		double value;
+
+		try {
+			const char *name = m_scalx.at(device_id).c_str();
+			DEBUG_TRACE("Read device %s calibration setting %u...", name, offset);
+			Calibratable& s = CalibratableManager::find_by_name(name);
+			s.calibration_read(value, offset);
+		} catch (...) {
+			DEBUG_TRACE("Device calibration read failed");
+			error_code = (int)DTEError::INCORRECT_DATA;
+		}
+
+		if (error_code) {
+			return DTEEncoder::encode(DTECommand::SCALR_RESP, error_code);
+		}
+
+		return DTEEncoder::encode(DTECommand::SCALR_RESP, error_code, value);
 	}
 
 	std::string ARGOSTX_REQ(int error_code, std::vector<BaseType>& arg_list) {
@@ -607,6 +637,9 @@ public:
 			break;
 		case DTECommand::SCALW_REQ:
 			resp = SCALW_REQ(error_code, arg_list);
+			break;
+		case DTECommand::SCALR_REQ:
+			resp = SCALR_REQ(error_code, arg_list);
 			break;
 		case DTECommand::ARGOSTX_REQ:
 			resp = ARGOSTX_REQ(error_code, arg_list);

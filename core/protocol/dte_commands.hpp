@@ -22,6 +22,7 @@ enum class DTECommand {
 	ERASE_REQ,
 	SCALW_REQ,
 	ARGOSTX_REQ,
+	SCALR_REQ,
 	__NUM_REQ,
 	PARML_RESP = RESP_CMD_BASE,
 	PARMR_RESP,
@@ -39,6 +40,7 @@ enum class DTECommand {
 	ERASE_RESP,
 	SCALW_RESP,
 	ARGOSTX_RESP,
+	SCALR_RESP,
 	__NUM_RESP
 };
 

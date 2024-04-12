@@ -35,9 +35,9 @@ void AD5933LL::write_reg(const AD5933Register reg, uint8_t value)
     NrfI2C::write(m_bus, m_addr, buffer, 2, false);
 }
 
-double AD5933LL::get_iq_magnitude_single_point(unsigned int frequency, unsigned int averaging, VRange vrange)
+void AD5933LL::start(const unsigned int frequency, const VRange vrange)
 {
-	DEBUG_TRACE("AD5933LL::get_iq_magnitude_single_point");
+	DEBUG_TRACE("AD5933LL::start");
 	reset();
 	gain(vrange);
 	set_settling_times(1);
@@ -48,19 +48,38 @@ double AD5933LL::get_iq_magnitude_single_point(unsigned int frequency, unsigned 
 	initialize();
 	PMU::delay_ms(10);
 	startsweep();
+}
 
-	double accum = 0;
+void AD5933LL::stop() {
+	DEBUG_TRACE("AD5933LL::stop");
+	powerdown();
+}
+
+double AD5933LL::get_impedence(const unsigned int averaging, const double gain)
+{
+	DEBUG_TRACE("AD5933LL::get_impedence");
+	double impedence = 0;
 	for (unsigned int i = 0; i < averaging; i++) {
 		wait_iq_data_ready();
-		accum += std::sqrt(std::pow((double)read_real(), 2) + std::pow((double)read_imag(), 2));
+		double magnitude = std::sqrt(std::pow((double)read_real(), 2) + std::pow((double)read_imag(), 2));
+		impedence += 1 / (magnitude * gain);
 	}
-	accum /= averaging;
+	impedence /= averaging;
 
-	powerdown();
+	DEBUG_TRACE("AD5933LL::get_impedence() = %lf", impedence);
 
-	DEBUG_TRACE("AD5933LL::get_iq_magnitude_single_point() = %f", accum);
+	return impedence;
+}
 
-	return accum;
+void AD5933LL::get_real_imaginary(int16_t& real, int16_t& imag)
+{
+	DEBUG_TRACE("AD5933LL::get_real_imaginary");
+
+	wait_iq_data_ready();
+	real = read_real();
+	imag = read_imag();
+
+	DEBUG_TRACE("AD5933LL::get_real_imaginary() = %d,%d", (int)real, (int)imag);
 }
 
 void AD5933LL::set_start_frequency(unsigned int frequency)
@@ -109,7 +128,7 @@ void AD5933LL::set_settling_times(unsigned int settling)
 void AD5933LL::initialize()
 {
 	DEBUG_TRACE("AD5933LL::initialize");
-	write_reg(AD5933Register::CONTROL_HIGH, (uint8_t)AD5933ControlRegisterHigh::INIT_START_FREQUENCY| m_gain_setting);
+	write_reg(AD5933Register::CONTROL_HIGH, (uint8_t)AD5933ControlRegisterHigh::INIT_START_FREQUENCY | m_gain_setting);
 }
 
 void AD5933LL::reset()
@@ -171,12 +190,12 @@ uint8_t AD5933LL::status()
 	return read_reg(AD5933Register::STATUS);
 }
 
-uint16_t AD5933LL::read_real() {
-	return (uint16_t)read_reg(AD5933Register::REAL_15_8) << 8 | read_reg(AD5933Register::REAL_7_0);
+int16_t AD5933LL::read_real() {
+	return (int16_t)((uint16_t)read_reg(AD5933Register::REAL_15_8) << 8 | read_reg(AD5933Register::REAL_7_0));
 }
 
-uint16_t AD5933LL::read_imag() {
-	return (uint16_t)read_reg(AD5933Register::IMAG_15_8) << 8 | read_reg(AD5933Register::IMAG_7_0);
+int16_t AD5933LL::read_imag() {
+	return (int16_t)((uint16_t)read_reg(AD5933Register::IMAG_15_8) << 8 | read_reg(AD5933Register::IMAG_7_0));
 }
 
 void AD5933LL::wait_iq_data_ready()

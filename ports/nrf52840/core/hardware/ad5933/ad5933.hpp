@@ -2,20 +2,33 @@
 
 #include <cstdint>
 
-class AD5933LL {
+enum class VRange {
+	V1_GAIN1X,
+	V2_GAIN1X,
+	V200MV_GAIN1X,
+	V400MV_GAIN1X,
+	V1_GAIN0_5X,
+	V2_GAIN0_5X,
+	V200MV_GAIN0_5X,
+	V400MV_GAIN0_5X,
+};
+
+class AD5933 {
 public:
-	enum class VRange {
-		V1_GAIN1X,
-		V2_GAIN1X,
-		V200MV_GAIN1X,
-		V400MV_GAIN1X,
-		V1_GAIN0_5X,
-		V2_GAIN0_5X,
-		V200MV_GAIN0_5X,
-		V400MV_GAIN0_5X,
-	};
+	virtual ~AD5933() {}
+	virtual void start(const unsigned int frequency, const VRange vrange) = 0;
+	virtual void stop() = 0;
+	virtual double get_impedence(const unsigned int averaging, const double gain) = 0;
+	virtual void get_real_imaginary(int16_t& real, int16_t& imag) = 0;
+};
+
+class AD5933LL : public AD5933 {
+public:
 	AD5933LL(unsigned int bus, unsigned char addr);
-	double get_iq_magnitude_single_point(unsigned int frequency = 90000, unsigned int averaging = 1, VRange vrange = VRange::V1_GAIN1X);
+	void start(const unsigned int frequency, const VRange vrange);
+	void stop();
+	double get_impedence(const unsigned int averaging, const double gain);
+	void get_real_imaginary(int16_t& real, int16_t& imag);
 
 private:
 	unsigned int m_bus;
@@ -81,6 +94,6 @@ private:
 	void powerdown();
 	void gain(VRange);
 	uint8_t status();
-	uint16_t read_real();
-	uint16_t read_imag();
+	int16_t read_real();
+	int16_t read_imag();
 };

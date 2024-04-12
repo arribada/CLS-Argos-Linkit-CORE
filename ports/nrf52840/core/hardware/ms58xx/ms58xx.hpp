@@ -7,10 +7,16 @@
 #include "bsp.hpp"
 #include "error.hpp"
 
-class MS58xxLL {
+class MS58xxHardware {
+public:
+	virtual ~MS58xxHardware() {}
+	virtual void read(double& temperature, double& pressure) = 0;
+};
+
+class MS58xxLL : public MS58xxHardware {
 public:
 	MS58xxLL(unsigned int bus, unsigned char address, std::string variant);
-	void read(double& temperature, double& pressure);
+	void read(double& temperature, double& pressure) override;
 
 private:
 	unsigned int m_bus;
@@ -46,7 +52,7 @@ private:
 
 class MS58xx : public Sensor {
 public:
-	MS58xx(MS58xxLL& ms58xx) : Sensor("PRS"), m_ms58xx(ms58xx) {}
+	MS58xx(MS58xxHardware& ms58xx) : Sensor("PRS"), m_ms58xx(ms58xx) {}
 	double read(unsigned int channel = 0) {
 		if (0 == channel) {
 			m_ms58xx.read(m_last_temperature, m_last_pressure);
@@ -60,5 +66,5 @@ public:
 private:
 	double m_last_pressure;
 	double m_last_temperature;
-	MS58xxLL& m_ms58xx;
+	MS58xxHardware& m_ms58xx;
 };

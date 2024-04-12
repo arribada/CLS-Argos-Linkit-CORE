@@ -304,6 +304,33 @@ const DTECommandMap command_map[] = {
 		}
 	},
 	{
+		.name = "SCALR",
+		.command = DTECommand::SCALR_REQ,
+		.prototype =
+		{
+			{
+				.name = "sensor",
+				.key = "",
+				.encoding = BaseEncoding::UINT,
+				.min_value = 0U,
+				.max_value = 6U,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			},
+			{
+				.name = "offset",
+				.key = "",
+				.encoding = BaseEncoding::UINT,
+				.min_value = 0U,
+				.max_value = 0U,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			}
+		}
+	},
+	{
 		.name = "PARML",
 		.command = DTECommand::PARML_RESP,
 		.prototype = 
@@ -493,6 +520,23 @@ const DTECommandMap command_map[] = {
 		.command = DTECommand::ARGOSTX_RESP,
 		.prototype =
 		{
+		}
+	},
+	{
+		.name = "SCALR",
+		.command = DTECommand::SCALR_RESP,
+		.prototype =
+		{
+			{
+				.name = "value",
+				.key = "",
+				.encoding = BaseEncoding::FLOAT,
+				.min_value = 0.0,
+				.max_value = 0.0,
+				.permitted_values = {},
+				.is_implemented = false,
+				.is_writable = false
+			}
 		}
 	},
 };
