@@ -96,4 +96,5 @@ private:
 	uint8_t status();
 	int16_t read_real();
 	int16_t read_imag();
+	void dump_regs();
 };

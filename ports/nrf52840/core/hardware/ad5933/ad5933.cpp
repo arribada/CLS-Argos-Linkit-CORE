@@ -40,7 +40,7 @@ void AD5933LL::start(const unsigned int frequency, const VRange vrange)
 	DEBUG_TRACE("AD5933LL::start");
 	reset();
 	gain(vrange);
-	set_settling_times(1);
+	set_settling_times(128);
 	set_start_frequency(frequency);
 	set_frequency_increment(1);
 	set_number_of_increments(0);
@@ -80,12 +80,15 @@ void AD5933LL::get_real_imaginary(int16_t& real, int16_t& imag)
 	imag = read_imag();
 
 	DEBUG_TRACE("AD5933LL::get_real_imaginary() = %d,%d", (int)real, (int)imag);
+#ifdef DEBUG_AD5933
+	dump_regs();
+#endif
 }
 
 void AD5933LL::set_start_frequency(unsigned int frequency)
 {
 	DEBUG_TRACE("AD5933LL::set_start_frequency");
-	uint64_t frequency_conversion = ((uint64_t)frequency << 27) / 4000000;
+	uint64_t frequency_conversion = (((uint64_t)frequency << 27) + 3999999) / 4000000;
 	write_reg(AD5933Register::START_FREQUENCY_23_16, frequency_conversion >> 16);
 	write_reg(AD5933Register::START_FREQUENCY_15_8, frequency_conversion >> 8);
 	write_reg(AD5933Register::START_FREQUENCY_7_0, frequency_conversion);
@@ -101,7 +104,7 @@ void AD5933LL::set_number_of_increments(unsigned int num)
 void AD5933LL::set_frequency_increment(unsigned int inc)
 {
 	DEBUG_TRACE("AD5933LL::set_frequency_increment");
-	uint64_t frequency_conversion = ((uint64_t)inc << 27) / 4000000;
+	uint64_t frequency_conversion = (((uint64_t)inc << 27) + 3999999) / 4000000;
 	write_reg(AD5933Register::FREQUENCY_INCREMENT_23_16, frequency_conversion >> 16);
 	write_reg(AD5933Register::FREQUENCY_INCREMENT_15_8, frequency_conversion >> 8);
 	write_reg(AD5933Register::FREQUENCY_INCREMENT_7_0, frequency_conversion);
@@ -191,11 +194,19 @@ uint8_t AD5933LL::status()
 }
 
 int16_t AD5933LL::read_real() {
-	return (int16_t)((uint16_t)read_reg(AD5933Register::REAL_15_8) << 8 | read_reg(AD5933Register::REAL_7_0));
+	uint8_t low = read_reg(AD5933Register::REAL_7_0);
+	uint8_t high = read_reg(AD5933Register::REAL_15_8);
+	DEBUG_TRACE("REAL_7_0=%02x REAL_15_8=%02x", (unsigned int)low, (unsigned int)high);
+	int x = (int)high << 8 | low;
+	return (int16_t)x;
 }
 
 int16_t AD5933LL::read_imag() {
-	return (int16_t)((uint16_t)read_reg(AD5933Register::IMAG_15_8) << 8 | read_reg(AD5933Register::IMAG_7_0));
+	uint8_t low = read_reg(AD5933Register::IMAG_7_0);
+	uint8_t high = read_reg(AD5933Register::IMAG_15_8);
+	DEBUG_TRACE("IMAG_7_0=%02x IMAG_15_8=%02x", (unsigned int)low, (unsigned int)high);
+	int x = (int)high << 8 | low;
+	return (int16_t)x;
 }
 
 void AD5933LL::wait_iq_data_ready()
@@ -209,4 +220,13 @@ void AD5933LL::powerdown()
 {
 	DEBUG_TRACE("AD5933LL::powerdown");
 	write_reg(AD5933Register::CONTROL_HIGH, (uint8_t)AD5933ControlRegisterHigh::POWER_DOWN);
+}
+
+void AD5933LL::dump_regs()
+{
+    uint8_t value;
+    for (unsigned int i = 0x80; i < 0x98; i++) {
+        value = read_reg((AD5933Register)i);
+        DEBUG_TRACE("reg[%02x]=%02x", i, (unsigned int)value);
+    }
 }

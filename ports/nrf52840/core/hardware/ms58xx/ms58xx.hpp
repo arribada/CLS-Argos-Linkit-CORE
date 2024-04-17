@@ -9,8 +9,13 @@
 
 class MS58xxHardware {
 public:
-	virtual ~MS58xxHardware() {}
-	virtual void read(double& temperature, double& pressure) = 0;
+    virtual ~MS58xxHardware() {}
+    virtual void read(double& temperature, double& pressure) = 0;
+};
+
+class MS58xxDummy : public MS58xxHardware {
+public:
+    void read(double& t, double& p) { t = 0; p = 0; }
 };
 
 class MS58xxLL : public MS58xxHardware {

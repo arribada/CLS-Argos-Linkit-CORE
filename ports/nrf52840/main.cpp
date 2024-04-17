@@ -509,7 +509,8 @@ int main()
 	}
 
 	DEBUG_TRACE("MS58xx...");
-	MS58xxLL *ms58xx_devices[BSP::I2C_TOTAL_NUMBER];
+	MS58xxHardware *ms58xx_devices[BSP::I2C_TOTAL_NUMBER];
+#ifndef DUMMY_MS58xx
 	for (unsigned int i = 0; i < BSP::I2C_TOTAL_NUMBER; i++) {
 		static unsigned int i2caddr[2] = { MS5803_ADDRESS, MS5837_ADDRESS };
 		static std::string variant[2] = { MS5803_VARIANT, MS5837_VARIANT };
@@ -524,9 +525,12 @@ int main()
 			}
 		}
 	}
+#else
+        ms58xx_devices[0] = new MS58xxDummy();
+#endif
 
 	DEBUG_TRACE("AD5933...");
-	AD5933LL *ad5933_devices[BSP::I2C_TOTAL_NUMBER];
+	AD5933 *ad5933_devices[BSP::I2C_TOTAL_NUMBER];
 	for (unsigned int i = 0; i < BSP::I2C_TOTAL_NUMBER; i++) {
 		try {
 			ad5933_devices[i] = new AD5933LL(i, AD5933_ADDRESS);
