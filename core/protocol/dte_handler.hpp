@@ -449,7 +449,7 @@ public:
 		unsigned int offset = std::get<unsigned int>(arg_list[1]);
 
 		// Extract the calibration value parameter from arg_list to use
-		unsigned int value = std::get<double>(arg_list[2]);
+		double value = std::get<double>(arg_list[2]);
 
 		try {
 			const char *name = m_scalx.at(device_id).c_str();
