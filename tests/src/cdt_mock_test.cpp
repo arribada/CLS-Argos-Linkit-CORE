@@ -60,7 +60,7 @@ TEST(CDTMock, CDTConductivityCalculation)
 	int16_t imag[2] = {-1900, -1950};
 	mock().expectOneCall("start").onObject(&m_ad5933).
 		withUnsignedIntParameter("frequency", 90000).
-		withUnsignedIntParameter("vrange", 0);
+		withUnsignedIntParameter("vrange", 3);
 	mock().expectOneCall("stop").onObject(&m_ad5933);
 	mock().expectOneCall("get_real_imaginary.real").onObject(&m_ad5933).
 			andReturnValue(real[0]);

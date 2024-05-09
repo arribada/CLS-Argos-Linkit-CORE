@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cmath>
 
 #include "sys_log.hpp"
 #include "dte_handler.hpp"
@@ -333,6 +334,73 @@ TEST(DTEHandler, PASPW_REQ_NewArgos4Satellites)
 	req = "$PARMR#005;ART03\r";
 	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
 	STRCMP_EQUAL("$O;PARMR#019;ART03=07/03/2023 23:22:51\r", resp.c_str());
+}
+
+TEST(DTEHandler, PASPW_REQ_NewTypeCSatelliteAOP)
+{
+	// Supplied by CLS
+	std::string allcast_ref = read_paspw_file("data/allcast.2.117.06.json");
+	std::string allcast_binary;
+
+	// Transcode to binary
+	allcast_binary = Binascii::unhexlify(allcast_ref);
+
+	BaseRawData paspw_raw = {0, 0, allcast_binary };
+
+	std::string resp;
+	std::string req = DTEEncoder::encode(DTECommand::PASPW_REQ, paspw_raw);
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;PASPW#000;\r", resp.c_str());
+
+	// Get last AOP date
+	req = "$PARMR#005;ART03\r";
+	CHECK_TRUE(DTEAction::NONE == dte_handler->handle_dte_message(req, resp));
+	STRCMP_EQUAL("$O;PARMR#019;ART03=14/02/2024 00:00:00\r", resp.c_str());
+
+	BasePassPredict pp = configuration_store->read_pass_predict();
+	CHECK_EQUAL(9U, pp.num_records);
+
+	// CS (0x1) Format Type C AOP
+    //"semiMajorAxis" : 7131.4802650250485,
+    //"semiMajorAxisDrift" : -1.8773441215638673,
+    //"inclination" : 98.34399241298725,
+    //"ascendantNodeLongitude" : 87.6911,
+    //"ascendantNodeDrift" : -24.98042710052248,
+    //"orbitalPeriod" : 99.91929259380959
+	DEBUG_TRACE("semiMajorAxisKm=%g", (double)pp.records[0].semiMajorAxisKm);
+	DEBUG_TRACE("semiMajorAxisDriftMeterPerDay=%g", (double)pp.records[0].semiMajorAxisDriftMeterPerDay);
+	DEBUG_TRACE("inclinationDeg=%g", (double)pp.records[0].inclinationDeg);
+	DEBUG_TRACE("ascNodeLongitudeDeg=%g", (double)pp.records[0].ascNodeLongitudeDeg);
+	DEBUG_TRACE("ascNodeDriftDeg=%g", (double)pp.records[0].ascNodeDriftDeg);
+	DEBUG_TRACE("orbitPeriodMin=%g", (double)pp.records[0].orbitPeriodMin);
+	CHECK_EQUAL(1, pp.records[0].satHexId);
+	CHECK_TRUE(std::abs(7131.4802650250485f - pp.records[0].semiMajorAxisKm) < 0.001f);
+	CHECK_TRUE(std::abs(-1.8773441215638673f - pp.records[0].semiMajorAxisDriftMeterPerDay) < 0.1f);
+	CHECK_TRUE(std::abs(98.34399241298725f - pp.records[0].inclinationDeg) < 0.001f);
+	CHECK_TRUE(std::abs(87.6911f - pp.records[0].ascNodeLongitudeDeg) < 0.001f);
+	CHECK_TRUE(std::abs(-24.98042710052248f - pp.records[0].ascNodeDriftDeg) < 0.001f);
+	CHECK_TRUE(std::abs(99.91929259380959f - pp.records[0].orbitPeriodMin) < 0.001f);
+
+	// O3 (0x2) Format Type C AOP
+    //"semiMajorAxis" : 7115.020730404127,
+    //"semiMajorAxisDrift" : 0.0,
+    //"inclination" : 98.35391884172172,
+    //"ascendantNodeLongitude" : 174.0282,
+    //"ascendantNodeDrift" : -24.89342498744658,
+    //"orbitalPeriod" : 99.57388979678635
+	DEBUG_TRACE("semiMajorAxisKm=%g", (double)pp.records[1].semiMajorAxisKm);
+	DEBUG_TRACE("semiMajorAxisDriftMeterPerDay=%g", (double)pp.records[1].semiMajorAxisDriftMeterPerDay);
+	DEBUG_TRACE("inclinationDeg=%g", (double)pp.records[1].inclinationDeg);
+	DEBUG_TRACE("ascNodeLongitudeDeg=%g", (double)pp.records[1].ascNodeLongitudeDeg);
+	DEBUG_TRACE("ascNodeDriftDeg=%g", (double)pp.records[1].ascNodeDriftDeg);
+	DEBUG_TRACE("orbitPeriodMin=%g", (double)pp.records[1].orbitPeriodMin);
+	CHECK_EQUAL(2, pp.records[1].satHexId);
+	CHECK_TRUE(std::abs(7115.020730404127f - pp.records[1].semiMajorAxisKm) < 0.001f);
+	CHECK_TRUE(std::abs(0.0f - pp.records[1].semiMajorAxisDriftMeterPerDay) < 0.1f);
+	CHECK_TRUE(std::abs(98.35391884172172f - pp.records[1].inclinationDeg) < 0.001f);
+	CHECK_TRUE(std::abs(174.0282f - pp.records[1].ascNodeLongitudeDeg) < 0.001f);
+	CHECK_TRUE(std::abs(-24.89342498744658f - pp.records[1].ascNodeDriftDeg) < 0.001f);
+	CHECK_TRUE(std::abs(99.57388979678635f - pp.records[1].orbitPeriodMin) < 0.001f);
 }
 
 TEST(DTEHandler, DUMPD_REQ_SensorLog)

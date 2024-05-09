@@ -21,6 +21,11 @@ using namespace std::literals::string_literals;
 
 class PassPredictCodec {
 private:
+	enum class AopFormat {
+		A,
+		B,
+		C
+	};
 
 	static SatDownlinkStatus_t convert_dl_operating_status(uint8_t status, bool type_a, enum SatUplinkStatus_t ul_status) {
 		if (type_a) {
@@ -111,7 +116,7 @@ private:
 #endif
 	}
 
-	static void allcast_sat_orbit_params_decode(const std::string& data, unsigned int &pos, bool type_a, std::map<uint8_t, AopSatelliteEntry_t> &orbit_params, uint8_t a_dcs) {
+	static void allcast_sat_orbit_params_decode(const std::string& data, unsigned int &pos, AopFormat format, std::map<uint8_t, AopSatelliteEntry_t> &orbit_params, uint8_t a_dcs) {
 		uint32_t working, day_of_year;
 		AopSatelliteEntry_t aop_entry;
 
@@ -157,7 +162,7 @@ private:
 				aop_entry.bulletin.hour, aop_entry.bulletin.minute, aop_entry.bulletin.second);
 
 		// 86 bits of bulletin
-		if (type_a) {
+		if (format == AopFormat::A) {
 			EXTRACT_BITS(working, data, pos, 19); // Longitude of the ascending node
 			aop_entry.ascNodeLongitudeDeg = working / 1000.f;
 			EXTRACT_BITS(working, data, pos, 10); // angular separation between two successive ascending nodes
@@ -170,7 +175,7 @@ private:
 			aop_entry.semiMajorAxisDriftMeterPerDay = working * -0.1f;
 			EXTRACT_BITS(working, data, pos, 16); // inclination
 			aop_entry.inclinationDeg = (working / 10000.f) + 97;
-		} else {
+		} else if (format == AopFormat::B) {
 			EXTRACT_BITS(working, data, pos, 19); // Longitude of the ascending node
 			aop_entry.ascNodeLongitudeDeg = working / 1000.f;
 			EXTRACT_BITS(working, data, pos, 10); // angular separation between two successive ascending nodes
@@ -183,6 +188,19 @@ private:
 			aop_entry.semiMajorAxisDriftMeterPerDay = working * -0.1f;
 			EXTRACT_BITS(working, data, pos, 16); // inclination
 			aop_entry.inclinationDeg = (working / 10000.f) + 95;
+		} else if (format == AopFormat::C) {
+			EXTRACT_BITS(working, data, pos, 19); // Longitude of the ascending node
+			aop_entry.ascNodeLongitudeDeg = working / 1000.f;
+			EXTRACT_BITS(working, data, pos, 10); // angular separation between two successive ascending nodes
+			aop_entry.ascNodeDriftDeg = (working / 1000.f) - 25.012f;
+			EXTRACT_BITS(working, data, pos, 14); // nodal period
+			aop_entry.orbitPeriodMin = (working / 1000.f) + 90;
+			EXTRACT_BITS(working, data, pos, 19); // semi-major axis
+			aop_entry.semiMajorAxisKm = (working / 1000.f) + 6750;
+			EXTRACT_BITS(working, data, pos, 8); // semi-major axis decay
+			aop_entry.semiMajorAxisDriftMeterPerDay = working * -0.1f;
+			EXTRACT_BITS(working, data, pos, 16); // inclination
+			aop_entry.inclinationDeg = (working / 10000.f) + 96;
 		}
 
 		uint8_t key = aop_entry.satHexId;
@@ -219,10 +237,13 @@ private:
 			allcast_constellation_status_decode(data, pos, false, constellation_status, a_dcs);
 			break;
 		case 0xBE: // Satellite Orbit Parameters Type A
-			allcast_sat_orbit_params_decode(data, pos, true, orbit_params, a_dcs);
+			allcast_sat_orbit_params_decode(data, pos, AopFormat::A, orbit_params, a_dcs);
 			break;
 		case 0xD4: // Satellite Orbit Parameters Type B
-			allcast_sat_orbit_params_decode(data, pos, false, orbit_params, a_dcs);
+			allcast_sat_orbit_params_decode(data, pos, AopFormat::B, orbit_params, a_dcs);
+			break;
+		case 0x13: // Satellite Orbit Parameters Type C
+			allcast_sat_orbit_params_decode(data, pos, AopFormat::C, orbit_params, a_dcs);
 			break;
 		default:
 			DEBUG_ERROR("allcast_packet_decode: unrecognised allcast packet ID (%08x)", addressee_identification);
