@@ -42,7 +42,7 @@ void CDT::calibration_write(const double value, const unsigned int offset) {
 		m_cal.write((unsigned int)CalibrationPoint::GAIN_FACTOR, value);
 	} else if (7 == offset) {
 		DEBUG_TRACE("CDT::calibrate: power on AD5933 using f=%u", (unsigned int)value);
-		m_ad5933.start((unsigned int)value, VRange::V1_GAIN1X);
+		m_ad5933.start((unsigned int)value, VRange::V400MV_GAIN1X);
 	} else if (8 == offset) {
 		DEBUG_TRACE("CDT::calibrate: power off AD5933");
 		m_ad5933.stop();
@@ -102,7 +102,7 @@ double CDT::read_calibrated_conductivity() {
 		CC = 0.4696;
 	}
 
-	m_ad5933.start(90000, VRange::V1_GAIN1X);
+	m_ad5933.start(90000, VRange::V400MV_GAIN1X);
 	double impedance = m_ad5933.get_impedence(2, gain_factor);
 	m_ad5933.stop();
 

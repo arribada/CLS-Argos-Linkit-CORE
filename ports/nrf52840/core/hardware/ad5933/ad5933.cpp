@@ -85,10 +85,10 @@ void AD5933LL::get_real_imaginary(int16_t& real, int16_t& imag)
 #endif
 }
 
-void AD5933LL::set_start_frequency(unsigned int frequency)
+void AD5933LL::set_start_frequency(unsigned int v)
 {
-	DEBUG_TRACE("AD5933LL::set_start_frequency");
-	uint64_t frequency_conversion = (((uint64_t)frequency << 27) + 3999999) / 4000000;
+	uint64_t frequency_conversion = (((uint64_t)v << 27) + 2097000) / 4194000; // Assumes 16.776MHz osc
+	DEBUG_TRACE("AD5933LL::set_start_frequency: code=%08x", (unsigned int)frequency_conversion);
 	write_reg(AD5933Register::START_FREQUENCY_23_16, frequency_conversion >> 16);
 	write_reg(AD5933Register::START_FREQUENCY_15_8, frequency_conversion >> 8);
 	write_reg(AD5933Register::START_FREQUENCY_7_0, frequency_conversion);
@@ -101,10 +101,10 @@ void AD5933LL::set_number_of_increments(unsigned int num)
 	write_reg(AD5933Register::NUM_INCREMENTS_7_0, num);
 }
 
-void AD5933LL::set_frequency_increment(unsigned int inc)
+void AD5933LL::set_frequency_increment(unsigned int v)
 {
-	DEBUG_TRACE("AD5933LL::set_frequency_increment");
-	uint64_t frequency_conversion = (((uint64_t)inc << 27) + 3999999) / 4000000;
+	uint64_t frequency_conversion = (((uint64_t)v << 27) + 2097000) / 4194000; // Assumes 16.776MHz osc
+	DEBUG_TRACE("AD5933LL::set_frequency_increment: code=%08x", (unsigned int)frequency_conversion);
 	write_reg(AD5933Register::FREQUENCY_INCREMENT_23_16, frequency_conversion >> 16);
 	write_reg(AD5933Register::FREQUENCY_INCREMENT_15_8, frequency_conversion >> 8);
 	write_reg(AD5933Register::FREQUENCY_INCREMENT_7_0, frequency_conversion);
@@ -113,19 +113,19 @@ void AD5933LL::set_frequency_increment(unsigned int inc)
 void AD5933LL::set_settling_times(unsigned int settling)
 {
 	DEBUG_TRACE("AD5933LL::set_settling_times");
-	  uint8_t decode = 0;
-	  settling = std::min(settling, (unsigned int)2047);
+	uint8_t decode = 0;
+	settling = std::min(settling, (unsigned int)2047);
 
-	  if (settling > 1023) {
-	    decode = 3; // 4X
-	    settling >>= 2;
-	  } else if (settling > 511) {
-	    decode = 1; // 2X
-	    settling >>= 1;
-	  }
+	if (settling > 1023) {
+		decode = 3; // 4X
+		settling >>= 2;
+	} else if (settling > 511) {
+		decode = 1; // 2X
+		settling >>= 1;
+	}
 
-	  write_reg(AD5933Register::SETTLING_TIMES_15_8, (settling >> 8) | (decode << 1));
-	  write_reg(AD5933Register::SETTLING_TIMES_7_0, settling);
+	write_reg(AD5933Register::SETTLING_TIMES_15_8, (settling >> 8) | (decode << 1));
+	write_reg(AD5933Register::SETTLING_TIMES_7_0, settling);
 }
 
 void AD5933LL::initialize()
