@@ -1045,6 +1045,7 @@ void ArticSat::initiate_rx() {
 	// image was released
 	add_rx_packet_filter(0x000005F); // Constellation Satellite Status - format B
 	add_rx_packet_filter(0x00000D4); // Satellite Orbit Parameters – format B for ANGELS
+	add_rx_packet_filter(0x0000013); // Satellite Orbit Parameters – format C
 	add_rx_packet_filter(m_device_identifier);
 
 	// Initiate RX mode command
