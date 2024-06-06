@@ -37,6 +37,7 @@ const BaseMap param_map[] = {
 	{ "LB_ARGOS_MODE", "LBP04", BaseEncoding::ARGOSMODE, 0U, 0U, { 0U, 1U, 2U, 3U }, true, true },
 	{ "LB_ARGOS_DUTY_CYCLE", "LBP05", BaseEncoding::UINT, 0U, 0xFFFFFFU, {}, true, true },
 	{ "LB_GNSS_EN", "LBP06", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "LB_CAM_EN", "LBP07", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 	{ "DLOC_ARG_LB", "ARP12", BaseEncoding::AQPERIOD, 0, 0, { 0, 1, 2, 3, 4, 5, 6, 7, 8 }, true, true },
 	{ "LB_GNSS_HDOPFILT_THR", "LBP07", BaseEncoding::UINT, 2U, 15U, {}, true, true },
 	{ "LB_ARGOS_DEPTH_PILE", "LBP08", BaseEncoding::DEPTHPILE, 0U, 0U, {1U, 2U, 3U, 4U, 8U, 9U, 10U, 11U, 12U}, true, true },
@@ -132,6 +133,13 @@ const BaseMap param_map[] = {
 	{ "CDT_SENSOR_DEPTH", "CDP04", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
 	{ "CDT_SENSOR_TEMPERATURE", "CDP05", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
 
+	// Camera service
+	{ "CAM_ENABLE", "CAM01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "CAM_TRIGGER_ON_SURFACED", "CAM02", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "CAM_TRIGGER_ON_AXL_WAKEUP", "CAM03", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "CAM_PERIOD_ON", "CAM04", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+	{ "CAM_PERIOD_OFF", "CAM05", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+
 	// EXTERNAL LED
 	{ "EXT_LED_MODE", "LDP02", BaseEncoding::LEDMODE, 0U, 0U, {}, true, true },
 
@@ -179,6 +187,7 @@ const BaseMap param_map[] = {
 
 	// GNSS trigger cold start on surfaced
 	{ "GNSS_TRIGGER_COLD_START_ON_SURFACED", "GNP28", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+
 
 	// Sensor Argos TX options
 	{ "SEA_TEMP_SENSOR_ENABLE_TX_MODE", "STP04", BaseEncoding::SENSORENABLETXMODE, 0, 0, {}, true, true },

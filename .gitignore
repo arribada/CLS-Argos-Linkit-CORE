@@ -19,3 +19,6 @@ ports/nrf52840/LinkIt_CORE_board_dfu.zip
 .vscode/settings.json
 ports/nrf52840/bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/*
 ports/nrf52840/build/*
+.devcontainer/*
+.dockerignore
+.vscode/*

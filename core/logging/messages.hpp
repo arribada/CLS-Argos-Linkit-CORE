@@ -35,7 +35,8 @@ enum LogType : uint8_t {
 	LOG_ERROR,
 	LOG_WARN,
 	LOG_INFO,
-	LOG_TRACE
+	LOG_TRACE,
+	LOG_CAM
 };
 
 struct __attribute__((packed)) LogHeader {
@@ -108,6 +109,24 @@ struct __attribute__((packed)) GPSLogEntry {
 	};
 };
 static_assert(sizeof(GPSInfo) <= MAX_LOG_PAYLOAD, "GPSInfo wrong size");
+
+enum class CAMEventType : uint8_t { ON, OFF };
+
+struct __attribute__((packed)) CAMInfo {
+	CAMEventType event_type;
+	uint16_t   batt_voltage;
+	uint16_t   counter;
+	std::time_t schedTime;
+};
+
+struct __attribute__((packed)) CAMLogEntry {
+	LogHeader header;
+	union {
+		CAMInfo info;
+		uint8_t data[MAX_LOG_PAYLOAD];
+	};
+};
+static_assert(sizeof(CAMInfo) <= MAX_LOG_PAYLOAD, "CAMInfo wrong size");
 
 enum class StartupCause : uint8_t { BROWNOUT, WATCHDOG, HARD_RESET, FACTORY_RESET, SOFT_RESET };
 
