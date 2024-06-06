@@ -6,6 +6,7 @@
 #include "sea_temp_sensor_service.hpp"
 #include "cdt_sensor_service.hpp"
 #include "gps_service.hpp"
+#include "cam_service.hpp"
 #include "pressure_sensor_service.hpp"
 #include "axl_sensor_service.hpp"
 #include "argos_tx_service.hpp"
@@ -35,6 +36,7 @@
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
 #include "m8qasync.hpp"
+#include "runcam.hpp"
 #include "ltr_303.hpp"
 #include "oem_ph.hpp"
 #include "oem_rtd.hpp"
@@ -466,6 +468,11 @@ int main()
 	FsLog axl_sensor_log(&lfs_file_system, "AXL", 1024*1024);
 	axl_sensor_log.set_log_formatter(&axl_sensor_log_formatter);
 
+	DEBUG_TRACE("RunCam Sensor Log...");
+	CAMLogFormatter runcam_sensor_log_formatter;
+	FsLog runcam_sensor_log(&lfs_file_system, "camera.log", 1024*1024);
+	runcam_sensor_log.set_log_formatter(&runcam_sensor_log_formatter);
+
 	DEBUG_TRACE("RAM access...");
 	NrfMemoryAccess nrf_memory_access;
 	memory_access = &nrf_memory_access;
@@ -506,6 +513,14 @@ int main()
 		static GNSSDetectorService gps_detector(m8q_gnss);
 	} catch (...) {
 		DEBUG_TRACE("GPS M8Q not detected");
+	}
+	
+	DEBUG_TRACE("RunCam ...");
+	try {
+		static RunCam run_cam;
+		static CAMService cam_service(run_cam, &fs_sensor_log);
+	} catch (...) {
+		DEBUG_TRACE("RunCam not detected");
 	}
 
 	DEBUG_TRACE("MS58xx...");

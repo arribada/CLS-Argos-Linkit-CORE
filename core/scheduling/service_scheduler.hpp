@@ -13,7 +13,9 @@ enum class ServiceEventType {
 	GNSS_ON,
 	ARGOS_TX_START,
 	ARGOS_TX_END,
-	SENSOR_LOG_UPDATED
+	SENSOR_LOG_UPDATED,
+	CAM_START,
+	CAM_END
 };
 
 struct ServiceSensorData {
@@ -36,7 +38,8 @@ enum class ServiceIdentifier : unsigned int {
 	PH_SENSOR,
 	AXL_SENSOR,
 	MEMORY_MONITOR,
-	DIVE_MODE
+	DIVE_MODE,
+	CAM_SENSOR
 };
 
 struct ServiceEvent {

@@ -52,6 +52,7 @@ private:
 		{5, "CDT"},
 		{6, "AXL"},
 		{7, "PRESSURE"},
+		{8, "CAM"},
 	};
 	static inline std::map<unsigned int, std::string> m_logger_erase = {
 		{1, "sensor.log"},
@@ -62,6 +63,7 @@ private:
 		{7, "CDT"},
 		{8, "AXL"},
 		{9, "PRESSURE"},
+		{10, "CAM"},
 	};
 	static inline std::map<unsigned int, std::string> m_scalx = {
 		{0, "AXL"},

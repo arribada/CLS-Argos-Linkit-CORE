@@ -160,6 +160,7 @@ protected:
 		/* LB_ARGOS_MODE */ BaseArgosMode::LEGACY,
 		/* LB_ARGOS_DUTY_CYCLE */ 0U,
 		/* LB_GNSS_EN */ (bool)true,
+		/* LB_CAM_EN */ (bool)false,
 		/* DLOC_ARG_LB */ 60*60U,
 		/* LB_GNSS_HDOPFILT_THR */ 2U,
 		/* LB_ARGOS_DEPTH_PILE */ BaseArgosDepthPile::DEPTH_PILE_1,
@@ -296,6 +297,12 @@ protected:
 		/* LB_CRITICAL_THRESH */ 2.8,
 		/* PRESSURE_SENSOR_LOGGING_MODE */ BasePressureSensorLoggingMode::ALWAYS,
 		/* GNSS_TRIGGER_COLD_START_ON_SURFACED */ (bool)false,
+
+		/* CAM_ENABLE */ (bool)false,
+		/* CAM_TRIGGER_ON_SURFACED */ (bool)false,
+		/* CAM_TRIGGER_ON_AXL_WAKEUP */ (bool)false,
+		/* CAM_PERIOD_ON */ 2U * 60U,
+		/* CAM_PERIOD_ON */ 10U * 60U,
 
 		/* SEA_TEMP_SENSOR_ENABLE_TX_MODE */ BaseSensorEnableTxMode::OFF,
 		/* SEA_TEMP_SENSOR_ENABLE_TX_MAX_SAMPLES */ 1U,

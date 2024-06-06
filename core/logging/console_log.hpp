@@ -25,6 +25,11 @@ private:
 		const char *name = log_type_name[entry->header.log_type];
 		printf("[%s]\tlat: %lf lon: %lf\r\n", name, entry->info.lat, entry->info.lon);
 	}
+
+	void cam_formatter(const CAMLogEntry *entry) {
+		const char *name = log_type_name[entry->header.log_type];
+		printf("[%s]\tstate: %u counter: %u batt_voltage: %f\r\n", name, entry->info.event_type, entry->info.counter, entry->info.batt_voltage););
+	}
 	void startup_formatter(const SystemStartupLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
 		printf("[%s]\tstartup_cause: %d", name, static_cast<int>(entry->cause));
@@ -80,6 +85,9 @@ public:
 			break;
 		case LOG_GPS:
 			gps_formatter((const GPSLogEntry *)entry);
+			break;
+		case LOG_CAM:
+			cam_formatter((const CAMLogEntry *)entry);
 			break;
 		case LOG_STATE:
 			state_formatter((const StateChangeLogEntry *)entry);

@@ -172,6 +172,7 @@ target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
     ${PROJ_DIR}/core/hardware/cdt
     ${PROJ_DIR}/core/hardware/bmx160
     ${PROJ_DIR}/core/hardware/stwlc68_otp
+    ${PROJ_DIR}/core/hardware/run_cam
 )
 
 target_sources(${TARGET_NAME} PRIVATE
@@ -234,6 +235,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${CORE_DIR}/sm/ledsm.cpp
     ${CORE_DIR}/services/service.cpp
     ${CORE_DIR}/services/gps_service.cpp
+    ${CORE_DIR}/services/cam_service.cpp
     ${CORE_DIR}/services/argos_tx_service.cpp
     ${CORE_DIR}/services/argos_rx_service.cpp
     ${CORE_DIR}/services/uwdetector_service.cpp
@@ -258,6 +260,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/artic_sat/pa_driver.cpp
 	${PROJ_DIR}/core/hardware/m8qasync/m8qasync.cpp
     ${PROJ_DIR}/core/hardware/m8qasync/ubx_comms.cpp
+    ${PROJ_DIR}/core/hardware/run_cam/runcam.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp
     ${PROJ_DIR}/core/hardware/nrf_spim.cpp
