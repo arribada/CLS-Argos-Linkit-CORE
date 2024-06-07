@@ -468,9 +468,9 @@ int main()
 	FsLog axl_sensor_log(&lfs_file_system, "AXL", 1024*1024);
 	axl_sensor_log.set_log_formatter(&axl_sensor_log_formatter);
 
-	DEBUG_TRACE("RunCam Sensor Log...");
+	DEBUG_TRACE("CAMERA Sensor Log...");
 	CAMLogFormatter runcam_sensor_log_formatter;
-	FsLog runcam_sensor_log(&lfs_file_system, "camera.log", 1024*1024);
+	FsLog runcam_sensor_log(&lfs_file_system, "CAMERA", 1024*1024);
 	runcam_sensor_log.set_log_formatter(&runcam_sensor_log_formatter);
 
 	DEBUG_TRACE("RAM access...");
@@ -515,10 +515,10 @@ int main()
 		DEBUG_TRACE("GPS M8Q not detected");
 	}
 	
-	DEBUG_TRACE("RunCam ...");
+	DEBUG_TRACE("CAMERA ...");
 	try {
 		static RunCam run_cam;
-		static CAMService cam_service(run_cam, &fs_sensor_log);
+		static CAMService cam_service(run_cam, &runcam_sensor_log);
 	} catch (...) {
 		DEBUG_TRACE("RunCam not detected");
 	}
