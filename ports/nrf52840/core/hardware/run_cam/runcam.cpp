@@ -14,8 +14,8 @@ RunCam::~RunCam() {
 
 void RunCam::power_off()
 {
-   if (m_state == State::POWERED_OFF)
-        return;
+   // if (m_state == State::POWERED_OFF)
+   //      return;
 	DEBUG_TRACE("RunCam::power_off");
    m_state = State::POWERED_OFF;
 	nrf_gpio_pin_clear(CAM_PWR_EN);
