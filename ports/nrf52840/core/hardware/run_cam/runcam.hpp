@@ -8,7 +8,7 @@ public:
     RunCam();
     ~RunCam();
 	void power_off() override;
-	void power_off() override;
+	void power_on() override;
 private:
 	enum class State
 	{

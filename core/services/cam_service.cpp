@@ -31,7 +31,7 @@ unsigned int CAMService::service_next_schedule_in_ms() {
     }
 
     // Find the next schedule time aligned to UTC 00:00
-    std::time_t next_schedule = now - (now % (aq_period))) + aq_period - period_off;
+    std::time_t next_schedule = now - (now % (aq_period)) + aq_period - period_off;
 
     DEBUG_TRACE("CAMService::reschedule: period_on=%u period_off=%u now=%u next=%u",
     		(unsigned int)period_on, (unsigned int)period_off,
@@ -117,9 +117,9 @@ void CAMService::task_process_cam_data()
     cam_entry.info.counter = m_num_captures;
 
     DEBUG_INFO("CAMService::task_process_cam_data: batt=%lfV state=%u count=%u", 
-			(double)gps_entry.info.batt_voltage / 1000,
+			(double)cam_entry.info.batt_voltage / 1000,
             (unsigned int)cam_entry.info.event_type,
-            (unsigned int)cam_entry.info.counter,
+            (unsigned int)cam_entry.info.counter
             );
 
     // Notify configuration store that we have a new valid GPS fix
@@ -142,7 +142,7 @@ void CAMService::react(const CAMEventError&) {
 void CAMService::cam_data_callback() {
     // Mark first fix flag
 	m_num_captures++;
-    task_process_gnss_data();
+    task_process_cam_data();
 }
 
 void CAMService::populate_cam_log_with_time(CAMLogEntry &entry, std::time_t time)
