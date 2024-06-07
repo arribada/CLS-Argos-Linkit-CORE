@@ -22,7 +22,7 @@ struct ServiceSensorData {
 	double port[5];
 };
 
-using ServiceEventData = std::variant<bool,GPSLogEntry,ServiceSensorData>;
+using ServiceEventData = std::variant<bool,GPSLogEntry,ServiceSensorData,CAMLogEntry>;
 
 enum class ServiceIdentifier : unsigned int {
 	UNKNOWN,

@@ -2,7 +2,7 @@
 
 #include <atomic>
 
-#include "gps.hpp"
+#include "runcam.hpp"
 #include "service.hpp"
 #include "logger.hpp"
 #include "timeutils.hpp"
@@ -15,12 +15,12 @@ public:
 		return "log_datetime,id,batt_voltage,state\r\n";
 	}
 	const std::string log_entry(const LogEntry& e) override {
-		char entry[512], d1[128], d2[128];
+		char entry[512], d1[128];
 		const CAMLogEntry *cam = (const CAMLogEntry *)&e;
 		std::time_t t;
 		std::tm *tm;
 
-		t = convert_epochtime(log->header.year, log->header.month, log->header.day, log->header.hours, log->header.minutes, log->header.seconds);
+		t = convert_epochtime(cam->header.year, cam->header.month, cam->header.day, cam->header.hours, cam->header.minutes, cam->header.seconds);
 		tm = std::gmtime(&t);
 		std::strftime(d1, sizeof(d1), "%d/%m/%Y %H:%M:%S", tm);
 
@@ -28,15 +28,15 @@ public:
 		snprintf(entry, sizeof(entry), "%s,%d,%f,%d\r\n",
 				d1,
 				(unsigned int)cam->info.counter,
-				(unsigned int)cam->info.batt_voltage/1000,
-				(unsigned int)gps->info.state);
+				(double)cam->info.batt_voltage/1000,
+				(unsigned int)cam->info.event_type);
 		return std::string(entry);
-	}
+	};
 };
 
 class CAMService : public Service, public CAMEventListener  {
 public:
-	CAMService(CAMDevice& device, Logger *logger) : ServiceServiceIdentifier::CAM_SENSOR, "CAM", logger), m_device(device) {
+	CAMService(CAMDevice& device, Logger *logger) : Service(ServiceIdentifier::CAM_SENSOR, "CAM", logger), m_device(device) {
 	    m_device.subscribe(*this);
 	}
 	void notify_peer_event(ServiceEvent& e) override;
@@ -68,6 +68,6 @@ private:
 	void task_process_cam_data();
 	void populate_cam_log_with_time(CAMLogEntry &entry, std::time_t time);
 	CAMLogEntry invalid_log_entry();
-	void cam_data_callback(CAMData data);
+	void cam_data_callback();
 	void populate_cam_data_and_callback();
 };

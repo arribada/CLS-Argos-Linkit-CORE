@@ -1,3 +1,4 @@
+#include "runcam.hpp"
 #include "bsp.hpp"
 #include "gpio.hpp"
 #include "debug.hpp"
@@ -17,7 +18,7 @@ void RunCam::power_off()
         return;
 	DEBUG_TRACE("RunCam::power_off");
    m_state = State::POWERED_OFF;
-	nrf_gpio_pin_clear(BSP::CAM_PWR_EN);
+	nrf_gpio_pin_clear(CAM_PWR_EN);
 }
 
 void RunCam::power_on()
@@ -25,5 +26,5 @@ void RunCam::power_on()
    if (m_state == State::POWERED_ON)
         return;
 	DEBUG_TRACE("RunCam::power_on");
-	nrf_gpio_pin_set(BSP::CAM_PWR_EN);
+	nrf_gpio_pin_set(CAM_PWR_EN);
 }

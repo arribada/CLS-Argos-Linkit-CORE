@@ -28,7 +28,7 @@ private:
 
 	void cam_formatter(const CAMLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
-		printf("[%s]\tstate: %u counter: %u batt_voltage: %f\r\n", name, entry->info.event_type, entry->info.counter, entry->info.batt_voltage););
+		printf("[%s]\tstate: %u counter: %u batt_voltage: %f\r\n", name, entry->info.event_type, entry->info.counter, entry->info.batt_voltage);
 	}
 	void startup_formatter(const SystemStartupLogEntry *entry) {
 		const char *name = log_type_name[entry->header.log_type];
