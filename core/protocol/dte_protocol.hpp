@@ -545,7 +545,7 @@ protected:
 		const auto max_value = std::get<double>(arg_map.max_value);
 		if ((min_value != 0 || max_value != 0) &&
 			(value < min_value || value > max_value)) {
-			DEBUG_ERROR("parameter \"%s\" value out of min/max range", arg_map.name.c_str(), value, min_value, max_value);
+			DEBUG_ERROR("parameter \"%s\" (%u) value out of min/max range (%u/%u)", arg_map.name.c_str(), value, min_value, max_value);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 		if (!arg_map.permitted_values.empty() &&
@@ -562,7 +562,7 @@ protected:
 		const auto max_value = std::get<unsigned int>(arg_map.max_value);
 		if ((min_value != 0 || max_value != 0) &&
 			(value < min_value || value > max_value)) {
-			DEBUG_ERROR("parameter \"%s\" value out of min/max range", arg_map.name.c_str(), value, min_value, max_value);
+			DEBUG_ERROR("parameter \"%s\" (%u) value out of min/max range (%u/%u)", arg_map.name.c_str(), value, min_value, max_value);
 			throw DTE_PROTOCOL_VALUE_OUT_OF_RANGE;
 		}
 		if (!arg_map.permitted_values.empty() &&

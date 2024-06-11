@@ -133,11 +133,11 @@ const BaseMap param_map[] = {
 	{ "CDT_SENSOR_TEMPERATURE", "CDP05", BaseEncoding::FLOAT, (double)0.0, (double)0.0, {}, true, true },
 
 	// Camera service
-	{ "CAM_ENABLE", "CAM01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
-	{ "CAM_TRIGGER_ON_SURFACED", "CAM02", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
-	{ "CAM_TRIGGER_ON_AXL_WAKEUP", "CAM03", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
-	{ "CAM_PERIOD_ON", "CAM04", BaseEncoding::UINT, 0U, 0U, {}, true, true },
-	{ "CAM_PERIOD_OFF", "CAM05", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+	{ "CAM_ENABLE", "CAP01", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "CAM_TRIGGER_ON_SURFACED", "CAP02", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "CAM_TRIGGER_ON_AXL_WAKEUP", "CAP03", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
+	{ "CAM_PERIOD_ON", "CAP04", BaseEncoding::UINT, 0U, 0U, {}, true, true },
+	{ "CAM_PERIOD_OFF", "CAP05", BaseEncoding::UINT, 0U, 0U, {}, true, true },
 	{ "LB_CAM_EN", "LBP13", BaseEncoding::BOOLEAN, 0, 0, {}, true, true },
 
 	// EXTERNAL LED

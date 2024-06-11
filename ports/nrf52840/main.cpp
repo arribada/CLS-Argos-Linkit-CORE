@@ -470,7 +470,7 @@ int main()
 
 	DEBUG_TRACE("CAMERA Sensor Log...");
 	CAMLogFormatter runcam_sensor_log_formatter;
-	FsLog runcam_sensor_log(&lfs_file_system, "CAMERA", 1024*1024);
+	FsLog runcam_sensor_log(&lfs_file_system, "CAM", 1024*1024);
 	runcam_sensor_log.set_log_formatter(&runcam_sensor_log_formatter);
 
 	DEBUG_TRACE("RAM access...");
@@ -515,14 +515,6 @@ int main()
 		DEBUG_TRACE("GPS M8Q not detected");
 	}
 	
-	DEBUG_TRACE("CAMERA ...");
-	try {
-		static RunCam run_cam;
-		static CAMService cam_service(run_cam, &runcam_sensor_log);
-	} catch (...) {
-		DEBUG_TRACE("RunCam not detected");
-	}
-
 	DEBUG_TRACE("MS58xx...");
 	MS58xxHardware *ms58xx_devices[BSP::I2C_TOTAL_NUMBER];
 #ifndef DUMMY_MS58xx
@@ -611,6 +603,14 @@ int main()
 		static AXLSensorService axl_sensor_service(bmx160, &axl_sensor_log);
 	} catch (...) {
 		DEBUG_TRACE("BMX160: not detected");
+	}
+
+	DEBUG_TRACE("CAMERA ...");
+	try {
+		static RunCam run_cam;
+		static CAMService cam_service(run_cam, &runcam_sensor_log);
+	} catch (...) {
+		DEBUG_TRACE("RunCam not detected");
 	}
 
 	DEBUG_TRACE("Memory monitor...");
