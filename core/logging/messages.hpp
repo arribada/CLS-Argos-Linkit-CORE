@@ -110,7 +110,7 @@ struct __attribute__((packed)) GPSLogEntry {
 };
 static_assert(sizeof(GPSInfo) <= MAX_LOG_PAYLOAD, "GPSInfo wrong size");
 
-enum class CAMEventType : uint8_t { ON, OFF };
+enum class CAMEventType : uint8_t { OFF, ON };
 
 struct __attribute__((packed)) CAMInfo {
 	CAMEventType event_type;

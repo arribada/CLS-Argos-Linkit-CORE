@@ -3,8 +3,6 @@
 #include "scheduler.hpp"
 
 extern ConfigurationStore *configuration_store;
-extern Scheduler *system_scheduler;
-
 
 #define MS_PER_SEC         (1000)
 
@@ -23,30 +21,43 @@ bool CAMService::service_is_enabled() {
 unsigned int CAMService::service_next_schedule_in_ms() {
     std::time_t now = service_current_time();
     std::time_t period_on = service_read_param<unsigned int>(ParamID::CAM_PERIOD_ON);
-    std::time_t period_off = service_read_param<unsigned int>(ParamID::CAM_PERIOD_ON);
-    std::time_t aq_period = period_on + period_off;
-
+    std::time_t period_off = service_read_param<unsigned int>(ParamID::CAM_PERIOD_OFF);
+    std::time_t aq_period = period_on;// + period_off;
     if (period_on == 0) {
     	return Service::SCHEDULE_DISABLED;
     }
+    std::time_t next_schedule = now - (now % aq_period) + aq_period;
+    unsigned int next_state = m_device.is_powered_on();
+    if (next_state)
+    {
+        //DEBUG_TRACE("CAMService::service_next_schedule_in_ms() => next state : PWR OFF");
+        aq_period = period_on;// + period_off;
+    } else {
+        aq_period = period_off;// + period_off;
+        next_schedule = now - (now % (period_on+period_off)) + aq_period;
+        //DEBUG_TRACE("CAMService::service_next_schedule_in_ms() => next state : PWR ON");
+    }
 
-    // Find the next schedule time aligned to UTC 00:00
-    std::time_t next_schedule = now - (now % (aq_period)) + aq_period - period_off;
-
-    DEBUG_TRACE("CAMService::reschedule: period_on=%u period_off=%u now=%u next=%u",
+    DEBUG_TRACE("CAMService::reschedule: period_on=%u period_off=%u now=%u next=%u next_state=%u",
     		(unsigned int)period_on, (unsigned int)period_off,
-			(unsigned int)now, (unsigned int)next_schedule);
+			(unsigned int)now, (unsigned int)next_schedule, next_state);
 
     // Find the time in milliseconds until this schedule
     return (next_schedule - now) * MS_PER_SEC;
 }
 
 void CAMService::service_initiate() {
-
-	m_next_schedule = service_current_time();
-	m_wakeup_time = service_current_timer();
 	m_is_active = true;
-	m_device.power_on();
+	m_next_schedule = service_current_timer();
+	m_wakeup_time = service_current_timer();
+    if (m_device.is_powered_on()) {
+        DEBUG_TRACE("CAMService::service_initiate => new state = PWR ON");
+	    m_device.power_off();
+    } else {
+        DEBUG_TRACE("CAMService::service_initiate => next state = PWR OFF");
+	    m_device.power_on();
+    }
+    
 }
 
 bool CAMService::service_cancel() {
@@ -67,11 +78,12 @@ bool CAMService::service_cancel() {
 
 unsigned int CAMService::service_next_timeout() {
 	// No timeoute managed
-	return 0;
+    return(0);
 }
 
 bool CAMService::service_is_triggered_on_surfaced(bool& immediate) {
-    return service_read_param<bool>(ParamID::CAM_TRIGGER_ON_SURFACED);
+    immediate = service_read_param<bool>(ParamID::CAM_TRIGGER_ON_SURFACED);
+    return true;
 }
 
 bool CAMService::service_is_usable_underwater() {
@@ -97,7 +109,7 @@ CAMLogEntry CAMService::invalid_log_entry()
     return cam_entry;
 }
 
-void CAMService::task_process_cam_data()
+void CAMService::task_process_cam_data(bool state)
 {
     DEBUG_TRACE("CAMService::task_process_cam_data");
 
@@ -113,8 +125,12 @@ void CAMService::task_process_cam_data()
 
     cam_entry.info.schedTime     = m_next_schedule;
 
-    cam_entry.info.event_type = CAMEventType::ON;
-    cam_entry.info.counter = m_num_captures;
+    if (state)
+        cam_entry.info.event_type = CAMEventType::ON;
+    else
+        cam_entry.info.event_type = CAMEventType::OFF;
+    
+    cam_entry.info.counter = m_device.get_num_captures();
 
     DEBUG_INFO("CAMService::task_process_cam_data: batt=%lfV state=%u count=%u", 
 			(double)cam_entry.info.batt_voltage / 1000,
@@ -122,11 +138,8 @@ void CAMService::task_process_cam_data()
             (unsigned int)cam_entry.info.counter
             );
 
-    // Notify configuration store that we have a new valid GPS fix
-    //configuration_store->notify_gps_location(gps_entry);
-
     ServiceEventData event_data = cam_entry;
-    service_complete(&event_data, &cam_entry);
+    service_complete(&event_data, &cam_entry, true);
 }
 
 void CAMService::react(const CAMEventError&) {
@@ -139,10 +152,29 @@ void CAMService::react(const CAMEventError&) {
     service_complete(&event_data, &log_entry);
 }
 
-void CAMService::cam_data_callback() {
-    // Mark first fix flag
-	m_num_captures++;
-    task_process_cam_data();
+void CAMService::react(const CAMEventPowerOn&) {
+	// if (!m_is_active)
+	// 	return;
+    DEBUG_TRACE("CAMService::react(CAMEventOn)");
+    m_device.power_on();
+    task_process_cam_data(true);
+    //CAMLogEntry log_entry = invalid_log_entry();
+    //ServiceEventData event_data = log_entry;
+    //service_complete(&event_data, &log_entry);
+    //service_reschedule(false);
+}
+
+void CAMService::react(const CAMEventPowerOff&) {
+	// if (!m_is_active)
+	// 	return;
+    DEBUG_TRACE("CAMService::react(CAMEventOff)");
+    m_device.power_off();
+    task_process_cam_data(false);
+    m_num_captures++;
+    //CAMLogEntry log_entry = invalid_log_entry();
+    //ServiceEventData event_data = log_entry;
+    //service_complete(&event_data, &log_entry);
+    //service_reschedule(false);
 }
 
 void CAMService::populate_cam_log_with_time(CAMLogEntry &entry, std::time_t time)
@@ -162,7 +194,7 @@ bool CAMService::service_is_triggered_on_event(ServiceEvent& event, bool& immedi
 	return false;
 }
 
-void CAMService::notify_peer_event(ServiceEvent& e) {
-	//DEBUG_TRACE("GPSService::notify_peer_event: (%u,%u)", e.event_source, e.event_type);
-	Service::notify_peer_event(e);
-}
+// void CAMService::notify_peer_event(ServiceEvent& event) {
+//     DEBUG_TRACE("CAMService::notify_peer_event: (%u,%u)", event.event_source, event.event_type);
+// 	Service::notify_peer_event(event);
+// }

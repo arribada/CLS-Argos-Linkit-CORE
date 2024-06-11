@@ -39,7 +39,7 @@ public:
 	CAMService(CAMDevice& device, Logger *logger) : Service(ServiceIdentifier::CAM_SENSOR, "CAM", logger), m_device(device) {
 	    m_device.subscribe(*this);
 	}
-	void notify_peer_event(ServiceEvent& e) override;
+	//void notify_peer_event(ServiceEvent& event) override;
 
 protected:
 	// Service interface methods
@@ -63,11 +63,12 @@ private:
 	unsigned int m_num_captures;
 
     void react(const CAMEventError&) override;
+    void react(const CAMEventPowerOn&) override;
+    void react(const CAMEventPowerOff&) override;
 
 	// Private methods for GNSS
-	void task_process_cam_data();
+	void task_process_cam_data(bool state);
 	void populate_cam_log_with_time(CAMLogEntry &entry, std::time_t time);
 	CAMLogEntry invalid_log_entry();
-	void cam_data_callback();
 	void populate_cam_data_and_callback();
 };

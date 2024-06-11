@@ -18,10 +18,7 @@ struct CAMData {
  */
 struct CAMEventError {};
 struct CAMEventPowerOn {};
-struct CAMEventPowerOff {
-    bool fix_found;
-    CAMEventPowerOff(bool a) : fix_found(a) {}
-};
+struct CAMEventPowerOff {};
 
 class CAMEventListener {
 public:
@@ -36,6 +33,7 @@ public:
     virtual ~CAMDevice() {}
     // These methods are specific to the chipset and should be implemented by device-specific subclass
     virtual void power_off() = 0;
-    //virtual void power_on(const CAMSettings& cam_settings) = 0;
     virtual void power_on() = 0;
+    virtual bool is_powered_on() = 0;
+	virtual unsigned int get_num_captures() = 0 ;
 };
