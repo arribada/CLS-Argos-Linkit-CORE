@@ -36,4 +36,6 @@ public:
     virtual void power_on() = 0;
     virtual bool is_powered_on() = 0;
 	virtual unsigned int get_num_captures() = 0 ;
+	virtual	void clear_save_record_pin() = 0;
+	virtual void set_save_record_pin() = 0;
 };

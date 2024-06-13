@@ -2,13 +2,18 @@
 #include "config_store.hpp"
 #include "scheduler.hpp"
 
+
 extern ConfigurationStore *configuration_store;
 
 #define MS_PER_SEC         (1000)
+#define TIME_OFF_SAVE_S      (1)
+#define TIME_ON_SAVE_S       (2)
 
 void CAMService::service_init() {
 	m_is_active = false;
     m_num_captures = 0;
+    m_is_pwr_on = false;
+    
 }
 
 void CAMService::service_term() {
@@ -22,25 +27,33 @@ unsigned int CAMService::service_next_schedule_in_ms() {
     std::time_t now = service_current_time();
     std::time_t period_on = service_read_param<unsigned int>(ParamID::CAM_PERIOD_ON);
     std::time_t period_off = service_read_param<unsigned int>(ParamID::CAM_PERIOD_OFF);
-    std::time_t aq_period = period_on;// + period_off;
+    std::time_t aq_period = period_on ;// + period_off;
+    std::time_t next_schedule = 0;
     if (period_on == 0) {
     	return Service::SCHEDULE_DISABLED;
     }
-    std::time_t next_schedule = now - (now % aq_period) + aq_period;
-    unsigned int next_state = m_device.is_powered_on();
-    if (next_state)
+    
+    if (m_is_pwr_on)
     {
-        //DEBUG_TRACE("CAMService::service_next_schedule_in_ms() => next state : PWR OFF");
-        aq_period = period_on;// + period_off;
-    } else {
-        aq_period = period_off;// + period_off;
         next_schedule = now - (now % (period_on+period_off)) + aq_period;
-        //DEBUG_TRACE("CAMService::service_next_schedule_in_ms() => next state : PWR ON");
+        if (next_schedule < now)
+        {
+            next_schedule = now - (now % (aq_period)) + aq_period;
+        }
+        next_schedule += TIME_OFF_SAVE_S + TIME_ON_SAVE_S;
+    }
+    else
+    {
+        aq_period = period_off;// + period_off;
+        if (next_schedule < now)
+        {
+            next_schedule = now - (now % (aq_period)) + aq_period;
+        }
     }
 
     DEBUG_TRACE("CAMService::reschedule: period_on=%u period_off=%u now=%u next=%u next_state=%u",
     		(unsigned int)period_on, (unsigned int)period_off,
-			(unsigned int)now, (unsigned int)next_schedule, next_state);
+			(unsigned int)now, (unsigned int)next_schedule, !m_is_pwr_on);
 
     // Find the time in milliseconds until this schedule
     return (next_schedule - now) * MS_PER_SEC;
@@ -51,10 +64,16 @@ void CAMService::service_initiate() {
 	m_next_schedule = service_current_timer();
 	m_wakeup_time = service_current_timer();
     if (m_device.is_powered_on()) {
-        DEBUG_TRACE("CAMService::service_initiate => new state = PWR ON");
+        DEBUG_TRACE("CAMService::service_initiate => PWR OFF");
+        DEBUG_TRACE("CAMService::Save record");
+        m_device.clear_save_record_pin();
+		PMU::delay_ms(TIME_OFF_SAVE_S * 1000);
+        m_device.set_save_record_pin();
+		PMU::delay_ms(TIME_ON_SAVE_S * 1000);
+        DEBUG_TRACE("CAMService::End Save");
 	    m_device.power_off();
     } else {
-        DEBUG_TRACE("CAMService::service_initiate => next state = PWR OFF");
+        DEBUG_TRACE("CAMService::service_initiate => PWR ON");
 	    m_device.power_on();
     }
     
@@ -156,25 +175,19 @@ void CAMService::react(const CAMEventPowerOn&) {
 	// if (!m_is_active)
 	// 	return;
     DEBUG_TRACE("CAMService::react(CAMEventOn)");
+    m_is_pwr_on = true;
     m_device.power_on();
-    task_process_cam_data(true);
-    //CAMLogEntry log_entry = invalid_log_entry();
-    //ServiceEventData event_data = log_entry;
-    //service_complete(&event_data, &log_entry);
-    //service_reschedule(false);
+    task_process_cam_data(m_is_pwr_on);
 }
 
 void CAMService::react(const CAMEventPowerOff&) {
 	// if (!m_is_active)
 	// 	return;
     DEBUG_TRACE("CAMService::react(CAMEventOff)");
+    m_is_pwr_on = false;
     m_device.power_off();
-    task_process_cam_data(false);
+    task_process_cam_data(m_is_pwr_on);
     m_num_captures++;
-    //CAMLogEntry log_entry = invalid_log_entry();
-    //ServiceEventData event_data = log_entry;
-    //service_complete(&event_data, &log_entry);
-    //service_reschedule(false);
 }
 
 void CAMService::populate_cam_log_with_time(CAMLogEntry &entry, std::time_t time)

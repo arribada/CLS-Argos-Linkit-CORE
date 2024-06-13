@@ -12,6 +12,8 @@ public:
 	void power_on() override;
 	bool is_powered_on() override;
 	unsigned int get_num_captures() override;
+	void clear_save_record_pin() override;
+	void set_save_record_pin() override;
 private:
 	enum class State
 	{
