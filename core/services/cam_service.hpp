@@ -60,6 +60,7 @@ private:
 	uint64_t     m_wakeup_time;
 	std::time_t  m_next_schedule;
 	bool m_is_active;
+	bool m_is_pwr_on;
 	unsigned int m_num_captures;
 
     void react(const CAMEventError&) override;
