@@ -6,8 +6,8 @@
 extern ConfigurationStore *configuration_store;
 
 #define MS_PER_SEC         (1000)
-#define TIME_OFF_SAVE_S      (1)
-#define TIME_ON_SAVE_S       (2)
+#define TIME_OFF_SAVE_MS      (1000)
+#define TIME_ON_SAVE_MS       (2000)
 
 void CAMService::service_init() {
 	m_is_active = false;
@@ -27,36 +27,23 @@ unsigned int CAMService::service_next_schedule_in_ms() {
     std::time_t now = service_current_time();
     std::time_t period_on = service_read_param<unsigned int>(ParamID::CAM_PERIOD_ON);
     std::time_t period_off = service_read_param<unsigned int>(ParamID::CAM_PERIOD_OFF);
-    std::time_t aq_period = period_on ;// + period_off;
     std::time_t next_schedule = 0;
     if (period_on == 0) {
     	return Service::SCHEDULE_DISABLED;
     }
     
     if (m_is_pwr_on)
-    {
-        next_schedule = now - (now % (period_on+period_off)) + aq_period;
-        if (next_schedule < now)
-        {
-            next_schedule = now - (now % (aq_period)) + aq_period;
-        }
-        next_schedule += TIME_OFF_SAVE_S + TIME_ON_SAVE_S;
-    }
+        next_schedule = period_on;
     else
-    {
-        aq_period = period_off;// + period_off;
-        if (next_schedule < now)
-        {
-            next_schedule = now - (now % (aq_period)) + aq_period;
-        }
-    }
+        next_schedule = period_off;
 
     DEBUG_TRACE("CAMService::reschedule: period_on=%u period_off=%u now=%u next=%u next_state=%u",
     		(unsigned int)period_on, (unsigned int)period_off,
 			(unsigned int)now, (unsigned int)next_schedule, !m_is_pwr_on);
 
     // Find the time in milliseconds until this schedule
-    return (next_schedule - now) * MS_PER_SEC;
+    //return (next_schedule - now) * MS_PER_SEC;
+    return next_schedule * MS_PER_SEC;
 }
 
 void CAMService::service_initiate() {
@@ -67,9 +54,9 @@ void CAMService::service_initiate() {
         DEBUG_TRACE("CAMService::service_initiate => PWR OFF");
         DEBUG_TRACE("CAMService::Save record");
         m_device.clear_save_record_pin();
-		PMU::delay_ms(TIME_OFF_SAVE_S * 1000);
+		PMU::delay_ms(TIME_OFF_SAVE_S);
         m_device.set_save_record_pin();
-		PMU::delay_ms(TIME_ON_SAVE_S * 1000);
+		PMU::delay_ms(TIME_ON_SAVE_S);
         DEBUG_TRACE("CAMService::End Save");
 	    m_device.power_off();
     } else {
