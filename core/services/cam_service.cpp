@@ -1,13 +1,14 @@
 #include "cam_service.hpp"
 #include "config_store.hpp"
 #include "scheduler.hpp"
-
+#include "runcam.hpp"
 
 extern ConfigurationStore *configuration_store;
 
 #define MS_PER_SEC         (1000)
-#define TIME_OFF_SAVE_MS      (1000)
-#define TIME_ON_SAVE_MS       (2000)
+//#define TIME_OFF_SAVE_MS      (1000)
+//#define TIME_ON_SAVE_MS       (2000)
+#define TIME_TO_START_S       (2)
 
 void CAMService::service_init() {
 	m_is_active = false;
@@ -43,7 +44,7 @@ unsigned int CAMService::service_next_schedule_in_ms() {
 
     // Find the time in milliseconds until this schedule
     //return (next_schedule - now) * MS_PER_SEC;
-    return next_schedule * MS_PER_SEC;
+    return (next_schedule * MS_PER_SEC) + PWR_BUTT_DELAY + PWR_DELAY;
 }
 
 void CAMService::service_initiate() {
@@ -52,12 +53,6 @@ void CAMService::service_initiate() {
 	m_wakeup_time = service_current_timer();
     if (m_device.is_powered_on()) {
         DEBUG_TRACE("CAMService::service_initiate => PWR OFF");
-        DEBUG_TRACE("CAMService::Save record");
-        m_device.clear_save_record_pin();
-		PMU::delay_ms(TIME_OFF_SAVE_S);
-        m_device.set_save_record_pin();
-		PMU::delay_ms(TIME_ON_SAVE_S);
-        DEBUG_TRACE("CAMService::End Save");
 	    m_device.power_off();
     } else {
         DEBUG_TRACE("CAMService::service_initiate => PWR ON");

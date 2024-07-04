@@ -4,6 +4,8 @@
 #include "cam.hpp"
 #include "scheduler.hpp"
 
+#define PWR_BUTT_DELAY 2000
+#define PWR_DELAY 100
 class RunCam: public CAMDevice {
 public:
     RunCam();
@@ -12,8 +14,6 @@ public:
 	void power_on() override;
 	bool is_powered_on() override;
 	unsigned int get_num_captures() override;
-	void clear_save_record_pin() override;
-	void set_save_record_pin() override;
 private:
 	enum class State
 	{

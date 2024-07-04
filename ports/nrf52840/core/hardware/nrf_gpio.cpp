@@ -22,6 +22,8 @@ void GPIOPins::initialise()
 	set(SAT_RESET);
 	clear(SWS_ENABLE_PIN);
 	clear(AG_ENABLE);
+	clear(CAM_PWR_BUTT);
+    clear(CAM_PWR_EN);
 }
 
 void GPIOPins::set(uint32_t pin)

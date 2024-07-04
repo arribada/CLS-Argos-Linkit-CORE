@@ -33,7 +33,9 @@
 #define WCHG_INTB_PIN	BSP::GPIO::GPIO_WCHG_INTB
 #define GPS_POWER		BSP::GPIO::GPIO_GPS_PWR_EN
 #define AG_ENABLE		BSP::GPIO::GPIO_AG_PWR
-#define CAM_PWR_EN     BSP::GPIO::GPIO_EXT1_GPIO2
+// Warning pins, also used with EXT_I2C !
+#define CAM_PWR_EN     BSP::GPIO::GPIO_EXT1_GPIO1
+#define CAM_PWR_BUTT   BSP::GPIO::GPIO_EXT1_GPIO2
 
 // I2C device mappings
 #define CDT_MS5803_DEVICE EXT_I2C_BUS
