@@ -6,13 +6,10 @@
 extern ConfigurationStore *configuration_store;
 
 #define MS_PER_SEC         (1000)
-//#define TIME_OFF_SAVE_MS      (1000)
-//#define TIME_ON_SAVE_MS       (2000)
-#define TIME_TO_START_S       (2)
 
 void CAMService::service_init() {
-	m_is_active = false;
-    m_num_captures = 0;
+        m_is_active = false;
+        m_num_captures = 0;
     m_is_pwr_on = false;
     
 }
