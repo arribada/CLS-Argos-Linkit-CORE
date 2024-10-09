@@ -17,19 +17,20 @@ set(LIB_DIR       ../../libraries)
 
 option(BOARD "Board to compile for" NONE)
 
-if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE OR ${MODEL} MATCHES FEATHER)
+if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE OR ${MODEL} MATCHES SMD)
     set (ARGOS_STM 0)
     set (ARGOS_ARTIC_SAT 0)
     set (ARGOS_ARTIC_R2 1)
     set (FLASH_IS25 1)
-    set (FLASH_GD25 0)
     set (SENSOR_BMX160 1)
     set(MODEL_SB 0)
     set(MODEL_UW 0)
     set(MODEL_CORE 0)
-    set(MODEL_FEATHER 0)
+    set(MODEL_SMD 0)
     set(DEVICE_MODEL "Linkit ${MODEL}")
     set(HAS_WCHG 0)
+    set(HAS_GAUGE_STC3117 0)
+    set(GPS_MODEL M8Q)
     if(${MODEL} MATCHES SB)
         set(MODEL_SB 1)
     elseif(${MODEL} MATCHES UW)
@@ -38,17 +39,18 @@ if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE OR ${MODE
     elseif(${MODEL} MATCHES CORE)
         set(MODEL_CORE 1)
 	    set(HAS_WCHG 1)
-    elseif(${MODEL} MATCHES FEATHER)
-        set(MODEL_FEATHER 1)
+    elseif(${MODEL} MATCHES SMD)
+        set(GPS_MODEL M10Q)
+        set(MODEL_SMD 1)
+        set(HAS_GAUGE_STC3117 1)
         set (SENSOR_BMX160 0)
+        set (SENSOR_BMA400 1)
 	    set(HAS_WCHG 0)
         set (ARGOS_ARTIC_R2 0)
-        set(ARGOS_STM 1)
-        set (FLASH_IS25 0)
-        set (FLASH_GD25 1)
+        set (ARGOS_SMD 1)
     endif()
 else()
-    message(FATAL_ERROR "MODEL must be one of {SB, CORE, UW, FEATHER}")
+    message(FATAL_ERROR "MODEL must be one of {SB, CORE, UW, SMD}")
 endif()
 
 # Append board model to the target name
@@ -64,16 +66,16 @@ elseif(${BOARD} MATCHES LINKIT)
     set(BOOTLOADER "bootloader/gentracker_secure_bootloader/gentracker_v1.0/armgcc/_build/cls_bootloader_v1_linkit_merged.hex")
 elseif(${BOARD} MATCHES RSPB)
     set(TARGET_NAME ${PROJECT_NAME}_rspb_board)
-    set(BOARD_DIR     "${PROJ_DIR}/bsp/rspb_adafruit_feather")
+    set(BOARD_DIR     "${PROJ_DIR}/bsp/rspbtracker_v1.0")
     set(DEVICE_MODEL "RSPB ${MODEL}")
-    set(BOOTLOADER "bootloader/gentracker_secure_bootloader/rspb_adafruit_feather/armgcc/_build/rspb_bootloader_v1_linkit_merged.hex")
+    set(BOOTLOADER "bootloader/gentracker_secure_bootloader/rspbtracker_v1.0/armgcc/_build/rspb_bootloader_v1_linkit_merged.hex")
 else()
     message(FATAL_ERROR "Board must be HORIZON or LINKIT or RSPB")
 endif()
 
 if (DEBUG_LEVEL)
 else()
-    set(DEBUG_LEVEL 3)
+    set(DEBUG_LEVEL 4)
 endif()
 
 
@@ -177,7 +179,6 @@ target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
     ${PROJ_DIR}/core/interface
     ${PROJ_DIR}/core/memmang
     ${PROJ_DIR}/core/scheduling
-    ${PROJ_DIR}/core/hardware/m8qasync
     ${PROJ_DIR}/core/hardware/ms58xx
     ${PROJ_DIR}/core/hardware/ad5933
     ${PROJ_DIR}/core/hardware/ltr_303
@@ -264,8 +265,6 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/oem_ph/oem_ph.cpp
     ${PROJ_DIR}/core/hardware/oem_rtd/oem_rtd.cpp
     ${PROJ_DIR}/core/hardware/ezo_rtd/ezo_rtd.cpp
-	${PROJ_DIR}/core/hardware/m8qasync/m8qasync.cpp
-    ${PROJ_DIR}/core/hardware/m8qasync/ubx_comms.cpp
     ${PROJ_DIR}/core/hardware/nrf_timer.cpp
     ${PROJ_DIR}/core/hardware/nrf_rtc.cpp
     ${PROJ_DIR}/core/hardware/nrf_spim.cpp
@@ -287,6 +286,28 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/gcc_startup_nrf52840.S
     ${PROJ_DIR}/main.cpp
 )
+
+if(${GPS_MODEL} MATCHES M8Q)
+    target_sources(${TARGET_NAME} PRIVATE
+        ${PROJ_DIR}/core/hardware/m8qasync/m8qasync.cpp
+        ${PROJ_DIR}/core/hardware/m8qasync/ubx_comms.cpp
+    )
+
+    target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
+        ${PROJ_DIR}/core/hardware/m8qasync
+    )
+elseif(${GPS_MODEL} MATCHES M10Q)
+    target_sources(${TARGET_NAME} PRIVATE
+        ${PROJ_DIR}/core/hardware/m10qasync/m10qasync.cpp
+        ${PROJ_DIR}/core/hardware/m10qasync/ubx_comms.cpp
+    )
+
+    target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
+        ${PROJ_DIR}/core/hardware/m10qasync
+    )
+else()
+    message(FATAL_ERROR "GPS_MODEL should be defined")
+endif()
 
 if (HAS_WCHG)
         target_sources(${TARGET_NAME} PRIVATE
@@ -342,16 +363,17 @@ if (FLASH_IS25)
         )
 endif()
 
-if (FLASH_GD25)
+if (HAS_GAUGE_STC3117)
         target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
-            ${PROJ_DIR}/core/filesystem/flash_gd25
+            ${PROJ_DIR}/core/hardware/stc3117
         )
         
         target_sources(${TARGET_NAME} PRIVATE
-            ${PROJ_DIR}/core/filesystem/flash_gd25/gd25_flash.cpp
+            ${PROJ_DIR}/core/hardware/stc3117/Generic_I2C.c
+            ${PROJ_DIR}/core/hardware/stc3117/stc311x_gasgauge.c
+            ${PROJ_DIR}/core/hardware/stc3117/stc3117_gasgauge.cpp
         )
 endif()
-
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
     Release=0
@@ -360,13 +382,14 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     MODEL_SB=${MODEL_SB}
     MODEL_UW=${MODEL_UW}
     MODEL_CORE=${MODEL_CORE}
-    MODEL_FEATHER=${MODEL_ADAFDRUIT}
+    MODEL_RSPB=${MODEL_RSPB}
+    GPS_MODEL="${GPS_MODEL}"s
     ARGOS_ARTIC_SAT=${ARGOS_ARTIC_SAT}
     ARGOS_ARTIC_R2=${ARGOS_ARTIC_R2}
     ARGOS_STM=${ARGOS_STM}
     FLASH_IS25=${FLASH_IS25}
-    FLASH_GD25=${FLASH_GD25}
     SENSOR_BMX160=${SENSOR_BMX160}
+    HAS_GAUGE_STC3117=${HAS_GAUGE_STC3117} 
     BUILD_TYPE=${CMAKE_BUILD_TYPE}
     #SCHEDULER_DEBUG
     DEBUG_ENABLE=1

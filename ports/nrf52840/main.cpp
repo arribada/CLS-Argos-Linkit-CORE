@@ -33,15 +33,22 @@
 #if defined(ARGOS_ARTIC_SAT) && (ARGOS_ARTIC_SAT == 1)
 #include "artic_sat.hpp"
 #endif
-#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
-#include "gd25_flash.hpp"
-#endif
 #if defined(FLASH_IS25) && (FLASH_IS25 == 1)
 #include "is25_flash.hpp"
 #endif
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
+
+#if defined(HAS_GAUGE_STC3117) && (HAS_GAUGE_STC3117 == 1)
+#include "stc3117_gasgauge.hpp"
+#endif
+
+#if defined(GPS_MODEL) && GPS_MODEL == "M8Q"
 #include "m8qasync.hpp"
+#endif
+#if defined(GPS_MODEL) && GPS_MODEL == "M10Q"
+#include "m10qasync.hpp"
+#endif
 #include "ltr_303.hpp"
 #include "oem_ph.hpp"
 #include "oem_rtd.hpp"
@@ -85,12 +92,8 @@ static bool m_is_debug_init = false;
 // FSM initial state -> BootState
 FSM_INITIAL_STATE(GenTracker, BootState)
 
-#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
-#define OTA_UPDATE_RESERVED_BLOCKS ((1024 * 1024) / GD25_BLOCK_SIZE)
-#else
 // Reserve the last 1MB of IS25 flash memory for firmware updates
 #define OTA_UPDATE_RESERVED_BLOCKS ((1024 * 1024) / IS25_BLOCK_SIZE)
-#endif
 
 // Reed switch debouncing time (ms)
 #define REED_SWITCH_DEBOUNCE_TIME_MS    25
@@ -288,13 +291,7 @@ int main()
 	NrfTimer::get_instance().init();
 
 	DEBUG_TRACE("RGB LED...");
-	//TODO implement NeoPixel management here.
-#ifdef NEOPIXEL_PIN
-	DEBUG_TRACE("Implement NeoPixel usage");
-	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_NEOPIXEL, RGBLedColor::WHITE);
-#else
 	NrfRGBLed nrf_status_led("STATUS", BSP::GPIO::GPIO_LED_RED, BSP::GPIO::GPIO_LED_GREEN, BSP::GPIO::GPIO_LED_BLUE, RGBLedColor::WHITE);
-#endif
 	status_led = &nrf_status_led;
 
 #ifdef EXT_LED_PIN
@@ -315,15 +312,9 @@ int main()
 	DEBUG_TRACE("BLE...");
     BleInterface::get_instance().init();
 
-	#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
-	DEBUG_TRACE("GD25 flash...");
-	Gd25Flash gd25_flash;
-	gd25_flash.init();
-	#else
 	DEBUG_TRACE("IS25 flash...");
 	Is25Flash is25_flash;
 	is25_flash.init();
-	#endif
 
 	// Check the reed switch is engaged for 3 seconds if this is a power on event
     DEBUG_TRACE("PMU Reset Cause = %s", PMU::reset_cause().c_str());
@@ -448,14 +439,9 @@ int main()
 
 	DEBUG_TRACE("LFS filesystem...");
 
-	#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
-	LFSFileSystem lfs_file_system(&gd25_flash, GD25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);
-	main_filesystem = &lfs_file_system;
-	#else
 	LFSFileSystem lfs_file_system(&is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS);
 	main_filesystem = &lfs_file_system;
 	DEBUG_TRACE("STWLC68 not included");
-	#endif
 
 	// If we can't mount the filesystem then try to format it first and retry
 	DEBUG_TRACE("Mount LFS filesystem...");
@@ -478,10 +464,19 @@ int main()
 	DEBUG_TRACE("Battery monitor...");
 	double critical_batt_voltage = configuration_store->read_param<double>(ParamID::LB_CRITICAL_THRESH);
 	unsigned int low_batt_level = configuration_store->read_param<unsigned int>(ParamID::LB_TRESHOLD);
+ 	#ifdef STC3117_ADDRESS
+	DEBUG_TRACE("Battery gauge STC3117..");
+	GaugeBatteryMonitor stc3117_battery_monitor((uint16_t)(critical_batt_voltage*1000), low_batt_level);
+	if (stc3117_battery_monitor.IsInit() != true) {
+		DEBUG_ERROR("Failed to initialize battery gauge STC3117");
+	}	
+    battery_monitor = &stc3117_battery_monitor;
+	#else
     NrfBatteryMonitor nrf_battery_monitor(BATTERY_ADC, BATT_CHEM_NCR18650_3100_3400,
     		(uint16_t)(critical_batt_voltage*1000), low_batt_level);
     battery_monitor = &nrf_battery_monitor;
-
+	#endif 
+	
 	DEBUG_TRACE("LFS System Log...");
 	SysLogFormatter sys_log_formatter;
 	FsLog fs_system_log(&lfs_file_system, "system.log", 1024*1024);
@@ -534,11 +529,7 @@ int main()
 	DEBUG_TRACE("OTA updater...");
 	ble_service = &BleInterface::get_instance();
 
-	#if defined(FLASH_GD25) && (FLASH_GD25 == 1)
-	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &gd25_flash, GD25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS, OTA_UPDATE_RESERVED_BLOCKS);
-	#else
 	OTAFlashFileUpdater ota_flash_file_updater(&lfs_file_system, &is25_flash, IS25_BLOCK_COUNT - OTA_UPDATE_RESERVED_BLOCKS, OTA_UPDATE_RESERVED_BLOCKS);
-	#endif
 	ota_updater = &ota_flash_file_updater;
 
 	DEBUG_TRACE("SWS...");
@@ -565,6 +556,7 @@ int main()
 	DEBUG_TRACE("ARGOS ARTIC not configured...");
 	#endif
 
+#if defined(GPS_MODEL) && GPS_MODEL == M8Q
 	DEBUG_TRACE("GPS M8Q ...");
 	try {
 		static M8QAsyncReceiver m8q_gnss;
@@ -573,6 +565,18 @@ int main()
 	} catch (...) {
 		DEBUG_TRACE("GPS M8Q not detected");
 	}
+#endif
+
+#if defined(GPS_MODEL) && GPS_MODEL == M10Q
+	DEBUG_TRACE("GPS M10Q ...");
+	try {
+		static M8QAsyncReceiver m8q_gnss;
+		static GPSService gps_service(m8q_gnss, &fs_sensor_log);
+		static GNSSDetectorService gps_detector(m8q_gnss);
+	} catch (...) {
+		DEBUG_TRACE("GPS M8Q not detected");
+	}
+#endif
 
 	DEBUG_TRACE("MS58xx...");
 	MS58xxHardware *ms58xx_devices[BSP::I2C_TOTAL_NUMBER];

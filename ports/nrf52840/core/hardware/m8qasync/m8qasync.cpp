@@ -133,6 +133,7 @@ void M8QAsyncReceiver::enter_shutdown() {
 #if 0 == NO_GPS_POWER_REG
     // Disable the power supply for the GPS
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
+    GPIOPins::clear(BSP::GPIO::GPIO_GPS_RST);
 #else
     // Use GPIO_GPS_EXT_INT as a shutdown
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_EXT_INT);
@@ -148,6 +149,7 @@ void M8QAsyncReceiver::exit_shutdown() {
 #if 0 == NO_GPS_POWER_REG
     // Enable the power supply for the GPS
     GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);
+    GPIOPins::set(BSP::GPIO::GPIO_GPS_RST);
     PMU::delay_ms(1000); // Necessary to allow the device to boot
 #else
     // Use GPIO_GPS_EXT_INT as a wake-up
@@ -523,7 +525,8 @@ void M8QAsyncReceiver::state_configure() {
 				run_state_machine(1000);
 				break;
 			} else if (m_step == 7) {
-				disable_odometer();
+                // todo deprecated with M10 VALSET Should be used.
+				//disable_odometer();
 				break;
 			} else if (m_step == 8) {
 				disable_timepulse_output(0);

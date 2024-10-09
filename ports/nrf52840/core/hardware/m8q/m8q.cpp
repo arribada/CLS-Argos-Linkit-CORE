@@ -650,10 +650,12 @@ M8QReceiver::SendReturnCode M8QReceiver::setup_uart_port()
     // Disable NMEA and only allow UBX messages
 
 	// Make sure we are running at the correct baud rate for the module
+    DEBUG_INFO("SETUP_UART PORT  SYNC BAUDRATE");
 	auto ret = sync_baud_rate();
 	if (ret != SendReturnCode::SUCCESS)
 		return ret;
 
+    DEBUG_INFO("CONFIGUREBAUDRAITE");
     CFG::PRT::MSG_UART uart_prt = 
     {
         .portID = CFG::PRT::PORTID_UART,
@@ -1152,6 +1154,7 @@ M8QReceiver::SendReturnCode M8QReceiver::enter_shutdown_mode()
 #if 0 == NO_GPS_POWER_REG
     // Disable the power supply for the GPS
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_PWR_EN);
+    GPIOPins::clear(BSP::GPIO::GPIO_GPS_RST);
 #else
 	// Use GPIO_GPS_EXT_INT as a shutdown
     GPIOPins::clear(BSP::GPIO::GPIO_GPS_EXT_INT);
@@ -1174,6 +1177,7 @@ M8QReceiver::SendReturnCode M8QReceiver::exit_shutdown_mode()
 #if 0 == NO_GPS_POWER_REG
     // Enable the power supply for the GPS
     GPIOPins::set(BSP::GPIO::GPIO_GPS_PWR_EN);
+    GPIOPins::set(BSP::GPIO::GPIO_GPS_RST);
     nrf_delay_ms(1000); // Necessary to allow the device to boot
 #else
 	// Use GPIO_GPS_EXT_INT as a wake-up

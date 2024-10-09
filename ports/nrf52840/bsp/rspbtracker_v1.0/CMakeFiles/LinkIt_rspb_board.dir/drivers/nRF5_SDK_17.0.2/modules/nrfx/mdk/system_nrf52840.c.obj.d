@@ -1,0 +1,27 @@
+CMakeFiles/LinkIt_rspb_board.dir/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c.obj: \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.c \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/lib/gcc/arm-none-eabi/10.2.1/include/stdint.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/stdint.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/machine/_default_types.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/features.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/_newlib_version.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/_intsup.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/_stdint.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/lib/gcc/arm-none-eabi/10.2.1/include/stdbool.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf52840.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/components/toolchain/cmsis/include/core_cm4.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/components/toolchain/cmsis/include/cmsis_version.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/components/toolchain/cmsis/include/cmsis_compiler.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/components/toolchain/cmsis/include/cmsis_gcc.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/components/toolchain/cmsis/include/mpu_armv7.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/system_nrf52840.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf52840_bitfields.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf51_to_nrf52840.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf52_to_nrf52840.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/compiler_abstraction.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf_erratas.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf51_erratas.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf52_erratas.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf53_erratas.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/nrf91_erratas.h

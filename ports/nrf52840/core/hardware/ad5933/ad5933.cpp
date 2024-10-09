@@ -212,8 +212,7 @@ int16_t AD5933LL::read_imag() {
 void AD5933LL::wait_iq_data_ready()
 {
 	DEBUG_TRACE("AD5933LL::wait_iq_data_ready");
-	while (0 == (status() & (uint8_t)AD5933StatusRegister::VALID_REAL_IMAG_DATA))
-		;
+	while (0 == (status() & (uint8_t)AD5933StatusRegister::VALID_REAL_IMAG_DATA)) ;
 }
 
 void AD5933LL::powerdown()

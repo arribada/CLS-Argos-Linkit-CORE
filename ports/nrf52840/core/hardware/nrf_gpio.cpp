@@ -17,18 +17,15 @@ void GPIOPins::initialise()
 	nrf_gpio_cfg_default(BSP::UARTAsync_Inits[0].config.tx_pin);
 
 	// Ensure power off state for everything controlling power
-	clear(GPS_POWER);
+	set(GPS_POWER);
+	set(GPS_RST);
 	#ifdef SAT_PWR_EN
 	clear(SAT_PWR_EN);
+	//set(SAT_PWR_EN);
+	//set(SAT_RESET);
 	#endif
-	#ifdef SAT_PWR_EN
-	set(SAT_RESET);
-	#endif
-	#ifdef SAT_PWR_EN
-	clear(SWS_ENABLE_PIN);
-	#endif
-	#ifdef SAT_PWR_EN
-	clear(AG_ENABLE);
+	#ifdef SENSORS_PWR_PIN
+	set(SENSORS_PWR_PIN);
 	#endif
 }
 

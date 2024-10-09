@@ -2,13 +2,8 @@
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
-#if FLASH_GD25 == 1
-	#include "gd25_flash.h"
-	#include "GD25Q16C.h"
-#else
-	#include "is25_flash.h"
-	#include "IS25LP128F.h"
-#endif
+#include "is25_flash.h"
+#include "IS25LP128F.h"
 #include "crc32.h"
 #include "nordic_common.h"
 #include "nrf_dfu_settings.h"
@@ -26,11 +21,7 @@ struct __attribute__((packed)) image_header {
 
 #define MAX_IMAGE_SIZE  (FIRMWARE_UPDATE_REGION_SIZE - sizeof(struct image_header))
 
-#if FLASH_GD25 == 1
-static const unsigned int FIRMWARE_UPDATE_BLOCK_OFFSET = GD25_BLOCK_COUNT - (FIRMWARE_UPDATE_REGION_SIZE / GD25_BLOCK_SIZE);
-#else
 static const unsigned int FIRMWARE_UPDATE_BLOCK_OFFSET = IS25_BLOCK_COUNT - (FIRMWARE_UPDATE_REGION_SIZE / IS25_BLOCK_SIZE);
-#endif
 
 
 static uint32_t compute_crc_in_flash(uint32_t base_addr, uint32_t size)
@@ -44,11 +35,7 @@ static uint32_t compute_crc_in_flash(uint32_t base_addr, uint32_t size)
 		uint32_t length = MIN(PAGE_SIZE, size);
 
 
-#if FLASH_GD25 == 1
-		gd25_flash_read(base_addr + offset, data, length);
-#else
 		is25_flash_read(base_addr + offset, data, length);
-#endif
 
 		crc = crc32_compute(data, length, &crc);
 
@@ -75,12 +62,7 @@ static uint32_t ext_image_copy(uint32_t dst_addr,
         NRF_LOG_FLUSH();
 
         // Read ex flash page
-
-#if FLASH_GD25 == 1
-    	gd25_flash_read(src_addr, (uint8_t *)src_page, bytes);
-#else
     	is25_flash_read(src_addr, (uint8_t *)src_page, bytes);
-#endif
 
     	// Erase the target pages
         ret_val = nrf_dfu_flash_erase(dst_addr, 1, NULL);
@@ -146,36 +128,6 @@ void ext_flash_update(void)
 
 	// Initialise flash memory
 	
-
-#if FLASH_GD25 == 1
-	if (gd25_flash_init())
-		return;
-
-	// Read header providing us with size and crc32
-	gd25_flash_read(FIRMWARE_UPDATE_BLOCK_OFFSET * GD25_BLOCK_SIZE, (uint8_t *)&header, sizeof(header));
-
-	if ((header.image_size <= MAX_IMAGE_SIZE) && (header.image_size > 0))
-	{
-		NRF_LOG_INFO("ext_flash_update: new firmware image detected size=%u crc32=%08x",
-				     header.image_size, header.crc32);
-
-		uint32_t crc32 = compute_crc_in_flash((FIRMWARE_UPDATE_BLOCK_OFFSET * GD25_BLOCK_SIZE) + sizeof(header), header.image_size);
-		if (crc32 != header.crc32)
-		{
-			NRF_LOG_ERROR("ext_flash_update: computed checksum %08x does not match - aborting", crc32);
-			gd25_flash_erase(FIRMWARE_UPDATE_BLOCK_OFFSET);
-			gd25_flash_deinit();
-			return;
-		}
-
-
-		// Initialise DFU settings
-		nrf_dfu_settings_init(false);
-
-		NRF_LOG_INFO("ext_flash_update: applying firmware update...");
-		apply_update((FIRMWARE_UPDATE_BLOCK_OFFSET * GD25_BLOCK_SIZE) + sizeof(header), header.image_size);
-#else
-
 	if (is25_flash_init())
 		return;
 
@@ -201,7 +153,6 @@ void ext_flash_update(void)
 
 		NRF_LOG_INFO("ext_flash_update: applying firmware update...");
 		apply_update((FIRMWARE_UPDATE_BLOCK_OFFSET * IS25_BLOCK_SIZE) + sizeof(header), header.image_size);
-#endif
 
 		NRF_LOG_INFO("ext_flash_update: validating firmware update...")
 		if (validate_update(header.image_size, header.crc32))
@@ -216,12 +167,7 @@ void ext_flash_update(void)
 		NRF_LOG_INFO("ext_flash_update: erasing ext flash...");
 	    NRF_LOG_FLUSH();
 
-
-#if FLASH_GD25 == 1
-		gd25_flash_erase(FIRMWARE_UPDATE_BLOCK_OFFSET);
-#else
 		is25_flash_erase(FIRMWARE_UPDATE_BLOCK_OFFSET);
-#endif
 
 	    // Save settings
 	    nrf_dfu_settings_write_and_backup(NULL);
@@ -236,11 +182,6 @@ void ext_flash_update(void)
 		NRF_LOG_INFO("ext_flash_update: no firmware image detected");
 	}
 
-
-#if FLASH_GD25 == 1
-	gd25_flash_deinit();
-#else
 	is25_flash_deinit();
-#endif
 }
 

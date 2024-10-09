@@ -89,8 +89,8 @@
   #include "gentracker_v1.h"
 #elif defined(BOARD_HORIZON_V4)
   #include "horizon_v4.h"
-#elif defined(BOARD_RSPB)
-  #include "rspb_adafruit.h"
+#elif defined(BOARD_RSPBTRACKER_V1)
+  #include "rspbtracker_v1.h"
 #else
 #error "Board is not defined"
 

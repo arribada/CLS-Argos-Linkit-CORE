@@ -1,0 +1,14 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../../drivers/nRF5_SDK_17.0.2/modules/nrfx/mdk/startup_config.h
+
+/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/gcc_startup_nrf52840.S
+startup_config.h
+/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/startup_config.h
+

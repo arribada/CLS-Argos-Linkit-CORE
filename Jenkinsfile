@@ -22,7 +22,7 @@ pipeline {
                     dir('ports/nrf52840/bootloader/gentracker_secure_bootloader/horizon_v4.0/armgcc') {
                         sh 'make mergehex'
                     }
-                    dir('ports/nrf52840/bootloader/gentracker_secure_bootloader/rspb_adafruit_feather/armgcc') {
+                    dir('ports/nrf52840/bootloader/gentracker_secure_bootloader/rspbtracker_v1.0/armgcc') {
                         sh 'make mergehex'
                     }
                 }
@@ -93,12 +93,12 @@ pipeline {
 						sh "mv LinkIt_horizon_board.img LinkIt_HORIZON_board-`cat TAG_NAME`.img"
 						sh "mv LinkIt_horizon_board_merged.hex LinkIt_HORIZON_board_merged-`cat TAG_NAME`.hex"
                     }
-                    dir('ports/nrf52840/build/RSPB') {
+                    dir('ports/nrf52840/build/SMD') {
                         sh 'git show-ref --tags -d | grep ^`git rev-parse HEAD` | sed -e "s,.* refs/tags/,," -e "s/\\^{}//" > TAG_NAME'
-                        sh 'cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=RSPB -DCMAKE_BUILD_TYPE=Release -DMODEL=FEATHER ../..'
+                        sh 'cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchain_arm_gcc_nrf52.cmake -DDEBUG_LEVEL=4 -DBOARD=RSPB -DCMAKE_BUILD_TYPE=Release -DMODEL=SMD ../..'
                         sh 'make -j 4'
-                        sh 'nrfutil settings generate --family NRF52840 --application LinkIt_rspb_adafruit_board.hex --application-version 0 --bootloader-version 1 --bl-settings-version 2 --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ../../drivers/nRF5_SDK_17.0.2/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ../../nrfutil_pkg_key.pem settings.hex'
-                        sh 'mergehex -m ../../bootloader/gentracker_secure_bootloader/rspb_adafruit_feather/armgcc/_build/rspb_bootloader_v1_linkit_merged.hex LinkIt_rspb_board.hex -o m1.hex'
+                        sh 'nrfutil settings generate --family NRF52840 --application LinkIt_rspbtracker_v1.0_board.hex --application-version 0 --bootloader-version 1 --bl-settings-version 2 --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ../../drivers/nRF5_SDK_17.0.2/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ../../nrfutil_pkg_key.pem settings.hex'
+                        sh 'mergehex -m ../../bootloader/gentracker_secure_bootloader/rspbtracker_v1.0/armgcc/_build/rspb_bootloader_v1_linkit_merged.hex LinkIt_rspb_board.hex -o m1.hex'
                         sh 'mergehex -m m1.hex settings.hex -o LinkIt_rspb_board_merged.hex'
                         sh 'rm -f m1.hex settings.hex'
 						sh "mv LinkIt_rspb_board_dfu.zip LinkIt_RSPB_board_dfu-`cat TAG_NAME`.zip"

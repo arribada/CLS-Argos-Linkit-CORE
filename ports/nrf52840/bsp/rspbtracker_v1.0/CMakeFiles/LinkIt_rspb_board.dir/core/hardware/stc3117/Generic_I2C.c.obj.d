@@ -1,0 +1,26 @@
+CMakeFiles/LinkIt_rspb_board.dir/core/hardware/stc3117/Generic_I2C.c.obj: \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/stc3117/Generic_I2C.c \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/stc3117/Generic_I2C.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/stdio.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/_ansi.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/newlib.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/_newlib_version.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/config.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/machine/ieeefp.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/features.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/cdefs.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/machine/_default_types.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/lib/gcc/arm-none-eabi/10.2.1/include/stddef.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/lib/gcc/arm-none-eabi/10.2.1/include/stdarg.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/reent.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/_ansi.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/_types.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/machine/_types.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/lock.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/types.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/_stdint.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/_pthreadtypes.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/sched.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/_timespec.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/machine/types.h \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/stdio.h
