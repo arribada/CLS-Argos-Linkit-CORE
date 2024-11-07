@@ -482,6 +482,10 @@ CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj: \
  /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/stc3117/stc3117_gasgauge.hpp \
  /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/stc3117/stc311x_BatteryInfo.h \
  /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/stc3117/stc311x_gasgauge.h \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/m10qasync/m10qasync.hpp \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/m10qasync/ubx_comms.hpp \
+ /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/m10qasync/ubx.hpp \
+ /home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c++/10.2.1/cstddef \
  /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/ltr_303/ltr_303.hpp \
  /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/oem_ph/oem_ph.hpp \
  /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/oem_rtd/oem_rtd.hpp \

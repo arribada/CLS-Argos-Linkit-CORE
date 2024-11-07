@@ -173,7 +173,6 @@ void UBXComms::handle_rx_buffer(uint8_t * buffer, unsigned int length) {
     if (m_debug_enable) {
         notify(UBXCommsEventDebug(buffer, length));
     }
-
 	// Run DBD filter on the buffer
 	if (m_dbd_filter_en) {
 		run_dbd_filter(buffer, length);
@@ -287,6 +286,7 @@ void UBXComms::compute_crc(const uint8_t * const buffer, const unsigned int leng
 
 void UBXComms::run_expect_filter(const UBX::HeaderAndPayloadCRC * const msg) {
 	if (!m_expect.enable) return;
+	//DEBUG_TRACE("resp msg class : %u resp_msg_id %u", msg->msgClass, msg->msgId);
 	if (m_expect.resp_cls != (uint8_t)msg->msgClass ||
 		m_expect.resp_msg_id != msg->msgId) return;
 
@@ -308,6 +308,10 @@ void UBXComms::run_expect_filter(const UBX::HeaderAndPayloadCRC * const msg) {
 			m_expect.enable = false;
 			notify(UBXCommsEventAckNack(ack->infoCode == 0));
 		}
+	} else if (msg->msgClass == MessageClass::MSG_CLASS_CFG && msg->msgId == UBX::CFG::ID_VALGET) {
+		m_expect.enable = false;
+		notify(UBXCommsEventCfgValget((uint8_t *)msg->payload, msg->msgLength));
+		
 	} else {
 		m_expect.enable = false;
 		notify(UBXCommsEventAckNack(true));

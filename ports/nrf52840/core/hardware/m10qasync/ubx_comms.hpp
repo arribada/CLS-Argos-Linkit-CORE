@@ -16,13 +16,13 @@ enum UBXCommsMgaDbdStatus {
 	SUCCESS,
 	INCORRECT_NUM_MESSAGES
 };
-struct UBXCommsEventSatReport {
-	UBX::NAV::SAT::MSG_SAT       sat;
-};
 struct UBXCommsEventNavReport {
     UBX::NAV::PVT::MSG_PVT       pvt;
     UBX::NAV::STATUS::MSG_STATUS status;
     UBX::NAV::DOP::MSG_DOP       dop;
+};
+struct UBXCommsEventSatReport {
+	UBX::NAV::SAT::MSG_SAT       sat;
 };
 struct UBXCommsEventSent {};
 struct UBXCommsEventError {
@@ -38,6 +38,11 @@ struct UBXCommsEventRespTimeout {};
 struct UBXCommsEventAckNack {
 	bool ack;
 	UBXCommsEventAckNack(bool a) : ack(a) {}
+};
+struct UBXCommsEventCfgValget {
+	uint8_t *msg;
+	unsigned int length;
+	UBXCommsEventCfgValget(uint8_t *a, unsigned int b) : msg(a), length(b) {}
 };
 struct UBXCommsEventMgaAck {
 	bool ack;
@@ -57,6 +62,7 @@ public:
 	virtual ~UBXCommsEventListener() {}
 	virtual void react(const UBXCommsEventSendComplete&) {}
 	virtual void react(const UBXCommsEventAckNack&) {}
+	virtual void react(const UBXCommsEventCfgValget&) {}
 	virtual void react(const UBXCommsEventMgaAck&) {}
 	virtual void react(const UBXCommsEventNavReport&) {}
     virtual void react(const UBXCommsEventSatReport&) {}
@@ -69,18 +75,23 @@ class UBXComms : public EventEmitter<UBXCommsEventListener> {
 public:
 	UBXComms(unsigned int libuarte_async_instance = 0);
 	template <typename T>
-	void send_packet_with_expect(UBX::MessageClass cls, uint8_t id, T content,
-			UBX::MessageClass resp_cls = UBX::MessageClass::MSG_CLASS_ACK, uint8_t resp_msg_id = UBX::ACK::ID_ACK) {
+	void send_packet_with_expect(UBX::MessageClass cls, uint8_t id, const T& content,
+								UBX::MessageClass resp_cls = UBX::MessageClass::MSG_CLASS_ACK,
+								uint8_t resp_msg_id = UBX::ACK::ID_ACK, 
+								size_t dynamic_size = 0) {
 		unsigned int content_size;
 		if constexpr (std::is_same<T, UBX::Empty>::value) {
 			content_size = 0;
+		// } else if constexpr (std::is_same<T, UBX::CFG::VALSET::MSG_VALSET>::value) {
+		// 	content_size = sizeof(content) + dynamic_size;
 		} else {
-			content_size = sizeof(content);
-		};
+			content_size = sizeof(content) + dynamic_size;
+		}
 
+		// DEBUG_TRACE("SEND WITH EXPECT : content_size : %u", content_size);
 		if (m_is_send_busy) {
 			DEBUG_TRACE("UBXComms: send is busy...");
-			while(m_is_send_busy);
+			while (m_is_send_busy);
 		}
 
 		UBX::HeaderAndPayloadCRC *msg = (UBX::HeaderAndPayloadCRC *)m_tx_buffer;
@@ -90,9 +101,18 @@ public:
 		msg->msgId = id;
 		msg->msgLength = content_size;
 		std::memcpy(msg->payload, &content, content_size);
+
+		// for (unsigned int i = 0; i < content_size; i++) {
+		// 	DEBUG_TRACE("Content %u: 0x%02X", i, msg->payload[i]);
+		// }
+
 		compute_crc((const uint8_t * const)&msg->msgClass, content_size + sizeof(UBX::Header) - 2, msg->payload[msg->msgLength], msg->payload[msg->msgLength+1]);
+
+		DEBUG_TRACE("UBXComms: send with expect...");
 		send_with_expect(m_tx_buffer, content_size + sizeof(UBX::Header) + 2, resp_cls, resp_msg_id);
 	}
+
+
 
 	void init();
 	void deinit();

@@ -5,10 +5,10 @@
 #include "gps.hpp"
 #include "scheduler.hpp"
 
-class M8QAsyncReceiver : public UBXCommsEventListener, public GPSDevice {
+class M10QAsyncReceiver : public UBXCommsEventListener, public GPSDevice {
 public:
-	M8QAsyncReceiver();
-	~M8QAsyncReceiver();
+	M10QAsyncReceiver();
+	~M10QAsyncReceiver();
 	void power_on(const GPSNavSettings& nav_settings) override;
 	void power_off() override;
 
@@ -105,6 +105,7 @@ private:
 	void save_config();
 	void soft_reset();
 	void setup_uart_port();
+	void read_uart_port();
 	void setup_gnss_channel_sharing();
 	void setup_power_management();
 	void setup_continuous_mode();
@@ -112,7 +113,7 @@ private:
 	void setup_expert_navigation_settings();
 	void supply_time_assistance();
 	void disable_odometer();
-	void disable_timepulse_output(unsigned int idx);
+	void disable_timepulse_output();
 	void enable_nav_pvt_message();
 	void enable_nav_dop_message();
 	void enable_nav_status_message();
@@ -134,6 +135,7 @@ private:
 	// Events
 	void react(const UBXCommsEventSendComplete&) override;
 	void react(const UBXCommsEventAckNack&) override;
+	void react(const UBXCommsEventCfgValget&) override;
     void react(const UBXCommsEventSatReport& sat) override;
 	void react(const UBXCommsEventNavReport&) override;
 	void react(const UBXCommsEventMgaAck&) override;

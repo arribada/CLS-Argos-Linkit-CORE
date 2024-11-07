@@ -21,7 +21,6 @@ if(${MODEL} MATCHES SB OR ${MODEL} MATCHES UW OR ${MODEL} MATCHES CORE OR ${MODE
     set (ARGOS_STM 0)
     set (ARGOS_ARTIC_SAT 0)
     set (ARGOS_ARTIC_R2 1)
-    set (FLASH_IS25 1)
     set (SENSOR_BMX160 1)
     set(MODEL_SB 0)
     set(MODEL_UW 0)
@@ -175,6 +174,7 @@ target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
     ${CORE_DIR}/logging
     ${CORE_DIR}/sm
     ${CORE_DIR}/scheduling
+    ${PROJ_DIR}/core/filesystem/flash_is25
     ${PROJ_DIR}/core/hardware
     ${PROJ_DIR}/core/interface
     ${PROJ_DIR}/core/memmang
@@ -274,6 +274,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${PROJ_DIR}/core/hardware/nrf_irq.cpp
     ${PROJ_DIR}/core/hardware/nrf_battery_mon.cpp
     ${PROJ_DIR}/core/hardware/nrf_i2c.cpp
+    ${PROJ_DIR}/core/filesystem/flash_is25/is25_flash.cpp
     ${PROJ_DIR}/core/interface/ble_interface.cpp
     ${PROJ_DIR}/core/interface/ble_stm_ota.c
     ${PROJ_DIR}/core/memmang/heap_4.c
@@ -353,16 +354,6 @@ if (ARGOS_ARTIC_R2)
         )
 endif()
 
-if (FLASH_IS25)
-        target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
-            ${PROJ_DIR}/core/filesystem/flash_is25
-        )
-        
-        target_sources(${TARGET_NAME} PRIVATE
-            ${PROJ_DIR}/core/filesystem/flash_is25/is25_flash.cpp
-        )
-endif()
-
 if (HAS_GAUGE_STC3117)
         target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
             ${PROJ_DIR}/core/hardware/stc3117
@@ -383,11 +374,10 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     MODEL_UW=${MODEL_UW}
     MODEL_CORE=${MODEL_CORE}
     MODEL_RSPB=${MODEL_RSPB}
-    GPS_MODEL="${GPS_MODEL}"
+    GPS_${GPS_MODEL}
     ARGOS_ARTIC_SAT=${ARGOS_ARTIC_SAT}
     ARGOS_ARTIC_R2=${ARGOS_ARTIC_R2}
     ARGOS_STM=${ARGOS_STM}
-    FLASH_IS25=${FLASH_IS25}
     SENSOR_BMX160=${SENSOR_BMX160}
     HAS_GAUGE_STC3117=${HAS_GAUGE_STC3117} 
     BUILD_TYPE=${CMAKE_BUILD_TYPE}

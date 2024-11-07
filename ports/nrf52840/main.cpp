@@ -33,9 +33,7 @@
 #if defined(ARGOS_ARTIC_SAT) && (ARGOS_ARTIC_SAT == 1)
 #include "artic_sat.hpp"
 #endif
-#if defined(FLASH_IS25) && (FLASH_IS25 == 1)
 #include "is25_flash.hpp"
-#endif
 #include "nrf_rgb_led.hpp"
 #include "nrf_battery_mon.hpp"
 
@@ -43,12 +41,13 @@
 #include "stc3117_gasgauge.hpp"
 #endif
 
-#if defined(GPS_MODEL) && GPS_MODEL == "M8Q"
+#if defined(GPS_M8Q)
 #include "m8qasync.hpp"
 #endif
-#if defined(GPS_MODEL) && GPS_MODEL == "M10Q"
+#if defined(GPS_M10Q)
 #include "m10qasync.hpp"
 #endif
+
 #include "ltr_303.hpp"
 #include "oem_ph.hpp"
 #include "oem_rtd.hpp"
@@ -556,7 +555,7 @@ int main()
 	DEBUG_TRACE("ARGOS ARTIC not configured...");
 	#endif
 
-#if defined(GPS_MODEL) && GPS_MODEL == M8Q
+#if defined(GPS_M8Q)
 	DEBUG_TRACE("GPS M8Q ...");
 	try {
 		static M8QAsyncReceiver m8q_gnss;
@@ -565,17 +564,18 @@ int main()
 	} catch (...) {
 		DEBUG_TRACE("GPS M8Q not detected");
 	}
-#endif
 
-#if defined(GPS_MODEL) && GPS_MODEL == M10Q
+#elif defined(GPS_M10Q)
 	DEBUG_TRACE("GPS M10Q ...");
 	try {
-		static M8QAsyncReceiver m8q_gnss;
-		static GPSService gps_service(m8q_gnss, &fs_sensor_log);
-		static GNSSDetectorService gps_detector(m8q_gnss);
+		static M10QAsyncReceiver m10q_gnss;
+		static GPSService gps_service(m10q_gnss, &fs_sensor_log);
+		static GNSSDetectorService gps_detector(m10q_gnss);
 	} catch (...) {
-		DEBUG_TRACE("GPS M8Q not detected");
+		DEBUG_TRACE("GPS M10Q not detected");
 	}
+#else 
+	raise Exception("No GPS defined in Makefile");
 #endif
 
 	DEBUG_TRACE("MS58xx...");

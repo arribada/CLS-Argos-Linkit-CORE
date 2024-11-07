@@ -525,8 +525,7 @@ void M8QAsyncReceiver::state_configure() {
 				run_state_machine(1000);
 				break;
 			} else if (m_step == 7) {
-                // todo deprecated with M10 VALSET Should be used.
-				//disable_odometer();
+				disable_odometer();
 				break;
 			} else if (m_step == 8) {
 				disable_timepulse_output(0);

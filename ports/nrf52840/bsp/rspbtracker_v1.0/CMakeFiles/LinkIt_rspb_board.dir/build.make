@@ -1259,10 +1259,24 @@ CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_i2c.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_i2c.cpp.s"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/nrf_i2c.cpp -o CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_i2c.cpp.s
 
+CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
+CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj: ../../core/filesystem/flash_is25/is25_flash.cpp
+CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_86) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj"
+	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/filesystem/flash_is25/is25_flash.cpp
+
+CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.i"
+	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/filesystem/flash_is25/is25_flash.cpp > CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.i
+
+CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.s"
+	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/filesystem/flash_is25/is25_flash.cpp -o CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.s
+
 CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj: ../../core/interface/ble_interface.cpp
 CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_86) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_87) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/interface/ble_interface.cpp
 
 CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.i: cmake_force
@@ -1276,7 +1290,7 @@ CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.s: cmake_force
 CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj: ../../core/interface/ble_stm_ota.c
 CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_87) "Building C object CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_88) "Building C object CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-gcc --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/interface/ble_stm_ota.c
 
 CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.i: cmake_force
@@ -1290,7 +1304,7 @@ CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.s: cmake_force
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj: ../../core/memmang/heap_4.c
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_88) "Building C object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_89) "Building C object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-gcc --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/memmang/heap_4.c
 
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.i: cmake_force
@@ -1304,7 +1318,7 @@ CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.s: cmake_force
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.obj: ../../core/memmang/heap_mem.c
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_89) "Building C object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_90) "Building C object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-gcc --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/memmang/heap_mem.c
 
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.i: cmake_force
@@ -1318,7 +1332,7 @@ CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_mem.c.s: cmake_force
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.obj: ../../core/memmang/bindings.c
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_90) "Building C object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_91) "Building C object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-gcc --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/memmang/bindings.c
 
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.i: cmake_force
@@ -1332,7 +1346,7 @@ CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.c.s: cmake_force
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.obj: ../../core/memmang/bindings.cpp
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_91) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_92) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/memmang/bindings.cpp
 
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.i: cmake_force
@@ -1346,7 +1360,7 @@ CMakeFiles/LinkIt_rspb_board.dir/core/memmang/bindings.cpp.s: cmake_force
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.obj: ../../core/memmang/memmang.cpp
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_92) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_93) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/memmang/memmang.cpp
 
 CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.i: cmake_force
@@ -1360,7 +1374,7 @@ CMakeFiles/LinkIt_rspb_board.dir/core/memmang/memmang.cpp.s: cmake_force
 CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.obj: ../../core/scheduling/interrupt_lock.cpp
 CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_93) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_94) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/scheduling/interrupt_lock.cpp
 
 CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.i: cmake_force
@@ -1374,7 +1388,7 @@ CMakeFiles/LinkIt_rspb_board.dir/core/scheduling/interrupt_lock.cpp.s: cmake_for
 CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj: ../../drivers/nrf_log_redirect/nrf_log_redirect.c
 CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_94) "Building C object CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_95) "Building C object CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-gcc --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj -MF CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/drivers/nrf_log_redirect/nrf_log_redirect.c
 
 CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.i: cmake_force
@@ -1387,7 +1401,7 @@ CMakeFiles/LinkIt_rspb_board.dir/drivers/nrf_log_redirect/nrf_log_redirect.c.s: 
 
 CMakeFiles/LinkIt_rspb_board.dir/gcc_startup_nrf52840.S.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/gcc_startup_nrf52840.S.obj: ../../gcc_startup_nrf52840.S
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_95) "Building ASM object CMakeFiles/LinkIt_rspb_board.dir/gcc_startup_nrf52840.S.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_96) "Building ASM object CMakeFiles/LinkIt_rspb_board.dir/gcc_startup_nrf52840.S.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-gcc --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(ASM_DEFINES) $(ASM_INCLUDES) $(ASM_FLAGS) -o CMakeFiles/LinkIt_rspb_board.dir/gcc_startup_nrf52840.S.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/gcc_startup_nrf52840.S
 
 CMakeFiles/LinkIt_rspb_board.dir/gcc_startup_nrf52840.S.i: cmake_force
@@ -1401,7 +1415,7 @@ CMakeFiles/LinkIt_rspb_board.dir/gcc_startup_nrf52840.S.s: cmake_force
 CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj: ../../main.cpp
 CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_96) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_97) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj -MF CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/main.cpp
 
 CMakeFiles/LinkIt_rspb_board.dir/main.cpp.i: cmake_force
@@ -1415,7 +1429,7 @@ CMakeFiles/LinkIt_rspb_board.dir/main.cpp.s: cmake_force
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj: ../../core/hardware/m10qasync/m10qasync.cpp
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_97) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_98) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/m10qasync/m10qasync.cpp
 
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.i: cmake_force
@@ -1429,7 +1443,7 @@ CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.s: cmake_
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj: ../../core/hardware/m10qasync/ubx_comms.cpp
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_98) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_99) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/m10qasync/ubx_comms.cpp
 
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.i: cmake_force
@@ -1439,20 +1453,6 @@ CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.i: cmake_
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.s"
 	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/hardware/m10qasync/ubx_comms.cpp -o CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.s
-
-CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
-CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj: ../../core/filesystem/flash_is25/is25_flash.cpp
-CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj: CMakeFiles/LinkIt_rspb_board.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/bsp/rspbtracker_v1.0/CMakeFiles --progress-num=$(CMAKE_PROGRESS_99) "Building CXX object CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj"
-	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj -MF CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj.d -o CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj -c /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/filesystem/flash_is25/is25_flash.cpp
-
-CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.i"
-	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/filesystem/flash_is25/is25_flash.cpp > CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.i
-
-CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.s"
-	/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-g++ --sysroot=/home/schade/tools/gcc-arm-none-eabi-10-2020-q4-major/bin/../arm-none-eabi $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/schade/Linkit/CLS-Argos-Linkit-CORE/ports/nrf52840/core/filesystem/flash_is25/is25_flash.cpp -o CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.s
 
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/stc3117/Generic_I2C.c.obj: CMakeFiles/LinkIt_rspb_board.dir/flags.make
 CMakeFiles/LinkIt_rspb_board.dir/core/hardware/stc3117/Generic_I2C.c.obj: ../../core/hardware/stc3117/Generic_I2C.c
@@ -1583,6 +1583,7 @@ LinkIt_rspb_board_OBJECTS = \
 "CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_irq.cpp.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_battery_mon.cpp.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_i2c.cpp.obj" \
+"CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj" \
@@ -1596,7 +1597,6 @@ LinkIt_rspb_board_OBJECTS = \
 "CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj" \
-"CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/hardware/stc3117/Generic_I2C.c.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/hardware/stc3117/stc311x_gasgauge.c.obj" \
 "CMakeFiles/LinkIt_rspb_board.dir/core/hardware/stc3117/stc3117_gasgauge.cpp.obj"
@@ -1689,6 +1689,7 @@ LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_switch
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_irq.cpp.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_battery_mon.cpp.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/hardware/nrf_i2c.cpp.obj
+LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_interface.cpp.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/interface/ble_stm_ota.c.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/memmang/heap_4.c.obj
@@ -1702,7 +1703,6 @@ LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/gcc_startup_nrf52840.S.o
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/main.cpp.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/m10qasync.cpp.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/hardware/m10qasync/ubx_comms.cpp.obj
-LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/filesystem/flash_is25/is25_flash.cpp.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/hardware/stc3117/Generic_I2C.c.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/hardware/stc3117/stc311x_gasgauge.c.obj
 LinkIt_rspb_board.elf: CMakeFiles/LinkIt_rspb_board.dir/core/hardware/stc3117/stc3117_gasgauge.cpp.obj
