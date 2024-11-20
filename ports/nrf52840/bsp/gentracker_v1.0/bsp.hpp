@@ -48,6 +48,7 @@
 
 // I2C bus addresses
 #define MCP4716_I2C_ADDR    0x60
+#define BAR100_ADDRESS 		0x40
 #define MS5803_ADDRESS      0x77
 #define MS5837_ADDRESS	    0x76
 #define LIGHT_DEVICE_ADDR   0x29

@@ -43,6 +43,7 @@
 #define BMX160_DEVICE  ONBOARD_I2C_BUS
 
 // Device addresses
+#define BAR100_ADDRESS  0x40
 #define MS5803_ADDRESS	0x77
 #define MS5837_ADDRESS	0x76
 #define AD5933_ADDRESS  0x0D

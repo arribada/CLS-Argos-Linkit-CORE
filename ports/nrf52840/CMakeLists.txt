@@ -163,7 +163,9 @@ target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
     ${PROJ_DIR}/core/scheduling
     ${PROJ_DIR}/core/hardware/artic_sat
     ${PROJ_DIR}/core/hardware/m8qasync
+    ${PROJ_DIR}/core/hardware/pressure_sensor
     ${PROJ_DIR}/core/hardware/ms58xx
+    ${PROJ_DIR}/core/hardware/bar100
     ${PROJ_DIR}/core/hardware/ad5933
     ${PROJ_DIR}/core/hardware/ltr_303
     ${PROJ_DIR}/core/hardware/oem_ph
@@ -246,6 +248,7 @@ target_sources(${TARGET_NAME} PRIVATE
     ${BOARD_DIR}/bsp.cpp
     ${PROJ_DIR}/core/filesystem/is25_flash.cpp
     ${PROJ_DIR}/core/hardware/ms58xx/ms58xx.cpp
+    ${PROJ_DIR}/core/hardware/bar100/bar100.cpp
     ${PROJ_DIR}/core/hardware/ad5933/ad5933.cpp
     ${PROJ_DIR}/core/hardware/bmx160/bmx160.cpp
     ${PROJ_DIR}/core/hardware/bmx160/bmx160.c
@@ -315,7 +318,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     DEVICE_MODEL_NAME="${DEVICE_MODEL}"s
     #LFS_YES_TRACE
     #BATTERY_NOT_FITTED
-    DUMMY_MS58xx
+    #DUMMY_PRESSURE_SENSOR
     #DEBUG_AD5933
     DEBUG_TO_SYSTEMLOG
     ETL_LOG_ERRORS

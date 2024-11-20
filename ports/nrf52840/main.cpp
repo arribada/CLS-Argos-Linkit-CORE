@@ -42,6 +42,7 @@
 #include "cdt.hpp"
 #include "bmx160.hpp"
 #include "ms58xx.hpp"
+#include "bar100.hpp"
 #include "fs_log.hpp"
 #include "nrf_i2c.hpp"
 #include "gpio_led.hpp"
@@ -508,25 +509,25 @@ int main()
 		DEBUG_TRACE("GPS M8Q not detected");
 	}
 
-	DEBUG_TRACE("MS58xx...");
-	MS58xxHardware *ms58xx_devices[BSP::I2C_TOTAL_NUMBER];
-#ifndef DUMMY_MS58xx
+	DEBUG_TRACE("Pressure Sensor...");
+	PressureSensorDevice *pressure_sensor_devices[BSP::I2C_TOTAL_NUMBER];
+#ifndef DUMMY_PRESSURE_SENSOR
 	for (unsigned int i = 0; i < BSP::I2C_TOTAL_NUMBER; i++) {
-		static unsigned int i2caddr[2] = { MS5803_ADDRESS, MS5837_ADDRESS };
-		static std::string variant[2] = { MS5803_VARIANT, MS5837_VARIANT };
-		for (unsigned int j = 0; j < 2; j++) {
+		static unsigned int i2caddr[3] = { MS5803_ADDRESS, MS5837_ADDRESS, BAR100_ADDRESS };
+		static std::string variant[3] = { MS5803_VARIANT, MS5837_VARIANT, "BAR100-R3-RP" };
+		for (unsigned int j = 0; j < 3; j++) {
 			try {
-				ms58xx_devices[i] = new MS58xxLL(i, i2caddr[j], variant[j]);
-				DEBUG_TRACE("MS58xx: found on i2cbus=%u i2caddr=0x%02x", i, i2caddr[j]);
+				pressure_sensor_devices[i] = (j == 2) ? (PressureSensorDevice *)new Bar100(i, i2caddr[j]) : (PressureSensorDevice *)new MS58xxLL(i, i2caddr[j], variant[j]);
+				DEBUG_TRACE("%s: found on i2cbus=%u i2caddr=0x%02x", variant[j].c_str(), i, i2caddr[j]);
 				break;
 			} catch (...) {
-				DEBUG_TRACE("MS58xx: not detected on i2cbus=%u i2caddr=0x%02x", i, i2caddr[j]);
-				ms58xx_devices[i] = nullptr;
+				DEBUG_TRACE("Nothing detected on i2cbus=%u i2caddr=0x%02x", i, i2caddr[j]);
+				pressure_sensor_devices[i] = nullptr;
 			}
 		}
 	}
 #else
-        ms58xx_devices[0] = new MS58xxDummy();
+	pressure_sensor_devices[0] = new PressureSensorDummyDevice();
 #endif
 
 	DEBUG_TRACE("AD5933...");
@@ -547,18 +548,18 @@ int main()
 	for (unsigned int x = 0; x < 2; x++) {
 		// Check available devices on each bus
 		for (unsigned int i = 0; i < BSP::I2C_TOTAL_NUMBER; i++) {
-			//DEBUG_TRACE("cdt=%u press=%u bus=%u ad5933=%p ms58xx=%p", cdt_present, standalone_pressure, i, ad5933_devices[i], ms58xx_devices[i]);
-			if (!cdt_present && ad5933_devices[i] && ms58xx_devices[i]) {
+			//DEBUG_TRACE("cdt=%u press=%u bus=%u ad5933=%p pressure_sensor_device=%p", cdt_present, standalone_pressure, i, ad5933_devices[i], pressure_sensor_devices[i]);
+			if (!cdt_present && ad5933_devices[i] && pressure_sensor_devices[i]) {
 				DEBUG_TRACE("CDT on bus %u...", i);
 				cdt_present = true;
-				static CDT cdt(*ms58xx_devices[i], *ad5933_devices[i]);
+				static CDT cdt(*pressure_sensor_devices[i], *ad5933_devices[i]);
 				static CDTSensorService cdt_sensor_service(cdt, &cdt_sensor_log);
-			} else if (!standalone_pressure && ms58xx_devices[i]) {
+			} else if (!standalone_pressure && pressure_sensor_devices[i]) {
 				DEBUG_TRACE("Standalone Pressure Sensor on bus %u...", i);
 				standalone_pressure = true;
-				static MS58xx ms58xx_pressure_sensor(*ms58xx_devices[i]);
-				static PressureDetectorService pressure_detector(ms58xx_pressure_sensor);
-				static PressureSensorService pressure_sensor(ms58xx_pressure_sensor, &pressure_sensor_log);
+				static PressureSensor pressure_sensor(*pressure_sensor_devices[i]);
+				static PressureDetectorService pressure_detector(pressure_sensor);
+				static PressureSensorService pressure_sensor_service(pressure_sensor, &pressure_sensor_log);
 			}
 		}
 

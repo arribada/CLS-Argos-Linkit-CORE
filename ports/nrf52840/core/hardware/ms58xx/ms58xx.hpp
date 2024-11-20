@@ -3,22 +3,11 @@
 #include <cstdint>
 #include <functional>
 #include <string>
-#include "sensor.hpp"
+#include "pressure_sensor.hpp"
 #include "bsp.hpp"
 #include "error.hpp"
 
-class MS58xxHardware {
-public:
-    virtual ~MS58xxHardware() {}
-    virtual void read(double& temperature, double& pressure) = 0;
-};
-
-class MS58xxDummy : public MS58xxHardware {
-public:
-    void read(double& t, double& p) { t = 0; p = 0; }
-};
-
-class MS58xxLL : public MS58xxHardware {
+class MS58xxLL : public PressureSensorDevice {
 public:
 	MS58xxLL(unsigned int bus, unsigned char address, std::string variant);
 	void read(double& temperature, double& pressure) override;
@@ -54,22 +43,3 @@ private:
 	void check_coeffs();
 };
 
-
-class MS58xx : public Sensor {
-public:
-	MS58xx(MS58xxHardware& ms58xx) : Sensor("PRS"), m_ms58xx(ms58xx) {}
-	double read(unsigned int channel = 0) {
-		if (0 == channel) {
-			m_ms58xx.read(m_last_temperature, m_last_pressure);
-			return m_last_pressure;
-		} else if (1 == channel) {
-			return m_last_temperature;
-		}
-		throw ErrorCode::BAD_SENSOR_CHANNEL;
-	}
-
-private:
-	double m_last_pressure;
-	double m_last_temperature;
-	MS58xxHardware& m_ms58xx;
-};

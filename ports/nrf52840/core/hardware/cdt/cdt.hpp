@@ -1,12 +1,11 @@
 #pragma once
 
-#include "ms58xx.hpp"
-#include "sensor.hpp"
+#include "pressure_sensor.hpp"
 #include "ad5933.hpp"
 
 class CDT : public Sensor {
 public:
-	CDT(MS58xxHardware& ms58xx, AD5933& ad5933);
+	CDT(PressureSensorDevice& device, AD5933& ad5933);
 	void calibration_write(const double, const unsigned int) override;
 	void calibration_save(bool force) override;
 	void calibration_read(double &value, const unsigned int) override;
@@ -14,7 +13,7 @@ public:
 
 private:
 	Calibration m_cal;
-	MS58xxHardware& m_ms58xx;
+	PressureSensorDevice& m_device;
 	AD5933& m_ad5933;
 	double m_last_temperature;
 	double m_last_pressure;

@@ -1,7 +1,7 @@
 #include "cdt.hpp"
 #include "debug.hpp"
 
-CDT::CDT(MS58xxHardware& ms58xx, AD5933& ad5933) : Sensor("CDT"), m_cal(Calibration("CDT")), m_ms58xx(ms58xx), m_ad5933(ad5933) {
+CDT::CDT(PressureSensorDevice& device, AD5933& ad5933) : Sensor("CDT"), m_cal(Calibration("CDT")), m_device(device), m_ad5933(ad5933) {
 }
 
 double CDT::read(unsigned int offset) {
@@ -10,7 +10,7 @@ double CDT::read(unsigned int offset) {
 		return read_calibrated_conductivity();
 		break;
 	case 1:
-		m_ms58xx.read(m_last_temperature, m_last_pressure);
+		m_device.read(m_last_temperature, m_last_pressure);
 		return m_last_pressure;
 		break;
 	case 2:
