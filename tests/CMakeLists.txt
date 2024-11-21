@@ -120,6 +120,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${NRF_DIR}/core/hardware/m8qasync"
     "${NRF_DIR}/core/hardware/ad5933"
     "${NRF_DIR}/core/hardware/ms58xx"
+    "${NRF_DIR}/core/hardware/pressure_sensor"
     "${NRF_DIR}/core/hardware/cdt"
     "${NRF_DIR}/core/memmang"
     "mocks"
